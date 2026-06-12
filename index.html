@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SupaChess — Entraîneur d'échecs</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .supa-section { margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(128,128,128,.4); }
+  .supa-head { font-weight: 600; font-size: .85em; opacity: .9; }
+  .supa-model { font-weight: 400; font-size: .75em; opacity: .6; margin-left: 4px; }
+  .supa-resume { font-style: italic; font-size: .85em; margin: 2px 0 4px; opacity: .85; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">♞ Supa<span>Chess</span></div>
+  <div class="engine-status">
+    <span id="engine-dot" class="status-dot loading"></span>
+    <span id="engine-label">Stockfish NNUE — chargement…</span>
+  </div>
+  <div class="engine-status">
+    <span id="supa-dot" class="status-dot loading"></span>
+    <span id="supa-label">Supa : vérification…</span>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- Colonne gauche : eval bar + échiquier -->
+  <section class="board-zone">
+    <div class="evalbar-wrap">
+      <div class="evalbar"><div id="evalbar-white" class="evalbar-white"></div></div>
+      <div id="evalbar-label" class="evalbar-label">0.0</div>
+    </div>
+    <div class="board-col">
+      <div id="status-line" class="status-line">Initialisation…</div>
+      <div id="board" class="board"></div>
+      <div class="board-controls">
+        <button id="btn-new" class="btn">Nouvelle partie</button>
+        <button id="btn-undo" class="btn">Annuler le coup</button>
+        <select id="sel-color" class="btn select">
+          <option value="w">Je joue les Blancs</option>
+          <option value="b">Je joue les Noirs</option>
+        </select>
+        <button id="btn-fen" class="btn">Importer FEN</button>
+      </div>
+      <div class="board-controls settings">
+        <label>Tolérance
+          <select id="sel-threshold" class="btn select">
+            <option value="0.15">Strict (0.15)</option>
+            <option value="0.30" selected>Normal (0.30)</option>
+            <option value="0.60">Souple (0.60)</option>
+          </select>
+        </label>
+        <label>Analyse
+          <select id="sel-movetime" class="btn select">
+            <option value="800">Rapide (0.8s)</option>
+            <option value="1500" selected>Normale (1.5s)</option>
+            <option value="3000">Profonde (3s)</option>
+          </select>
+        </label>
+        <label>Adversaire
+          <select id="sel-elo" class="btn select">
+            <option value="1320">Elo 1320</option>
+            <option value="1600" selected>Elo 1600</option>
+            <option value="2000">Elo 2000</option>
+            <option value="2400">Elo 2400</option>
+            <option value="0">Pleine force</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- Colonne droite : coach + historique + stats -->
+  <section class="side-zone">
+    <div id="coach-panel" class="panel coach-panel hidden">
+      <h2 id="coach-title">Coach</h2>
+      <p id="coach-message" class="coach-message"></p>
+      <div id="coach-ranking" class="coach-ranking"></div>
+      <div class="coach-actions">
+        <button id="btn-force" class="btn danger">Jouer quand même</button>
+        <button id="btn-cancel" class="btn">Annuler</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Coups candidats</h2>
+      <div id="candidates-list" class="candidates-list"><em>En attente d'analyse…</em></div>
+    </div>
+
+    <div class="panel">
+      <h2>Historique</h2>
+      <div id="move-history" class="move-history"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Stats de session</h2>
+      <table class="stats-table">
+        <tbody>
+          <tr><td>Coups joués</td><td id="stat-moves">0</td></tr>
+          <tr><td>% top-1</td><td id="stat-top1">—</td></tr>
+          <tr><td>% top-3</td><td id="stat-top3">—</td></tr>
+          <tr><td>Interceptions (erreurs évitées)</td><td id="stat-intercepts">0</td></tr>
+          <tr><td>Coups forcés malgré le coach</td><td id="stat-forced">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script src="vendor/chess.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/coach.js"></script>
+<script src="js/supa.js"></script>
+<script src="js/board.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
