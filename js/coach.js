@@ -285,6 +285,94 @@ function buildArguments(fenBefore, line, bestLine, history) {
   return { san, pros: dedup(pros), cons: dedup(cons) };
 }
 
+/* ── SAN français (K→R, Q→D, R→T, B→F, N→C) ── */
+function sanFr(san) {
+  return String(san).replace(/[KQRBN]/g, (c) => ({ K: "R", Q: "D", R: "T", B: "F", N: "C" }[c]));
+}
+
+function lcFirst(s) { return s ? s.charAt(0).toLowerCase() + s.slice(1) : s; }
+
+/* ── Comparaison candidat A vs candidat suivant B du classement ──
+   Retourne une phrase "Mieux que <B> (+Δ) : <argument concret>". */
+function buildComparison(candA, candB) {
+  if (!candB) return null;
+  const deltaCp = scoreValue(candA.line) - scoreValue(candB.line);
+  const delta = (Math.max(0, deltaCp) / 100).toFixed(2);
+  // Arguments que A possède et pas B (hors phrases purement liées à l'éval)
+  const generic = (s) => /^(Meilleur coup|Garde un bon avantage)/.test(s);
+  const aOnly = candA.args.pros.filter((p) => !candB.args.pros.includes(p) && !generic(p));
+  // Défauts de B que A n'a pas
+  const bCons = candB.args.cons.filter((c) => !candA.args.cons.includes(c) && !/^Perd \d/.test(c) && !c.startsWith("Perd 0") && !/point d'éval/.test(c));
+  let why;
+  if (aOnly.length) why = lcFirst(aOnly[0]);
+  else if (bCons.length) why = "évite : " + lcFirst(bCons[0]);
+  else why = "légèrement mieux évalué par le moteur";
+  return `Mieux que ${sanFr(candB.san)} (+${delta}) : ${why}`;
+}
+
+/* ── Riposte adverse attendue à partir de la PV du candidat ──
+   pv[0] = notre coup, pv[1] = riposte adverse. Analyse la position après
+   pv[0]+pv[1] : échec, capture, fourchette, pièce menacée, centre, matériel.
+   Retourne { san, text, punish } ou null. */
+function buildReplyInfo(fenBefore, pv) {
+  if (!pv || pv.length < 1) return null;
+  const c = new Chess(fenBefore);
+  const color = c.turn();
+  const enemy = color === "w" ? "b" : "w";
+  const m0 = c.move(uciToMoveObj(pv[0]));
+  if (!m0) return null;
+  if (pv.length < 2 || c.game_over()) return null;
+  const m1 = c.move(uciToMoveObj(pv[1]));
+  if (!m1) return null;
+  // Affichage : "…Cf6" si l'adversaire est Noir, "Cf3" sinon
+  const replySan = (color === "w" ? "…" : "") + sanFr(m1.san);
+
+  const conseq = [];
+  if (c.in_checkmate()) conseq.push("mat !");
+  else if (c.in_check()) conseq.push("donne échec");
+  if (m1.captured) conseq.push(`prend ${PIECE_NAMES[m1.captured]} en ${m1.to}`);
+
+  // Fourchette / menace : la pièce arrivée en m1.to attaque nos pièces
+  const board = c.board();
+  const targets = [];
+  for (let r = 0; r < 8; r++) for (let cc = 0; cc < 8; cc++) {
+    const p = board[r][cc];
+    if (p && p.color === color && p.type !== "p") {
+      const sq = rcSq(r, cc);
+      const atk = attackersOf(c, sq, enemy);
+      if (atk.some((a) => a.from === m1.to)) {
+        targets.push({ sq, type: p.type, hang: p.type !== "k" && isHanging(c, sq, p.type, color) });
+      }
+    }
+  }
+  if (targets.length >= 2) {
+    conseq.push(`fourchette sur ${targets.map((t) => `${PIECE_NAMES[t.type]} ${t.sq}`).join(" et ")}`);
+  } else {
+    const h = targets.find((t) => t.hang);
+    if (h) conseq.push(`menace ${PIECE_NAMES[h.type]} en ${h.sq} (mal défendu)`);
+  }
+  // Pression : pion adverse qui prend ou contrôle le centre
+  if (!conseq.length && m1.piece === "p" && CENTER_SQUARES.includes(m1.to)) {
+    conseq.push("prend le centre");
+  }
+  // Gain de matériel adverse dans la suite de la PV (6 demi-coups)
+  const matD = pvMaterialDelta(fenBefore, pv, 6, color);
+  if (matD <= -1) conseq.push(`gagne du matériel sur la suite (${matD} pour toi)`);
+  // Pression sur colonne ouverte vers notre roi
+  if (!conseq.length && ["r", "q"].includes(m1.piece)) {
+    const kingSq = findKing(c, color);
+    if (kingSq && kingSq[0] === m1.to[0] && fileIsOpenFor(c, m1.to[0], enemy)) {
+      conseq.push(`pression sur la colonne ${m1.to[0]} vers ton roi`);
+    }
+  }
+
+  const text = conseq.length
+    ? `${replySan}, puis ${dedup(conseq).join(", ")}`
+    : `${replySan} (position équilibrée)`;
+  const punish = conseq.length ? dedup(conseq).join(", ") : null;
+  return { san: replySan, text, punish };
+}
+
 function findKing(chess, color) {
   const board = chess.board();
   for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {

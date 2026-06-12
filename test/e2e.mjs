@@ -82,6 +82,27 @@ try {
   results.push(["6. Précision moyenne par joueur affichée", ok6,
     `stat="${accStat.trim()}" badge="${accBadge.trim()}"`]);
   await shot("05_accuracy.png");
+
+  // Test 7 : explications comparatives + riposte adverse
+  // 7a — cartes candidats : "vs" (comparatif) + "Riposte" pour >= 3 candidats
+  await page.waitForSelector("#candidates-list .cl-card", { timeout: 30000 });
+  const nbCmp = await page.locator("#candidates-list .cl-cmp").count();
+  const nbReply = await page.locator("#candidates-list .cl-reply").count();
+  const candListTxt = await page.textContent("#candidates-list");
+  const ok7a = nbCmp >= 3 && nbReply >= 3 && /Riposte/.test(candListTxt) && /Mieux que/.test(candListTxt);
+  await shot("06_candidates_details.png");
+  // 7b — interception de 1.a4 (nouvelle partie) : le coach montre la riposte du coup refusé
+  await page.click("#btn-new");
+  await page.waitForSelector(".cdot", { timeout: 45000 });
+  await page.click("[data-square='a2']");
+  await page.click("[data-square='a4']");
+  await page.waitForSelector("#coach-panel:not(.hidden)", { timeout: 30000 });
+  const coachMsg = await page.textContent("#coach-message");
+  const coachTxt = await page.textContent("#coach-ranking");
+  const ok7b = /l'adversaire répond/.test(coachMsg) && /Riposte attendue/.test(coachTxt);
+  results.push(["7. Comparatif + riposte adverse (cartes + coup refusé)", ok7a && ok7b,
+    `cmp=${nbCmp} reply=${nbReply} msg="${coachMsg.slice(0, 160)}"`]);
+  await shot("07_riposte_refused_move.png");
 } catch (e) {
   results.push(["EXCEPTION", false, String(e)]);
   await shot("99_failure.png").catch(() => {});

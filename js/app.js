@@ -92,8 +92,13 @@ function buildCandidates(lines, fen) {
   state.candidates = lines.map((line, i) => {
     const deltaCp = Math.max(0, bestVal - scoreValue(line));
     const args = buildArguments(fen, line, best, state.fenHistory);
-    return { rank: i + 1, uci: line.pv[0], san: args.san, line, deltaCp, args };
+    const reply = buildReplyInfo(fen, line.pv);
+    return { rank: i + 1, uci: line.pv[0], san: args.san, line, deltaCp, args, reply };
   });
+  // Comparaison de chaque candidat avec le suivant du classement
+  for (let i = 0; i < state.candidates.length; i++) {
+    state.candidates[i].cmp = buildComparison(state.candidates[i], state.candidates[i + 1] || null);
+  }
   boardUI.dots = state.candidates.map((c) => ({
     square: c.uci.slice(2, 4),
     rank: c.rank,
@@ -184,7 +189,8 @@ async function attemptUserMove(moveObj) {
     const best = state.candidates[0] ? state.candidates[0].line : line;
     const deltaCp = Math.max(0, scoreValue(best) - scoreValue(line));
     const args = buildArguments(state.chess.fen(), line, best, state.fenHistory);
-    cand = { rank: null, uci, san: args.san, line, deltaCp, args };
+    const reply = buildReplyInfo(state.chess.fen(), line.pv);
+    cand = { rank: null, uci, san: args.san, line, deltaCp, args, reply, cmp: null };
     state.phase = "userTurn";
   }
 
@@ -200,8 +206,13 @@ function interceptMove(moveObj, cand) {
   state.pendingMove = { ...moveObj, uci: cand.uci, cand };
   state.stats.intercepts++;
   const bestSan = state.candidates[0] ? state.candidates[0].san : "—";
-  $("coach-message").textContent =
-    `Non, ne joue pas ${cand.san} (perte de ${(cand.deltaCp / 100).toFixed(2)}) ! Joue plutôt ${bestSan}.`;
+  let msg = `Non, ne joue pas ${cand.san} (perte de ${(cand.deltaCp / 100).toFixed(2)}) ! Joue plutôt ${bestSan}.`;
+  // Punition adverse explicite du coup refusé (à partir de la PV de la sonde)
+  if (cand.reply) {
+    msg += ` Si tu joues ${cand.san}, l'adversaire répond ${cand.reply.san}` +
+      (cand.reply.punish ? ` et ${cand.reply.punish}.` : " et garde une position confortable.");
+  }
+  $("coach-message").textContent = msg;
   renderCoachRanking(cand);
   $("coach-panel").classList.remove("hidden");
   setStatus("Coup intercepté — consultez le coach.");
@@ -240,7 +251,10 @@ function candidateCard(c, whiteSide, isUserMove) {
       <span class="cand-san">${esc(c.san)}</span>
       <span class="cand-eval">${formatScore(c.line, whiteSide)}</span>
     </div>
-    <div class="cand-args">${pros}${cons || ""}</div>`;
+    <div class="cand-args">${pros}${cons || ""}</div>
+    ${c.reply ? `<div class="cand-reply">↩ ${isUserMove
+      ? `Si tu joues ${esc(c.san)}, l'adversaire répond ${esc(c.reply.san)}${c.reply.punish ? " et " + esc(c.reply.punish) : ""}`
+      : `Riposte attendue : ${esc(c.reply.text)}`}</div>` : ""}`;
   if (!isUserMove) {
     div.title = "Cliquer pour jouer ce coup";
     div.addEventListener("click", () => {
@@ -310,9 +324,13 @@ function renderCandidatesList() {
   wrap.innerHTML = state.candidates.map((c) => {
     const q = qualityClass(c.deltaCp, c.rank);
     const colors = { "q-best": "var(--green)", "q-good": "var(--yellow)", "q-mid": "var(--orange)", "q-bad": "var(--red)" };
-    return `<div class="cl-row"><span class="cl-dot" style="background:${colors[q]}"></span>
+    const sub = [];
+    if (c.cmp) sub.push(`<div class="cl-sub cl-cmp">▸ ${esc(c.cmp)}</div>`);
+    if (c.reply) sub.push(`<div class="cl-sub cl-reply">↩ Riposte attendue : ${esc(c.reply.text)}</div>`);
+    return `<div class="cl-card"><div class="cl-row"><span class="cl-dot" style="background:${colors[q]}"></span>
       <strong>${c.rank}. ${esc(c.san)}</strong>
-      <span style="margin-left:auto;color:var(--text-dim)">${formatScore(c.line, whiteSide)}</span></div>`;
+      <span style="margin-left:auto;color:var(--text-dim)">${formatScore(c.line, whiteSide)}</span></div>
+      ${sub.join("")}</div>`;
   }).join("");
 }
 
