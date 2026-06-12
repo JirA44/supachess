@@ -30,3 +30,14 @@
 [supa-coach] OpenRouter nvidia/nemotron-3-ultra-550b-a55b:free: pas de JSON exploitable
 [supa-coach] 127.0.0.1 "POST /coach HTTP/1.1" 200 -
 [supa-coach] 127.0.0.1 "POST /coach HTTP/1.1" 200 -
+[supa-coach] port 8778 — OpenRouter modèles=['nvidia/nemotron-3-ultra-550b-a55b:free', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free'] clé=OK — fallback Ollama qwen3:4b
+[supa-coach] port 8778 — OpenRouter modèles=['nvidia/nemotron-3-ultra-550b-a55b:free', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free'] clé=OK — fallback Ollama qwen3:4b
+[supa-coach] 127.0.0.1 "OPTIONS /coach HTTP/1.1" 200 -
+[supa-coach] 127.0.0.1 "GET /health HTTP/1.1" 200 -
+[supa-coach] 127.0.0.1 "GET /health HTTP/1.1" 200 -
+[supa-coach] 127.0.0.1 "OPTIONS /coach HTTP/1.1" 200 -
+[supa-coach] 127.0.0.1 "OPTIONS /coach HTTP/1.1" 200 -
+[supa-coach] 127.0.0.1 "OPTIONS /coach HTTP/1.1" 200 -
+[supa-coach] 127.0.0.1 "GET /health HTTP/1.1" 200 -
+[supa-coach] 127.0.0.1 "OPTIONS /review HTTP/1.1" 200 -
+[supa-coach] 127.0.0.1 "GET /health HTTP/1.1" 200 -

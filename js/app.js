@@ -12,6 +12,8 @@ const state = {
   pendingMove: null,     // coup utilisateur intercepté {from,to,promotion,uci}
   fenHistory: [],        // clés FEN (4 champs) pour détection de répétition
   evalWhiteCp: 0,
+  gen: 0,                // génération de tour : invalide les analyses en vol au changement de mode
+
   stats: { moves: 0, top1: 0, top3: 0, intercepts: 0, forced: 0 },
   accuracy: { w: [], b: [], pendingEngine: null }, // moveAccuracy [0..100] par couleur
 };
@@ -22,6 +24,7 @@ const boardUI = new BoardUI($("board"), onSquareClick);
 function thresholdCp() { return Math.round(parseFloat($("sel-threshold").value) * 100); }
 function movetime() { return parseInt($("sel-movetime").value, 10); }
 function opponentElo() { return parseInt($("sel-elo").value, 10); }
+function isManualMode() { return $("sel-elo").value === "manual"; }
 
 /* ── Init moteur ── */
 async function init() {
@@ -57,7 +60,7 @@ function fenKey(fen) { return fen.split(" ").slice(0, 4).join(" "); }
 /* ── Boucle de jeu ── */
 async function startTurn() {
   if (checkGameOver()) return;
-  if (state.chess.turn() === state.userColor) {
+  if (isManualMode() || state.chess.turn() === state.userColor) {
     await analyzeForUser();
   } else {
     await playEngineMove();
@@ -66,12 +69,13 @@ async function startTurn() {
 
 async function analyzeForUser() {
   state.phase = "analyzing";
+  const gen = ++state.gen;
   setStatus("Analyse de la position… (MultiPV)");
   boardUI.dots = [];
   renderBoard();
   const fen = state.chess.fen();
   const res = await state.engine.analyze({ fen, multipv: 6, movetime: movetime(), elo: 0 });
-  if (state.chess.fen() !== fen) return; // partie changée entre temps
+  if (state.gen !== gen || state.chess.fen() !== fen) return; // partie/mode changé entre temps
   buildCandidates(res.lines, fen);
   updateEvalBar(res.lines[0]);
   // Précision du dernier coup engine : l'eval top-1 de cette analyse (POV utilisateur)
@@ -82,7 +86,13 @@ async function analyzeForUser() {
     recordAccuracy(p.color, p.beforeCp, -clampCpFromLine(res.lines[0]));
   }
   state.phase = "userTurn";
-  setStatus("À vous de jouer — les points indiquent les coups candidats.");
+  if (isManualMode()) {
+    const turnLabel = state.chess.turn() === "w" ? "Blancs" : "Noirs";
+    const isOpp = state.chess.turn() !== state.userColor;
+    setStatus(`Mode manuel — au trait: ${turnLabel}${isOpp ? " (coup adverse: pas d'interception)" : ""}.`);
+  } else {
+    setStatus("À vous de jouer — les points indiquent les coups candidats.");
+  }
   renderAll();
 }
 
@@ -137,13 +147,14 @@ function breakdownHtml(bd, cls) {
 
 async function playEngineMove() {
   state.phase = "engineThinking";
+  const gen = ++state.gen;
   setStatus("Stockfish réfléchit…");
   boardUI.dots = [];
   renderBoard();
   const fen = state.chess.fen();
   const elo = opponentElo();
   const res = await state.engine.analyze({ fen, multipv: 1, movetime: Math.min(movetime(), 1200), elo });
-  if (state.chess.fen() !== fen) return;
+  if (state.gen !== gen || state.chess.fen() !== fen) return;
   if (!res.bestmove || res.bestmove === "(none)") { checkGameOver(); return; }
   const engineColor = state.chess.turn();
   const mv = state.chess.move(uciToMoveObj(res.bestmove));
@@ -178,7 +189,8 @@ function onSquareClick(sq) {
       return;
     }
   }
-  if (piece && piece.color === state.userColor) {
+  const selectableColor = isManualMode() ? state.chess.turn() : state.userColor;
+  if (piece && piece.color === selectableColor) {
     boardUI.selected = sq;
     boardUI.legalTargets = state.chess.moves({ square: sq, verbose: true }).map((m) => m.to);
   } else {
@@ -224,7 +236,10 @@ async function attemptUserMove(moveObj) {
     state.phase = "userTurn";
   }
 
-  if (cand.deltaCp > thresholdCp()) {
+  // Mode manuel : pas d'interception pour le camp adverse (réplication d'une
+  // partie jouée ailleurs — on rentre le coup tel quel, l'analyse reste affichée).
+  const skipIntercept = isManualMode() && state.chess.turn() !== state.userColor;
+  if (!skipIntercept && cand.deltaCp > thresholdCp()) {
     interceptMove(moveObj, cand);
   } else {
     commitUserMove(moveObj, cand, false);
@@ -487,6 +502,15 @@ function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
 /* ── Boutons ── */
 $("btn-new").addEventListener("click", newGame);
 $("sel-color").addEventListener("change", newGame);
+$("sel-elo").addEventListener("change", () => {
+  // Changement de mode en cours de partie : on invalide les analyses en vol
+  // et on relance le tour (l'engine reprend la main si c'est son tour).
+  if (state.phase === "gameover" || state.phase === "init") return;
+  state.gen++;
+  state.pendingMove = null;
+  hideCoach();
+  startTurn();
+});
 $("btn-force").addEventListener("click", () => {
   if (state.pendingMove) {
     const { from, to, promotion, cand } = state.pendingMove;
