@@ -13,6 +13,7 @@ const state = {
   fenHistory: [],        // clés FEN (4 champs) pour détection de répétition
   evalWhiteCp: 0,
   stats: { moves: 0, top1: 0, top3: 0, intercepts: 0, forced: 0 },
+  accuracy: { w: [], b: [], pendingEngine: null }, // moveAccuracy [0..100] par couleur
 };
 
 const boardUI = new BoardUI($("board"), onSquareClick);
@@ -37,6 +38,7 @@ function newGame() {
   state.chess = new Chess();
   state.candidates = [];
   state.pendingMove = null;
+  resetAccuracy();
   state.fenHistory = [fenKey(state.chess.fen())];
   state.userColor = $("sel-color").value;
   boardUI.setFlipped(state.userColor === "b");
@@ -71,6 +73,13 @@ async function analyzeForUser() {
   if (state.chess.fen() !== fen) return; // partie changée entre temps
   buildCandidates(res.lines, fen);
   updateEvalBar(res.lines[0]);
+  // Précision du dernier coup engine : l'eval top-1 de cette analyse (POV utilisateur)
+  // inversée donne l'eval APRÈS le coup engine de son point de vue.
+  if (state.accuracy.pendingEngine && res.lines.length) {
+    const p = state.accuracy.pendingEngine;
+    state.accuracy.pendingEngine = null;
+    recordAccuracy(p.color, p.beforeCp, -clampCpFromLine(res.lines[0]));
+  }
   state.phase = "userTurn";
   setStatus("À vous de jouer — les points indiquent les coups candidats.");
   renderAll();
@@ -103,10 +112,16 @@ async function playEngineMove() {
   const res = await state.engine.analyze({ fen, multipv: 1, movetime: Math.min(movetime(), 1200), elo });
   if (state.chess.fen() !== fen) return;
   if (!res.bestmove || res.bestmove === "(none)") { checkGameOver(); return; }
+  const engineColor = state.chess.turn();
   const mv = state.chess.move(uciToMoveObj(res.bestmove));
   if (mv) {
     boardUI.lastMove = { from: mv.from, to: mv.to };
     state.fenHistory.push(fenKey(state.chess.fen()));
+    // Eval AVANT (POV engine) = top-1 de son analyse ; APRÈS = top-1 de la
+    // prochaine analyse MultiPV utilisateur (déjà lancée pour son tour).
+    if (res.lines.length) {
+      state.accuracy.pendingEngine = { color: engineColor, beforeCp: clampCpFromLine(res.lines[0]) };
+    }
   }
   renderAll();
   startTurn();
@@ -240,8 +255,15 @@ function candidateCard(c, whiteSide, isUserMove) {
 
 function commitUserMove(moveObj, cand, forced) {
   state.phase = "userTurn";
+  const userMoveColor = state.chess.turn();
   const mv = state.chess.move(moveObj);
   if (!mv) return;
+  // Précision du coup utilisateur : avant = meilleur candidat, après = candidat joué.
+  if (cand && state.candidates.length) {
+    recordAccuracy(userMoveColor,
+      clampCpFromLine(state.candidates[0].line),
+      clampCpFromLine(cand.line));
+  }
   boardUI.lastMove = { from: mv.from, to: mv.to };
   boardUI.dots = [];
   state.fenHistory.push(fenKey(state.chess.fen()));
@@ -313,6 +335,52 @@ function renderStats() {
   $("stat-forced").textContent = s.forced;
 }
 
+/* ── Précision (style lichess accuracy) ── */
+function clampCpFromLine(line) {
+  if (line.mate !== null) return line.mate > 0 ? 1000 : -1000;
+  return Math.max(-1000, Math.min(1000, line.scoreCp));
+}
+function winPct(cp) {
+  return 50 + 50 * (2 / (1 + Math.exp(-0.00368208 * cp)) - 1);
+}
+function moveAccuracyPct(beforeCp, afterCp) {
+  const drop = Math.max(0, winPct(beforeCp) - winPct(afterCp));
+  const acc = 103.1668 * Math.exp(-0.04354 * drop) - 3.1668;
+  return Math.max(0, Math.min(100, acc));
+}
+function recordAccuracy(color, beforeCp, afterCp) {
+  state.accuracy[color].push(moveAccuracyPct(beforeCp, afterCp));
+  renderAccuracy();
+}
+function resetAccuracy() {
+  state.accuracy = { w: [], b: [], pendingEngine: null };
+  renderAccuracy();
+}
+function avgAccuracy(arr) {
+  if (!arr.length) return null;
+  return arr.reduce((s, x) => s + x, 0) / arr.length;
+}
+function accColor(v) {
+  return v >= 90 ? "var(--green)" : v >= 80 ? "var(--yellow)" : v >= 60 ? "var(--orange)" : "var(--red)";
+}
+function accuracyHtml() {
+  const youAreWhite = state.userColor === "w";
+  const parts = [["w", youAreWhite ? "Blancs (toi)" : "Blancs (SF)"],
+                 ["b", youAreWhite ? "Noirs (SF)" : "Noirs (toi)"]].map(([c, label]) => {
+    const v = avgAccuracy(state.accuracy[c]);
+    if (v === null) return `${esc(label)}: <span style="color:var(--text-dim)">—</span>`;
+    return `${esc(label)}: <span style="color:${accColor(v)};font-weight:600">${v.toFixed(1)}%</span>`;
+  });
+  return parts.join(" &nbsp;·&nbsp; ");
+}
+function renderAccuracy() {
+  const html = accuracyHtml();
+  const cell = $("stat-accuracy");
+  if (cell) cell.innerHTML = html;
+  const badge = $("accuracy-badge");
+  if (badge) badge.innerHTML = "Précision — " + html;
+}
+
 function updateEvalBar(bestLine) {
   if (!bestLine) return;
   const whiteToMove = state.chess.turn() === "w";
@@ -357,6 +425,7 @@ $("btn-undo").addEventListener("click", () => {
     if (state.chess.turn() === state.userColor) break;
   }
   if (state.stats.moves > 0) state.stats.moves--;
+  state.accuracy.pendingEngine = null;
   boardUI.lastMove = null;
   renderAll();
   startTurn();
@@ -369,6 +438,7 @@ $("btn-fen").addEventListener("click", () => {
   state.chess = new Chess(fen.trim());
   state.fenHistory = [fenKey(state.chess.fen())];
   state.candidates = [];
+  resetAccuracy();
   boardUI.lastMove = null;
   boardUI.dots = [];
   hideCoach();

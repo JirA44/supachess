@@ -66,6 +66,22 @@ try {
   // attendre la ré-analyse pour une belle capture finale
   await page.waitForSelector(".cdot", { timeout: 30000 }).catch(() => {});
   await shot("04_after_engine_reply.png");
+
+  // Test 6 : précision moyenne affichée pour chaque joueur après 2 demi-coups
+  await page.waitForFunction(
+    () => {
+      const t = document.getElementById("stat-accuracy")?.textContent || "";
+      return (t.match(/%/g) || []).length >= 2;
+    },
+    { timeout: 45000 }
+  );
+  const accStat = await page.textContent("#stat-accuracy");
+  const accBadge = await page.textContent("#accuracy-badge");
+  const ok6 = (accStat.match(/%/g) || []).length >= 2 && /Blancs/.test(accStat)
+    && /Noirs/.test(accStat) && (accBadge.match(/%/g) || []).length >= 2;
+  results.push(["6. Précision moyenne par joueur affichée", ok6,
+    `stat="${accStat.trim()}" badge="${accBadge.trim()}"`]);
+  await shot("05_accuracy.png");
 } catch (e) {
   results.push(["EXCEPTION", false, String(e)]);
   await shot("99_failure.png").catch(() => {});

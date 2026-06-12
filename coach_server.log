@@ -1,50 +1,9 @@
-[supa-coach] port 8778 — OpenRouter modèle=nvidia/nemotron-3-ultra-550b-a55b:free clé=OK — fallback Ollama qwen3:4b
-[supa-coach] 127.0.0.1 "GET /health HTTP/1.1" 200 -
-[supa-coach] OpenRouter échec: 'choices'
-[supa-coach] Ollama échec: timed out
-[supa-coach] 127.0.0.1 "POST /coach HTTP/1.1" 200 -
-----------------------------------------
-Exception occurred during processing of request from ('127.0.0.1', 54662)
-Traceback (most recent call last):
-  File "socketserver.py", line 691, in process_request_thread
-  File "socketserver.py", line 361, in finish_request
-  File "socketserver.py", line 755, in __init__
-  File "http\server.py", line 436, in handle
-  File "http\server.py", line 424, in handle_one_request
-  File "D:\Code\supachess\supa_coach_server.py", line 235, in do_POST
-    self._send(200, resp)
-  File "D:\Code\supachess\supa_coach_server.py", line 194, in _send
-    self.end_headers()
-  File "http\server.py", line 538, in end_headers
-  File "http\server.py", line 542, in flush_headers
-  File "socketserver.py", line 834, in write
-ConnectionAbortedError: [WinError 10053] Une connexion établie a été abandonnée par un logiciel de votre ordinateur hôte
-----------------------------------------
-[supa-coach] OpenRouter échec: 'choices'
-[supa-coach] Ollama échec: timed out
-[supa-coach] 127.0.0.1 "POST /coach HTTP/1.1" 200 -
-----------------------------------------
-Exception occurred during processing of request from ('127.0.0.1', 60801)
-Traceback (most recent call last):
-  File "socketserver.py", line 691, in process_request_thread
-  File "socketserver.py", line 361, in finish_request
-  File "socketserver.py", line 755, in __init__
-  File "http\server.py", line 436, in handle
-  File "http\server.py", line 424, in handle_one_request
-  File "D:\Code\supachess\supa_coach_server.py", line 235, in do_POST
-    self._send(200, resp)
-  File "D:\Code\supachess\supa_coach_server.py", line 194, in _send
-    self.end_headers()
-  File "http\server.py", line 538, in end_headers
-  File "http\server.py", line 542, in flush_headers
-  File "socketserver.py", line 834, in write
-ConnectionAbortedError: [WinError 10053] Une connexion établie a été abandonnée par un logiciel de votre ordinateur hôte
-----------------------------------------
 [supa-coach] port 8778 — OpenRouter modèles=['nvidia/nemotron-3-ultra-550b-a55b:free', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free'] clé=OK — fallback Ollama qwen3:4b
 [supa-coach] 127.0.0.1 "GET /health HTTP/1.1" 200 -
-[supa-coach] 127.0.0.1 "POST /coach HTTP/1.1" 200 -
 [supa-coach] 127.0.0.1 "GET /health HTTP/1.1" 200 -
 [supa-coach] 127.0.0.1 "OPTIONS /coach HTTP/1.1" 200 -
+[supa-coach] 127.0.0.1 "POST /coach HTTP/1.1" 200 -
+[supa-coach] OpenRouter nvidia/nemotron-3-ultra-550b-a55b:free: pas de JSON exploitable
 [supa-coach] 127.0.0.1 "POST /coach HTTP/1.1" 200 -
 [supa-coach] 127.0.0.1 "GET /health HTTP/1.1" 200 -
 [supa-coach] 127.0.0.1 "OPTIONS /coach HTTP/1.1" 200 -

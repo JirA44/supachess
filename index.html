@@ -10,6 +10,7 @@
   .supa-head { font-weight: 600; font-size: .85em; opacity: .9; }
   .supa-model { font-weight: 400; font-size: .75em; opacity: .6; margin-left: 4px; }
   .supa-resume { font-style: italic; font-size: .85em; margin: 2px 0 4px; opacity: .85; }
+  .accuracy-badge { font-size: .8em; opacity: .9; margin-top: 4px; text-align: center; }
 </style>
 </head>
 <body>
@@ -35,6 +36,7 @@
     <div class="board-col">
       <div id="status-line" class="status-line">Initialisation…</div>
       <div id="board" class="board"></div>
+      <div id="accuracy-badge" class="accuracy-badge">Précision — Blancs: — &nbsp;·&nbsp; Noirs: —</div>
       <div class="board-controls">
         <button id="btn-new" class="btn">Nouvelle partie</button>
         <button id="btn-undo" class="btn">Annuler le coup</button>
@@ -98,6 +100,7 @@
       <h2>Stats de session</h2>
       <table class="stats-table">
         <tbody>
+          <tr><td>Précision moyenne</td><td id="stat-accuracy">—</td></tr>
           <tr><td>Coups joués</td><td id="stat-moves">0</td></tr>
           <tr><td>% top-1</td><td id="stat-top1">—</td></tr>
           <tr><td>% top-3</td><td id="stat-top3">—</td></tr>
