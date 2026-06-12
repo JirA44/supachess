@@ -430,6 +430,24 @@ $("btn-undo").addEventListener("click", () => {
   renderAll();
   startTurn();
 });
+$("btn-pgn").addEventListener("click", () => {
+  if (state.chess.history().length === 0) { alert("Aucun coup joué."); return; }
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  state.chess.header(
+    "Event", "SupaChess entraînement",
+    "Site", "https://jira44.github.io/supachess/",
+    "Date", `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`,
+    "White", state.userColor === "w" ? "Joueur" : "Stockfish 18",
+    "Black", state.userColor === "b" ? "Joueur" : "Stockfish 18"
+  );
+  const blob = new Blob([state.chess.pgn()], { type: "application/x-chess-pgn" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `supachess_${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.pgn`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
 $("btn-fen").addEventListener("click", () => {
   const fen = prompt("Collez une position FEN :");
   if (!fen) return;
