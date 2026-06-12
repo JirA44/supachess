@@ -17,6 +17,28 @@
   .cl-cmp { color: #7fc97f; }
   .cl-reply { color: #e0a868; }
   .cand-reply { font-size: .8em; margin-top: 3px; color: #e0a868; }
+  .cl-caret { width: 12px; display: inline-block; opacity: .7; font-size: .8em; }
+  .cl-args { margin: 2px 0 2px 18px; font-size: .82em; }
+  .cl-bd { color: #8fb6d9; cursor: help; }
+  .btn.mini { font-size: .75em; padding: 1px 6px; }
+  .game-row { display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    padding: 3px 0; border-bottom: 1px dashed rgba(128,128,128,.25); font-size: .85em; }
+  .game-row:last-child { border-bottom: none; }
+  .game-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .pgn-modal { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex;
+    align-items: center; justify-content: center; z-index: 50; }
+  .pgn-modal.hidden { display: none; }
+  .pgn-modal-box { background: var(--panel, #222); border: 1px solid rgba(128,128,128,.4);
+    border-radius: 8px; padding: 16px; width: min(560px, 92vw); }
+  .pgn-modal-box textarea { width: 100%; box-sizing: border-box; font-family: monospace;
+    font-size: .85em; margin: 8px 0; background: rgba(0,0,0,.25); color: inherit;
+    border: 1px solid rgba(128,128,128,.4); border-radius: 4px; padding: 6px; }
+  .review-progress { font-size: .85em; font-style: italic; opacity: .85; margin-bottom: 6px; }
+  .review-report h3, .review-report h4 { margin: 6px 0 3px; font-size: .95em; }
+  .review-report ul { margin: 2px 0 6px 18px; padding: 0; font-size: .85em; }
+  .review-meta { font-size: .8em; opacity: .8; margin-bottom: 4px; }
+  .review-worst { font-size: .82em; margin-top: 5px; line-height: 1.4; }
+  #replay-bar.hidden { display: none; }
 </style>
 </head>
 <body>
@@ -52,6 +74,13 @@
         </select>
         <button id="btn-fen" class="btn">Importer FEN</button>
         <button id="btn-pgn" class="btn">⬇ PGN</button>
+        <button id="btn-analyze-pgn" class="btn">Analyser PGN (Supa)</button>
+      </div>
+      <div id="replay-bar" class="board-controls hidden">
+        <button id="btn-replay-prev" class="btn">◀</button>
+        <span id="replay-label">Coup 0/0</span>
+        <button id="btn-replay-next" class="btn">▶</button>
+        <button id="btn-replay-quit" class="btn">Quitter la relecture</button>
       </div>
       <div class="board-controls settings">
         <label>Tolérance
@@ -98,6 +127,21 @@
       <div id="candidates-list" class="candidates-list"><em>En attente d'analyse…</em></div>
     </div>
 
+    <div id="review-panel" class="panel hidden">
+      <h2>Analyse de partie</h2>
+      <div id="review-progress" class="review-progress"></div>
+      <div id="review-report" class="review-report"></div>
+      <div class="coach-actions">
+        <button id="btn-replay-game" class="btn hidden">Rejouer cette partie</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Parties</h2>
+      <div id="games-list" class="games-list"><em>Aucune partie enregistrée.</em></div>
+      <button id="btn-export-all" class="btn" style="margin-top:6px">Tout exporter (.pgn)</button>
+    </div>
+
     <div class="panel">
       <h2>Historique</h2>
       <div id="move-history" class="move-history"></div>
@@ -119,11 +163,25 @@
   </section>
 </main>
 
+<div id="pgn-modal" class="pgn-modal hidden">
+  <div class="pgn-modal-box">
+    <h2>Analyser un PGN avec Supa</h2>
+    <p style="font-size:.85em;opacity:.85">Collez un PGN (le vôtre ou d'ailleurs) : chaque position est analysée par Stockfish, puis Supa génère un bilan pédagogique.</p>
+    <textarea id="pgn-input" rows="10" placeholder="[Event &quot;...&quot;]&#10;&#10;1. e4 e5 2. Nf3 ..."></textarea>
+    <div class="coach-actions">
+      <button id="btn-run-review" class="btn">Analyser</button>
+      <button id="btn-close-pgn" class="btn">Fermer</button>
+    </div>
+  </div>
+</div>
+
 <script src="vendor/chess.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/coach.js"></script>
 <script src="js/supa.js"></script>
 <script src="js/board.js"></script>
 <script src="js/app.js"></script>
+<script src="js/games.js"></script>
+<script src="js/review.js"></script>
 </body>
 </html>

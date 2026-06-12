@@ -47,6 +47,7 @@ function newGame() {
   boardUI.dots = [];
   boardUI.legalTargets = [];
   hideCoach();
+  if (typeof gamesNewEntry === "function") gamesNewEntry();
   renderAll();
   startTurn();
 }
@@ -93,8 +94,10 @@ function buildCandidates(lines, fen) {
     const deltaCp = Math.max(0, bestVal - scoreValue(line));
     const args = buildArguments(fen, line, best, state.fenHistory);
     const reply = buildReplyInfo(fen, line.pv);
-    return { rank: i + 1, uci: line.pv[0], san: args.san, line, deltaCp, args, reply };
+    const bd = computeBreakdown(fen, line);
+    return { rank: i + 1, uci: line.pv[0], san: args.san, line, deltaCp, args, reply, bd };
   });
+  clExpanded.clear();
   // Comparaison de chaque candidat avec le suivant du classement
   for (let i = 0; i < state.candidates.length; i++) {
     state.candidates[i].cmp = buildComparison(state.candidates[i], state.candidates[i + 1] || null);
@@ -105,6 +108,31 @@ function buildCandidates(lines, fen) {
     quality: qualityClass(c.deltaCp, c.rank),
     title: `${c.san} (${formatScore(c.line, state.chess.turn() === "w")})`,
   }));
+}
+
+/* ── Décomposition heuristique des "micro-points" d'un candidat ──
+   total (éval moteur, pions, POV joueur) = somme composantes + dynamique. */
+function computeBreakdown(fenBefore, line) {
+  try {
+    const after = new Chess(fenBefore);
+    const color = after.turn();
+    if (!after.move(uciToMoveObj(line.pv[0]))) return null;
+    const bd = evalBreakdown(after.fen(), color);
+    const total = clampCpFromLine(line) / 100;
+    const sum = bd.materiel + bd.roi + bd.activite + bd.centre + bd.structure;
+    bd.dynamique = total - sum;
+    bd.total = total;
+    return bd;
+  } catch (_e) { return null; }
+}
+
+function fmtPts(v) { return (v > 0 ? "+" : "") + v.toFixed(2); }
+
+function breakdownHtml(bd, cls) {
+  if (!bd) return "";
+  return `<div class="${cls}" title="Estimation heuristique — Stockfish NNUE ne publie pas sa décomposition interne. 'Dynamique' = éval totale − somme des composantes.">` +
+    `Σ° Matériel ${fmtPts(bd.materiel)} · Roi ${fmtPts(bd.roi)} · Activité ${fmtPts(bd.activite)}` +
+    ` · Centre ${fmtPts(bd.centre)} · Structure ${fmtPts(bd.structure)} · Dynamique ${fmtPts(bd.dynamique)}</div>`;
 }
 
 async function playEngineMove() {
@@ -127,6 +155,7 @@ async function playEngineMove() {
     if (res.lines.length) {
       state.accuracy.pendingEngine = { color: engineColor, beforeCp: clampCpFromLine(res.lines[0]) };
     }
+    if (typeof gamesAutoSave === "function") gamesAutoSave();
   }
   renderAll();
   startTurn();
@@ -190,7 +219,8 @@ async function attemptUserMove(moveObj) {
     const deltaCp = Math.max(0, scoreValue(best) - scoreValue(line));
     const args = buildArguments(state.chess.fen(), line, best, state.fenHistory);
     const reply = buildReplyInfo(state.chess.fen(), line.pv);
-    cand = { rank: null, uci, san: args.san, line, deltaCp, args, reply, cmp: null };
+    const bd = computeBreakdown(state.chess.fen(), line);
+    cand = { rank: null, uci, san: args.san, line, deltaCp, args, reply, cmp: null, bd };
     state.phase = "userTurn";
   }
 
@@ -252,6 +282,7 @@ function candidateCard(c, whiteSide, isUserMove) {
       <span class="cand-eval">${formatScore(c.line, whiteSide)}</span>
     </div>
     <div class="cand-args">${pros}${cons || ""}</div>
+    ${c.bd ? breakdownHtml(c.bd, "cl-sub cl-bd") : ""}
     ${c.reply ? `<div class="cand-reply">↩ ${isUserMove
       ? `Si tu joues ${esc(c.san)}, l'adversaire répond ${esc(c.reply.san)}${c.reply.punish ? " et " + esc(c.reply.punish) : ""}`
       : `Riposte attendue : ${esc(c.reply.text)}`}</div>` : ""}`;
@@ -286,6 +317,7 @@ function commitUserMove(moveObj, cand, forced) {
   if (cand && cand.rank !== null && cand.rank <= 3) state.stats.top3++;
   if (forced) state.stats.forced++;
   state.pendingMove = null;
+  if (typeof gamesAutoSave === "function") gamesAutoSave();
   hideCoach();
   renderAll();
   startTurn();
@@ -308,6 +340,7 @@ function checkGameOver() {
   else if (c.in_threefold_repetition()) msg += "nulle par répétition.";
   else if (c.insufficient_material()) msg += "nulle (matériel insuffisant).";
   else msg += "nulle.";
+  if (typeof gamesAutoSave === "function") gamesAutoSave();
   setStatus(msg);
   renderBoard();
   return true;
@@ -317,21 +350,56 @@ function checkGameOver() {
 function renderAll() { renderBoard(); renderCandidatesList(); renderHistory(); renderStats(); }
 function renderBoard() { boardUI.render(state.chess); }
 
+/* Cartes candidats dépliables (clic sur l'en-tête). Le 1er candidat est
+   déplié par défaut. Déplié = arguments POUR/CONTRE + micro-points. */
+const clExpanded = new Set();
+
+function clIsOpen(c, i) {
+  if (clExpanded.has("!" + c.uci)) return false;       // fermé explicitement
+  return clExpanded.has(c.uci) || i === 0;             // 1er ouvert par défaut
+}
+
 function renderCandidatesList() {
   const wrap = $("candidates-list");
   if (!state.candidates.length) { wrap.innerHTML = "<em>En attente d'analyse…</em>"; return; }
   const whiteSide = state.chess.turn() === "w";
-  wrap.innerHTML = state.candidates.map((c) => {
+  wrap.innerHTML = state.candidates.map((c, i) => {
     const q = qualityClass(c.deltaCp, c.rank);
     const colors = { "q-best": "var(--green)", "q-good": "var(--yellow)", "q-mid": "var(--orange)", "q-bad": "var(--red)" };
+    const open = clIsOpen(c, i);
     const sub = [];
+    if (open) {
+      const pros = c.args.pros.map((a) => `<div class="arg-pro">✚ ${esc(a)}</div>`).join("");
+      const cons = c.args.cons.map((a) => `<div class="arg-con">✖ ${esc(a)}</div>`).join("");
+      if (pros || cons) sub.push(`<div class="cl-args">${pros}${cons}</div>`);
+      if (c.bd) sub.push(breakdownHtml(c.bd, "cl-sub cl-bd"));
+    }
     if (c.cmp) sub.push(`<div class="cl-sub cl-cmp">▸ ${esc(c.cmp)}</div>`);
     if (c.reply) sub.push(`<div class="cl-sub cl-reply">↩ Riposte attendue : ${esc(c.reply.text)}</div>`);
-    return `<div class="cl-card"><div class="cl-row"><span class="cl-dot" style="background:${colors[q]}"></span>
+    return `<div class="cl-card${open ? " open" : ""}" data-uci="${esc(c.uci)}">
+      <div class="cl-row" style="cursor:pointer" title="Cliquer pour ${open ? "replier" : "déplier"}">
+      <span class="cl-caret">${open ? "▾" : "▸"}</span>
+      <span class="cl-dot" style="background:${colors[q]}"></span>
       <strong>${c.rank}. ${esc(c.san)}</strong>
       <span style="margin-left:auto;color:var(--text-dim)">${formatScore(c.line, whiteSide)}</span></div>
       ${sub.join("")}</div>`;
   }).join("");
+  for (const row of wrap.querySelectorAll(".cl-card > .cl-row")) {
+    row.addEventListener("click", () => {
+      const card = row.parentElement;
+      const uci = card.dataset.uci;
+      const i = state.candidates.findIndex((c) => c.uci === uci);
+      if (i < 0) return;
+      if (clIsOpen(state.candidates[i], i)) {
+        clExpanded.delete(uci);
+        clExpanded.add("!" + uci);
+      } else {
+        clExpanded.delete("!" + uci);
+        clExpanded.add(uci);
+      }
+      renderCandidatesList();
+    });
+  }
 }
 
 function renderHistory() {
@@ -474,6 +542,7 @@ $("btn-fen").addEventListener("click", () => {
   state.chess = new Chess(fen.trim());
   state.fenHistory = [fenKey(state.chess.fen())];
   state.candidates = [];
+  if (typeof gamesNewEntry === "function") gamesNewEntry();
   resetAccuracy();
   boardUI.lastMove = null;
   boardUI.dots = [];

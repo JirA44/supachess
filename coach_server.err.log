@@ -41,3 +41,18 @@ Traceback (most recent call last):
   File "socketserver.py", line 834, in write
 ConnectionAbortedError: [WinError 10053] Une connexion établie a été abandonnée par un logiciel de votre ordinateur hôte
 ----------------------------------------
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 54639)
+Traceback (most recent call last):
+  File "socketserver.py", line 691, in process_request_thread
+  File "socketserver.py", line 361, in finish_request
+  File "socketserver.py", line 755, in __init__
+  File "http\server.py", line 436, in handle
+  File "http\server.py", line 424, in handle_one_request
+  File "D:\Code\supachess\supa_coach_server.py", line 244, in do_POST
+    self._send(200, resp)
+  File "D:\Code\supachess\supa_coach_server.py", line 204, in _send
+    self.wfile.write(data)
+  File "socketserver.py", line 834, in write
+ConnectionAbortedError: [WinError 10053] Une connexion établie a été abandonnée par un logiciel de votre ordinateur hôte
+----------------------------------------

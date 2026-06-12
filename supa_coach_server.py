@@ -84,8 +84,32 @@ def build_prompt(payload):
     )
 
 
-def extract_json(text):
-    """Extrait le premier objet JSON équilibré contenant 'comments' (tolérant au raisonnement)."""
+def build_review_prompt(payload):
+    """Prompt pour le bilan pédagogique d'une partie complète (POST /review)."""
+    moves = payload.get("moves", [])
+    lines = []
+    for m in moves:
+        tag = m.get("tag") or ""
+        prefix = f"{m.get('n')}{'...' if m.get('color') == 'b' else '.'}"
+        lines.append(f"{prefix} {m.get('san')} {tag} (perte {m.get('delta')})")
+    return (
+        "Tu es Supa, coach d'échecs français, pédagogue et concret.\n"
+        "Voici une partie analysée par Stockfish. Pour chaque coup: perte d'éval en pions "
+        "vs le meilleur coup (?! = imprécision >=0.3, ? = erreur >=0.6, ?? = gaffe >=2.0).\n"
+        f"Blancs: {payload.get('white', '?')} — précision {payload.get('accuracy_w')}%\n"
+        f"Noirs: {payload.get('black', '?')} — précision {payload.get('accuracy_b')}%\n"
+        f"Résultat: {payload.get('result', '*')}\n"
+        "Coups:\n" + "\n".join(lines) +
+        "\n\nDonne un bilan pédagogique en français pour le joueur: exactement 3 points forts, "
+        "3 erreurs récurrentes et 3 conseils de progression (courts, concrets, cite des coups précis).\n"
+        'Réponds UNIQUEMENT en JSON strict de la forme: {"report": {"points_forts": ["...", "...", "..."], '
+        '"erreurs": ["...", "...", "..."], "conseils": ["...", "...", "..."]}}\n'
+        "Pas de texte hors du JSON."
+    )
+
+
+def extract_json(text, key="comments"):
+    """Extrait le premier objet JSON équilibré contenant `key` (tolérant au raisonnement)."""
     if not text:
         return None
     # retirer un éventuel bloc <think>
@@ -114,7 +138,7 @@ def extract_json(text):
                 if depth == 0:
                     try:
                         obj = json.loads(text[start:i + 1])
-                        if isinstance(obj, dict) and "comments" in obj:
+                        if isinstance(obj, dict) and key in obj:
                             return obj
                         break
                     except json.JSONDecodeError:
@@ -161,18 +185,18 @@ def call_ollama(prompt):
     return msg.get("content") or msg.get("thinking") or ""
 
 
-def generate_comments(payload):
-    """Retourne (comments|None, source)."""
-    prompt = build_prompt(payload)
+def llm_json(prompt, json_key):
+    """Routage LLM commun (/coach et /review): OpenRouter puis fallback Ollama.
+    Retourne (valeur_de_json_key | None, source)."""
     models, key = load_openrouter_config()
     if models and key:
         for model in models:
             try:
                 text = call_openrouter(prompt, model, key)
-                obj = extract_json(text)
+                obj = extract_json(text, json_key)
                 if obj:
                     _last_model_used["name"] = model
-                    return obj["comments"], f"supa/{model}"
+                    return obj[json_key], f"supa/{model}"
                 print(f"[supa-coach] OpenRouter {model}: pas de JSON exploitable", flush=True)
             except (urllib.error.URLError, TimeoutError, KeyError, OSError, RuntimeError) as e:
                 print(f"[supa-coach] OpenRouter {model} échec: {e}", flush=True)
@@ -181,14 +205,24 @@ def generate_comments(payload):
     # Fallback Ollama
     try:
         text = call_ollama(prompt)
-        obj = extract_json(text)
+        obj = extract_json(text, json_key)
         if obj:
             _last_model_used["name"] = f"ollama/{OLLAMA_MODEL}"
-            return obj["comments"], f"supa/ollama-{OLLAMA_MODEL}"
+            return obj[json_key], f"supa/ollama-{OLLAMA_MODEL}"
         print("[supa-coach] Ollama: pas de JSON exploitable", flush=True)
     except (urllib.error.URLError, TimeoutError, OSError) as e:
         print(f"[supa-coach] Ollama échec: {e}", flush=True)
     return None, "none"
+
+
+def generate_comments(payload):
+    """Retourne (comments|None, source)."""
+    return llm_json(build_prompt(payload), "comments")
+
+
+def generate_review(payload):
+    """Retourne (report|None, source)."""
+    return llm_json(build_review_prompt(payload), "report")
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -218,7 +252,7 @@ class Handler(BaseHTTPRequestHandler):
             self._send(404, {"error": "not found"})
 
     def do_POST(self):
-        if self.path != "/coach":
+        if self.path not in ("/coach", "/review"):
             self._send(404, {"error": "not found"})
             return
         try:
@@ -226,6 +260,9 @@ class Handler(BaseHTTPRequestHandler):
             payload = json.loads(self.rfile.read(length).decode("utf-8"))
         except (ValueError, json.JSONDecodeError) as e:
             self._send(400, {"error": f"JSON invalide: {e}"})
+            return
+        if self.path == "/review":
+            self._handle_review(payload)
             return
         fen = payload.get("fen")
         if not fen or not isinstance(payload.get("candidates"), list):
@@ -239,6 +276,25 @@ class Handler(BaseHTTPRequestHandler):
         comments, source = generate_comments(payload)
         resp = {"comments": comments, "source": source}
         if comments is not None:
+            with _cache_lock:
+                _cache[cache_key] = resp
+        self._send(200, resp)
+
+    def _handle_review(self, payload):
+        """POST /review {white, black, result, accuracy_w, accuracy_b, moves:[{n,color,san,delta,tag}]}
+        -> {report:{points_forts,erreurs,conseils}|None, source}"""
+        moves = payload.get("moves")
+        if not isinstance(moves, list) or not moves:
+            self._send(400, {"error": "champs requis: moves[] (liste non vide)"})
+            return
+        cache_key = "review:" + json.dumps(moves, sort_keys=True, ensure_ascii=False)
+        with _cache_lock:
+            if cache_key in _cache:
+                self._send(200, _cache[cache_key])
+                return
+        report, source = generate_review(payload)
+        resp = {"report": report, "source": source}
+        if report is not None:
             with _cache_lock:
                 _cache[cache_key] = resp
         self._send(200, resp)

@@ -383,3 +383,81 @@ function findKing(chess, color) {
 }
 
 function dedup(arr) { return [...new Set(arr)]; }
+
+/* ── Décomposition heuristique de l'évaluation ─────────────────────────────
+   evalBreakdown(fenAfter, povColor) → composantes en PIONS du point de vue
+   de povColor : { materiel, roi, activite, centre, structure }.
+   NOTE: Stockfish NNUE ne publie pas sa décomposition — ceci est une
+   ESTIMATION heuristique déterministe. Le "reste" (dynamique) est calculé
+   par l'appelant : évalTotale − somme(composantes).
+   Valeurs matérielles en centipawns : 100/320/330/500/900. */
+const CP_VALUES = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
+
+function evalBreakdown(fenAfter, povColor) {
+  const chess = new Chess(fenAfter);
+  const board = chess.board();
+
+  function sideScore(col) {
+    let mat = 0, roi = 0, act = 0, centre = 0, struct = 0;
+    const pawnFiles = {};
+    let kingSq = null;
+    for (let r = 0; r < 8; r++) for (let cc = 0; cc < 8; cc++) {
+      const p = board[r][cc];
+      if (!p || p.color !== col) continue;
+      const sq = rcSq(r, cc);
+      mat += CP_VALUES[p.type];
+      if (p.type === "k") kingSq = sq;
+      if (p.type === "p") {
+        (pawnFiles[sq[0]] = pawnFiles[sq[0]] || []).push(sq);
+        if (isPassedPawn(chess, sq, col)) struct += 20; // pion passé
+      }
+      // Activité / développement : pièces mineures sorties de leur case initiale
+      if (["n", "b"].includes(p.type)) {
+        const init = INITIAL_SQUARES[col][p.type];
+        if (init && !init.includes(sq)) act += 15;
+      }
+      // Occupation du centre
+      if (CENTER_SQUARES.includes(sq)) centre += 15;
+    }
+    // Contrôle du centre (attaques sur e4/d4/e5/d5)
+    for (const cs of CENTER_SQUARES) centre += attackersOf(chess, cs, col).length * 5;
+    // Structure : pions doublés / isolés
+    for (const f of Object.keys(pawnFiles)) {
+      const n = pawnFiles[f].length;
+      if (n > 1) struct -= 15 * (n - 1); // doublés
+      const fi = f.charCodeAt(0);
+      const hasAdj = [String.fromCharCode(fi - 1), String.fromCharCode(fi + 1)]
+        .some((a) => pawnFiles[a] && pawnFiles[a].length);
+      if (!hasAdj) struct -= 15 * n; // isolés
+    }
+    // Sécurité du roi : pions boucliers manquants (3 colonnes devant le roi)
+    if (kingSq) {
+      const { r, c: kc } = sqRC(kingSq);
+      const dir = col === "w" ? -1 : 1;
+      for (const nc of [kc - 1, kc, kc + 1]) {
+        if (nc < 0 || nc > 7) continue;
+        let shielded = false;
+        for (const dist of [1, 2]) {
+          const nr = r + dir * dist;
+          if (!inBoard(nr, nc)) continue;
+          const p = board[nr][nc];
+          if (p && p.type === "p" && p.color === col) { shielded = true; break; }
+        }
+        if (!shielded) roi -= 20;
+      }
+    }
+    // Échec subi
+    if (chess.turn() === col && chess.in_check()) roi -= 50;
+    return { mat, roi, act, centre, struct };
+  }
+
+  const us = sideScore(povColor);
+  const them = sideScore(povColor === "w" ? "b" : "w");
+  return {
+    materiel: (us.mat - them.mat) / 100,
+    roi: (us.roi - them.roi) / 100,
+    activite: (us.act - them.act) / 100,
+    centre: (us.centre - them.centre) / 100,
+    structure: (us.struct - them.struct) / 100,
+  };
+}
