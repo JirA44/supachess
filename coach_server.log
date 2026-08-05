@@ -41,3 +41,11 @@
 [supa-coach] 127.0.0.1 "GET /health HTTP/1.1" 200 -
 [supa-coach] 127.0.0.1 "OPTIONS /review HTTP/1.1" 200 -
 [supa-coach] 127.0.0.1 "GET /health HTTP/1.1" 200 -
+[supa-coach] OpenRouter nvidia/nemotron-3-ultra-550b-a55b:free échec: OpenRouter erreur: {"error": {"message": "Provider returned error", "code": 504}}
+[supa-coach] 127.0.0.1 "POST /coach HTTP/1.1" 200 -
+[supa-coach] OpenRouter nvidia/nemotron-3-ultra-550b-a55b:free échec: OpenRouter erreur: {"error": {"message": "Provider returned error", "code": 504}}
+[supa-coach] 127.0.0.1 "POST /coach HTTP/1.1" 200 -
+[supa-coach] OpenRouter nvidia/nemotron-3-ultra-550b-a55b:free échec: OpenRouter erreur: {"error": {"message": "Provider returned error", "code": 504}}
+[supa-coach] 127.0.0.1 "POST /coach HTTP/1.1" 200 -
+[supa-coach] OpenRouter nvidia/nemotron-3-ultra-550b-a55b:free échec: OpenRouter erreur: {"error": {"message": "Provider returned error", "code": 504}}
+[supa-coach] 127.0.0.1 "POST /review HTTP/1.1" 200 -
