@@ -38,14 +38,21 @@ body {
 }
 .board-zone { display: flex; gap: 14px; align-items: stretch; }
 
-/* Eval bar — hauteur calée sur l'échiquier par syncEvalBar() (app.js) */
-.evalbar-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+/* Eval bar — la grille .board-row étire la barre exactement à la hauteur du board (aucun calcul JS) */
+.board-row {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px; align-items: stretch; margin-bottom: 20px;
+}
 .evalbar {
-  width: 22px; height: 480px; flex: 0 0 auto; background: #20232f; border: 1px solid var(--panel-edge);
+  width: 22px; background: #20232f; border: 1px solid var(--panel-edge);
   border-radius: 6px; overflow: hidden; display: flex; flex-direction: column-reverse;
 }
 .evalbar-white { background: #e8e9f0; width: 100%; height: 50%; transition: height .5s ease; }
-.evalbar-label { font-size: .8rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.evalbar-label {
+  position: absolute; left: calc(100% - 11px); transform: translateX(-50%);
+  top: calc(100% + 6px); white-space: nowrap;
+  font-size: .8rem; color: var(--text-dim); font-variant-numeric: tabular-nums;
+}
 
 .board-col { flex: 1; display: flex; flex-direction: column; gap: 12px; }
 .status-line { min-height: 26px; color: var(--accent); font-weight: 600; }

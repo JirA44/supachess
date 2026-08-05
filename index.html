@@ -55,15 +55,15 @@
 </header>
 
 <main class="layout">
-  <!-- Colonne gauche : eval bar + échiquier -->
+  <!-- Colonne gauche : échiquier + barre d'évaluation -->
   <section class="board-zone">
-    <div class="evalbar-wrap">
-      <div class="evalbar"><div id="evalbar-white" class="evalbar-white"></div></div>
-      <div id="evalbar-label" class="evalbar-label">0.0</div>
-    </div>
     <div class="board-col">
       <div id="status-line" class="status-line">Initialisation…</div>
-      <div id="board" class="board"></div>
+      <div class="board-row">
+        <div id="board" class="board"></div>
+        <div class="evalbar"><div id="evalbar-white" class="evalbar-white"></div></div>
+        <div id="evalbar-label" class="evalbar-label">0.0</div>
+      </div>
       <div id="accuracy-badge" class="accuracy-badge">Précision — Blancs: — &nbsp;·&nbsp; Noirs: —</div>
       <div class="board-controls">
         <button id="btn-new" class="btn">Nouvelle partie</button>

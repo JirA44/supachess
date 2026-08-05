@@ -496,19 +496,7 @@ function updateEvalBar(bestLine) {
     : (cp / 100).toFixed(1);
 }
 
-// La barre d'évaluation ne doit pas dépasser le bas de l'échiquier :
-// on cale sa hauteur et son offset sur l'élément #board (recalage au resize).
-function syncEvalBar() {
-  const board = $("board");
-  const wrap = document.querySelector(".evalbar-wrap");
-  const bar = document.querySelector(".evalbar");
-  if (!board || !wrap || !bar) return;
-  const boardTop = board.getBoundingClientRect().top - wrap.getBoundingClientRect().top;
-  wrap.style.paddingTop = Math.max(0, boardTop) + "px";
-  bar.style.height = board.offsetHeight + "px";
-}
-window.addEventListener("resize", syncEvalBar);
-syncEvalBar();
+// La barre d'évaluation est calée sur l'échiquier en CSS (.board-row, align-items: stretch).
 
 function setStatus(msg) { $("status-line").textContent = msg; }
 function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
