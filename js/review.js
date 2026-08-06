@@ -174,6 +174,7 @@ async function replayGoto(i) {
   state.replayIdx = idx;
   state.chess = new Chess(reviewState.fens[idx]);
   state.fenHistory = [fenKey(state.chess.fen())];
+  state.evalHistory = [];
   state.candidates = [];
   state.accuracy.pendingEngine = null;
   state.pendingMove = null;

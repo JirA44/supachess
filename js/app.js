@@ -11,6 +11,7 @@ const state = {
   phase: "init",         // init | analyzing | userTurn | coach | engineThinking | gameover
   pendingMove: null,     // coup utilisateur intercepté {from,to,promotion,uci}
   fenHistory: [],        // clés FEN (4 champs) pour détection de répétition
+  evalHistory: [],       // éval (côté Blancs) de chaque demi-coup joué, parallèle à history()
   evalWhiteCp: 0,
   gen: 0,                // génération de tour : invalide les analyses en vol au changement de mode
 
@@ -43,6 +44,7 @@ function newGame() {
   state.pendingMove = null;
   resetAccuracy();
   state.fenHistory = [fenKey(state.chess.fen())];
+  state.evalHistory = [];
   state.userColor = $("sel-color").value;
   boardUI.setFlipped(state.userColor === "b");
   boardUI.selected = null;
@@ -161,6 +163,7 @@ async function playEngineMove() {
   if (mv) {
     boardUI.lastMove = { from: mv.from, to: mv.to };
     state.fenHistory.push(fenKey(state.chess.fen()));
+    state.evalHistory.push(res.lines.length ? whitePovEval(res.lines[0], engineColor === "w") : null);
     // Eval AVANT (POV engine) = top-1 de son analyse ; APRÈS = top-1 de la
     // prochaine analyse MultiPV utilisateur (déjà lancée pour son tour).
     if (res.lines.length) {
@@ -324,6 +327,7 @@ function commitUserMove(moveObj, cand, forced) {
       clampCpFromLine(state.candidates[0].line),
       clampCpFromLine(cand.line));
   }
+  state.evalHistory.push(cand && cand.line ? whitePovEval(cand.line, userMoveColor === "w") : null);
   boardUI.lastMove = { from: mv.from, to: mv.to };
   boardUI.dots = [];
   state.fenHistory.push(fenKey(state.chess.fen()));
@@ -419,12 +423,32 @@ function renderCandidatesList() {
 
 function renderHistory() {
   const hist = state.chess.history();
+  const evals = state.evalHistory || [];
   let html = "";
   for (let i = 0; i < hist.length; i += 2) {
-    html += `<span class="mvnum">${i / 2 + 1}.</span><span class="mv">${esc(hist[i])}</span>`;
-    if (hist[i + 1]) html += `<span class="mv">${esc(hist[i + 1])}</span>`;
+    html += `<span class="mvnum">${i / 2 + 1}.</span><span class="mv">${esc(hist[i])}</span>${evalTag(evals[i])}`;
+    if (hist[i + 1]) html += `<span class="mv">${esc(hist[i + 1])}</span>${evalTag(evals[i + 1])}`;
   }
   $("move-history").innerHTML = html || "<em>Aucun coup joué.</em>";
+}
+
+/* Éval d'un coup joué en valeur côté Blancs : {cp} ou {mate} (positif = avantage Blancs). */
+function whitePovEval(line, moverIsWhite) {
+  if (!line) return null;
+  const sign = moverIsWhite ? 1 : -1;
+  if (line.mate !== null) return { mate: line.mate * sign };
+  return { cp: (line.scoreCp !== null ? line.scoreCp : 0) * sign };
+}
+function evalTag(e) {
+  const s = fmtEval(e);
+  return s ? ` <span class="mv-eval">${s}</span>` : "";
+}
+function fmtEval(e) {
+  if (!e) return "";
+  if (e.mate !== undefined) return (e.mate > 0 ? "#+" : "#") + e.mate;
+  if (e.cp === undefined) return "";
+  const v = e.cp / 100;
+  return (v > 0 ? "+" : "") + v.toFixed(2);
 }
 
 function renderStats() {
@@ -533,6 +557,7 @@ $("btn-undo").addEventListener("click", () => {
   while (undone < 2 && state.chess.history().length > 0) {
     state.chess.undo();
     state.fenHistory.pop();
+    state.evalHistory.pop();
     undone++;
     if (state.chess.turn() === state.userColor) break;
   }
@@ -567,6 +592,7 @@ $("btn-fen").addEventListener("click", () => {
   if (!test.load(fen.trim())) { alert("FEN invalide."); return; }
   state.chess = new Chess(fen.trim());
   state.fenHistory = [fenKey(state.chess.fen())];
+  state.evalHistory = [];
   state.candidates = [];
   if (typeof gamesNewEntry === "function") gamesNewEntry();
   resetAccuracy();

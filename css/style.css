@@ -153,6 +153,7 @@ body {
   max-height: 130px; overflow-y: auto; font-variant-numeric: tabular-nums; }
 .move-history .mvnum { color: var(--text-dim); }
 .move-history .mv { font-weight: 600; }
+.move-history .mv-eval { color: var(--accent); font-size: .72rem; font-variant-numeric: tabular-nums; margin-left: 1px; margin-right: 2px; }
 
 /* Stats */
 .stats-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
