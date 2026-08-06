@@ -39,6 +39,12 @@
   .review-meta { font-size: .8em; opacity: .8; margin-bottom: 4px; }
   .review-worst { font-size: .82em; margin-top: 5px; line-height: 1.4; }
   #replay-bar.hidden { display: none; }
+  .site-footer { padding: 10px 16px; border-top: 1px solid rgba(128,128,128,.25);
+    display: flex; justify-content: center; align-items: center; gap: 14px;
+    font-size: .8em; opacity: .9; }
+  .site-footer img { height: 24px; }
+  .hub-link { text-decoration: none; color: inherit; }
+  .hub-link:hover { color: #7fc97f; }
 </style>
 </head>
 <body>
@@ -175,6 +181,13 @@
     </div>
   </div>
 </div>
+
+<footer class="site-footer">
+  <a href="https://github.com/JirA44/supachess-web" target="_blank" rel="noopener" class="hub-link">♞ Hub SupaChess</a>
+  <span class="visitor-counter">
+    <img src="https://api.visitorbadge.io/api/visitors?path=supachess.jira44.github.io&label=Visiteurs&countColor=%237fc97f" alt="Compteur de visiteurs" />
+  </span>
+</footer>
 
 <script src="vendor/chess.js"></script>
 <script src="js/engine.js"></script>
