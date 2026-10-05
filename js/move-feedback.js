@@ -33,11 +33,23 @@ const moveFeedback = {
     const key = mode === "preview" ? "preview" : color;
     const grade = moveGrade(deltaCp, brilliant);
     this.cards.delete(key);
-    this.cards.set(key, { san, color, moveNumber, deltaCp, mode, token, ...grade });
+    this.cards.set(key, { san, color, moveNumber, square, deltaCp, mode, token, ...grade });
+    if (mode === "preview") this.syncBoardPreview();
     this.render();
   },
-  clear() { this.cards.clear(); this.render(); },
-  clearPreview() { this.cards.delete("preview"); this.render(); },
+  clear() { this.cards.clear(); this.syncBoardPreview(); this.render(); },
+  clearPreview() { this.cards.delete("preview"); this.syncBoardPreview(); this.render(); },
+  syncBoardPreview() {
+    if (typeof boardUI === "undefined") return;
+    const preview = this.cards.get("preview");
+    boardUI.previewDot = preview ? {
+      square: preview.square,
+      label: `${preview.symbol} ${preview.rating === null ? "…" : preview.rating + "/10"}`,
+      quality: preview.tone,
+      title: `${preview.san} — coup testé`,
+    } : null;
+    boardUI.render(state.chess);
+  },
   render() {
     const wrap = document.getElementById("move-feedback");
     if (!wrap) return;
@@ -73,6 +85,7 @@ const moveFeedback = {
 
 function previewCandidate(cand) {
   if (!["userTurn", "coach"].includes(state.phase)) return;
-  moveFeedback.show({ san: cand.san, color: state.chess.turn(), moveNumber: moveNumberFromFen(state.chess.fen()), deltaCp: cand.deltaCp,
+  moveFeedback.show({ san: cand.san, color: state.chess.turn(), moveNumber: moveNumberFromFen(state.chess.fen()),
+    square: cand.uci.slice(2, 4), deltaCp: cand.deltaCp,
     brilliant: isBrilliantCandidate(state.chess.fen(), cand), mode: "preview" });
 }
