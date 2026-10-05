@@ -2,7 +2,8 @@
 "use strict";
 
 const UNICODE_PIECES = {
-  w: { k: "♔", q: "♕", r: "♖", b: "♗", n: "♘", p: "♙" },
+  // Filled glyph silhouettes let CSS paint the white pieces white on every font.
+  w: { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" },
   b: { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" },
 };
 
@@ -13,7 +14,8 @@ class BoardUI {
     this.flipped = false;
     this.selected = null;
     this.lastMove = null;   // {from, to}
-    this.dots = [];         // [{square, rank, quality}]
+    this.dots = [];         // [{square, label, quality, title}]
+    this.previewDot = null;
     this.legalTargets = [];
   }
 
@@ -46,13 +48,29 @@ class BoardUI {
           hint.className = "legal-hint";
           cell.appendChild(hint);
         }
-        const dot = this.dots.find((d) => d.square === sq);
+        const dotsHere = this.dots.filter((d) => d.square === sq);
+        const dot = dotsHere[0];
         if (dot) {
           const d = document.createElement("span");
-          d.className = "cdot " + dot.quality;
-          d.textContent = dot.rank;
-          d.title = dot.title || "";
+          d.className = "cdot tone-" + dot.quality;
+          d.textContent = dotsHere.length > 1 ? `${dot.label} +${dotsHere.length - 1}` : dot.label || dot.rank;
+          d.title = dotsHere.map((move) => move.title).join("\n") || "Coup candidat";
+          d.setAttribute("aria-label", d.title);
           cell.appendChild(d);
+        }
+        if (this.previewDot && this.previewDot.square === sq) {
+          const preview = document.createElement("span");
+          preview.className = "cdot preview-move-bubble tone-" + this.previewDot.quality;
+          preview.textContent = this.previewDot.label;
+          preview.title = this.previewDot.title;
+          cell.appendChild(preview);
+        }
+        if (this.lastMove && this.lastMove.to === sq && this.lastMove.grade) {
+          const note = document.createElement("span");
+          note.className = "played-move-bubble tone-" + this.lastMove.grade.tone;
+          note.textContent = `${this.lastMove.grade.symbol} ${this.lastMove.grade.rating === null ? "…" : this.lastMove.grade.rating + "/10"}`;
+          note.title = `${this.lastMove.san || "Coup joué"} · ${this.lastMove.grade.rating === null ? "analyse en cours" : this.lastMove.grade.label}`;
+          cell.appendChild(note);
         }
         // Coordonnées sur les bords
         if (vc === 7) {
