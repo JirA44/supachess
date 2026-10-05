@@ -16,7 +16,7 @@ function moveGrade(deltaCp, brilliant = false) {
 // Un sacrifice doit conserver l'évaluation et céder au moins une pièce
 // sur la réponse calculée. Le premier coup du classement ne suffit pas.
 function isBrilliantCandidate(fen, cand) {
-  if (!cand || cand.deltaCp >= 30 || !cand.line || cand.line.depth < 10) return false;
+  if (!cand || cand.deltaCp >= 30 || !cand.line || cand.line.depth < 8 || cand.line.pv.length < 2) return false;
   try {
     return pvMaterialDelta(fen, cand.line.pv, 2, new Chess(fen).turn()) <= -3;
   } catch (_e) { return false; }
@@ -29,7 +29,7 @@ function moveNumberFromFen(fen) {
 
 const moveFeedback = {
   cards: new Map(),
-  show({ san, color, moveNumber, deltaCp = null, brilliant = false, mode = "played", token = null }) {
+  show({ san, color, moveNumber, square = null, deltaCp = null, brilliant = false, mode = "played", token = null }) {
     const key = mode === "preview" ? "preview" : color;
     const grade = moveGrade(deltaCp, brilliant);
     this.cards.delete(key);
