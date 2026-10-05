@@ -470,12 +470,20 @@ function renderCandidatesList() {
     if (c.reply) sub.push(`<div class="cl-sub cl-reply">↩ Riposte attendue : ${esc(c.reply.text)}</div>`);
     return `<div class="cl-card${open ? " open" : ""}" data-uci="${esc(c.uci)}">
       <div class="cl-row" style="cursor:pointer" title="Cliquer pour ${open ? "replier" : "déplier"}">
-      <span class="cl-caret">${open ? "▾" : "▸"}</span>
-      <span class="cl-dot" style="background:${colors[q]}"></span>
-      <strong>${c.rank}. ${esc(c.san)}</strong>
-      <span class="move-grade-chip tone-${grade.tone}" title="Note estimée sur 10 selon la perte face au meilleur coup"><span class="move-grade-symbol">${esc(grade.symbol)}</span><span class="move-grade-rating">${grade.rating === null ? "…" : `${grade.rating}/10`}</span></span>
-      <span style="margin-left:auto;color:var(--text-dim)">${formatScore(c.line, whiteSide)}</span>
-      <button type="button" class="btn mini move-preview" data-preview="${esc(c.uci)}" aria-label="Tester ${esc(c.san)}">Tester</button></div>
+        <div class="cl-move">
+          <span class="cl-caret">${open ? "▾" : "▸"}</span>
+          <span class="cl-dot" style="background:${colors[q]}"></span>
+          <strong class="cl-san">${c.rank}. ${esc(c.san)}</strong>
+        </div>
+        <span class="move-grade-chip tone-${grade.tone}" title="Note ${grade.rating === null ? "en cours" : grade.rating + " sur 10"} — ${esc(grade.label)}">
+          <span class="move-grade-symbol">${esc(grade.symbol)}</span>
+          <span class="move-grade-rating">${grade.rating === null ? "…" : `${grade.rating} / 10`}</span>
+        </span>
+      </div>
+      <div class="cl-row-meta">
+        <span class="cl-eval">Évaluation : ${formatScore(c.line, whiteSide)}</span>
+        <button type="button" class="btn mini move-preview" data-preview="${esc(c.uci)}" aria-label="Tester ${esc(c.san)}">Tester</button>
+      </div>
       ${sub.join("")}</div>`;
   }).join("");
   for (const row of wrap.querySelectorAll(".cl-card > .cl-row")) {
