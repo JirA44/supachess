@@ -123,7 +123,7 @@ function buildCandidates(lines, fen) {
   for (const cand of state.candidates) {
     const square = cand.uci.slice(2, 4);
     const grade = moveGrade(cand.deltaCp, isBrilliantCandidate(fen, cand));
-    const moveBadge = { san: cand.san, label: `${grade.symbol} ${grade.rating}/10`, grade, rank: cand.rank };
+    const moveBadge = { san: cand.san, label: `${grade.symbol} ${grade.rating} / 10`, grade, rank: cand.rank };
     if (!dotsBySquare.has(square)) dotsBySquare.set(square, []);
     dotsBySquare.get(square).push(moveBadge);
   }
