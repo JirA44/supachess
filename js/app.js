@@ -39,6 +39,8 @@ async function init() {
 }
 
 function newGame() {
+  state.gen++;
+  moveFeedback.clear();
   state.chess = new Chess();
   state.candidates = [];
   state.pendingMove = null;
@@ -86,6 +88,7 @@ async function analyzeForUser() {
     const p = state.accuracy.pendingEngine;
     state.accuracy.pendingEngine = null;
     recordAccuracy(p.color, p.beforeCp, -clampCpFromLine(res.lines[0]));
+    finishEngineFeedback(p, res.lines[0]);
   }
   state.phase = "userTurn";
   if (isManualMode()) {
@@ -155,7 +158,10 @@ async function playEngineMove() {
   renderBoard();
   const fen = state.chess.fen();
   const elo = opponentElo();
-  const res = await state.engine.analyze({ fen, multipv: 1, movetime: Math.min(movetime(), 1200), elo });
+  // La note compare le coup de l'adversaire au meilleur coup à pleine force.
+  const baseline = await state.engine.analyze({ fen, multipv: 1, movetime: Math.min(movetime(), 1200), elo: 0 });
+  if (state.gen !== gen || state.chess.fen() !== fen) return;
+  const res = elo === 0 ? baseline : await state.engine.analyze({ fen, multipv: 1, movetime: Math.min(movetime(), 1200), elo });
   if (state.gen !== gen || state.chess.fen() !== fen) return;
   if (!res.bestmove || res.bestmove === "(none)") { checkGameOver(); return; }
   const engineColor = state.chess.turn();
@@ -166,13 +172,32 @@ async function playEngineMove() {
     state.evalHistory.push(res.lines.length ? whitePovEval(res.lines[0], engineColor === "w") : null);
     // Eval AVANT (POV engine) = top-1 de son analyse ; APRÈS = top-1 de la
     // prochaine analyse MultiPV utilisateur (déjà lancée pour son tour).
-    if (res.lines.length) {
-      state.accuracy.pendingEngine = { color: engineColor, beforeCp: clampCpFromLine(res.lines[0]) };
+    moveFeedback.clearPreview();
+    moveFeedback.show({ san: mv.san, color: engineColor, token: gen });
+    if (baseline.lines.length) {
+      const pending = { color: engineColor, beforeCp: clampCpFromLine(baseline.lines[0]),
+        beforeValue: scoreValue(baseline.lines[0]), san: mv.san, uci: res.bestmove, fen, token: gen };
+      if (state.chess.game_over()) {
+        const terminal = { scoreCp: 0, mate: state.chess.in_checkmate() ? 0 : null, pv: [], depth: baseline.lines[0].depth };
+        finishEngineFeedback(pending, terminal);
+        recordAccuracy(engineColor, pending.beforeCp, state.chess.in_checkmate() ? 1000 : 0);
+      } else {
+        state.accuracy.pendingEngine = pending;
+      }
     }
     if (typeof gamesAutoSave === "function") gamesAutoSave();
   }
   renderAll();
   startTurn();
+}
+
+function finishEngineFeedback(pending, replyLine) {
+  const card = moveFeedback.cards.get(pending.color);
+  if (!card || card.token !== pending.token) return;
+  const deltaCp = Math.max(0, pending.beforeValue + scoreValue(replyLine));
+  const cand = { deltaCp, line: { ...replyLine, pv: [pending.uci, ...replyLine.pv] } };
+  moveFeedback.show({ san: pending.san, color: pending.color, deltaCp,
+    brilliant: isBrilliantCandidate(pending.fen, cand), token: pending.token });
 }
 
 /* ── Interaction échiquier ── */
@@ -204,6 +229,12 @@ function onSquareClick(sq) {
 
 /* ── Cœur du concept : interception ── */
 async function attemptUserMove(moveObj) {
+  if (state.phase !== "userTurn") return;
+  const fen = state.chess.fen();
+  const gen = state.gen;
+  const probe = new Chess(fen);
+  const attempted = probe.move(moveObj);
+  if (!attempted) return;
   boardUI.selected = null;
   boardUI.legalTargets = [];
   const uci = moveObj.from + moveObj.to + (moveObj.promotion || "");
@@ -214,9 +245,10 @@ async function attemptUserMove(moveObj) {
     setStatus("Évaluation de votre coup…");
     state.phase = "analyzing";
     renderBoard();
-    const probe = new Chess(state.chess.fen());
-    probe.move(moveObj);
-    const res = await state.engine.analyze({ fen: probe.fen(), multipv: 1, movetime: 600, elo: 0 });
+    moveFeedback.show({ san: attempted.san, color: attempted.color, mode: "preview" });
+    const res = probe.game_over() ? { lines: [] } :
+      await state.engine.analyze({ fen: probe.fen(), multipv: 1, movetime: 600, elo: 0 });
+    if (state.gen !== gen || state.chess.fen() !== fen) return;
     // Score retourné côté adversaire → on inverse pour le joueur
     let line;
     if (res.lines.length) {
@@ -227,8 +259,12 @@ async function attemptUserMove(moveObj) {
         mate: l.mate !== null ? -l.mate : null,
         pv: [uci, ...l.pv],
       };
+    } else if (probe.game_over()) {
+      line = { multipv: 99, depth: 0, scoreCp: 0, mate: probe.in_checkmate() ? 1 : null, pv: [uci] };
     } else {
-      line = { multipv: 99, depth: 0, scoreCp: -9999, mate: null, pv: [uci] };
+      state.phase = "userTurn";
+      setStatus("Analyse du coup indisponible. Réessaie ce coup.");
+      return;
     }
     const best = state.candidates[0] ? state.candidates[0].line : line;
     const deltaCp = Math.max(0, scoreValue(best) - scoreValue(line));
@@ -250,6 +286,7 @@ async function attemptUserMove(moveObj) {
 }
 
 function interceptMove(moveObj, cand) {
+  previewCandidate(cand);
   state.phase = "coach";
   state.pendingMove = { ...moveObj, uci: cand.uci, cand };
   state.stats.intercepts++;
@@ -304,9 +341,17 @@ function candidateCard(c, whiteSide, isUserMove) {
     ${c.reply ? `<div class="cand-reply">↩ ${isUserMove
       ? `Si tu joues ${esc(c.san)}, l'adversaire répond ${esc(c.reply.san)}${c.reply.punish ? " et " + esc(c.reply.punish) : ""}`
       : `Riposte attendue : ${esc(c.reply.text)}`}</div>` : ""}`;
+  const preview = document.createElement("button");
+  preview.type = "button";
+  preview.className = "btn mini move-preview";
+  preview.textContent = "Tester";
+  preview.setAttribute("aria-label", "Tester " + c.san);
+  preview.addEventListener("click", (event) => { event.stopPropagation(); previewCandidate(c); });
+  div.appendChild(preview);
   if (!isUserMove) {
     div.title = "Cliquer pour jouer ce coup";
     div.addEventListener("click", () => {
+      if (!["userTurn", "coach"].includes(state.phase)) return;
       hideCoach();
       commitUserMove(uciToMoveObj(c.uci), c, false);
     });
@@ -319,8 +364,12 @@ function candidateCard(c, whiteSide, isUserMove) {
 function commitUserMove(moveObj, cand, forced) {
   state.phase = "userTurn";
   const userMoveColor = state.chess.turn();
+  const fenBefore = state.chess.fen();
   const mv = state.chess.move(moveObj);
   if (!mv) return;
+  moveFeedback.clearPreview();
+  moveFeedback.show({ san: mv.san, color: mv.color, deltaCp: cand ? cand.deltaCp : null,
+    brilliant: isBrilliantCandidate(fenBefore, cand) });
   // Précision du coup utilisateur : avant = meilleur candidat, après = candidat joué.
   if (cand && state.candidates.length) {
     recordAccuracy(userMoveColor,
@@ -400,7 +449,8 @@ function renderCandidatesList() {
       <span class="cl-caret">${open ? "▾" : "▸"}</span>
       <span class="cl-dot" style="background:${colors[q]}"></span>
       <strong>${c.rank}. ${esc(c.san)}</strong>
-      <span style="margin-left:auto;color:var(--text-dim)">${formatScore(c.line, whiteSide)}</span></div>
+      <span style="margin-left:auto;color:var(--text-dim)">${formatScore(c.line, whiteSide)}</span>
+      <button type="button" class="btn mini move-preview" data-preview="${esc(c.uci)}" aria-label="Tester ${esc(c.san)}">Tester</button></div>
       ${sub.join("")}</div>`;
   }).join("");
   for (const row of wrap.querySelectorAll(".cl-card > .cl-row")) {
@@ -417,6 +467,13 @@ function renderCandidatesList() {
         clExpanded.add(uci);
       }
       renderCandidatesList();
+    });
+  }
+  for (const button of wrap.querySelectorAll("[data-preview]")) {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const cand = state.candidates.find((c) => c.uci === button.dataset.preview);
+      if (cand) previewCandidate(cand);
     });
   }
 }
@@ -552,6 +609,8 @@ $("btn-cancel").addEventListener("click", () => {
 $("btn-undo").addEventListener("click", () => {
   if (state.phase === "engineThinking" || state.phase === "analyzing") return;
   hideCoach();
+  state.gen++;
+  moveFeedback.clear();
   // Annule jusqu'à revenir au trait du joueur (1 ou 2 demi-coups)
   let undone = 0;
   while (undone < 2 && state.chess.history().length > 0) {
@@ -590,6 +649,8 @@ $("btn-fen").addEventListener("click", () => {
   if (!fen) return;
   const test = new Chess();
   if (!test.load(fen.trim())) { alert("FEN invalide."); return; }
+  state.gen++;
+  moveFeedback.clear();
   state.chess = new Chess(fen.trim());
   state.fenHistory = [fenKey(state.chess.fen())];
   state.evalHistory = [];

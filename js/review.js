@@ -7,7 +7,7 @@
 const REVIEW_BASE = "http://localhost:8778";
 const REVIEW_TIMEOUT_MS = 150000;
 
-const reviewState = { fens: [], moves: [], running: false };
+const reviewState = { fens: [], moves: [], grades: [], running: false };
 
 function reviewShowModal(pgn) {
   document.getElementById("pgn-modal").classList.remove("hidden");
@@ -60,13 +60,15 @@ async function reviewRun() {
 
   // Analyse SF de chaque position (score POV trait).
   const cps = [];
+  const positionLines = [];
   try {
     for (let i = 0; i < fens.length; i++) {
       reviewSetProgress(`Analyse Stockfish… coup ${Math.min(i + 1, moves.length)}/${moves.length}`);
       const tmp = new Chess(fens[i]);
-      if (tmp.game_over()) { cps.push(tmp.in_checkmate() ? -1000 : 0); continue; }
+      if (tmp.game_over()) { cps.push(tmp.in_checkmate() ? -1000 : 0); positionLines.push(null); continue; }
       const res = await state.engine.analyze({ fen: fens[i], multipv: 2, movetime: 400, elo: 0 });
       cps.push(res.lines.length ? clampCpFromLine(res.lines[0]) : 0);
+      positionLines.push(res.lines[0] || null);
     }
   } catch (e) {
     reviewSetProgress("Erreur d'analyse : " + e);
@@ -80,7 +82,11 @@ async function reviewRun() {
   for (let i = 0; i < moves.length; i++) {
     const before = cps[i];
     const after = -cps[i + 1];
-    const delta = Math.max(0, (before - after)) / 100;
+    const next = new Chess(fens[i + 1]);
+    const beforeValue = positionLines[i] ? scoreValue(positionLines[i]) : before;
+    const replyValue = positionLines[i + 1] ? scoreValue(positionLines[i + 1]) :
+      (next.in_checkmate() ? -100000 : cps[i + 1]);
+    const delta = Math.max(0, beforeValue + replyValue) / 100;
     accs[moves[i].color].push(moveAccuracyPct(before, after));
     rows.push({
       n: Math.floor(i / 2) + 1,
@@ -96,6 +102,13 @@ async function reviewRun() {
 
   reviewState.fens = fens;
   reviewState.moves = moves;
+  reviewState.grades = rows.map((row, i) => {
+    const reply = positionLines[i + 1];
+    const move = moves[i];
+    const uci = move.from + move.to + (move.promotion || "");
+    const cand = { deltaCp: row.delta * 100, line: reply ? { ...reply, pv: [uci, ...reply.pv] } : null };
+    return { deltaCp: cand.deltaCp, brilliant: isBrilliantCandidate(fens[i], cand) };
+  });
   reviewSetProgress("Analyse Stockfish terminée — bilan en cours…");
   reviewRenderLocal(rows, accW, accB, headers);
   document.getElementById("btn-replay-game").classList.remove("hidden");
@@ -111,7 +124,7 @@ function reviewCount(rows, color, tag) {
 
 function reviewRenderLocal(rows, accW, accB, headers) {
   const worst = rows.filter((r) => r.tag).sort((a, b) => b.delta - a.delta).slice(0, 6);
-  const moveLabel = (r) => `${r.n}.${r.color === "b" ? ".." : ""} ${sanFr(r.san)} ${r.tag} (−${r.delta.toFixed(2)})`;
+  const moveLabel = (r) => `${r.n}.${r.color === "b" ? ".." : ""} ${sanFr(r.san)} ${r.tag} (${r.delta >= 100 ? "mat forcé perdu ou concédé" : "−" + r.delta.toFixed(2)})`;
   const line = (col, label) =>
     `<tr><td>${label}</td><td>${col === "w" ? (accW ?? "—") : (accB ?? "—")}%</td>` +
     `<td>${reviewCount(rows, col, "?!")}</td><td>${reviewCount(rows, col, "?")}</td>` +
@@ -171,6 +184,14 @@ async function reviewAskSupa(rows, accW, accB, headers) {
 async function replayGoto(i) {
   if (!reviewState.fens.length) return;
   const idx = Math.max(0, Math.min(reviewState.fens.length - 1, i));
+  state.gen++;
+  moveFeedback.clear();
+  if (idx > 0) {
+    const move = reviewState.moves[idx - 1];
+    const grade = reviewState.grades[idx - 1];
+    moveFeedback.show({ san: move.san, color: move.color,
+      deltaCp: grade ? grade.deltaCp : null, brilliant: grade ? grade.brilliant : false, mode: "replay" });
+  }
   state.replayIdx = idx;
   state.chess = new Chess(reviewState.fens[idx]);
   state.fenHistory = [fenKey(state.chess.fen())];
