@@ -456,7 +456,7 @@ function renderCandidatesList() {
   const whiteSide = state.chess.turn() === "w";
   wrap.innerHTML = state.candidates.map((c, i) => {
     const q = qualityClass(c.deltaCp, c.rank);
-    const colors = { "q-best": "var(--green)", "q-good": "var(--yellow)", "q-mid": "var(--orange)", "q-bad": "var(--red)" };
+    const colors = { "q-best": "var(--candidate-best)", "q-good": "var(--candidate-good)", "q-mid": "var(--candidate-mid)", "q-bad": "var(--candidate-bad)" };
     const open = clIsOpen(c, i);
     const grade = moveGrade(c.deltaCp, isBrilliantCandidate(state.chess.fen(), c));
     const sub = [];
@@ -473,7 +473,7 @@ function renderCandidatesList() {
       <span class="cl-caret">${open ? "▾" : "▸"}</span>
       <span class="cl-dot" style="background:${colors[q]}"></span>
       <strong>${c.rank}. ${esc(c.san)}</strong>
-      <span class="move-grade-chip tone-${grade.tone}" title="Note estimée sur 10 selon la perte face au meilleur coup">${grade.symbol} ${grade.rating}/10</span>
+      <span class="move-grade-chip tone-${grade.tone}" title="Note estimée sur 10 selon la perte face au meilleur coup"><span class="move-grade-symbol">${esc(grade.symbol)}</span><span class="move-grade-rating">${grade.rating === null ? "…" : `${grade.rating}/10`}</span></span>
       <span style="margin-left:auto;color:var(--text-dim)">${formatScore(c.line, whiteSide)}</span>
       <button type="button" class="btn mini move-preview" data-preview="${esc(c.uci)}" aria-label="Tester ${esc(c.san)}">Tester</button></div>
       ${sub.join("")}</div>`;
