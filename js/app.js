@@ -78,7 +78,9 @@ async function analyzeForUser() {
   boardUI.dots = [];
   renderBoard();
   const fen = state.chess.fen();
-  const res = await state.engine.analyze({ fen, multipv: 6, movetime: movetime(), elo: 0 });
+  const legalMoveCount = state.chess.moves({ verbose: true }).length;
+  setStatus(`Analyse des ${legalMoveCount} coups possibles…`);
+  const res = await state.engine.analyze({ fen, multipv: Math.max(1, legalMoveCount), movetime: movetime(), elo: 0 });
   if (state.gen !== gen || state.chess.fen() !== fen) return; // partie/mode changé entre temps
   buildCandidates(res.lines, fen);
   updateEvalBar(res.lines[0]);
@@ -117,12 +119,24 @@ function buildCandidates(lines, fen) {
   for (let i = 0; i < state.candidates.length; i++) {
     state.candidates[i].cmp = buildComparison(state.candidates[i], state.candidates[i + 1] || null);
   }
-  boardUI.dots = state.candidates.map((c) => ({
-    square: c.uci.slice(2, 4),
-    rank: c.rank,
-    quality: qualityClass(c.deltaCp, c.rank),
-    title: `${c.san} (${formatScore(c.line, state.chess.turn() === "w")})`,
-  }));
+  const dotsBySquare = new Map();
+  for (const cand of state.candidates) {
+    const square = cand.uci.slice(2, 4);
+    const grade = moveGrade(cand.deltaCp, isBrilliantCandidate(fen, cand));
+    const moveBadge = { san: cand.san, label: `${grade.symbol} ${grade.rating}/10`, grade, rank: cand.rank };
+    if (!dotsBySquare.has(square)) dotsBySquare.set(square, []);
+    dotsBySquare.get(square).push(moveBadge);
+  }
+  boardUI.dots = Array.from(dotsBySquare, ([square, moves]) => {
+    const featured = moves.reduce((best, move) =>
+      !best || move.grade.rating > best.grade.rating ? move : best, null);
+    return {
+      square,
+      label: featured.label,
+      quality: featured.grade.tone,
+      title: moves.map((move) => `${move.san}: ${move.label}`).join("\n"),
+    };
+  });
 }
 
 /* ── Décomposition heuristique des "micro-points" d'un candidat ──
@@ -173,10 +187,11 @@ async function playEngineMove() {
     // Eval AVANT (POV engine) = top-1 de son analyse ; APRÈS = top-1 de la
     // prochaine analyse MultiPV utilisateur (déjà lancée pour son tour).
     moveFeedback.clearPreview();
-    moveFeedback.show({ san: mv.san, color: engineColor, moveNumber: moveNumberFromFen(fen), token: gen });
+    moveFeedback.show({ san: mv.san, color: engineColor, moveNumber: moveNumberFromFen(fen), square: mv.to, token: gen });
+    boardUI.lastMove = { from: mv.from, to: mv.to, san: mv.san, grade: moveGrade(null) };
     if (baseline.lines.length) {
       const pending = { color: engineColor, beforeCp: clampCpFromLine(baseline.lines[0]),
-        beforeValue: scoreValue(baseline.lines[0]), san: mv.san, uci: res.bestmove, fen, moveNumber: moveNumberFromFen(fen), token: gen };
+        beforeValue: scoreValue(baseline.lines[0]), san: mv.san, uci: res.bestmove, fen, square: mv.to, moveNumber: moveNumberFromFen(fen), token: gen };
       if (state.chess.game_over()) {
         const terminal = { scoreCp: 0, mate: state.chess.in_checkmate() ? 0 : null, pv: [], depth: baseline.lines[0].depth };
         finishEngineFeedback(pending, terminal);
@@ -196,8 +211,14 @@ function finishEngineFeedback(pending, replyLine) {
   if (!card || card.token !== pending.token) return;
   const deltaCp = Math.max(0, pending.beforeValue + scoreValue(replyLine));
   const cand = { deltaCp, line: { ...replyLine, pv: [pending.uci, ...replyLine.pv] } };
-  moveFeedback.show({ san: pending.san, color: pending.color, moveNumber: pending.moveNumber, deltaCp,
-    brilliant: isBrilliantCandidate(pending.fen, cand), token: pending.token });
+  const brilliant = isBrilliantCandidate(pending.fen, cand);
+  const grade = moveGrade(deltaCp, brilliant);
+  moveFeedback.show({ san: pending.san, color: pending.color, moveNumber: pending.moveNumber, square: pending.square,
+    deltaCp, brilliant, token: pending.token });
+  if (boardUI.lastMove && boardUI.lastMove.to === pending.square) {
+    boardUI.lastMove.grade = grade;
+    renderBoard();
+  }
 }
 
 /* ── Interaction échiquier ── */
@@ -245,7 +266,7 @@ async function attemptUserMove(moveObj) {
     setStatus("Évaluation de votre coup…");
     state.phase = "analyzing";
     renderBoard();
-    moveFeedback.show({ san: attempted.san, color: attempted.color, moveNumber: moveNumberFromFen(fen), mode: "preview" });
+    moveFeedback.show({ san: attempted.san, color: attempted.color, moveNumber: moveNumberFromFen(fen), square: attempted.to, mode: "preview" });
     const res = probe.game_over() ? { lines: [] } :
       await state.engine.analyze({ fen: probe.fen(), multipv: 1, movetime: 600, elo: 0 });
     if (state.gen !== gen || state.chess.fen() !== fen) return;
@@ -368,8 +389,11 @@ function commitUserMove(moveObj, cand, forced) {
   const mv = state.chess.move(moveObj);
   if (!mv) return;
   moveFeedback.clearPreview();
-  moveFeedback.show({ san: mv.san, color: mv.color, moveNumber: moveNumberFromFen(fenBefore), deltaCp: cand ? cand.deltaCp : null,
-    brilliant: isBrilliantCandidate(fenBefore, cand) });
+  const brilliant = isBrilliantCandidate(fenBefore, cand);
+  const grade = moveGrade(cand ? cand.deltaCp : null, brilliant);
+  moveFeedback.show({ san: mv.san, color: mv.color, moveNumber: moveNumberFromFen(fenBefore), square: mv.to,
+    deltaCp: cand ? cand.deltaCp : null, brilliant });
+  boardUI.lastMove = { from: mv.from, to: mv.to, san: mv.san, grade };
   // Précision du coup utilisateur : avant = meilleur candidat, après = candidat joué.
   if (cand && state.candidates.length) {
     recordAccuracy(userMoveColor,
@@ -377,7 +401,6 @@ function commitUserMove(moveObj, cand, forced) {
       clampCpFromLine(cand.line));
   }
   state.evalHistory.push(cand && cand.line ? whitePovEval(cand.line, userMoveColor === "w") : null);
-  boardUI.lastMove = { from: mv.from, to: mv.to };
   boardUI.dots = [];
   state.fenHistory.push(fenKey(state.chess.fen()));
   state.stats.moves++;
@@ -435,6 +458,7 @@ function renderCandidatesList() {
     const q = qualityClass(c.deltaCp, c.rank);
     const colors = { "q-best": "var(--green)", "q-good": "var(--yellow)", "q-mid": "var(--orange)", "q-bad": "var(--red)" };
     const open = clIsOpen(c, i);
+    const grade = moveGrade(c.deltaCp, isBrilliantCandidate(state.chess.fen(), c));
     const sub = [];
     if (open) {
       const pros = c.args.pros.map((a) => `<div class="arg-pro">✚ ${esc(a)}</div>`).join("");
@@ -449,6 +473,7 @@ function renderCandidatesList() {
       <span class="cl-caret">${open ? "▾" : "▸"}</span>
       <span class="cl-dot" style="background:${colors[q]}"></span>
       <strong>${c.rank}. ${esc(c.san)}</strong>
+      <span class="move-grade-chip tone-${grade.tone}" title="Note estimée sur 10 selon la perte face au meilleur coup">${grade.symbol} ${grade.rating}/10</span>
       <span style="margin-left:auto;color:var(--text-dim)">${formatScore(c.line, whiteSide)}</span>
       <button type="button" class="btn mini move-preview" data-preview="${esc(c.uci)}" aria-label="Tester ${esc(c.san)}">Tester</button></div>
       ${sub.join("")}</div>`;
