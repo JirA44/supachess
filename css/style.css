@@ -168,13 +168,13 @@ body {
 .cl-san { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cl-row-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 5px 0 0 30px; }
 .cl-eval { color: var(--text-dim); font-size: .82rem; font-variant-numeric: tabular-nums; }
-.move-grade-chip { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  width: 102px; min-height: 40px; flex: 0 0 102px; padding: 5px 8px;
-  border: 2px solid #343b4d; border-radius: 8px; background: #f4f5f8;
-  color: #151923; font-size: 1rem; font-weight: 900; line-height: 1;
+.move-grade-chip { display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  width: 120px; min-height: 46px; flex: 0 0 120px; padding: 6px 9px;
+  border: 2px solid #343b4d; border-radius: 8px; background: #fff;
+  color: #10131b; font-size: 1rem; font-weight: 900; line-height: 1;
   white-space: nowrap; font-variant-numeric: tabular-nums; }
-.move-grade-symbol { font-size: .88rem; font-weight: 900; }
-.move-grade-rating { color: #151923; font-size: 1rem; font-weight: 900; letter-spacing: .01em; }
+.move-grade-symbol { font-size: .9rem; font-weight: 900; }
+.move-grade-rating { color: #10131b; font-size: 1.2rem; font-weight: 950; letter-spacing: .015em; }
 .move-grade-chip.tone-best { border-color: #86ad99; }
 .move-grade-chip.tone-best .move-grade-symbol { color: #176746; }
 .move-grade-chip.tone-good { border-color: #93a5bd; }
