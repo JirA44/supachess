@@ -173,10 +173,10 @@ async function playEngineMove() {
     // Eval AVANT (POV engine) = top-1 de son analyse ; APRÈS = top-1 de la
     // prochaine analyse MultiPV utilisateur (déjà lancée pour son tour).
     moveFeedback.clearPreview();
-    moveFeedback.show({ san: mv.san, color: engineColor, token: gen });
+    moveFeedback.show({ san: mv.san, color: engineColor, moveNumber: moveNumberFromFen(fen), token: gen });
     if (baseline.lines.length) {
       const pending = { color: engineColor, beforeCp: clampCpFromLine(baseline.lines[0]),
-        beforeValue: scoreValue(baseline.lines[0]), san: mv.san, uci: res.bestmove, fen, token: gen };
+        beforeValue: scoreValue(baseline.lines[0]), san: mv.san, uci: res.bestmove, fen, moveNumber: moveNumberFromFen(fen), token: gen };
       if (state.chess.game_over()) {
         const terminal = { scoreCp: 0, mate: state.chess.in_checkmate() ? 0 : null, pv: [], depth: baseline.lines[0].depth };
         finishEngineFeedback(pending, terminal);
@@ -196,7 +196,7 @@ function finishEngineFeedback(pending, replyLine) {
   if (!card || card.token !== pending.token) return;
   const deltaCp = Math.max(0, pending.beforeValue + scoreValue(replyLine));
   const cand = { deltaCp, line: { ...replyLine, pv: [pending.uci, ...replyLine.pv] } };
-  moveFeedback.show({ san: pending.san, color: pending.color, deltaCp,
+  moveFeedback.show({ san: pending.san, color: pending.color, moveNumber: pending.moveNumber, deltaCp,
     brilliant: isBrilliantCandidate(pending.fen, cand), token: pending.token });
 }
 
@@ -245,7 +245,7 @@ async function attemptUserMove(moveObj) {
     setStatus("Évaluation de votre coup…");
     state.phase = "analyzing";
     renderBoard();
-    moveFeedback.show({ san: attempted.san, color: attempted.color, mode: "preview" });
+    moveFeedback.show({ san: attempted.san, color: attempted.color, moveNumber: moveNumberFromFen(fen), mode: "preview" });
     const res = probe.game_over() ? { lines: [] } :
       await state.engine.analyze({ fen: probe.fen(), multipv: 1, movetime: 600, elo: 0 });
     if (state.gen !== gen || state.chess.fen() !== fen) return;
@@ -368,7 +368,7 @@ function commitUserMove(moveObj, cand, forced) {
   const mv = state.chess.move(moveObj);
   if (!mv) return;
   moveFeedback.clearPreview();
-  moveFeedback.show({ san: mv.san, color: mv.color, deltaCp: cand ? cand.deltaCp : null,
+  moveFeedback.show({ san: mv.san, color: mv.color, moveNumber: moveNumberFromFen(fenBefore), deltaCp: cand ? cand.deltaCp : null,
     brilliant: isBrilliantCandidate(fenBefore, cand) });
   // Précision du coup utilisateur : avant = meilleur candidat, après = candidat joué.
   if (cand && state.candidates.length) {

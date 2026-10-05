@@ -189,7 +189,7 @@ async function replayGoto(i) {
   if (idx > 0) {
     const move = reviewState.moves[idx - 1];
     const grade = reviewState.grades[idx - 1];
-    moveFeedback.show({ san: move.san, color: move.color,
+    moveFeedback.show({ san: move.san, color: move.color, moveNumber: moveNumberFromFen(reviewState.fens[idx - 1]),
       deltaCp: grade ? grade.deltaCp : null, brilliant: grade ? grade.brilliant : false, mode: "replay" });
   }
   state.replayIdx = idx;

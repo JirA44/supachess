@@ -22,13 +22,18 @@ function isBrilliantCandidate(fen, cand) {
   } catch (_e) { return false; }
 }
 
+function moveNumberFromFen(fen) {
+  const number = Number(fen.split(" ")[5]);
+  return Number.isInteger(number) && number > 0 ? number : 1;
+}
+
 const moveFeedback = {
   cards: new Map(),
-  show({ san, color, deltaCp = null, brilliant = false, mode = "played", token = null }) {
+  show({ san, color, moveNumber, deltaCp = null, brilliant = false, mode = "played", token = null }) {
     const key = mode === "preview" ? "preview" : color;
     const grade = moveGrade(deltaCp, brilliant);
     this.cards.delete(key);
-    this.cards.set(key, { san, color, deltaCp, mode, token, ...grade });
+    this.cards.set(key, { san, color, moveNumber, deltaCp, mode, token, ...grade });
     this.render();
   },
   clear() { this.cards.clear(); this.render(); },
@@ -44,7 +49,8 @@ const moveFeedback = {
       const side = card.color === "w" ? "Blancs" : "Noirs";
       const heading = document.createElement("div");
       heading.className = "move-bubble-heading";
-      heading.textContent = `${modeLabel} · ${side} · ${card.san}`;
+      const numberedMove = `${card.moveNumber}${card.color === "w" ? "." : "…"} ${card.san}`;
+      heading.textContent = `${modeLabel} · ${side} · ${numberedMove}`;
       const result = document.createElement("strong");
       result.className = "move-bubble-result";
       result.textContent = `${card.symbol}  ${card.rating === null ? "…" : card.rating + "/10"} · ${card.label}`;
@@ -67,6 +73,6 @@ const moveFeedback = {
 
 function previewCandidate(cand) {
   if (!["userTurn", "coach"].includes(state.phase)) return;
-  moveFeedback.show({ san: cand.san, color: state.chess.turn(), deltaCp: cand.deltaCp,
+  moveFeedback.show({ san: cand.san, color: state.chess.turn(), moveNumber: moveNumberFromFen(state.chess.fen()), deltaCp: cand.deltaCp,
     brilliant: isBrilliantCandidate(state.chess.fen(), cand), mode: "preview" });
 }
