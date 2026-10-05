@@ -163,23 +163,27 @@ body {
 /* Candidates summary list */
 .candidates-list { display: flex; flex-direction: column; gap: 5px; font-size: .9rem;
   max-height: min(48vh, 520px); overflow-y: auto; overscroll-behavior: contain; }
-.cl-row { display: flex; align-items: center; gap: 8px; }
-.move-grade-chip { display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-  min-width: 82px; min-height: 30px; flex: 0 0 auto; padding: 4px 9px;
-  border: 1.5px solid #657087; border-radius: 7px; background: #11151f;
-  color: #fff; font-size: .96rem; font-weight: 800; line-height: 1;
+.cl-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.cl-move { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.cl-san { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cl-row-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 5px 0 0 30px; }
+.cl-eval { color: var(--text-dim); font-size: .82rem; font-variant-numeric: tabular-nums; }
+.move-grade-chip { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: 102px; min-height: 40px; flex: 0 0 102px; padding: 5px 8px;
+  border: 2px solid #343b4d; border-radius: 8px; background: #f4f5f8;
+  color: #151923; font-size: 1rem; font-weight: 900; line-height: 1;
   white-space: nowrap; font-variant-numeric: tabular-nums; }
-.move-grade-symbol { font-size: .84rem; font-weight: 900; }
-.move-grade-rating { color: #fff; font-size: .96rem; font-weight: 900; letter-spacing: .015em; }
-.move-grade-chip.tone-best { border-color: #83b69f; }
-.move-grade-chip.tone-best .move-grade-symbol { color: #a8d9c4; }
-.move-grade-chip.tone-good { border-color: #899dbd; }
-.move-grade-chip.tone-good .move-grade-symbol { color: #b9c9df; }
-.move-grade-chip.tone-mid { border-color: #ac956c; }
-.move-grade-chip.tone-mid .move-grade-symbol { color: #e4c58f; }
-.move-grade-chip.tone-bad { border-color: #ad777b; }
-.move-grade-chip.tone-bad .move-grade-symbol { color: #e5afb1; }
-.move-grade-chip.tone-pending { border-color: #657087; color: #fff; }
+.move-grade-symbol { font-size: .88rem; font-weight: 900; }
+.move-grade-rating { color: #151923; font-size: 1rem; font-weight: 900; letter-spacing: .01em; }
+.move-grade-chip.tone-best { border-color: #86ad99; }
+.move-grade-chip.tone-best .move-grade-symbol { color: #176746; }
+.move-grade-chip.tone-good { border-color: #93a5bd; }
+.move-grade-chip.tone-good .move-grade-symbol { color: #38587e; }
+.move-grade-chip.tone-mid { border-color: #b49b69; }
+.move-grade-chip.tone-mid .move-grade-symbol { color: #76571f; }
+.move-grade-chip.tone-bad { border-color: #b8898d; }
+.move-grade-chip.tone-bad .move-grade-symbol { color: #8b4248; }
+.move-grade-chip.tone-pending { border-color: #8b91a2; color: #151923; }
 .played-move-bubble.tone-best { background: #35dfb5; }
 .played-move-bubble.tone-good { background: #7ce99a; }
 .played-move-bubble.tone-mid { background: #ffca63; }
