@@ -477,7 +477,7 @@ function renderCandidatesList() {
         </div>
         <span class="move-grade-chip tone-${grade.tone}" title="Note ${grade.rating === null ? "en cours" : grade.rating + " sur 10"} — ${esc(grade.label)}">
           <span class="move-grade-symbol">${esc(grade.symbol)}</span>
-          <span class="move-grade-rating">${grade.rating === null ? "…" : `${grade.rating} / 10`}</span>
+          <span class="move-grade-rating">${grade.rating === null ? "…" : `<b>${grade.rating}</b><small>/10</small>`}</span>
         </span>
       </div>
       <div class="cl-row-meta">
