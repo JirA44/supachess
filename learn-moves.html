@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SupaChess — Compter et calculer les coups</title>
+<link rel="stylesheet" href="css/style.css?v=training-20261013">
+<style>
+body{min-height:100vh}.learn{max-width:1000px;margin:0 auto;padding:24px}.learn h1{margin:.2em 0}.lead{opacity:.82}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:18px 0}.lesson{background:var(--panel,#222);border:1px solid rgba(128,128,128,.3);border-radius:10px;padding:16px}
+.big{font-size:1.35rem;font-weight:700}.seq{font-family:monospace;line-height:1.8;background:rgba(0,0,0,.22);padding:12px;border-radius:8px}.ply{display:inline-block;padding:2px 7px;border-radius:6px;margin:2px}.white{background:rgba(127,201,127,.18)}.black{background:rgba(224,168,104,.18)}
+.exercise button{margin:4px}.answer{margin-top:10px;min-height:2em;font-weight:600}.ok{color:#7fc97f}.no{color:#e0a868}.back{text-decoration:none;color:inherit}.rule{border-left:4px solid #7fc97f;padding-left:12px}.counter{font-size:1.05rem}.muted{opacity:.72;font-size:.9em}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="brand">♞ Supa<span>Chess</span> <span class="brand-tag">Entraînement</span></div><a class="btn back" href="index.html">← Coach IA</a></header>
+<main class="learn">
+<h1>Compter les coups aux échecs</h1>
+<p class="lead">Apprends la différence entre <strong>coup complet</strong> et <strong>demi-coup (ply)</strong>, puis entraîne-toi à calculer une variante comme un joueur de tournoi.</p>
+<div class="grid">
+<section class="lesson"><div class="big">1 coup complet = Blancs + Noirs</div><p>Le numéro de coup regroupe normalement le mouvement des Blancs puis celui des Noirs.</p><div class="seq"><b>1.</b> <span class="ply white">e4</span> <span class="ply black">e5</span><br><b>2.</b> <span class="ply white">Cf3</span> <span class="ply black">Cc6</span><br><b>3.</b> <span class="ply white">Fc4</span> <span class="ply black">Cf6</span></div><p class="counter">Ici : <strong>3 coups complets = 6 demi-coups</strong>.</p></section>
+<section class="lesson"><div class="big">Un demi-coup = un mouvement</div><p>Pour mesurer précisément une profondeur de calcul, compte chaque mouvement individuel.</p><div class="seq">1. Moi<br>2. Adversaire<br>3. Moi<br>4. Adversaire<br>5. Moi</div><p>Cette variante fait <strong>5 demi-coups</strong> (plies).</p></section>
+</div>
+<section class="lesson rule"><strong>Réflexe de calcul :</strong> à chaque étape, cherche la meilleure réponse adverse, pas la réponse que tu aimerais voir. Vérifie ensuite échecs, captures, menaces, pièces non protégées et tactiques.</section>
+<div class="grid">
+<section class="lesson exercise"><h2>Quiz 1</h2><p><code>1. e4 e5 2. Cf3 Cc6 3. Fc4 Cf6</code></p><p>Combien de coups complets et de demi-coups ?</p><button class="btn" data-q="q1" data-a="bad">6 coups / 6 demi-coups</button><button class="btn" data-q="q1" data-a="good">3 coups / 6 demi-coups</button><button class="btn" data-q="q1" data-a="bad">3 coups / 3 demi-coups</button><div id="q1" class="answer"></div></section>
+<section class="lesson exercise"><h2>Quiz 2 — calcul</h2><p>Tu calcules : <strong>ton coup → réponse → ton coup → réponse → ton coup</strong>.</p><p>Quelle profondeur as-tu calculée ?</p><button class="btn" data-q="q2" data-a="bad">5 coups complets</button><button class="btn" data-q="q2" data-a="good">5 demi-coups</button><button class="btn" data-q="q2" data-a="bad">10 demi-coups</button><div id="q2" class="answer"></div></section>
+</div>
+<section class="lesson"><h2>Méthode SupaChess : calculer sans se perdre</h2><ol><li><strong>Menace adverse</strong> — que veut faire l'adversaire ?</li><li><strong>Coups forcés</strong> — échecs, captures, menaces directes.</li><li><strong>2–3 candidats</strong> — évite d'explorer tous les coups.</li><li><strong>Meilleure réponse adverse</strong> — suppose une défense forte.</li><li><strong>Position finale</strong> — matériel, roi, activité, tactiques.</li><li><strong>Anti-gaffe</strong> — dernier contrôle avant de jouer.</li></ol><p class="muted">Exemple d'objectif : visualiser 5 demi-coups correctement avant d'augmenter progressivement la profondeur.</p></section>
+</main>
+<script>
+document.querySelectorAll('[data-q]').forEach(b=>b.addEventListener('click',()=>{const out=document.getElementById(b.dataset.q);const ok=b.dataset.a==='good';out.className='answer '+(ok?'ok':'no');out.textContent=ok?'✓ Correct.':'Pas encore — recompte chaque mouvement individuel.';}));
+</script>
+</body></html>
