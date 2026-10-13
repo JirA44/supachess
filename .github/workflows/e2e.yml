@@ -1,0 +1,25 @@
+name: SupaChess user journeys
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  browser-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm install --no-save @playwright/test
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test --config=playwright.config.cjs
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-evidence
+          path: test-results/
