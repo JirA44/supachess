@@ -195,7 +195,8 @@ async function replayGoto(i) {
     boardUI.lastMove = { from: move.from, to: move.to, san: move.san, grade: replayGrade };
   }
   state.replayIdx = idx;
-  state.chess = new Chess(reviewState.fens[idx]);
+  state.chess = new Chess(reviewState.fens[0]);
+  for (const move of reviewState.moves.slice(0, idx)) state.chess.move(move.san);
   state.fenHistory = [fenKey(state.chess.fen())];
   state.evalHistory = [];
   state.candidates = [];
