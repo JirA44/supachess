@@ -134,8 +134,9 @@ function fileIsOpenFor(chess, file, color) {
    fenBefore : position avant le coup (trait au joueur)
    line      : { pv, scoreCp, mate } (score côté trait = côté joueur)
    bestLine  : ligne multipv 1
-   history   : liste de FEN (4 premiers champs) déjà vues             */
-function buildArguments(fenBefore, line, bestLine, history) {
+   history   : liste de FEN (4 premiers champs) déjà vues
+   moveHistory : coups joués en SAN (pour les conseils qui dépendent du contexte) */
+function buildArguments(fenBefore, line, bestLine, history, moveHistory = []) {
   const pros = [];
   const cons = [];
   const uci = line.pv[0];
@@ -169,7 +170,14 @@ function buildArguments(fenBefore, line, bestLine, history) {
   if (matDelta >= 1) pros.push(`Gagne du matériel sur la suite (+${matDelta} point${matDelta > 1 ? "s" : ""})`);
 
   if (verbose.flags.includes("k") || verbose.flags.includes("q")) {
-    pros.push("Roque : met le roi en sécurité et connecte les tours");
+    const opponentKingSideCastled = moveHistory.some(
+      (move) => move.color !== color && move.san === "O-O"
+    );
+    if (verbose.flags.includes("k") && opponentKingSideCastled) {
+      pros.push("Après le roque adverse côté roi, ce roque met aussi ton roi à l’abri et prépare un possible doublement des tours sur cette aile");
+    } else {
+      pros.push("Roque : met le roi en sécurité et connecte les tours");
+    }
   }
   // Développement
   const init = INITIAL_SQUARES[color][verbose.piece];
