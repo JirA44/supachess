@@ -109,7 +109,7 @@ function buildCandidates(lines, fen) {
   const bestVal = scoreValue(best);
   state.candidates = lines.map((line, i) => {
     const deltaCp = Math.max(0, bestVal - scoreValue(line));
-    const args = buildArguments(fen, line, best, state.fenHistory);
+    const args = buildArguments(fen, line, best, state.fenHistory, state.chess.history({ verbose: true }));
     const reply = buildReplyInfo(fen, line.pv);
     const bd = computeBreakdown(fen, line);
     return { rank: i + 1, uci: line.pv[0], san: args.san, line, deltaCp, args, reply, bd };
@@ -289,7 +289,7 @@ async function attemptUserMove(moveObj) {
     }
     const best = state.candidates[0] ? state.candidates[0].line : line;
     const deltaCp = Math.max(0, scoreValue(best) - scoreValue(line));
-    const args = buildArguments(state.chess.fen(), line, best, state.fenHistory);
+    const args = buildArguments(state.chess.fen(), line, best, state.fenHistory, state.chess.history({ verbose: true }));
     const reply = buildReplyInfo(state.chess.fen(), line.pv);
     const bd = computeBreakdown(state.chess.fen(), line);
     cand = { rank: null, uci, san: args.san, line, deltaCp, args, reply, cmp: null, bd };
