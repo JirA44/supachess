@@ -30,5 +30,7 @@ test('navigation depuis la leçon',async({page})=>{
 test('page principale et navigation de base',async({page})=>{
  await page.goto('/index.html');
  await expect(page.locator('#board')).toBeVisible();
+ await expect(page.locator('#board .piece')).toHaveCount(32);
+ await expect(page.locator('#board .piece').first()).toBeVisible();
  await expect(page.getByRole('link',{name:/Apprendre à compter/})).toBeVisible();
 });

@@ -54,15 +54,33 @@ function gamesAutoSave() {
     date: new Date().toISOString(),
     pgn: gamesBuildPgn(result),
     result,
+    userColor: state.userColor,
     accuracyW: gamesRound1(avgAccuracy(state.accuracy.w)),
     accuracyB: gamesRound1(avgAccuracy(state.accuracy.b)),
     stats: { ...state.stats },
   };
   const arr = gamesLoad();
   const i = arr.findIndex((g) => g.id === currentGameId);
-  if (i >= 0) arr[i] = entry; else arr.push(entry);
+  if (i >= 0) {
+    const previous = arr[i];
+    arr[i] = previous.pgn === entry.pgn && previous.review
+      ? { ...entry, review: previous.review }
+      : entry;
+  } else arr.push(entry);
   gamesStore(arr);
   gamesRenderPanel();
+  if (typeof learningPathRender === "function") learningPathRender();
+}
+
+function gamesSaveReview(id, review) {
+  const arr = gamesLoad();
+  const game = arr.find((item) => String(item.id) === String(id));
+  if (!game) return false;
+  game.review = { ...(game.review || {}), ...review };
+  gamesStore(arr);
+  gamesRenderPanel();
+  if (typeof learningPathRender === "function") learningPathRender();
+  return true;
 }
 
 function gamesDownload(name, content) {
@@ -86,7 +104,7 @@ function gamesRenderPanel() {
     const acc = (g.accuracyW != null ? g.accuracyW + "%" : "—") + " / " +
       (g.accuracyB != null ? g.accuracyB + "%" : "—");
     return `<div class="game-row" data-id="${esc(g.id)}">
-      <span class="game-meta">${esc(when)} · <strong>${esc(g.result)}</strong> · préc. B/N ${esc(acc)}</span>
+      <span class="game-meta">${esc(when)} · <strong>${esc(g.result)}</strong> · préc. B/N ${esc(acc)}${g.review?.analyzedAt ? " · analysée" : ""}</span>
       <span class="game-actions">
         <button class="btn mini" data-act="dl" title="Télécharger le PGN">⬇ PGN</button>
         <button class="btn mini" data-act="analyse" title="Analyser avec Supa">Analyser</button>
@@ -106,7 +124,7 @@ document.getElementById("games-list").addEventListener("click", (e) => {
   if (act === "dl") {
     gamesDownload(`supachess_${id}.pgn`, game.pgn);
   } else if (act === "analyse") {
-    if (typeof reviewStart === "function") reviewStart(game.pgn);
+    if (typeof reviewStart === "function") reviewStart(game.pgn, game.id);
   } else if (act === "del") {
     gamesStore(gamesLoad().filter((g) => g.id !== id));
     gamesRenderPanel();
