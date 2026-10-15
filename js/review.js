@@ -7,7 +7,7 @@
 const REVIEW_BASE = "http://localhost:8778";
 const REVIEW_TIMEOUT_MS = 150000;
 
-const reviewState = { fens: [], moves: [], grades: [], running: false };
+const reviewState = { fens: [], moves: [], grades: [], running: false, sourceGameId: null };
 
 function reviewShowModal(pgn) {
   document.getElementById("pgn-modal").classList.remove("hidden");
@@ -18,7 +18,8 @@ function reviewHideModal() {
 }
 
 /* Point d'entrée (bouton "Analyser PGN (Supa)" ou panneau Parties). */
-function reviewStart(pgn) {
+function reviewStart(pgn, sourceGameId = null) {
+  reviewState.sourceGameId = sourceGameId;
   reviewShowModal(pgn || "");
 }
 
@@ -88,17 +89,51 @@ async function reviewRun() {
       (next.in_checkmate() ? -100000 : cps[i + 1]);
     const delta = Math.max(0, beforeValue + replyValue) / 100;
     accs[moves[i].color].push(moveAccuracyPct(before, after));
-    rows.push({
+    const row = {
       n: Math.floor(i / 2) + 1,
       color: moves[i].color,
       san: moves[i].san,
       delta: +delta.toFixed(2),
       tag: reviewTagOf(delta),
-    });
+      theme: null,
+    };
+    if (row.tag && positionLines[i] && positionLines[i + 1]) {
+      const uci = moves[i].from + moves[i].to + (moves[i].promotion || "");
+      const replyLine = positionLines[i + 1];
+      const playedLine = {
+        ...replyLine,
+        scoreCp: replyLine.scoreCp === null ? null : -replyLine.scoreCp,
+        mate: replyLine.mate === null ? null : -replyLine.mate,
+        pv: [uci, ...replyLine.pv],
+      };
+      try {
+        const reasons = buildArguments(fens[i], playedLine, positionLines[i], [], moves.slice(0, i)).cons;
+        row.theme = window.SupaLearningPath.classifyLearningTheme(reasons, row.n);
+      } catch (_error) {
+        row.theme = null;
+      }
+    }
+    rows.push(row);
   }
   const r1 = (v) => (v === null ? null : Math.round(v * 10) / 10);
   const accW = r1(avgAccuracy(accs.w));
   const accB = r1(avgAccuracy(accs.b));
+
+  if (reviewState.sourceGameId && typeof gamesSaveReview === "function") {
+    const source = gamesLoad().find((game) => String(game.id) === String(reviewState.sourceGameId));
+    const userColor = source?.userColor || (/\[White\s+"Joueur"\]/i.test(source?.pgn || "") ? "w" :
+      /\[Black\s+"Joueur"\]/i.test(source?.pgn || "") ? "b" : null);
+    if (userColor) {
+      const playerErrors = rows.filter((row) => row.color === userColor && row.tag && row.theme);
+      gamesSaveReview(reviewState.sourceGameId, {
+        analyzedAt: Date.now(),
+        userColor,
+        ownAccuracy: userColor === "w" ? accW : accB,
+        themes: [...new Set(playerErrors.map((row) => row.theme))],
+        errorCount: playerErrors.length,
+      });
+    }
+  }
 
   reviewState.fens = fens;
   reviewState.moves = moves;
@@ -190,9 +225,7 @@ async function replayGoto(i) {
     const move = reviewState.moves[idx - 1];
     const grade = reviewState.grades[idx - 1];
     moveFeedback.show({ san: move.san, color: move.color, moveNumber: moveNumberFromFen(reviewState.fens[idx - 1]),
-      square: move.to, deltaCp: grade ? grade.deltaCp : null, brilliant: grade ? grade.brilliant : false, mode: "replay" });
-    const replayGrade = moveGrade(grade ? grade.deltaCp : null, grade ? grade.brilliant : false);
-    boardUI.lastMove = { from: move.from, to: move.to, san: move.san, grade: replayGrade };
+      deltaCp: grade ? grade.deltaCp : null, brilliant: grade ? grade.brilliant : false, mode: "replay" });
   }
   state.replayIdx = idx;
   state.chess = new Chess(reviewState.fens[idx]);
@@ -201,7 +234,7 @@ async function replayGoto(i) {
   state.candidates = [];
   state.accuracy.pendingEngine = null;
   state.pendingMove = null;
-  boardUI.lastMove = idx > 0 ? { from: reviewState.moves[idx - 1].from, to: reviewState.moves[idx - 1].to, san: reviewState.moves[idx - 1].san, grade: moveGrade(reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].deltaCp : null, reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].brilliant : false) } : null;
+  boardUI.lastMove = null;
   boardUI.dots = [];
   boardUI.selected = null;
   boardUI.legalTargets = [];
@@ -228,3 +261,4 @@ document.getElementById("btn-replay-quit").addEventListener("click", () => {
   state.userColor = document.getElementById("sel-color").value;
   newGame();
 });
+
