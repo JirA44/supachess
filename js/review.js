@@ -119,13 +119,16 @@ async function reviewRun() {
   const accW = r1(avgAccuracy(accs.w));
   const accB = r1(avgAccuracy(accs.b));
 
-  if (reviewState.sourceGameId && typeof gamesSaveReview === "function") {
-    const source = gamesLoad().find((game) => String(game.id) === String(reviewState.sourceGameId));
+  const source = reviewState.sourceGameId && typeof gamesLoad === "function"
+    ? gamesLoad().find((game) => String(game.id) === String(reviewState.sourceGameId))
+    : null;
+  const matchingSourceGameId = reviewSourceIdForPgn(reviewState.sourceGameId, source?.pgn, pgnText);
+  if (matchingSourceGameId && typeof gamesSaveReview === "function") {
     const userColor = source?.userColor || (/\[White\s+"Joueur"\]/i.test(source?.pgn || "") ? "w" :
       /\[Black\s+"Joueur"\]/i.test(source?.pgn || "") ? "b" : null);
     if (userColor) {
       const playerErrors = rows.filter((row) => row.color === userColor && row.tag && row.theme);
-      gamesSaveReview(reviewState.sourceGameId, {
+      gamesSaveReview(matchingSourceGameId, {
         analyzedAt: Date.now(),
         userColor,
         ownAccuracy: userColor === "w" ? accW : accB,
@@ -133,6 +136,9 @@ async function reviewRun() {
         errorCount: playerErrors.length,
       });
     }
+  } else if (reviewState.sourceGameId) {
+    // The PGN was edited or the saved game disappeared: keep this as a free analysis.
+    reviewState.sourceGameId = null;
   }
 
   reviewState.fens = fens;
