@@ -97,7 +97,7 @@ async function reviewRun() {
       tag: reviewTagOf(delta),
       theme: null,
     };
-    if (row.tag && positionLines[i] && positionLines[i + 1]) {
+    if (row.tag && positionLines[i] && positionLines[i + 1] && window.SupaLearningPath) {
       const uci = moves[i].from + moves[i].to + (moves[i].promotion || "");
       const replyLine = positionLines[i + 1];
       const playedLine = {
@@ -225,7 +225,9 @@ async function replayGoto(i) {
     const move = reviewState.moves[idx - 1];
     const grade = reviewState.grades[idx - 1];
     moveFeedback.show({ san: move.san, color: move.color, moveNumber: moveNumberFromFen(reviewState.fens[idx - 1]),
-      deltaCp: grade ? grade.deltaCp : null, brilliant: grade ? grade.brilliant : false, mode: "replay" });
+      square: move.to, deltaCp: grade ? grade.deltaCp : null, brilliant: grade ? grade.brilliant : false, mode: "replay" });
+    const replayGrade = moveGrade(grade ? grade.deltaCp : null, grade ? grade.brilliant : false);
+    boardUI.lastMove = { from: move.from, to: move.to, san: move.san, grade: replayGrade };
   }
   state.replayIdx = idx;
   state.chess = new Chess(reviewState.fens[idx]);
@@ -234,7 +236,7 @@ async function replayGoto(i) {
   state.candidates = [];
   state.accuracy.pendingEngine = null;
   state.pendingMove = null;
-  boardUI.lastMove = null;
+  boardUI.lastMove = idx > 0 ? { from: reviewState.moves[idx - 1].from, to: reviewState.moves[idx - 1].to, san: reviewState.moves[idx - 1].san, grade: moveGrade(reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].deltaCp : null, reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].brilliant : false) } : null;
   boardUI.dots = [];
   boardUI.selected = null;
   boardUI.legalTargets = [];
@@ -261,4 +263,3 @@ document.getElementById("btn-replay-quit").addEventListener("click", () => {
   state.userColor = document.getElementById("sel-color").value;
   newGame();
 });
-
