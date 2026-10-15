@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node --test test/learning-path.test.cjs",
-    "test:e2e": "node --test test/e2e.mjs test/e2e_manual.mjs test/e2e_new.mjs test/e2e_supa.mjs"
+    "test:e2e": "npx playwright test --config=playwright.config.cjs"
   },
   "keywords": [],
   "author": "",
@@ -17,4 +17,3 @@
     "stockfish": "^16.0.0"
   }
 }
-
