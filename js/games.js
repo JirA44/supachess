@@ -138,4 +138,3 @@ document.getElementById("btn-export-all").addEventListener("click", () => {
 });
 
 gamesRenderPanel();
-
