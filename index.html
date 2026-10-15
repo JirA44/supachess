@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SupaChess Coach IA — Entraîneur d'échecs</title>
-<link rel="stylesheet" href="css/style.css?v=grades-20261008-2">
+<link rel="stylesheet" href="css/style.css">
 <style>
   .supa-section { margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(128,128,128,.4); }
   .supa-head { font-weight: 600; font-size: .85em; opacity: .9; }
@@ -38,6 +38,12 @@
   .review-report ul { margin: 2px 0 6px 18px; padding: 0; font-size: .85em; }
   .review-meta { font-size: .8em; opacity: .8; margin-bottom: 4px; }
   .review-worst { font-size: .82em; margin-top: 5px; line-height: 1.4; }
+  .learning-path { border: 1px solid rgba(127,201,127,.35); }
+  .learning-path p { font-size: .84em; line-height: 1.45; }
+  .learning-progress-label { display: flex; justify-content: space-between; font-size: .78em; margin-bottom: 5px; }
+  .learning-progress-track { height: 7px; background: rgba(128,128,128,.25); border-radius: 8px; overflow: hidden; }
+  .learning-progress-fill { height: 100%; background: linear-gradient(90deg,#438a60,#9cdb91); transition: width .25s ease; }
+  .learning-cycle-progress { font-size: .8em; color: var(--text-dim,#9aa); }
   #replay-bar.hidden { display: none; }
   .site-footer { padding: 10px 16px; border-top: 1px solid rgba(128,128,128,.25);
     display: flex; justify-content: center; align-items: center; gap: 14px;
@@ -121,6 +127,10 @@
 
   <!-- Colonne droite : coach + historique + stats -->
   <section class="side-zone">
+    <div class="panel learning-path">
+      <h2>Mon parcours personnalisé</h2>
+      <div id="learning-path-content" aria-live="polite"><em>Préparation de ton parcours…</em></div>
+    </div>
     <div id="coach-panel" class="panel coach-panel hidden">
       <h2 id="coach-title">Coach</h2>
       <p id="coach-message" class="coach-message"></p>
@@ -184,7 +194,7 @@
   </div>
 </div>
 
-<footer class="site-footer">\n  <a href="learn-moves.html" class="hub-link">🎓 Apprendre à compter & calculer les coups</a>
+<footer class="site-footer">
   <a href="https://jira44.github.io/supachess-web/" target="_blank" rel="noopener" class="hub-link">♞ Hub SupaChess</a>
   <span class="visitor-counter">
     <img src="https://api.visitorbadge.io/api/visitors?path=supachess.jira44.github.io&label=Visiteurs&countColor=%237fc97f" alt="Compteur de visiteurs" />
@@ -197,8 +207,10 @@
 <script src="js/supa.js"></script>
 <script src="js/board.js"></script>
 <script src="js/move-feedback.js"></script>
-<script src="js/app.js?v=grades-20261008-2"></script>
+<script src="js/app.js"></script>
 <script src="js/games.js"></script>
+<script src="js/learning-path.js"></script>
 <script src="js/review.js"></script>
 </body>
 </html>
+
