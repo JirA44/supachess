@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
+const { reviewSourceIdForPgn } = require("../js/review-association");
 const {
   buildLearningPath,
   classifyLearningTheme,
@@ -101,3 +102,13 @@ test("ignores missing accuracy instead of treating it as zero", () => {
   assert.equal(path.accuracyChange, null);
 });
 
+
+test("does not associate a modified PGN with its saved source game", () => {
+  const sourcePgn = '[Event "Casual"]\n1. e4 e5 2. Nf3 Nc6 *';
+  const samePgnWithDifferentWhitespace = '  [Event "Casual"]\r\n1. e4  e5 2. Nf3 Nc6 *  ';
+  const modifiedPgn = '[Event "Casual"]\n1. e4 e5 2. Nf3 d6 *';
+
+  assert.equal(reviewSourceIdForPgn("saved-game-1", sourcePgn, samePgnWithDifferentWhitespace), "saved-game-1");
+  assert.equal(reviewSourceIdForPgn("saved-game-1", sourcePgn, modifiedPgn), null);
+  assert.equal(reviewSourceIdForPgn(null, sourcePgn, sourcePgn), null);
+});
