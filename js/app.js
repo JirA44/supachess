@@ -442,7 +442,7 @@ function commitUserMove(moveObj, cand, forced) {
   boardUI.dots = [];
   state.fenHistory.push(fenKey(state.chess.fen()));
   state.stats.moves++;
-  if (window.FischerAcademy) {
+  if (window.FischerAcademy && userMoveColor === state.userColor) {
     window.FischerAcademy.recordAttempt({
       category: "candidate_selection",
       exerciseId: "fen:" + fenBefore,
