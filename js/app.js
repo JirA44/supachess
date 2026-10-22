@@ -14,6 +14,7 @@ const state = {
   evalHistory: [],       // éval (côté Blancs) de chaque demi-coup joué, parallèle à history()
   evalWhiteCp: 0,
   gen: 0,                // génération de tour : invalide les analyses en vol au changement de mode
+  learningPractice: false,
 
   stats: { moves: 0, top1: 0, top3: 0, intercepts: 0, forced: 0 },
   accuracy: { w: [], b: [], pendingEngine: null }, // moveAccuracy [0..100] par couleur
@@ -38,8 +39,40 @@ async function init() {
   newGame();
 }
 
+function startFischerPractice() {
+  const academy = window.FischerAcademy;
+  const loaded = academy ? academy.loadAttempts() : { status: "PERSISTENCE_UNAVAILABLE", attempts: [] };
+  if (loaded.status !== "OK") { setStatus("Historique d’apprentissage indisponible."); return; }
+  const due = academy.buildReviewSchedule(loaded.attempts).find(item => item.due && item.exerciseId.startsWith("fen:"));
+  if (!due) { setStatus("Aucune position à répéter pour le moment."); return; }
+  const fen = due.exerciseId.slice(4);
+  const probe = new Chess();
+  if (!probe.load(fen)) { setStatus("Position d’entraînement invalide."); return; }
+  if (!state.learningPractice && state.chess.history().length && typeof gamesAutoSave === "function") gamesAutoSave();
+  state.gen++;
+  moveFeedback.clear();
+  state.learningPractice = true;
+  state.chess = new Chess(fen);
+  state.candidates = [];
+  state.pendingMove = null;
+  resetAccuracy();
+  state.fenHistory = [fenKey(state.chess.fen())];
+  state.evalHistory = [];
+  state.userColor = state.chess.turn();
+  boardUI.setFlipped(state.userColor === "b");
+  boardUI.selected = null;
+  boardUI.lastMove = null;
+  boardUI.dots = [];
+  boardUI.legalTargets = [];
+  hideCoach();
+  setStatus("Répétition Fischer — trouvez le meilleur coup avant de voir l’analyse.");
+  renderAll();
+  startTurn();
+}
+
 function newGame() {
   state.gen++;
+  state.learningPractice = false;
   moveFeedback.clear();
   state.chess = new Chess();
   state.candidates = [];
@@ -404,6 +437,14 @@ function commitUserMove(moveObj, cand, forced) {
   boardUI.dots = [];
   state.fenHistory.push(fenKey(state.chess.fen()));
   state.stats.moves++;
+  if (window.FischerAcademy) {
+    window.FischerAcademy.recordAttempt({
+      category: "candidate_selection",
+      exerciseId: "fen:" + fenBefore,
+      correct: Boolean(cand && cand.rank === 1),
+      attemptedAt: Date.now(),
+    });
+  }
   if (cand && cand.rank === 1) state.stats.top1++;
   if (cand && cand.rank !== null && cand.rank <= 3) state.stats.top3++;
   if (forced) state.stats.forced++;
@@ -696,5 +737,7 @@ $("btn-fen").addEventListener("click", () => {
   renderAll();
   startTurn();
 });
+
+$("btn-fischer-practice").addEventListener("click", startFischerPractice);
 
 init();
