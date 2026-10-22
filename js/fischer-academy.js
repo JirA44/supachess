@@ -15,7 +15,13 @@ function validateAttempt(attempt) {
   }
 }
 
-function loadAttempts(storage = globalThis.localStorage) {
+function resolveStorage(storage) {
+  if (storage) return storage;
+  try { return globalThis.localStorage; } catch (_error) { return null; }
+}
+
+function loadAttempts(storage) {
+  storage = resolveStorage(storage);
   if (!storage) return { status: 'PERSISTENCE_UNAVAILABLE', attempts: [] };
   try {
     const value = storage.getItem(STORAGE_KEY);
@@ -28,7 +34,8 @@ function loadAttempts(storage = globalThis.localStorage) {
   }
 }
 
-function recordAttempt(attempt, { storage = globalThis.localStorage } = {}) {
+function recordAttempt(attempt, { storage } = {}) {
+  storage = resolveStorage(storage);
   validateAttempt(attempt);
   const loaded = loadAttempts(storage);
   if (loaded.status !== 'OK') return { status: loaded.status, attempt: null };
@@ -95,7 +102,7 @@ function buildReviewSchedule(attempts, now = Date.now()) {
   }).sort((a, b) => a.dueAt - b.dueAt || a.exerciseId.localeCompare(b.exerciseId));
 }
 
-function renderLearningStatus(storage = globalThis.localStorage) {
+function renderLearningStatus(storage) {
   const summary = globalThis.document?.getElementById('fischer-learning-summary');
   const planEl = globalThis.document?.getElementById('fischer-learning-plan');
   if (!summary || !planEl) return;
