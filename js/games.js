@@ -46,6 +46,7 @@ function gamesBuildPgn(result) {
 
 /* Appelé après chaque coup (joueur + engine) et à la fin de partie. */
 function gamesAutoSave() {
+  if (state.learningPractice) return;
   if (!currentGameId) gamesNewEntry();
   if (state.chess.history().length === 0) return;
   const result = gamesResult();
