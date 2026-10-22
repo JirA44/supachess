@@ -1,6 +1,8 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const {
   STORAGE_KEY,
   buildTrainingPlan,
@@ -45,5 +47,11 @@ const damagedStorage = { getItem: () => '{invalid', setItem: () => { throw new E
 assert.equal(recordAttempt(first, { storage: damagedStorage }).status, 'INVALID_STORED_DATA');
 assert.equal(recordAttempt(first, { storage: null }).status, 'PERSISTENCE_UNAVAILABLE');
 assert.equal(STORAGE_KEY, 'supachess_fischer_attempts_v1');
+
+// Integration guard: candidates and board hints remain hidden until the learner commits a move.
+const appSource = fs.readFileSync(path.resolve(__dirname, '../js/app.js'), 'utf8');
+assert.match(appSource, /if \(state\.learningPractice && !state\.practiceReveal\)[\s\S]*Choisissez votre coup avant de consulter les candidats/);
+assert.match(appSource, /if \(state\.learningPractice\) boardUI\.dots = \[\]/);
+assert.match(appSource, /if \(state\.learningPractice\) state\.practiceReveal = true/);
 console.log('Fischer Academy persistence and spaced-learning tests passed');
 
