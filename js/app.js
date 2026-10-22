@@ -15,6 +15,7 @@ const state = {
   evalWhiteCp: 0,
   gen: 0,                // génération de tour : invalide les analyses en vol au changement de mode
   learningPractice: false,
+  practiceReveal: false,
 
   stats: { moves: 0, top1: 0, top3: 0, intercepts: 0, forced: 0 },
   accuracy: { w: [], b: [], pendingEngine: null }, // moveAccuracy [0..100] par couleur
@@ -52,6 +53,7 @@ function startFischerPractice() {
   state.gen++;
   moveFeedback.clear();
   state.learningPractice = true;
+  state.practiceReveal = false;
   state.chess = new Chess(fen);
   state.candidates = [];
   state.pendingMove = null;
@@ -73,6 +75,7 @@ function startFischerPractice() {
 function newGame() {
   state.gen++;
   state.learningPractice = false;
+  state.practiceReveal = false;
   moveFeedback.clear();
   state.chess = new Chess();
   state.candidates = [];
@@ -115,7 +118,9 @@ async function analyzeForUser() {
   setStatus(`Analyse des ${legalMoveCount} coups possibles…`);
   const res = await state.engine.analyze({ fen, multipv: Math.max(1, legalMoveCount), movetime: movetime(), elo: 0 });
   if (state.gen !== gen || state.chess.fen() !== fen) return; // partie/mode changé entre temps
+  if (state.learningPractice) state.practiceReveal = false;
   buildCandidates(res.lines, fen);
+  if (state.learningPractice) boardUI.dots = [];
   updateEvalBar(res.lines[0]);
   // Précision du dernier coup engine : l'eval top-1 de cette analyse (POV utilisateur)
   // inversée donne l'eval APRÈS le coup engine de son point de vue.
@@ -445,6 +450,7 @@ function commitUserMove(moveObj, cand, forced) {
       attemptedAt: Date.now(),
     });
   }
+  if (state.learningPractice) state.practiceReveal = true;
   if (cand && cand.rank === 1) state.stats.top1++;
   if (cand && cand.rank !== null && cand.rank <= 3) state.stats.top3++;
   if (forced) state.stats.forced++;
@@ -493,6 +499,10 @@ function clIsOpen(c, i) {
 
 function renderCandidatesList() {
   const wrap = $("candidates-list");
+  if (state.learningPractice && !state.practiceReveal) {
+    wrap.textContent = "Choisissez votre coup avant de consulter les candidats.";
+    return;
+  }
   if (!state.candidates.length) { wrap.innerHTML = "<em>En attente d'analyse…</em>"; return; }
   const whiteSide = state.chess.turn() === "w";
   wrap.innerHTML = state.candidates.map((c, i) => {
