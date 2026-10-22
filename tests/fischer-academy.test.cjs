@@ -53,5 +53,6 @@ const appSource = fs.readFileSync(path.resolve(__dirname, '../js/app.js'), 'utf8
 assert.match(appSource, /if \(state\.learningPractice && !state\.practiceReveal\)[\s\S]*Choisissez votre coup avant de consulter les candidats/);
 assert.match(appSource, /if \(state\.learningPractice\) boardUI\.dots = \[\]/);
 assert.match(appSource, /if \(state\.learningPractice\) state\.practiceReveal = true/);
+assert.match(appSource, /if \(window\.FischerAcademy && userMoveColor === state\.userColor\)/);
 console.log('Fischer Academy persistence and spaced-learning tests passed');
 
