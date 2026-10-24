@@ -91,6 +91,13 @@ async function reviewRun() {
     const uciMove = moves[i].from + moves[i].to + (moves[i].promotion || "");
     const blindspot = typeof ChessBlindspots !== "undefined"
       ? ChessBlindspots.tacticalMisses(fens[i], uciMove, { lossCp: delta * 100 }) : null;
+    const cpEvidence = typeof SupaChessCentipawns !== "undefined"
+      ? SupaChessCentipawns.explain({
+          fenBefore:fens[i],fenAfter:fens[i+1],uci:uciMove,
+          bestBefore:positionLines[i],bestAfter:positionLines[i+1],
+          captureFacts:blindspot && blindspot.status === "OK" ? blindspot.facts : []
+        }) : null;
+    const verifiedLossCp = cpEvidence && cpEvidence.status === "OK" ? cpEvidence.lossCp : null;
     rows.push({
       n: Math.floor(i / 2) + 1,
       color: moves[i].color,
@@ -98,6 +105,8 @@ async function reviewRun() {
       delta: +delta.toFixed(2),
       tag: reviewTagOf(delta),
       diagnostics: blindspot && blindspot.status === "OK" ? blindspot.diagnostics : [],
+      centipawns: cpEvidence,
+      lossCp: verifiedLossCp,
     });
   }
   const r1 = (v) => (v === null ? null : Math.round(v * 10) / 10);
@@ -111,7 +120,7 @@ async function reviewRun() {
     const move = moves[i];
     const uci = move.from + move.to + (move.promotion || "");
     const cand = { deltaCp: row.delta * 100, line: reply ? { ...reply, pv: [uci, ...reply.pv] } : null };
-    return { deltaCp: cand.deltaCp, brilliant: isBrilliantCandidate(fens[i], cand) };
+    return { deltaCp: row.centipawns && row.centipawns.status !== "OK" ? null : cand.deltaCp, brilliant: row.centipawns && row.centipawns.status !== "OK" ? false : isBrilliantCandidate(fens[i], cand) };
   });
   reviewSetProgress("Analyse Stockfish terminée — bilan en cours…");
   reviewRenderLocal(rows, accW, accB, headers);
@@ -133,6 +142,17 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     `<tr><td>${label}</td><td>${col === "w" ? (accW ?? "—") : (accB ?? "—")}%</td>` +
     `<td>${reviewCount(rows, col, "?!")}</td><td>${reviewCount(rows, col, "?")}</td>` +
     `<td>${reviewCount(rows, col, "??")}</td></tr>`;
+  const halfmoveExplanations = rows.map((r) => {
+    const cp = r.centipawns;
+    const heading = `${r.n}${r.color === "w" ? "." : "..."} ${sanFr(r.san)}`;
+    if (!cp) return `<li><strong>${esc(heading)}</strong> : analyse en centipions indisponible.</li>`;
+    const loss = cp.lossCp === null ? "non chiffrable (mat ou analyse incomplète)"
+      : `${(Math.round(cp.lossCp*10)/10).toLocaleString("fr-FR")} cp`;
+    const evalChange = Number.isFinite(cp.swingWhiteCp)
+      ? ` · variation côté Blancs : ${cp.swingWhiteCp>=0?"+":""}${cp.swingWhiteCp.toFixed(0)} cp` : "";
+    const facts = (cp.observations||[]).map(o=>o.text).join(" ");
+    return `<li><strong>${esc(heading)}</strong> — perte / meilleur coup : ${esc(loss)}${esc(evalChange)}. ${esc(cp.explanation)} ${esc(facts)}</li>`;
+  }).join("");
   const blindspots = rows.flatMap((r) => (r.diagnostics || []).map((d) => ({ ...d, n: r.n, color: r.color })));
   const examples = blindspots.slice(0, 8).map((d) => `<li><strong>${d.n}${d.color === "w" ? "." : "..."} :</strong> ${esc(d.text)} <small>${esc(d.caveat)}</small></li>`).join("");
   const lessonRows = rows.map((r, idx) => ({
@@ -165,6 +185,7 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     ${examples ? `<div class="review-worst"><h4>Vérification des pièces en prise (preuve d’une capture légale)</h4><ul>${examples}</ul></div>` : ""}
     <div class="review-worst"><h4>Habitude à entraîner : échecs, prises, menaces</h4><p>${pedagogical}</p></div>
     ${nextPractice ? `<div class="review-worst"><h4>Plan d’entraînement personnalisé</h4><ol>${nextPractice}</ol></div>` : ""}
+    <div class="review-worst"><h4>Chaque demi-coup expliqué : centipions et causes démontrables</h4><p><small>Perte relative au meilleur coup ≠ variation absolue de l’évaluation. Le moteur ne peut pas toujours établir le pourquoi en une phrase; les mats sont traités séparément.</small></p><ol>${halfmoveExplanations}</ol></div>
     <div id="review-supa"></div>`;
 }
 
