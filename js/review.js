@@ -7,7 +7,7 @@
 const REVIEW_BASE = "http://localhost:8778";
 const REVIEW_TIMEOUT_MS = 150000;
 
-const reviewState = { fens: [], moves: [], grades: [], running: false };
+const reviewState = { fens: [], moves: [], grades: [], running: false, returnState: null };
 
 function reviewShowModal(pgn) {
   document.getElementById("pgn-modal").classList.remove("hidden");
@@ -211,7 +211,44 @@ function reviewSyncSelectedPly(ply) {
   });
 }
 
+function reviewBeginReplay() {
+  if (reviewState.returnState) return;
+  const feedback = document.getElementById("move-feedback");
+  reviewState.returnState = {
+    state: { ...state, accuracy: { ...state.accuracy, w: [...state.accuracy.w], b: [...state.accuracy.b] } },
+    boardUI: { ...boardUI, dots: [...boardUI.dots], legalTargets: [...boardUI.legalTargets],
+      lastMove: boardUI.lastMove ? { ...boardUI.lastMove } : null },
+    status: document.getElementById("status-line").textContent,
+    evalHeight: document.getElementById("evalbar-white").style.height,
+    evalLabel: document.getElementById("evalbar-label").textContent,
+    feedbackClass: feedback.className,
+    feedbackHtml: feedback.innerHTML,
+    coachClass: document.getElementById("coach-panel").className,
+  };
+}
+
+function reviewRestoreAfterReplay() {
+  const saved = reviewState.returnState;
+  if (!saved) return;
+  const nextGen = state.gen + 1; // invalidate any analysis started by the replay
+  Object.assign(state, saved.state);
+  state.gen = nextGen;
+  Object.assign(boardUI, saved.boardUI);
+  document.getElementById("status-line").textContent = saved.status;
+  document.getElementById("evalbar-white").style.height = saved.evalHeight;
+  document.getElementById("evalbar-label").textContent = saved.evalLabel;
+  const feedback = document.getElementById("move-feedback");
+  feedback.className = saved.feedbackClass;
+  feedback.innerHTML = saved.feedbackHtml;
+  document.getElementById("coach-panel").className = saved.coachClass;
+  reviewState.returnState = null;
+  document.getElementById("replay-bar").classList.add("hidden");
+  renderAll();
+  if (["engineThinking", "analyzing"].includes(state.phase)) startTurn();
+}
+
 function reviewJumpToPly(ply) {
+  reviewBeginReplay();
   document.getElementById("replay-bar").classList.remove("hidden");
   replayGoto(ply).catch(console.error);
 }
@@ -293,14 +330,10 @@ document.getElementById("btn-analyze-pgn").addEventListener("click", () => revie
 document.getElementById("btn-run-review").addEventListener("click", () => { reviewRun().catch(console.error); });
 document.getElementById("btn-close-pgn").addEventListener("click", reviewHideModal);
 document.getElementById("btn-replay-game").addEventListener("click", () => {
+  reviewBeginReplay();
   document.getElementById("replay-bar").classList.remove("hidden");
   replayGoto(0).catch(console.error);
 });
 document.getElementById("btn-replay-prev").addEventListener("click", () => replayGoto((state.replayIdx || 0) - 1).catch(console.error));
 document.getElementById("btn-replay-next").addEventListener("click", () => replayGoto((state.replayIdx || 0) + 1).catch(console.error));
-document.getElementById("btn-replay-quit").addEventListener("click", () => {
-  document.getElementById("replay-bar").classList.add("hidden");
-  document.getElementById("review-panel").classList.add("hidden");
-  state.userColor = document.getElementById("sel-color").value;
-  newGame();
-});
+document.getElementById("btn-replay-quit").addEventListener("click", reviewRestoreAfterReplay);
