@@ -27,6 +27,18 @@ test('PGN halfmove link replays the exact resulting position and synchronizes th
   await page.goto('/index.html');
   const result=await page.evaluate(async()=>{
     if(typeof replayGoto!=="function" || typeof reviewRenderLocal!=="function") return {ready:false};
+    const savedGame=new Chess();
+    savedGame.move('d4');
+    const savedFen=savedGame.fen();
+    state.gen++;
+    state.chess=savedGame;
+    state.phase='userTurn';
+    state.fenHistory=[fenKey(savedFen)];
+    state.evalHistory=[];
+    state.candidates=[];
+    state.pendingMove=null;
+    state.accuracy={w:[],b:[],pendingEngine:null};
+    renderAll();
     const game=new Chess();
     const fens=[game.fen()];
     const moves=[];
@@ -63,4 +75,15 @@ test('PGN halfmove link replays the exact resulting position and synchronizes th
   expect(result.selected).toBe(true);
   expect(result.ariaCurrent).toBe('step');
   expect(result.replayBarVisible).toBe(true);
+  const restored=await page.evaluate(()=>{
+    document.getElementById('btn-replay-quit').click();
+    return {
+      fen:state.chess.fen(),
+      reportVisible:!document.getElementById('review-panel').classList.contains('hidden'),
+      replayBarHidden:document.getElementById('replay-bar').classList.contains('hidden')
+    };
+  });
+  expect(restored.fen).toBeTruthy();
+  expect(restored.reportVisible).toBe(true);
+  expect(restored.replayBarHidden).toBe(true);
 });
