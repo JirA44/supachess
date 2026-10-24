@@ -88,12 +88,16 @@ async function reviewRun() {
       (next.in_checkmate() ? -100000 : cps[i + 1]);
     const delta = Math.max(0, beforeValue + replyValue) / 100;
     accs[moves[i].color].push(moveAccuracyPct(before, after));
+    const uciMove = moves[i].from + moves[i].to + (moves[i].promotion || "");
+    const blindspot = typeof ChessBlindspots !== "undefined"
+      ? ChessBlindspots.tacticalMisses(fens[i], uciMove, { lossCp: delta * 100 }) : null;
     rows.push({
       n: Math.floor(i / 2) + 1,
       color: moves[i].color,
       san: moves[i].san,
       delta: +delta.toFixed(2),
       tag: reviewTagOf(delta),
+      diagnostics: blindspot && blindspot.status === "OK" ? blindspot.diagnostics : [],
     });
   }
   const r1 = (v) => (v === null ? null : Math.round(v * 10) / 10);
@@ -129,6 +133,8 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     `<tr><td>${label}</td><td>${col === "w" ? (accW ?? "—") : (accB ?? "—")}%</td>` +
     `<td>${reviewCount(rows, col, "?!")}</td><td>${reviewCount(rows, col, "?")}</td>` +
     `<td>${reviewCount(rows, col, "??")}</td></tr>`;
+  const blindspots = rows.flatMap((r) => (r.diagnostics || []).map((d) => ({ ...d, n: r.n, color: r.color })));
+  const examples = blindspots.slice(0, 8).map((d) => `<li><strong>${d.n}${d.color === "w" ? "." : "..."} :</strong> ${esc(d.text)} <small>${esc(d.caveat)}</small></li>`).join("");
   document.getElementById("review-report").innerHTML = `
     <div class="review-local">
       <h3>Bilan Stockfish (local)</h3>
@@ -138,6 +144,7 @@ function reviewRenderLocal(rows, accW, accB, headers) {
       ${worst.length ? `<div class="review-worst"><strong>Moments clés :</strong> ${worst.map(moveLabel).map(esc).join(" · ")}</div>`
         : "<div class='review-worst'>Aucune erreur notable détectée.</div>"}
     </div>
+    ${examples ? `<div class="review-worst"><h4>Vérification des pièces en prise (preuve d’une capture légale)</h4><ul>${examples}</ul></div>` : ""}
     <div id="review-supa"></div>`;
 }
 
