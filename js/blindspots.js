@@ -23,7 +23,7 @@ const ChessBlindspots = (() => {
     // Compare against the same board with the opponent to move BEFORE the played
     // move. This detects an actually *new* immediate threat. The hypothetical
     // board is only a baseline; never display it as a real game state.
-    const beforeParts = beforeFen.trim().split(/\\s+/);
+    const beforeParts = beforeFen.trim().split(/\s+/);
     beforeParts[1] = other(side);
     beforeParts[3] = "-";
     const baseline = new Chess(beforeParts.join(" "));
