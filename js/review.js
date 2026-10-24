@@ -7,7 +7,7 @@
 const REVIEW_BASE = "http://localhost:8778";
 const REVIEW_TIMEOUT_MS = 150000;
 
-const reviewState = { fens: [], moves: [], grades: [], running: false };
+const reviewState = { fens: [], moves: [], grades: [], running: false, returnState: null };
 
 function reviewShowModal(pgn) {
   document.getElementById("pgn-modal").classList.remove("hidden");
@@ -147,16 +147,17 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     `<tr><td>${label}</td><td>${col === "w" ? (accW ?? "—") : (accB ?? "—")}%</td>` +
     `<td>${reviewCount(rows, col, "?!")}</td><td>${reviewCount(rows, col, "?")}</td>` +
     `<td>${reviewCount(rows, col, "??")}</td></tr>`;
-  const halfmoveExplanations = rows.map((r) => {
+  const halfmoveExplanations = rows.map((r, idx) => {
     const cp = r.centipawns;
     const heading = `${r.n}${r.color === "w" ? "." : "..."} ${sanFr(r.san)}`;
-    if (!cp) return `<li><strong>${esc(heading)}</strong> : analyse en centipions indisponible.</li>`;
+    const moveLink = `<button type="button" class="review-ply-link" data-review-ply="${idx + 1}" aria-label="Aller à la position après ${esc(heading)}">${esc(heading)}</button>`;
+    if (!cp) return `<li class="review-ply" data-review-ply="${idx + 1}">${moveLink} : analyse en centipions indisponible.</li>`;
     const loss = cp.lossCp === null ? "non chiffrable (mat ou analyse incomplète)"
       : `${(Math.round(cp.lossCp*10)/10).toLocaleString("fr-FR")} cp`;
     const evalChange = Number.isFinite(cp.swingWhiteCp)
       ? ` · variation côté Blancs : ${cp.swingWhiteCp>=0?"+":""}${cp.swingWhiteCp.toFixed(0)} cp` : "";
     const facts = (cp.observations||[]).map(o=>o.text).join(" ");
-    return `<li><strong>${esc(heading)}</strong> — perte / meilleur coup : ${esc(loss)}${esc(evalChange)}. ${esc(cp.explanation)} ${esc(facts)}</li>`;
+    return `<li class="review-ply" data-review-ply="${idx + 1}">${moveLink} — perte / meilleur coup : ${esc(loss)}${esc(evalChange)}. ${esc(cp.explanation)} ${esc(facts)}</li>`;
   }).join("");
   const blindspots = rows.flatMap((r) => (r.diagnostics || []).map((d) => ({ ...d, n: r.n, color: r.color })));
   const examples = blindspots.slice(0, 8).map((d) => `<li><strong>${d.n}${d.color === "w" ? "." : "..."} :</strong> ${esc(d.text)} <small>${esc(d.caveat)}</small></li>`).join("");
@@ -192,6 +193,64 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     ${nextPractice ? `<div class="review-worst"><h4>Plan d’entraînement personnalisé</h4><ol>${nextPractice}</ol></div>` : ""}
     <div class="review-worst"><h4>Chaque demi-coup expliqué : centipions et causes démontrables</h4><p><small>Perte relative au meilleur coup ≠ variation absolue de l’évaluation. Le moteur ne peut pas toujours établir le pourquoi en une phrase; les mats sont traités séparément.</small></p><ol>${halfmoveExplanations}</ol></div>
     <div id="review-supa"></div>`;
+  document.querySelectorAll("#review-report .review-ply-link").forEach((link) => {
+    link.addEventListener("click", () => reviewJumpToPly(Number(link.dataset.reviewPly)));
+  });
+  reviewSyncSelectedPly(state.replayIdx || 0);
+}
+
+function reviewSyncSelectedPly(ply) {
+  document.querySelectorAll("#review-report .review-ply").forEach((item) => {
+    const selected = Number(item.dataset.reviewPly) === ply;
+    item.classList.toggle("selected", selected);
+    const link = item.querySelector(".review-ply-link");
+    if (link) {
+      if (selected) link.setAttribute("aria-current", "step");
+      else link.removeAttribute("aria-current");
+    }
+  });
+}
+
+function reviewBeginReplay() {
+  if (reviewState.returnState) return;
+  const feedback = document.getElementById("move-feedback");
+  reviewState.returnState = {
+    state: { ...state, accuracy: { ...state.accuracy, w: [...state.accuracy.w], b: [...state.accuracy.b] } },
+    boardUI: { ...boardUI, dots: [...boardUI.dots], legalTargets: [...boardUI.legalTargets],
+      lastMove: boardUI.lastMove ? { ...boardUI.lastMove } : null },
+    status: document.getElementById("status-line").textContent,
+    evalHeight: document.getElementById("evalbar-white").style.height,
+    evalLabel: document.getElementById("evalbar-label").textContent,
+    feedbackClass: feedback.className,
+    feedbackHtml: feedback.innerHTML,
+    coachClass: document.getElementById("coach-panel").className,
+  };
+}
+
+function reviewRestoreAfterReplay() {
+  const saved = reviewState.returnState;
+  if (!saved) return;
+  const nextGen = state.gen + 1; // invalidate any analysis started by the replay
+  Object.assign(state, saved.state);
+  state.gen = nextGen;
+  Object.assign(boardUI, saved.boardUI);
+  document.getElementById("status-line").textContent = saved.status;
+  document.getElementById("evalbar-white").style.height = saved.evalHeight;
+  document.getElementById("evalbar-label").textContent = saved.evalLabel;
+  const feedback = document.getElementById("move-feedback");
+  feedback.className = saved.feedbackClass;
+  feedback.innerHTML = saved.feedbackHtml;
+  document.getElementById("coach-panel").className = saved.coachClass;
+  reviewState.returnState = null;
+  document.getElementById("replay-bar").classList.add("hidden");
+  renderAll();
+  if (["engineThinking", "analyzing"].includes(state.phase)) startTurn();
+}
+
+function reviewJumpToPly(ply) {
+  reviewBeginReplay();
+  document.getElementById("replay-bar").classList.remove("hidden");
+  replayGoto(ply).catch(console.error);
 }
 
 async function reviewAskSupa(rows, accW, accB, headers) {
@@ -263,6 +322,7 @@ async function replayGoto(i) {
   document.getElementById("replay-label").textContent =
     `Coup ${idx}/${reviewState.fens.length - 1}`;
   renderAll();
+  reviewSyncSelectedPly(idx);
   await analyzeForUser(); // recalcul dots + candidats à chaque position
 }
 
@@ -270,14 +330,10 @@ document.getElementById("btn-analyze-pgn").addEventListener("click", () => revie
 document.getElementById("btn-run-review").addEventListener("click", () => { reviewRun().catch(console.error); });
 document.getElementById("btn-close-pgn").addEventListener("click", reviewHideModal);
 document.getElementById("btn-replay-game").addEventListener("click", () => {
+  reviewBeginReplay();
   document.getElementById("replay-bar").classList.remove("hidden");
   replayGoto(0).catch(console.error);
 });
 document.getElementById("btn-replay-prev").addEventListener("click", () => replayGoto((state.replayIdx || 0) - 1).catch(console.error));
 document.getElementById("btn-replay-next").addEventListener("click", () => replayGoto((state.replayIdx || 0) + 1).catch(console.error));
-document.getElementById("btn-replay-quit").addEventListener("click", () => {
-  document.getElementById("replay-bar").classList.add("hidden");
-  document.getElementById("review-panel").classList.add("hidden");
-  state.userColor = document.getElementById("sel-color").value;
-  newGame();
-});
+document.getElementById("btn-replay-quit").addEventListener("click", reviewRestoreAfterReplay);
