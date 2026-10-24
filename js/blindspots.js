@@ -18,8 +18,6 @@ const ChessBlindspots = (() => {
     const legal = game.moves({verbose:true}).find(m =>
       m.from===from && m.to===to && (!m.promotion || m.promotion===promotion));
     if (!legal) return {status:"INVALID_MOVE",facts:[],diagnostics:[]};
-    const previous = new Chess(beforeFen);
-    const oldLegal = previous.moves({verbose:true});
     const result = game.move({from,to,promotion});
     if (!result) return {status:"INVALID_MOVE",facts:[],diagnostics:[]};
     const now = legalCaptures(game,side);
@@ -27,25 +25,22 @@ const ChessBlindspots = (() => {
     for (const move of now) {
       const victim = game.get(move.to);
       if (!victim || victim.color!==side || victim.type==="k") continue;
-      const existedBefore = oldLegal.some(m => m.from===move.from && m.to===move.to &&
-        m.color===other(side) && m.captured);
       // Must never claim the loss is forced; defended captures can be bad.
       facts.push({
         id:"LEGAL_CAPTURE_NEXT_PLY",square:move.to,from:move.from,
         piece:victim.type,attacker:move.piece,
         captureSan:move.san,materialPoints:worth[victim.type],
-        newlyExposed: !existedBefore,
         fenAfter:game.fen()
       });
     }
     const seen = new Set();
     const diagnostics = [];
-    for (const fact of facts.filter(f=>f.newlyExposed).sort((a,b)=>b.materialPoints-a.materialPoints)) {
+    for (const fact of facts.sort((a,b)=>b.materialPoints-a.materialPoints)) {
       if (seen.has(fact.square)) continue;
       seen.add(fact.square);
       const significant = Number.isFinite(opts.lossCp) && opts.lossCp>=60;
       diagnostics.push({
-        code:"PIECE_IN_PRİSE_ONE_MOVE".replace("İ","I"),
+        code:"PIECE_EN_PRISE_EN_UN_COUP",
         square:fact.square,
         move:result.san,
         severity:significant?"erreur_probable":"attention",
