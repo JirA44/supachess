@@ -135,6 +135,15 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     `<td>${reviewCount(rows, col, "??")}</td></tr>`;
   const blindspots = rows.flatMap((r) => (r.diagnostics || []).map((d) => ({ ...d, n: r.n, color: r.color })));
   const examples = blindspots.slice(0, 8).map((d) => `<li><strong>${d.n}${d.color === "w" ? "." : "..."} :</strong> ${esc(d.text)} <small>${esc(d.caveat)}</small></li>`).join("");
+  const lessonRows = rows.map((r, idx) => ({
+    color:r.color, san:r.san, ply:idx+1, fenBefore:null,
+    diagnostics:r.diagnostics || []
+  }));
+  const learningPlan = typeof SupaChessLearning !== "undefined"
+    ? SupaChessLearning.plan({reports:lessonRows}) : [];
+  const nextPractice = learningPlan.slice(0,3).map((p) =>
+    `<li><strong>${esc(p.skill)} :</strong> ${esc(p.practice)} ${p.exercisesToTry} situations d’entraînement suggérées, puis vérification à J+1, J+3 et J+7. <small>${p.confidence === "pattern_supported" ? "Motif corroboré" : "Observation à confirmer sur plusieurs parties"}.</small></li>`
+  ).join("");
   const pedagogical = ["w", "b"].map((color) => {
     const total = rows.filter((r) => r.color === color).length;
     const exposed = rows.filter((r) => r.color === color && (r.diagnostics || []).length).length;
@@ -155,6 +164,7 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     </div>
     ${examples ? `<div class="review-worst"><h4>Vérification des pièces en prise (preuve d’une capture légale)</h4><ul>${examples}</ul></div>` : ""}
     <div class="review-worst"><h4>Habitude à entraîner : échecs, prises, menaces</h4><p>${pedagogical}</p></div>
+    ${nextPractice ? `<div class="review-worst"><h4>Plan d’entraînement personnalisé</h4><ol>${nextPractice}</ol></div>` : ""}
     <div id="review-supa"></div>`;
 }
 
