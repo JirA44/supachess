@@ -59,7 +59,7 @@ test('PGN halfmove link replays the exact resulting position and synchronizes th
     document.querySelector('.review-ply-link[data-review-ply="2"]').click();
     await new Promise(resolve=>setTimeout(resolve,0));
     return {
-      ready:true,idx:state.replayIdx,fen:state.chess.fen(),expectedFen:fens[2],
+      ready:true,idx:state.replayIdx,fen:state.chess.fen(),expectedFen:fens[2],savedFen,
       fromHighlighted:document.querySelector("[data-square='e7']")?.classList.contains('lastmove'),
       toHighlighted:document.querySelector("[data-square='e5']")?.classList.contains('lastmove'),
       selected:document.querySelector('.review-ply[data-review-ply="2"]')?.classList.contains('selected'),
@@ -83,7 +83,7 @@ test('PGN halfmove link replays the exact resulting position and synchronizes th
       replayBarHidden:document.getElementById('replay-bar').classList.contains('hidden')
     };
   });
-  expect(restored.fen).toBeTruthy();
+  expect(restored.fen).toBe(result.savedFen);
   expect(restored.reportVisible).toBe(true);
   expect(restored.replayBarHidden).toBe(true);
 });
