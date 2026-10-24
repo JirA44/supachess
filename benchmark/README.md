@@ -108,3 +108,34 @@ pas une IA pédagogique complète ni un résultat de 800 parties exécutées.
 La force des niveaux Lichess est variable dans le temps. La récupération automatique
 des PGN, la validation des métadonnées par API, la persistance des profils utilisateurs
 et les évaluations E2E en navigateur sont encore à tester/intégrer.
+
+## Explication pédagogique de chaque demi-coup
+
+`js/centipawn-explanations.js` calcule deux grandeurs **distinctes** à partir
+des meilleures lignes Stockfish obtenues avant et après le demi-coup :
+
+- **Perte en centipions / meilleur coup** : `max(0, évaluation du meilleur coup
+  avant − évaluation du coup réellement joué après)`, avec les deux scores
+  ramenés du point de vue du joueur qui vient de jouer.
+- **Variation brute de l'évaluation côté Blancs** : `score après − score avant`
+  en gardant toujours la perspective des Blancs. Elle peut être positive alors
+  que le coup des Noirs est mauvais, et elle **n'est pas** la perte centipion.
+
+Ces nombres sont sensibles à la profondeur, au temps de recherche et aux versions
+du moteur. Une évaluation de **mat** est affichée séparément et n'est jamais
+transformée artificiellement en centipions. Si l'analyse manque, la valeur reste
+**inconnue**, pas zéro.
+
+Pour chaque demi-coup, l'interface présente la perte chiffrable, la variation
+de score, le meilleur coup proposé par le moteur et les faits démontrés :
+notamment captures adverses immédiatement légales. En absence de preuve,
+le coach dit explicitement que la cause exacte n'est pas établie, plutôt que
+de déclarer arbitrairement « faiblesse tactique » ou « mauvais plan ».
+
+**À venir** : comparer des variantes suffisamment profondes (matériel à la fin
+de la PV, changements de structure de pions, déséquilibres positionnels,
+menaces tactiques), puis valider les explications sur un corpus étiqueté par
+des entraîneurs. Une variation de centipions ne démontre pas à elle seule
+la cause stratégique de la variation.
+
+Vérification ciblée : `npm test` (Node, chess.js), puis tests navigateur.
