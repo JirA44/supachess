@@ -18,8 +18,8 @@ test("no unsupported alert after normal e4 from start", () => {
 });
 
 test("detects opponent's legal one-move capture of queen", () => {
-  const fen="3rk3/8/8/8/8/8/P7/3QK3 w - - 0 1";
-  const r=tacticalMisses(fen,"a2a3",{lossCp:100});
+  const fen="3rk3/8/8/8/8/8/3B4/3QK3 w - - 0 1";
+  const r=tacticalMisses(fen,"d2e3",{lossCp:100});
   assert.equal(r.status,"OK");
   const queen=r.diagnostics.find(d=>d.square==="d1");
   assert.ok(queen);
@@ -27,6 +27,18 @@ test("detects opponent's legal one-move capture of queen", () => {
   assert.match(queen.text,/d1/);
   assert.equal(queen.evidence,"CAPTURE_LEGALE_IMMEDIATE");
   assert.match(queen.caveat,/pas une perte nette/);
+});
+
+test("ignores an already existing capture rather than blaming the latest move", () => {
+  const r=tacticalMisses("3rk3/8/8/8/8/8/P7/3QK3 w - - 0 1","a2a3",{lossCp:100});
+  assert.equal(r.status,"OK");
+  assert.equal(r.diagnostics.some(d=>d.square==="d1"),false);
+});
+test("legal but uncorroborated capture is not called an error", () => {
+  const r=tacticalMisses("3rk3/8/8/8/8/8/3B4/3QK3 w - - 0 1","d2e3",{lossCp:0});
+  assert.equal(r.status,"OK");
+  assert.equal(r.diagnostics.length,0);
+  assert.ok(r.facts.some(f=>f.square==="d1"));
 });
 
 test("does not claim illegal capture through a blocking pawn", () => {
