@@ -87,7 +87,9 @@ async function reviewRun() {
     const replyValue = positionLines[i + 1] ? scoreValue(positionLines[i + 1]) :
       (next.in_checkmate() ? -100000 : cps[i + 1]);
     const delta = Math.max(0, beforeValue + replyValue) / 100;
-    accs[moves[i].color].push(moveAccuracyPct(before, after));
+    // Accuracy is not inferred from mate/unknown centipawn scores.
+    // Retain only scores with fully comparable CP evaluations.
+
     const uciMove = moves[i].from + moves[i].to + (moves[i].promotion || "");
     const blindspot = typeof ChessBlindspots !== "undefined"
       ? ChessBlindspots.tacticalMisses(fens[i], uciMove, { lossCp: delta * 100 }) : null;
@@ -98,12 +100,14 @@ async function reviewRun() {
           captureFacts:blindspot && blindspot.status === "OK" ? blindspot.facts : []
         }) : null;
     const verifiedLossCp = cpEvidence && cpEvidence.status === "OK" ? cpEvidence.lossCp : null;
+    const displayDelta = verifiedLossCp === null ? null : verifiedLossCp / 100;
+    if (verifiedLossCp !== null) accs[moves[i].color].push(moveAccuracyPct(before, after));
     rows.push({
       n: Math.floor(i / 2) + 1,
       color: moves[i].color,
       san: moves[i].san,
-      delta: +delta.toFixed(2),
-      tag: reviewTagOf(delta),
+      delta: displayDelta === null ? null : +displayDelta.toFixed(2),
+      tag: displayDelta === null ? "" : reviewTagOf(displayDelta),
       diagnostics: blindspot && blindspot.status === "OK" ? blindspot.diagnostics : [],
       centipawns: cpEvidence,
       lossCp: verifiedLossCp,
@@ -119,8 +123,9 @@ async function reviewRun() {
     const reply = positionLines[i + 1];
     const move = moves[i];
     const uci = move.from + move.to + (move.promotion || "");
-    const cand = { deltaCp: row.delta * 100, line: reply ? { ...reply, pv: [uci, ...reply.pv] } : null };
-    return { deltaCp: row.centipawns && row.centipawns.status !== "OK" ? null : cand.deltaCp, brilliant: row.centipawns && row.centipawns.status !== "OK" ? false : isBrilliantCandidate(fens[i], cand) };
+    const cand = { deltaCp: row.lossCp, line: reply ? { ...reply, pv: [uci, ...reply.pv] } : null };
+    const eligible = Number.isFinite(cand.deltaCp);
+    return { deltaCp: eligible ? cand.deltaCp : null, brilliant: eligible ? isBrilliantCandidate(fens[i], cand) : false };
   });
   reviewSetProgress("Analyse Stockfish terminée — bilan en cours…");
   reviewRenderLocal(rows, accW, accB, headers);
@@ -137,7 +142,7 @@ function reviewCount(rows, color, tag) {
 
 function reviewRenderLocal(rows, accW, accB, headers) {
   const worst = rows.filter((r) => r.tag).sort((a, b) => b.delta - a.delta).slice(0, 6);
-  const moveLabel = (r) => `${r.n}.${r.color === "b" ? ".." : ""} ${sanFr(r.san)} ${r.tag} (${r.delta >= 100 ? "mat forcé perdu ou concédé" : "−" + r.delta.toFixed(2)})`;
+  const moveLabel = (r) => `${r.n}.${r.color === "b" ? ".." : ""} ${sanFr(r.san)} ${r.tag} (${Number.isFinite(r.delta) ? "−" + r.delta.toFixed(2) : "non chiffrable"})`;
   const line = (col, label) =>
     `<tr><td>${label}</td><td>${col === "w" ? (accW ?? "—") : (accB ?? "—")}%</td>` +
     `<td>${reviewCount(rows, col, "?!")}</td><td>${reviewCount(rows, col, "?")}</td>` +
