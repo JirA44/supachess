@@ -192,7 +192,7 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     <div class="review-worst"><h4>Habitude à entraîner : échecs, prises, menaces</h4><p>${pedagogical}</p></div>
     ${nextPractice ? `<div class="review-worst"><h4>Plan d’entraînement personnalisé</h4><ol>${nextPractice}</ol></div>` : ""}
     <div class="review-worst"><h4>Chaque demi-coup expliqué : centipions et causes démontrables</h4><p><small>Perte relative au meilleur coup ≠ variation absolue de l’évaluation. Le moteur ne peut pas toujours établir le pourquoi en une phrase; les mats sont traités séparément.</small></p><ol>${halfmoveExplanations}</ol></div>
-    <div id="review-supa"></div>;
+    <div id="review-supa"></div>`;
   document.querySelectorAll("#review-report .review-ply-link").forEach((link) => {
     link.addEventListener("click", () => reviewJumpToPly(Number(link.dataset.reviewPly)));
   });
