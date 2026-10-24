@@ -20,30 +20,42 @@ const ChessBlindspots = (() => {
     if (!legal) return {status:"INVALID_MOVE",facts:[],diagnostics:[]};
     const result = game.move({from,to,promotion});
     if (!result) return {status:"INVALID_MOVE",facts:[],diagnostics:[]};
+    // Compare against the same board with the opponent to move BEFORE the played
+    // move. This detects an actually *new* immediate threat. The hypothetical
+    // board is only a baseline; never display it as a real game state.
+    const beforeParts = beforeFen.trim().split(/\\s+/);
+    beforeParts[1] = other(side);
+    beforeParts[3] = "-";
+    const baseline = new Chess(beforeParts.join(" "));
+    const existing = new Set(legalCaptures(baseline, side).map(m =>
+      m.from + ":" + m.to + ":" + (m.captured||"")));
     const now = legalCaptures(game,side);
     const facts = [];
     for (const move of now) {
       const victim = game.get(move.to);
       if (!victim || victim.color!==side || victim.type==="k") continue;
-      // Must never claim the loss is forced; defended captures can be bad.
+      // A capture that was already legal BEFORE this move must not be blamed
+      // on this move. Legal capture also need not be a profitable exchange.
+      const newlyExposed = !existing.has(move.from + ":" + move.to + ":" + move.captured);
       facts.push({
         id:"LEGAL_CAPTURE_NEXT_PLY",square:move.to,from:move.from,
         piece:victim.type,attacker:move.piece,
         captureSan:move.san,materialPoints:worth[victim.type],
-        fenAfter:game.fen()
+        newlyExposed,fenAfter:game.fen()
       });
     }
     const seen = new Set();
     const diagnostics = [];
-    for (const fact of facts.sort((a,b)=>b.materialPoints-a.materialPoints)) {
+    for (const fact of facts.filter(f=>f.newlyExposed).sort((a,b)=>b.materialPoints-a.materialPoints)) {
       if (seen.has(fact.square)) continue;
       seen.add(fact.square);
       const significant = Number.isFinite(opts.lossCp) && opts.lossCp>=60;
+      if (!significant) continue; // No learning-deficit claim without a corroborating engine loss.
       diagnostics.push({
         code:"PIECE_EN_PRISE_EN_UN_COUP",
         square:fact.square,
         move:result.san,
-        severity:significant?"erreur_probable":"attention",
+        severity:"erreur_probable",
         evidence:"CAPTURE_LEGALE_IMMEDIATE",
         text:`Après ${result.san}, ta ${names[fact.piece]} en ${fact.square} pouvait être prise immédiatement par ${fact.captureSan}. Avais-tu vérifié cette capture adverse avant de jouer ?`,
         caveat:"La capture est légale, mais cela ne prouve pas une perte nette de matériel : vérifier les échanges et l'analyse moteur.",
