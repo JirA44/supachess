@@ -30,10 +30,19 @@ function isManualMode() { return $("sel-elo").value === "manual"; }
 /* ── Init moteur ── */
 async function init() {
   setStatus("Chargement du moteur…");
-  state.engine = new StockfishEngine("vendor/stockfish-18-lite-single.js");
-  await state.engine.ready;
+  const sf19WasmUrl = "https://cdn.jsdelivr.net/npm/stockfish@19.0.1/bin/stockfish-19-lite-single.wasm";
+  state.engine = new StockfishEngine("vendor/stockfish-19-worker.js#" + encodeURIComponent(sf19WasmUrl));
+  try {
+    await state.engine.ready;
+  } catch (error) {
+    console.error("[engine] Stockfish 19 unavailable:", error);
+    $("engine-dot").className = "status-dot";
+    $("engine-label").textContent = "Stockfish 19 indisponible";
+    setStatus("Impossible de charger Stockfish 19. Vérifiez la connexion puis rechargez la page.");
+    return;
+  }
   $("engine-dot").className = "status-dot ready";
-  $("engine-label").textContent = state.engine.engineName + " (NNUE) — prêt";
+  $("engine-label").textContent = state.engine.engineName + " (Stockfish 19 NNUE) — prêt";
   document.body.dataset.engineReady = "1";
   newGame();
 }
@@ -170,7 +179,7 @@ function breakdownHtml(bd, cls) {
 async function playEngineMove() {
   state.phase = "engineThinking";
   const gen = ++state.gen;
-  setStatus("Stockfish réfléchit…");
+  setStatus("Stockfish 19 réfléchit…");
   boardUI.dots = [];
   renderBoard();
   const fen = state.chess.fen();
@@ -674,8 +683,8 @@ $("btn-pgn").addEventListener("click", () => {
     "Event", "SupaChess entraînement",
     "Site", "https://jira44.github.io/supachess/",
     "Date", `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`,
-    "White", state.userColor === "w" ? "Joueur" : "Stockfish 18",
-    "Black", state.userColor === "b" ? "Joueur" : "Stockfish 18"
+    "White", state.userColor === "w" ? "Joueur" : "Stockfish 19",
+    "Black", state.userColor === "b" ? "Joueur" : "Stockfish 19"
   );
   const blob = new Blob([state.chess.pgn()], { type: "application/x-chess-pgn" });
   const a = document.createElement("a");
