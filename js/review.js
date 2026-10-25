@@ -150,7 +150,9 @@ async function reviewRun() {
     const uci = move.from + move.to + (move.promotion || "");
     const cand = { deltaCp: row.lossCp, line: reply ? { ...reply, pv: [uci, ...reply.pv] } : null };
     const eligible = Number.isFinite(cand.deltaCp);
-    return { deltaCp: eligible ? cand.deltaCp : null, brilliant: eligible ? isBrilliantCandidate(fens[i], cand) : false };
+    const evaluation = reply && (reply.scoreCp !== null || reply.mate !== null)
+      ? formatScore(reply, move.color === "b") : "—";
+    return { deltaCp: eligible ? cand.deltaCp : null, brilliant: eligible ? isBrilliantCandidate(fens[i], cand) : false, evaluation };
   });
   rows.forEach((row, i) => { row.classification = reviewClassOf(row, reviewState.grades[i]); });
   reviewSetProgress("Analyse Stockfish terminée — bilan en cours…");
@@ -344,7 +346,8 @@ async function replayGoto(i) {
     moveFeedback.show({ san: move.san, color: move.color, moveNumber: moveNumberFromFen(reviewState.fens[idx - 1]),
       square: move.to, deltaCp: grade ? grade.deltaCp : null, brilliant: grade ? grade.brilliant : false, mode: "replay" });
     const replayGrade = moveGrade(grade ? grade.deltaCp : null, grade ? grade.brilliant : false);
-    boardUI.lastMove = { from: move.from, to: move.to, san: move.san, grade: replayGrade };
+    boardUI.lastMove = { from: move.from, to: move.to, san: move.san, grade: replayGrade,
+      evaluation: reviewState.grades[idx - 1]?.evaluation || "—" };
   }
   state.replayIdx = idx;
   state.chess = new Chess(reviewState.fens[idx]);
@@ -353,7 +356,9 @@ async function replayGoto(i) {
   state.candidates = [];
   state.accuracy.pendingEngine = null;
   state.pendingMove = null;
-  boardUI.lastMove = idx > 0 ? { from: reviewState.moves[idx - 1].from, to: reviewState.moves[idx - 1].to, san: reviewState.moves[idx - 1].san, grade: moveGrade(reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].deltaCp : null, reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].brilliant : false) } : null;
+  boardUI.lastMove = idx > 0 ? { from: reviewState.moves[idx - 1].from, to: reviewState.moves[idx - 1].to, san: reviewState.moves[idx - 1].san,
+    grade: moveGrade(reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].deltaCp : null, reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].brilliant : false),
+    evaluation: reviewState.grades[idx - 1]?.evaluation || "—" } : null;
   boardUI.dots = [];
   boardUI.selected = null;
   boardUI.legalTargets = [];
