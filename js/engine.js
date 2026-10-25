@@ -1,4 +1,4 @@
-/* engine.js — wrapper UCI autour de stockfish-18-lite-single.js (Web Worker).
+/* engine.js — wrapper UCI autour du worker Stockfish 19 (Web Worker).
    File de requêtes séquentielle : une analyse à la fois. */
 "use strict";
 
@@ -10,9 +10,20 @@ class StockfishEngine {
     this.current = null;
     this.engineName = "Stockfish";
     this.readyResolve = null;
-    this.ready = new Promise((res) => { this.readyResolve = res; });
+    this.readyReject = null;
+    this.ready = new Promise((resolve, reject) => {
+      this.readyResolve = resolve;
+      this.readyReject = reject;
+    });
     this.worker.onmessage = (e) => this._onLine(String(e.data));
-    this.worker.onerror = (e) => console.error("[engine] worker error:", e.message || e);
+    this.worker.onerror = (e) => {
+      console.error("[engine] worker error:", e.message || e);
+      if (this.readyReject) {
+        this.readyReject(new Error(e.message || "Stockfish worker failed to load"));
+        this.readyResolve = null;
+        this.readyReject = null;
+      }
+    };
     this._send("uci");
   }
 
@@ -28,7 +39,7 @@ class StockfishEngine {
       return;
     }
     if (line === "readyok") {
-      if (this.readyResolve) { this.readyResolve(); this.readyResolve = null; }
+      if (this.readyResolve) { this.readyResolve(); this.readyResolve = null; this.readyReject = null; }
       return;
     }
     const job = this.current;
