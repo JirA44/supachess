@@ -53,7 +53,8 @@ class BoardUI {
         if (dot) {
           const d = document.createElement("span");
           d.className = "cdot tone-" + dot.quality;
-          d.textContent = dotsHere.length > 1 ? `${dot.label} +${dotsHere.length - 1}` : dot.label || dot.rank;
+          const label = dotsHere.length > 1 ? `${dot.label} +${dotsHere.length - 1}` : dot.label || dot.rank;
+          appendBoardBubbleText(d, label, dot.evaluation);
           d.title = dotsHere.map((move) => move.title).join("\n") || "Coup candidat";
           d.setAttribute("aria-label", d.title);
           cell.appendChild(d);
@@ -61,15 +62,17 @@ class BoardUI {
         if (this.previewDot && this.previewDot.square === sq) {
           const preview = document.createElement("span");
           preview.className = "cdot preview-move-bubble tone-" + this.previewDot.quality;
-          preview.textContent = this.previewDot.label;
+          appendBoardBubbleText(preview, this.previewDot.label, this.previewDot.evaluation);
           preview.title = this.previewDot.title;
           cell.appendChild(preview);
         }
         if (this.lastMove && this.lastMove.to === sq && this.lastMove.grade) {
           const note = document.createElement("span");
           note.className = "played-move-bubble tone-" + this.lastMove.grade.tone;
-          note.textContent = `${this.lastMove.grade.symbol} ${this.lastMove.grade.rating === null ? "…" : this.lastMove.grade.rating + "/10"}`;
+          const rating = this.lastMove.grade.rating === null ? "…" : this.lastMove.grade.rating;
+          appendBoardBubbleText(note, `${this.lastMove.grade.symbol}${rating}`, this.lastMove.evaluation);
           note.title = `${this.lastMove.san || "Coup joué"} · ${this.lastMove.grade.rating === null ? "analyse en cours" : this.lastMove.grade.label}`;
+          note.setAttribute("aria-label", `${note.title} · évaluation ${this.lastMove.evaluation || "indisponible"}`);
           cell.appendChild(note);
         }
         // Coordonnées sur les bords
@@ -90,6 +93,16 @@ class BoardUI {
       }
     }
   }
+}
+
+function appendBoardBubbleText(bubble, grade, evaluation) {
+  const gradeLine = document.createElement("span");
+  gradeLine.className = "board-bubble-grade";
+  gradeLine.textContent = grade || "…";
+  const evalLine = document.createElement("span");
+  evalLine.className = "board-bubble-eval";
+  evalLine.textContent = evaluation || "—";
+  bubble.append(gradeLine, evalLine);
 }
 
 /* Couleur de qualité d'un coup candidat selon sa perte d'éval vs le top-1. */
