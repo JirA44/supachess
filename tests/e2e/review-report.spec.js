@@ -23,6 +23,30 @@ test('PGN report: per-ply losses, evidence and training are actually rendered',a
   await expect(page.locator('#review-report')).toContainText('Plan d’entraînement personnalisé');
 });
 
+test('PGN report: two player columns show move symbols and stack on narrow screens',async({page})=>{
+  await page.goto('/index.html');
+  await page.evaluate(()=>{
+    const moves=[
+      {n:1,color:'w',san:'e4',bestMove:true,delta:0,lossCp:0,tag:'',diagnostics:[],centipawns:{status:'OK',lossCp:0,swingWhiteCp:0,explanation:'Proche du meilleur coup.',observations:[]}},
+      {n:1,color:'b',san:'e5',bestMove:false,delta:.8,lossCp:80,tag:'?',diagnostics:[],centipawns:{status:'OK',lossCp:80,swingWhiteCp:80,explanation:'Perte évaluée.',observations:[]}}
+    ];
+    reviewState.grades=moves.map(()=>({deltaCp:0,brilliant:false}));
+    reviewRenderLocal(moves,89.7,94.1,{White:'th7mas',Black:'HeyoAP',Result:'0-1'});
+  });
+  await expect(page.locator('.review-player-card')).toHaveCount(2);
+  await expect(page.locator('.review-player-w .review-grade-best')).toContainText('★');
+  await expect(page.locator('.review-player-b .review-grade-mistake')).toContainText('1');
+  await expect(page.locator('#review-report')).toContainText('89.7%');
+  await expect(page.locator('#review-report')).toContainText('94.1%');
+  await page.setViewportSize({width:375,height:800});
+  const mobileLayout=await page.locator('.review-player-grid').evaluate((node)=>({
+    media:matchMedia('(max-width: 560px)').matches,
+    columns:getComputedStyle(node).gridTemplateColumns
+  }));
+  expect(mobileLayout.media).toBe(true);
+  expect(mobileLayout.columns).toBe('minmax(0px, 1fr)');
+});
+
 test('PGN halfmove link replays the exact resulting position and synchronizes the report',async({page})=>{
   await page.goto('/index.html');
   const result=await page.evaluate(async()=>{

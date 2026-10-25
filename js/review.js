@@ -6,6 +6,17 @@
 
 const REVIEW_BASE = "http://localhost:8778";
 const REVIEW_TIMEOUT_MS = 150000;
+const REVIEW_MOVE_CLASSES = [
+  { id: "brilliant", symbol: "!!", label: "Brillant" },
+  { id: "best", symbol: "★", label: "Meilleur coup" },
+  { id: "very-good", symbol: "!", label: "Très bon coup" },
+  { id: "good", symbol: "✓", label: "Bon coup" },
+  { id: "ok", symbol: "=", label: "Coup OK" },
+  { id: "inaccuracy", symbol: "?!", label: "Imprécision" },
+  { id: "mistake", symbol: "?", label: "Erreur" },
+  { id: "blunder", symbol: "??", label: "Gaffe" },
+  { id: "unrated", symbol: "…", label: "Non évalué" },
+];
 
 const reviewState = { fens: [], moves: [], grades: [], running: false, returnState: null };
 
@@ -32,6 +43,18 @@ function reviewTagOf(delta) {
   if (delta >= 0.6) return "?";
   if (delta >= 0.3) return "?!";
   return "";
+}
+
+function reviewClassOf(row, grade = {}) {
+  if (!Number.isFinite(row.lossCp)) return "unrated";
+  if (row.lossCp >= 200) return "blunder";
+  if (row.lossCp >= 60) return "mistake";
+  if (row.lossCp >= 30) return "inaccuracy";
+  if (grade.brilliant && row.lossCp <= 10) return "brilliant";
+  if (row.bestMove && row.lossCp <= 10) return "best";
+  if (row.lossCp <= 10) return "very-good";
+  if (row.lossCp <= 20) return "good";
+  return "ok";
 }
 
 async function reviewRun() {
@@ -91,6 +114,7 @@ async function reviewRun() {
     // Retain only scores with fully comparable CP evaluations.
 
     const uciMove = moves[i].from + moves[i].to + (moves[i].promotion || "");
+    const bestMove = positionLines[i]?.pv?.[0] === uciMove;
     const blindspot = typeof ChessBlindspots !== "undefined"
       ? ChessBlindspots.tacticalMisses(fens[i], uciMove, { lossCp: delta * 100 }) : null;
     const cpEvidence = typeof SupaChessCentipawns !== "undefined"
@@ -106,6 +130,7 @@ async function reviewRun() {
       n: Math.floor(i / 2) + 1,
       color: moves[i].color,
       san: moves[i].san,
+      bestMove,
       delta: displayDelta === null ? null : +displayDelta.toFixed(2),
       tag: displayDelta === null ? "" : reviewTagOf(displayDelta),
       diagnostics: blindspot && blindspot.status === "OK" ? blindspot.diagnostics : [],
@@ -127,6 +152,7 @@ async function reviewRun() {
     const eligible = Number.isFinite(cand.deltaCp);
     return { deltaCp: eligible ? cand.deltaCp : null, brilliant: eligible ? isBrilliantCandidate(fens[i], cand) : false };
   });
+  rows.forEach((row, i) => { row.classification = reviewClassOf(row, reviewState.grades[i]); });
   reviewSetProgress("Analyse Stockfish terminée — bilan en cours…");
   reviewRenderLocal(rows, accW, accB, headers);
   document.getElementById("btn-replay-game").classList.remove("hidden");
@@ -137,16 +163,31 @@ async function reviewRun() {
 }
 
 function reviewCount(rows, color, tag) {
-  return rows.filter((r) => r.color === color && r.tag === tag).length;
+  return rows.filter((r) => r.color === color && r.classification === tag).length;
 }
 
 function reviewRenderLocal(rows, accW, accB, headers) {
+  rows.forEach((row, i) => {
+    row.classification = reviewClassOf(row, reviewState.grades[i]);
+    row.ply = i + 1;
+  });
   const worst = rows.filter((r) => r.tag).sort((a, b) => b.delta - a.delta).slice(0, 6);
   const moveLabel = (r) => `${r.n}.${r.color === "b" ? ".." : ""} ${sanFr(r.san)} ${r.tag} (${Number.isFinite(r.delta) ? "−" + r.delta.toFixed(2) : "non chiffrable"})`;
-  const line = (col, label) =>
-    `<tr><td>${label}</td><td>${col === "w" ? (accW ?? "—") : (accB ?? "—")}%</td>` +
-    `<td>${reviewCount(rows, col, "?!")}</td><td>${reviewCount(rows, col, "?")}</td>` +
-    `<td>${reviewCount(rows, col, "??")}</td></tr>`;
+  const moveButton = (row) => {
+    const heading = `${row.n}${row.color === "w" ? "." : "..."} ${sanFr(row.san)}`;
+    return `<li class="review-ply" data-review-ply="${row.ply}"><button type="button" class="review-ply-link" data-review-ply="${row.ply}" aria-label="Aller à la position après ${esc(heading)}">${esc(heading)}</button></li>`;
+  };
+  const playerCard = (color, name, accuracy) => `<section class="review-player-card review-player-${color}">
+    <div class="review-player-head"><h4>${esc(name)}</h4><strong class="review-player-accuracy">${Number.isFinite(accuracy) ? `${accuracy}%` : "—"}</strong></div>
+    <div class="review-grade-list">${REVIEW_MOVE_CLASSES.map((category) => {
+      const moves = rows.filter((row) => row.color === color && row.classification === category.id);
+      const count = reviewCount(rows, color, category.id);
+      const moveList = moves.length
+        ? `<details class="review-grade-moves"><summary>${moves.length} coup${moves.length === 1 ? "" : "s"}</summary><ol>${moves.map(moveButton).join("")}</ol></details>`
+        : "";
+      return `<div class="review-grade-row review-grade-${category.id}" title="${category.label}"><span class="review-grade-symbol" aria-hidden="true">${category.symbol}</span><span class="review-grade-label">${category.label}</span><span class="review-grade-count">${count}</span>${moveList}</div>`;
+    }).join("")}</div>
+  </section>`;
   const halfmoveExplanations = rows.map((r, idx) => {
     const cp = r.centipawns;
     const heading = `${r.n}${r.color === "w" ? "." : "..."} ${sanFr(r.san)}`;
@@ -183,8 +224,7 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     <div class="review-local">
       <h3>Bilan Stockfish (local)</h3>
       <div class="review-meta">${esc(headers.White || "Blancs")} vs ${esc(headers.Black || "Noirs")} — ${esc(headers.Result || "*")}</div>
-      <table class="stats-table"><thead><tr><th></th><th>Précision</th><th>?!</th><th>?</th><th>??</th></tr></thead>
-      <tbody>${line("w", "Blancs")}${line("b", "Noirs")}</tbody></table>
+      <div class="review-player-grid">${playerCard("w", headers.White || "Blancs", accW)}${playerCard("b", headers.Black || "Noirs", accB)}</div>
       ${worst.length ? `<div class="review-worst"><strong>Moments clés :</strong> ${worst.map(moveLabel).map(esc).join(" · ")}</div>`
         : "<div class='review-worst'>Aucune erreur notable détectée.</div>"}
     </div>
