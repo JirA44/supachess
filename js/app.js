@@ -30,8 +30,7 @@ function isManualMode() { return $("sel-elo").value === "manual"; }
 /* ── Init moteur ── */
 async function init() {
   setStatus("Chargement du moteur…");
-  const sf19WasmUrl = "https://cdn.jsdelivr.net/npm/stockfish@19.0.1/bin/stockfish-19-lite-single.wasm";
-  state.engine = new StockfishEngine("vendor/stockfish-19-worker.js#" + encodeURIComponent(sf19WasmUrl));
+  state.engine = new StockfishEngine("vendor/stockfish-19-lite-single.js");
   try {
     await state.engine.ready;
   } catch (error) {
