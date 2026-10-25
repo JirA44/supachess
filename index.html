@@ -213,11 +213,12 @@
 
 <footer class="site-footer">\n  <a href="learn-moves.html" class="hub-link">🎓 Apprendre à compter & calculer les coups</a>
   <a href="https://jira44.github.io/supachess-web/" target="_blank" rel="noopener" class="hub-link">♞ Hub SupaChess</a>
-  <span class="visitor-counter">
-    <img src="https://api.visitorbadge.io/api/visitors?path=supachess.jira44.github.io&label=Visiteurs&countColor=%237fc97f" alt="Compteur de visiteurs" />
-  </span>
+  <span id="registered-members-count" class="registered-members-count" aria-live="polite">Membres inscrits : chargement…</span>
 </footer>
 
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<script src="js/site-stats.js"></script>
 <script src="vendor/chess.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/coach.js"></script>
