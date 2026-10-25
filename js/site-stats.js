@@ -25,7 +25,7 @@
     };
 
     var app = firebase.apps.length ? firebase.app() : firebase.initializeApp(config);
-    app.firestore().collection("site_stats").doc("counters").onSnapshot(function (snapshot) {
+    firebase.firestore(app).collection("site_stats").doc("counters").onSnapshot(function (snapshot) {
       var count = snapshot.exists ? snapshot.data().registered_users : null;
       if (!Number.isSafeInteger(count) || count < 0) {
         unavailable();
