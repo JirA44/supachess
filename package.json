@@ -13,6 +13,6 @@
   "dependencies": {
     "chess.js": "^0.13.4",
     "playwright": "^1.60.0",
-    "stockfish": "^16.0.0"
+    "stockfish": "19.0.1"
   }
 }
