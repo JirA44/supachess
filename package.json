@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node --test test/blindspots.test.cjs test/centipawns.test.cjs test/learning-loop.test.cjs test/review-report.test.cjs"
+    "test": "node --test test/blindspots.test.cjs test/centipawns.test.cjs test/learning-loop.test.cjs test/review-report.test.cjs test/board-bubbles.test.cjs"
   },
   "keywords": [],
   "author": "",

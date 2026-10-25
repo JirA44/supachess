@@ -96,14 +96,16 @@ body {
 
 /* Candidate dots */
 .sq .cdot, .played-move-bubble {
-  position: absolute; z-index: 4; display: inline-flex; align-items: center; justify-content: center;
-  min-width: max-content; max-width: 96px; padding: 2px 5px; border-radius: 999px;
+  position: absolute; z-index: 4; display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+  min-width: 30px; max-width: 78px; padding: 2px 4px; border-radius: 7px;
   border: 1px solid rgba(0,0,0,.65); box-shadow: 0 2px 6px rgba(0,0,0,.55);
-  font-size: clamp(7px, 1.3vw, 11px); font-weight: 900; line-height: 1.2;
-  white-space: nowrap; color: #10131b;
+  font-size: clamp(7px, 1.3vw, 11px); font-weight: 900; line-height: 1.05;
+  white-space: nowrap; color: #10131b; font-variant-numeric: tabular-nums;
 }
 .sq .cdot { top: 2px; right: 2px; }
 .played-move-bubble { bottom: 2px; left: 2px; }
+.board-bubble-grade { font-size: 1em; }
+.board-bubble-eval { font-size: .82em; font-weight: 750; opacity: .88; }
 .cdot.q-best, .tone-best { background: var(--green); }
 .cdot.q-good, .tone-good { background: var(--yellow); }
 .cdot.q-mid, .tone-mid { background: var(--orange); }
