@@ -1,4 +1,4 @@
-/* engine.js — wrapper UCI autour de stockfish-18-lite-single.js (Web Worker).
+/* engine.js — wrapper UCI autour de stockfish-19-lite-single.js (Web Worker).
    File de requêtes séquentielle : une analyse à la fois. */
 "use strict";
 
@@ -116,3 +116,4 @@ function formatScore(lineInfo, sideIsWhite) {
   const v = (lineInfo.scoreCp * sign) / 100;
   return (v > 0 ? "+" : "") + v.toFixed(2);
 }
+

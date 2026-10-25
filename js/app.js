@@ -30,7 +30,7 @@ function isManualMode() { return $("sel-elo").value === "manual"; }
 /* ── Init moteur ── */
 async function init() {
   setStatus("Chargement du moteur…");
-  state.engine = new StockfishEngine("vendor/stockfish-18-lite-single.js");
+  state.engine = new StockfishEngine("vendor/stockfish-19-lite-single.js");
   await state.engine.ready;
   $("engine-dot").className = "status-dot ready";
   $("engine-label").textContent = state.engine.engineName + " (NNUE) — prêt";
@@ -674,8 +674,8 @@ $("btn-pgn").addEventListener("click", () => {
     "Event", "SupaChess entraînement",
     "Site", "https://jira44.github.io/supachess/",
     "Date", `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`,
-    "White", state.userColor === "w" ? "Joueur" : "Stockfish 18",
-    "Black", state.userColor === "b" ? "Joueur" : "Stockfish 18"
+    "White", state.userColor === "w" ? "Joueur" : "Stockfish 19",
+    "Black", state.userColor === "b" ? "Joueur" : "Stockfish 19"
   );
   const blob = new Blob([state.chess.pgn()], { type: "application/x-chess-pgn" });
   const a = document.createElement("a");
@@ -705,3 +705,4 @@ $("btn-fen").addEventListener("click", () => {
 });
 
 init();
+
