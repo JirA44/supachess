@@ -123,7 +123,9 @@ function buildCandidates(lines, fen) {
   for (const cand of state.candidates) {
     const square = cand.uci.slice(2, 4);
     const grade = moveGrade(cand.deltaCp, isBrilliantCandidate(fen, cand));
-    const moveBadge = { san: cand.san, label: `${grade.symbol} ${grade.rating} / 10`, grade, rank: cand.rank };
+    const evaluation = cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
+      ? formatScore(cand.line, state.chess.turn() === "w") : "—";
+    const moveBadge = { san: cand.san, label: `${grade.symbol}${grade.rating ?? "…"}`, evaluation, grade, rank: cand.rank };
     if (!dotsBySquare.has(square)) dotsBySquare.set(square, []);
     dotsBySquare.get(square).push(moveBadge);
   }
@@ -133,8 +135,9 @@ function buildCandidates(lines, fen) {
     return {
       square,
       label: featured.label,
+      evaluation: featured.evaluation,
       quality: featured.grade.tone,
-      title: moves.map((move) => `${move.san}: ${move.label}`).join("\n"),
+      title: moves.map((move) => `${move.san}: ${move.label} · ${move.evaluation}`).join("\n"),
     };
   });
 }
@@ -217,6 +220,8 @@ function finishEngineFeedback(pending, replyLine) {
     deltaCp, brilliant, token: pending.token });
   if (boardUI.lastMove && boardUI.lastMove.to === pending.square) {
     boardUI.lastMove.grade = grade;
+    boardUI.lastMove.evaluation = replyLine && (replyLine.scoreCp !== null || replyLine.mate !== null)
+      ? formatScore(replyLine, pending.color === "b") : "—";
     renderBoard();
   }
 }
@@ -393,7 +398,9 @@ function commitUserMove(moveObj, cand, forced) {
   const grade = moveGrade(cand ? cand.deltaCp : null, brilliant);
   moveFeedback.show({ san: mv.san, color: mv.color, moveNumber: moveNumberFromFen(fenBefore), square: mv.to,
     deltaCp: cand ? cand.deltaCp : null, brilliant });
-  boardUI.lastMove = { from: mv.from, to: mv.to, san: mv.san, grade };
+  const evaluation = cand && cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
+    ? formatScore(cand.line, userMoveColor === "w") : "—";
+  boardUI.lastMove = { from: mv.from, to: mv.to, san: mv.san, grade, evaluation };
   // Précision du coup utilisateur : avant = meilleur candidat, après = candidat joué.
   if (cand && state.candidates.length) {
     recordAccuracy(userMoveColor,
