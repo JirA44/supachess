@@ -37,8 +37,8 @@ function gamesBuildPgn(result) {
     "Event", "SupaChess entraînement",
     "Site", "https://jira44.github.io/supachess/",
     "Date", `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`,
-    "White", state.userColor === "w" ? "Joueur" : "Stockfish 18",
-    "Black", state.userColor === "b" ? "Joueur" : "Stockfish 18",
+    "White", state.userColor === "w" ? "Joueur" : "Stockfish 19",
+    "Black", state.userColor === "b" ? "Joueur" : "Stockfish 19",
     "Result", result
   );
   return state.chess.pgn();
@@ -120,3 +120,4 @@ document.getElementById("btn-export-all").addEventListener("click", () => {
 });
 
 gamesRenderPanel();
+

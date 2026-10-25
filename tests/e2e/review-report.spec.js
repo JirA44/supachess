@@ -99,6 +99,12 @@ test('PGN halfmove link replays the exact resulting position and synchronizes th
   expect(result.selected).toBe(true);
   expect(result.ariaCurrent).toBe('step');
   expect(result.replayBarVisible).toBe(true);
+  await page.keyboard.press('ArrowLeft');
+  await expect.poll(() => page.evaluate(() => state.replayIdx)).toBe(1);
+  await expect.poll(() => page.locator('.review-ply[data-review-ply="1"]').evaluateAll(nodes => nodes.length > 0 && nodes.every(node => node.classList.contains('selected')))).toBe(true);
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => page.evaluate(() => state.replayIdx)).toBe(2);
+  await expect.poll(() => page.locator('.review-ply[data-review-ply="2"]').evaluateAll(nodes => nodes.length > 0 && nodes.every(node => node.classList.contains('selected')))).toBe(true);
   const restored=await page.evaluate(()=>{
     document.getElementById('btn-replay-quit').click();
     return {
@@ -111,3 +117,4 @@ test('PGN halfmove link replays the exact resulting position and synchronizes th
   expect(restored.reportVisible).toBe(true);
   expect(restored.replayBarHidden).toBe(true);
 });
+

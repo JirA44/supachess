@@ -382,3 +382,16 @@ document.getElementById("btn-replay-game").addEventListener("click", () => {
 document.getElementById("btn-replay-prev").addEventListener("click", () => replayGoto((state.replayIdx || 0) - 1).catch(console.error));
 document.getElementById("btn-replay-next").addEventListener("click", () => replayGoto((state.replayIdx || 0) + 1).catch(console.error));
 document.getElementById("btn-replay-quit").addEventListener("click", reviewRestoreAfterReplay);
+if (typeof document.addEventListener === "function") document.addEventListener("keydown", (event) => {
+  if (!reviewState.returnState || document.getElementById("replay-bar").classList.contains("hidden")) return;
+  const target = event.target;
+  if (target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+  if (event.key === "ArrowLeft") {
+    event.preventDefault();
+    replayGoto((state.replayIdx || 0) - 1).catch(console.error);
+  } else if (event.key === "ArrowRight") {
+    event.preventDefault();
+    replayGoto((state.replayIdx || 0) + 1).catch(console.error);
+  }
+});
+
