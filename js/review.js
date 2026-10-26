@@ -363,6 +363,10 @@ function reviewSyncSelectedPly(ply) {
   });
 }
 
+function reviewCorrectionLossText(lossCp){
+  return Number.isFinite(lossCp)?`${lossCp.toLocaleString("fr-FR",{maximumFractionDigits:1})} centipions`:"perte mesurée";
+}
+
 function reviewStartCorrectionExercises(items,headers={}){
   const valid=Array.isArray(items)?items.filter((item)=>item&&item.fen&&item.bestUci):[];
   if(!valid.length)return;
@@ -400,7 +404,7 @@ function reviewShowCorrectionExercise(index){
   document.getElementById("review-exercise-heading").textContent=
     `Exercice ${index+1}/${exercise.items.length} · ${reviewCorrectionLabel(item.classification)} · ${colorName}`;
   const moveHeading=`${item.moveNumber}${item.color==="w"?".":"..."} ${item.playedSan}`;
-  const lossText=Number.isFinite(item.lossCp)?`${item.lossCp.toLocaleString("fr-FR",{maximumFractionDigits:1})} centipions`:"perte mesurée";
+  const lossText=reviewCorrectionLossText(item.lossCp);
   document.getElementById("review-exercise-prompt").textContent=
     `Dans la partie, ${moveHeading} (${reviewCorrectionLabel(item.classification).toLowerCase()}) faisait perdre ${lossText}. Trouve le meilleur coup.`;
   document.getElementById("review-exercise-feedback").textContent="À toi de jouer : clique une pièce puis sa case cible.";
@@ -443,7 +447,7 @@ function reviewHandleExerciseSquareClick(square){
       boardUI.selected=null;boardUI.legalTargets=[];
       boardUI.lastMove={from:selected,to:square,san:played.san};
       document.getElementById("review-exercise-feedback").textContent=
-        `Bien joué : ${played.san} est le meilleur coup. Dans la partie, ${item.playedSan} faisait perdre ${lossText}.`;
+        `Bien joué : ${played.san} est le meilleur coup. Dans la partie, ${item.playedSan} faisait perdre ${reviewCorrectionLossText(item.lossCp)}.`;
       document.getElementById("btn-review-exercise-next").disabled=false;
       setStatus("Position corrigée.");
       renderAll();
