@@ -241,7 +241,7 @@
           const played = playUci(branch, action.uci);
           if (played) {
             const legal = position.moves({ verbose: true });
-            const choices = [{ text: "Jouer " + frenchSanToEngine(played.san).replace(/N/g, "C").replace(/B/g, "F").replace(/Q/g, "D").replace(/R/g, "T").replace(/K/g, "R"), correct: true }];
+            const choices = [{ text: "Jouer " + played.san.replace(/N/g, "C").replace(/B/g, "F").replace(/Q/g, "D").replace(/R/g, "T").replace(/K/g, "R"), correct: true }];
             for (const option of legal) {
               if (option.from + option.to + (option.promotion || "") === action.uci) continue;
               const san = option.san.replace(/N/g, "C").replace(/B/g, "F").replace(/Q/g, "D").replace(/R/g, "T").replace(/K/g, "R");
