@@ -25,6 +25,7 @@ test("each lesson asks for a principle and cites its source", () => {
     assert.ok(lesson.question);
     assert.ok(lesson.choices.some((choice) => choice.correct));
     assert.ok(lesson.principle);
+    assert.ok(lesson.transfer, `${lesson.id} should tell the learner how to reuse the idea`);
     assert.ok(lesson.author && lesson.book && lesson.reference);
     assert.ok(lesson.sequence.some((action) => action.side === "user"));
   }
