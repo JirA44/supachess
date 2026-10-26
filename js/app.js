@@ -43,6 +43,27 @@ function thresholdCp() { return Math.round(parseFloat($("sel-threshold").value) 
 function movetime() { return parseInt($("sel-movetime").value, 10); }
 function opponentElo() { return parseInt($("sel-elo").value, 10); }
 function isManualMode() { return $("sel-elo").value === "manual"; }
+function opponentThinkTime() { return movetime(); }
+
+/* Indicative FIDE-like estimate only: anchor full-power SF19 at 3500 for 3s,
+   then adjust by about 35 points per doubling of engine think time. */
+function estimateOpponentFideLikeElo(elo, thinkTimeMs) {
+  const base = elo === 0 ? 3500 : elo;
+  const timeAdjustment = 35 * Math.log2(thinkTimeMs / 3000);
+  return Math.max(800, Math.min(3500, Math.round((base + timeAdjustment) / 10) * 10));
+}
+function updateOpponentFideEstimate() {
+  const output = $("opponent-fide-estimate");
+  if (!output) return;
+  if (isManualMode()) {
+    output.textContent = "Mode manuel — aucun adversaire moteur";
+    return;
+  }
+  const thinkTime = opponentThinkTime();
+  const seconds = (thinkTime / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 });
+  const rating = estimateOpponentFideLikeElo(opponentElo(), thinkTime).toLocaleString("fr-FR");
+  output.textContent = `≈ ${rating} Elo FIDE-like estimés · Stockfish 19, ${seconds} s`;
+}
 
 /* ── Init moteur ── */
 async function init() {
@@ -185,10 +206,13 @@ async function playEngineMove() {
   renderBoard();
   const fen = state.chess.fen();
   const elo = opponentElo();
-  // La note compare le coup de l'adversaire au meilleur coup à pleine force.
-  const baseline = await state.engine.analyze({ fen, multipv: 1, movetime: Math.min(movetime(), 1200), elo: 0 });
+  const thinkTime = opponentThinkTime();
+  // La référence reste rapide; le coup adverse utilise bien le temps choisi.
+  const baseline = await state.engine.analyze({ fen, multipv: 1, movetime: Math.min(thinkTime, 1200), elo: 0 });
   if (state.gen !== gen || state.chess.fen() !== fen) return;
-  const res = elo === 0 ? baseline : await state.engine.analyze({ fen, multipv: 1, movetime: Math.min(movetime(), 1200), elo });
+  const res = elo === 0 && thinkTime <= 1200
+    ? baseline
+    : await state.engine.analyze({ fen, multipv: 1, movetime: thinkTime, elo });
   if (state.gen !== gen || state.chess.fen() !== fen) return;
   if (!res.bestmove || res.bestmove === "(none)") { checkGameOver(); return; }
   const engineColor = state.chess.turn();
@@ -732,15 +756,18 @@ $("btn-move-dots").addEventListener("click", () => {
   renderBoard();
 });
 $("sel-color").addEventListener("change", newGame);
-$("sel-elo").addEventListener("change", () => {
-  // Changement de mode en cours de partie : on invalide les analyses en vol
-  // et on relance le tour (l'engine reprend la main si c'est son tour).
+function onOpponentSettingsChange() {
+  updateOpponentFideEstimate();
+  // Recalcule aussi si le niveau ou le temps change pendant une partie.
   if (state.phase === "gameover" || state.phase === "init") return;
   state.gen++;
   state.pendingMove = null;
   hideCoach();
   startTurn();
-});
+}
+$("sel-elo").addEventListener("change", onOpponentSettingsChange);
+$("sel-movetime").addEventListener("change", onOpponentSettingsChange);
+updateOpponentFideEstimate();
 $("btn-force").addEventListener("click", () => {
   if (state.pendingMove) {
     const { from, to, promotion, cand } = state.pendingMove;
