@@ -1,29 +1,31 @@
 const { test, expect } = require("@playwright/test");
 
-test("Capablanca lesson asks for the principle, then plays the line on the board", async ({ page }) => {
+test("Rook cutoff lesson asks for the principle, then plays the line on the board", async ({ page }) => {
   await page.goto("/book-lessons.html");
   await expect(page.locator("h1")).toHaveText("Leçons");
   await expect(page.locator(".lesson-subtitle")).toHaveText("La route vers l’excellence");
-  await expect(page.locator(".lesson-catalog-button")).toHaveCount(15);
+  expect(await page.locator(".lesson-catalog-button").count()).toBeGreaterThanOrEqual(100);
   await expect(page.locator("#lesson-board .sq")).toHaveCount(64);
-  await page.locator(".lesson-catalog-button").filter({ hasText: "Couper le roi avec la tour" }).click();
-  await page.getByRole("button", { name: "Limiter l’espace du roi adverse sur la rangée" }).click();
+  await page.locator(".lesson-catalog-button:not(.anticipation-exercise)").filter({ hasText: "Couper le roi avec la tour" }).first().click();
+  const firstPrinciple = page.locator("#lesson-choices .lesson-choice").first();
+  await expect(firstPrinciple).toContainText("Réduire l’espace du roi adverse");
+  await firstPrinciple.click();
   await page.locator('.sq[data-square="a1"]').click();
   await page.locator('.sq[data-square="a7"]').click();
   await expect(page.locator("#lesson-move-list")).toContainText("Toi : Ra7");
   await expect(page.locator("#lesson-move-list")).toContainText("Ligne du livre : Kg8");
   await page.locator('.sq[data-square="h1"]').click();
   await page.locator('.sq[data-square="g2"]').click();
-  await expect(page.locator("#lesson-feedback")).toContainText("Le roi rejoint la tour");
+  await expect(page.locator("#lesson-feedback")).toContainText("Le roi blanc avance pour soutenir la tour");
   await expect(page.locator("#lesson-explanation")).toContainText("Ce que tu viens d’apprendre");
   await expect(page.locator("#lesson-explanation")).toContainText("À réutiliser dans tes parties");
-  await expect(page.locator("#lesson-next-preview")).toContainText("Trouver le moment de jouer …d5");
+  await expect(page.locator("#lesson-next-preview")).toBeVisible();
   await expect(page.locator("#lesson-next")).toBeVisible();
 });
 
 test("Larsen lesson starts from the cited position, can flip, and accepts the central break", async ({ page }) => {
   await page.goto("/book-lessons.html");
-  await page.locator(".lesson-catalog-button").filter({ hasText: "Trouver le moment de jouer …d5" }).click();
+  await page.locator(".lesson-catalog-button:not(.anticipation-exercise)").filter({ hasText: "Trouver le moment de jouer …d5" }).click();
   await expect(page.locator("#lesson-board .sq").first()).toHaveAttribute("data-square", "h1");
   await expect(page.getByRole("link", { name: "Ouvrir le livre" })).toHaveAttribute("href", /Larsen%20Best%20Move%20Guide\.pdf/);
   await page.locator("#lesson-choices").getByRole("button", { name: "Ouvrir le centre par …d5" }).click();
@@ -71,4 +73,23 @@ test("home header has a prominent lessons button beside SupaChess Coach IA", asy
   await expect(page).toHaveURL(/book-lessons\.html/);
   await expect(page.locator("h1")).toHaveText("Leçons");
   await expect(page.locator(".lesson-subtitle")).toHaveText("La route vers l’excellence");
+});
+
+
+test("catalog filters and surprise exercise explicitly train opponent replies in green learning mode", async ({ page }) => {
+  await page.goto("/book-lessons.html");
+  expect(await page.locator(".lesson-catalog-button").count()).toBeGreaterThanOrEqual(100);
+  await expect(page.locator(".lesson-mode .lesson-eyebrow")).toContainText("mode apprentissage");
+  await page.selectOption("#lesson-program-filter", "Anti-erreurs · anticiper l’adversaire");
+  await expect(page.locator(".lesson-catalog-button.anticipation-exercise").first()).toBeVisible();
+  await page.click("#lesson-surprise");
+  await expect(page.locator("#lesson-title")).toHaveText("Exercice surprise");
+  await expect(page.locator("#lesson-source")).toContainText("thème révélé après l’exercice");
+  await expect(page.locator("#lesson-anticipate")).toHaveAttribute("aria-pressed", "false");
+  await page.click("#lesson-anticipate");
+  await expect(page.locator("#lesson-anticipate")).toHaveAttribute("aria-pressed", "true");
+  const green = await page.locator("#lesson-surprise").evaluate((node) => getComputedStyle(node).backgroundColor);
+  const [red, greenChannel, blue] = green.match(/\d+/g).map(Number);
+  expect(greenChannel).toBeGreaterThan(red);
+  expect(greenChannel).toBeGreaterThan(blue);
 });

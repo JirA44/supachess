@@ -28,11 +28,15 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     assert.ok(lesson.principle);
     assert.ok(lesson.transfer, `${lesson.id} should tell the learner how to reuse the idea`);
     assert.ok(lesson.author && lesson.book && lesson.reference);
+    assert.ok(lesson.program, `${lesson.id} should belong to a reinforcement program`);
+    assert.ok(lesson.pitfall, `${lesson.id} should explain what to avoid`);
+    assert.equal(lesson.choices.filter((choice) => choice.correct).length, 1, `${lesson.id} should have one correct principle`);
     assert.ok(lesson.sequence.some((action) => action.side === "user"));
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.length, 15);
+  assert.equal(LESSONS.length, 111, "the merged catalog contains 57 unique lessons and 54 opponent-reply drills");
+  assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
 });
 
 test("Stockfish alternatives are ranked, compared, and shown as legal SAN lines", () => {

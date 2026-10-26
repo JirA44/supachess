@@ -96,6 +96,191 @@
     {"id":"calculate-before-capture","title":"Calculer avant de capturer","category":"Calcul · Sécurité tactique","level":"Expert","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Expert","setup":["e4","e5","Nf3","Nc6","Bc4","Nf6","Ng5","d5","exd5","Nxd5"],"color":"w","question":"Après …Cxd5, que faut-il vérifier avant de prendre f7 ?","choices":[{"text":"Les réponses forcées du roi et les menaces sur les pièces lourdes","correct":true},{"text":"Uniquement la valeur du pion","correct":false},{"text":"Le nombre de pièces déjà développées","correct":false}],"principle":"Nxf7 crée une fourchette, mais …Kxf7 reprend le cavalier. La valeur du motif dépend des suites calculées, pas du seul coup spectaculaire.","transfer":"Avant toute combinaison, calcule les réponses forcées jusqu’à une position que tu peux évaluer; ne t’arrête pas à la première menace.","hints":["Le cavalier g5 peut prendre f7.","Calcule la reprise du roi puis cherche un échec utile."],"sequence":[{"side":"user","uci":"g5f7","explanation":"Le cavalier attaque la dame et la tour, mais il peut être repris."},{"side":"book","uci":"e8f7","explanation":"Le roi prend le cavalier: cette réponse doit être prévue."},{"side":"user","uci":"d1f3","explanation":"La dame donne échec au roi f7; évalue alors la suite et le matériel."}]}
   ];
 
+  // New, original SupaChess exercises covering the recurring themes taught in classic chess manuals.
+  const expandedLessonData = [
+    ["develop-second-knight","Développer les deux cavaliers","Débutant","Ouverture · Développement","w",["e4","e5"],"Quelle pièce complète le développement en attaquant le centre ?","Développer le cavalier g1 en f3","Avancer un pion de l’aile","Sortir la dame sans nécessité","Le cavalier f3 contrôle d4 et e5 et prépare le roque. Un développement harmonieux met les pièces en jeu avant de lancer une attaque.","À l’ouverture, demande-toi si chaque coup développe une pièce, contrôle le centre ou protège le roi.",["Le cavalier g1 peut attaquer e5.","Cherche une case centrale qui prépare le roque."],[["user","g1f3","Le cavalier se développe vers le centre et met e5 sous pression."],["book","b8c6","Le cavalier noir défend e5 et occupe une case centrale."],["user","f1c4","Le fou sort sur une diagonale active et complète le développement."]]],
+    ["castle-before-attack","Roquer avant d’ouvrir le jeu","Débutant","Ouverture · Sécurité du roi","w",["e4","e5","Nf3","Nc6","Bc4","Nf6"],"Quel coup met le roi en sécurité tout en activant une tour ?","Roquer côté roi","Pousser un pion devant le roi","Déplacer plusieurs fois la dame","Le petit roque met le roi à l’abri et amène la tour f1 vers le centre.","Avant une poussée qui ouvre des lignes, vérifie la sécurité de ton roi et les droits au roque.",["Le roi blanc peut rejoindre g1 si le chemin est libre.","Le coup développe aussi la tour h1."],[["user","e1g1","Le roi se met à l’abri et la tour rejoint la colonne f."],["book","d7d6","Le pion renforce le centre et prépare le développement du fou."],["user","d2d3","Le pion renforce e4 et ouvre la diagonale du fou c1."]]],
+    ["recapture-with-development","Reprendre en développant","Débutant","Ouverture · Centre","w",["e4","c5","Nf3","d6","d4","cxd4"],"Quelle reprise occupe le centre et développe une pièce ?","Le cavalier f3 reprend en d4","La dame reprend en d4","Ignorer le pion et jouer un coup d’aile","La reprise du cavalier gagne un temps de développement et garde la dame à l’abri des attaques avec tempo.","Après un échange, compare les reprises selon le développement, le contrôle central et la sécurité.",["Le cavalier f3 peut reprendre le pion en d4.","Choisis la reprise qui développe une pièce."],[["user","f3d4","Le cavalier reprend en occupant une case centrale."],["book","g8f6","Le cavalier noir se développe et attaque e4."],["user","b1c3","Le second cavalier renforce le centre."]]],
+    ["central-break-c3","Préparer la rupture centrale","Débutant","Plan · Rupture centrale","w",["e4","e5","Nf3","Nc6","Bc4","Bc5"],"Quel plan soutient une poussée d4 ?","Jouer c3 pour soutenir le centre","Pousser un pion de l’aile sans plan","Reculer une pièce développée","c3 prépare d4 et soutient le centre; le calcul des prises reste nécessaire avant la rupture.","Quand tu prépares une poussée centrale, vérifie qui pourra reprendre et quelles lignes s’ouvriront.",["Le pion d2 peut avancer de deux cases.","Quel pion peut soutenir d4 ?"],[["user","c2c3","Le pion soutient d4 et prépare à contester e5."],["book","g8f6","Le cavalier noir se développe et attaque e4."],["user","d2d4","La poussée centrale ouvre le jeu après calcul des échanges."]]],
+    ["bishop-retreat-square","Retraite active du fou","Débutant","Ouverture · Activité des pièces","w",["e4","e5","Nf3","Nc6","Bb5","a6"],"Où garder le fou sans l’échanger immédiatement ?","Le replier en a4","L’échanger en c6 sans examiner la position","Le ramener en h4","Ba4 conserve le fou et sa pression sur le centre; il ne s’agit pas d’éviter tout échange, mais de choisir le bon moment.","Quand une pièce est attaquée, compare les retraites qui gardent son activité avec les échanges possibles.",["Le fou peut suivre la diagonale b5–a4.","Cherche une case qui garde une diagonale vers le centre."],[["user","b5a4","Le fou se retire et conserve sa diagonale active."],["book","g8f6","Le cavalier se développe en attaquant e4."],["user","b1c3","Le cavalier se développe et renforce le contrôle central."]]],
+    ["develop-with-tempo","Développer en attaquant","Débutant","Ouverture · Gain de temps","b",["e4","e5","Nf3","Nc6","Bb5"],"Quel coup questionne le fou tout en préparant le développement ?","Jouer …a6 puis développer","Pousser un pion devant le roi","Déplacer la dame pour attaquer un pion","…a6 demande au fou de choisir une case; …Cf6 développe ensuite une pièce avec une menace sur e4.","Cherche des coups utiles qui développent une pièce ou gagnent un tempo sans retarder ton roi.",["Le pion a7 peut attaquer le fou b5.","Le cavalier g8 peut ensuite attaquer e4."],[["user","a7a6","Le pion demande au fou de préciser sa case."],["book","b5a4","Le fou se replie en gardant sa diagonale."],["user","g8f6","Le cavalier se développe et attaque e4."]]],
+    ["central-pawn-support","Soutenir le centre avant l’échange","Débutant","Ouverture · Structure de pions","w",["e4","e5","Nf3","Nc6","Bc4","Bc5"],"Quel coup soutient e4 et développe une autre pièce ensuite ?","Jouer d3 pour consolider le centre","Pousser g4 en affaiblissant le roi","Sortir la dame vers h5 sans calcul","d3 donne un appui à e4 et ouvre la diagonale du fou c1 sans créer de faiblesse autour du roi.","Un centre solide laisse tes pièces se développer derrière les pions.",["Le pion d2 peut protéger e3 et soutenir le centre.","Choisis un coup qui prépare aussi le développement du fou c1."],[["user","d2d3","Le pion renforce e4 et ouvre une diagonale au fou."],["book","g8f6","Le cavalier noir se développe vers le centre."],["user","b1c3","Le cavalier renforce e4 et contrôle d5."]]],
+    ["connect-rooks","Relier les tours","Intermédiaire","Ouverture · Coordination","w",["e4","e5","Nf3","Nc6","Bc4","Bc5"],"Quel coup aide à coordonner les tours et protège le roi ?","Roquer côté roi","Avancer la tour a1 dans une colonne fermée","Pousser un pion devant le roi","Le roque met le roi à l’abri et rapproche les tours; leur coordination permettra de choisir une colonne utile.","Après le développement, relie tes tours avant de chercher une opération sur une colonne.",["Le roi blanc peut roquer.","Le coup active également la tour h1."],[["user","e1g1","Le roi se met à l’abri et les tours se rapprochent."],["book","g8f6","Le cavalier noir se développe vers le centre."],["user","b1c3","Le cavalier se développe et renforce le centre."]]],
+    ["trade-when-ahead","Évaluer la position après un échange","Intermédiaire","Stratégie · Simplification","w",["e4","e5","Nf3","Nc6","Bb5","a6","Bxc6","dxc6"],"Après avoir gagné un pion, quel principe aide à convertir l’avantage ?","Échanger les pièces actives sans rendre le matériel","Lancer une attaque de pions devant le roi","Donner un pion pour garder les dames","Quand tu as un avantage matériel stable, des échanges calculés réduisent les contre-jeux; il faut encore surveiller les tactiques.","Avec un pion de plus, compare le risque de contre-attaque avant chaque échange de pièces.",["Les Noirs viennent de reprendre en c6.","Le cavalier f3 peut prendre e5; vérifie les réponses avant d’agir."],[["user","d2d3","Les Blancs consolident le centre avant de simplifier la position."],["book","g8f6","Le cavalier noir se développe vers le centre."],["user","b1c3","Le cavalier se développe et soutient le centre."]]],
+    ["avoid-hanging-piece","Vérifier les pièces en prise","Débutant","Tactique · Sécurité des pièces","w",["e4","e5","Nf3","Nc6","Bc4","Nf6"],"Avant de jouer, quelle vérification évite de laisser une pièce sans défense ?","Repérer les pièces attaquées et compter les défenseurs","Chercher seulement un échec","Pousser le premier pion disponible","Une pièce attaquée n’est pas toujours perdue: compare attaquants, défenseurs et menaces plus fortes avant de conclure.","À chaque tour, repère les menaces adverses et les pièces qui n’ont pas assez de défenseurs.",["Regarde le cavalier f3 et le pion e4.","Compare le nombre de pièces qui attaquent et défendent."],[["user","d2d3","Le coup consolide e4 et ouvre la diagonale du fou c1."],["book","d7d6","Le pion défend e5 et libère le fou c8."],["user","b1c3","Le cavalier renforce le centre et soutient e4."]]],
+    ["king-pawn-endgame","Activer le roi dans la finale","Débutant","Finale · Roi et pion","w",[],"Avant de pousser le pion, quelle pièce doit devenir active ?","Le roi, tout en gardant le pion défendu","La dame qui n’est plus sur l’échiquier","Le pion, sans regarder le roi adverse","En finale, le roi devient une pièce active. Il faut gagner de l’espace sans abandonner le pion.","Avant une poussée, vérifie le roi adverse, l’opposition et le chemin de promotion.",["Le roi blanc peut quitter e1 tout en restant près du pion.","Cherche une case centrale sûre pour le roi."],[["user","e1d1","Le roi avance vers le centre sans abandonner le pion e2."],["book","e4d4","Le roi noir se rapproche pour contester le pion."],["user","d1e1","Le roi garde une distance utile du pion et se prépare à soutenir sa marche."]], "8/8/8/8/4k3/8/4P3/4K3 w - - 0 1"],
+    ["pawn-opposition","Prendre l’opposition","Intermédiaire","Finale · Opposition","w",[],"Quel coup rapproche le roi tout en gardant l’opposition à l’adversaire ?","Avancer le roi d’une case centrale","Pousser le pion immédiatement","Éloigner le roi du pion","L’opposition est un outil pour gagner l’accès aux cases; elle se calcule selon le trait et la position exacte des rois.","Dans les finales de pions, compte les cases entre les rois et vérifie le trait avant d’avancer.",["Les rois sont alignés sur la colonne e.","Un pas de roi peut obliger l’adversaire à céder une case."],[["user","e4d4","Le roi avance vers une case centrale."],["book","e6d6","Le roi noir conteste la route vers le pion."],["user","e3e4","Le pion avance avec le roi blanc à proximité."]], "8/8/4k3/8/4K3/4P3/8/8 w - - 0 1"],
+    ["passed-pawn-support","Soutenir un pion passé","Intermédiaire","Finale · Pion passé","w",[],"Quel plan augmente les chances de promotion du pion ?","Approcher le roi pour soutenir le pion","Pousser le pion hors de portée du roi","Échanger le roi contre le pion","Un pion passé a besoin du soutien du roi; la course à la promotion se calcule avec les tempos et les cases de contrôle.","Avant de pousser, calcule si le roi peut escorter le pion jusqu’à la promotion.",["Le roi noir est proche du pion e2.","Le roi blanc peut se rapprocher du centre."],[["user","e1d1","Le roi gagne une case de soutien vers le pion."],["book","e4d4","Le roi noir tente de barrer la route."],["user","d1c2","Le roi continue vers le pion sans le pousser trop tôt."]], "8/8/8/8/4k3/8/4P3/4K3 w - - 0 1"],
+    ["rook-behind-passer","Placer la tour derrière le pion passé","Intermédiaire","Finale · Tours","w",[],"Où la tour soutient-elle le mieux un pion passé ?","Derrière le pion, sur sa colonne","Devant le pion en bloquant son avance","Sur une colonne sans lien avec le pion","Une tour placée derrière un pion passé peut soutenir sa marche; si le pion est adverse, la tour peut le freiner par derrière.","Dans les finales de tours, compare l’activité de la tour et la position du roi avant de pousser.",["La colonne a est libre.","La tour peut rejoindre la colonne a sur la case a5."],[["user","h5a5","La tour se place derrière le pion passé."],["book","g8g7","Le roi noir se rapproche du pion."],["user","a7a8q","Le pion avance en promotion avec le soutien de la tour."]], "6k1/P7/8/7R/8/8/8/7K w - - 0 1"],
+    ["rook-cutoff","Couper le roi avec la tour","Intermédiaire","Finale · Tour et roi contre roi","w",[],"Quel est le premier objectif de la tour ?","Réduire l’espace du roi adverse","Donner des échecs sans plan","Éloigner son propre roi de la finale","Une tour peut couper le roi adverse sur une rangée ou une colonne; le roi ami vient ensuite participer à la poursuite.","Dans les finales de tours, cherche une coupure utile avant une série d’échecs.",["Le roi noir est sur h8.","Une tour peut barrer la septième rangée depuis a1."],[["user","a1a7","La tour coupe une rangée et limite le roi adverse."],["book","h8g8","Le roi noir quitte la rangée contrôlée."],["user","h1g2","Le roi blanc avance pour soutenir la tour."]], "7k/8/8/8/8/8/8/R6K w - - 0 1"],
+    ["scholars-mate","Reconnaître le mat du berger","Intermédiaire","Tactique · Mat sur f7","w",["e4","e5","Qh5","Nc6","Bc4","Nf6"],"Quel coup exploite la faiblesse f7 et termine la partie ?","Dame prend f7 avec échec et mat","Échanger la dame contre le cavalier c6","Reculer la dame sans calculer","La dame prend f7 avec l’appui du fou c4. Le motif fonctionne dans cette position précise; les défenses antérieures peuvent l’empêcher.","Repère les cases faibles près du roi, puis vérifie les défenseurs et toutes les réponses légales.",["La case f7 est proche du roi noir.","La dame h5 et le fou c4 visent f7."],[["user","h5f7","La dame prend f7 avec le soutien du fou et mate le roi e8."]]],
+    ["fools-mate","Punir un roi affaibli","Intermédiaire","Tactique · Diagonale du roi","b",["f3","e5","g4"],"Quel coup exploite la diagonale affaiblie vers le roi blanc ?","Dame h4 donne échec et mat","Développer le cavalier b8","Pousser le pion a7","Les poussées f3 et g4 ont ouvert la diagonale vers le roi; la dame peut atteindre h4 dans cette position.","Après des poussées devant le roi, vérifie les diagonales et les cases de mat avant de poursuivre l’attaque.",["La diagonale d8–h4 est libre.","Vérifie si le roi blanc possède une case de fuite."],[["user","d8h4","La dame donne mat sur la diagonale affaiblie."]]],
+    ["back-rank-mate","Repérer le mat du couloir","Intermédiaire","Tactique · Mat du couloir","w",[],"Quel coup exploite les pions qui enferment le roi noir ?","Placer la tour en e8 avec échec et mat","Échanger la tour contre un pion","Déplacer le roi blanc","Les pions du roi noir lui retirent ses cases de fuite; la tour peut pénétrer sur la huitième rangée.","Quand le roi est derrière ses pions, cherche les cases de fuite et les pièces capables d’atteindre la dernière rangée.",["La colonne e est libre.","La tour e1 peut atteindre e8."],[["user","e1e8","La tour arrive sur la huitième rangée et mate le roi enfermé."]], "6k1/5ppp/8/8/8/8/5PPP/4R1K1 w - - 0 1"],
+    ["zwischenzug","Chercher un coup intermédiaire","Avancé","Tactique · Coup intermédiaire","w",["e4","e5","Nf3","Nc6","Bc4","Nf6","Ng5","d5","exd5","Na5"],"Avant de reprendre le cavalier, quel coup force une réponse ?","Fou b5 donne échec sur la diagonale libérée","Reprendre immédiatement le cavalier c6","Déplacer un pion sans menace","Le départ du cavalier c6 libère une diagonale; l’échec intermédiaire oblige les Noirs à répondre avant de régler la tension au centre.","Dans une séquence de prises, vérifie les échecs, les menaces et les coups qui modifient l’ordre des échanges.",["Le cavalier noir a quitté c6.","Le fou c4 peut atteindre b5 avec échec."],[["user","c4b5","Le fou donne échec sur la diagonale ouverte."],["book","c7c6","Le pion bloque l’échec et attaque le fou."],["user","d5c6","Le pion reprend en c6 pendant que le fou est encore attaqué."]]],
+    ["discover-check","Exploiter une attaque à découvert","Avancé","Tactique · Attaque à découvert","w",["e4","e5","Nf3","Nc6","Bc4","Nf6","Ng5","d5","exd5","Na5"],"Quel échec profite du départ du cavalier c6 ?","Fou b5 donne échec à découvert","Échanger le fou contre le pion h7","Pousser le pion a2","Le cavalier a quitté la diagonale du fou c4 vers le roi e8; le fou peut donner échec depuis b5.","Quand une pièce quitte une ligne, vérifie si elle a découvert une attaque ou un échec.",["Le cavalier noir n’est plus en c6.","Le fou c4 peut se placer en b5."],[["user","c4b5","Le fou donne échec sur la diagonale dégagée."],["book","c7c6","Le pion interpose et attaque le fou."],["user","d5c6","Le pion reprend en c6 et conserve l’initiative."]]],
+    ["king-safety-check","Calculer les échecs forcés","Avancé","Calcul · Coups candidats","w",["e4","e5","Nf3","Nc6","Bc4","Bc5"],"Avant un coup calme, quelle catégorie de coups candidats vérifier en premier ?","Les échecs, les prises et les menaces","Les coups de pions de l’aile seulement","Les échanges de dames automatiques","Les coups forcés réduisent les réponses possibles; examine-les avant de choisir un plan calme.","À chaque position, liste échecs, prises et menaces, puis compare-les aux coups de développement.",["Regarde les rois et les pièces attaquées.","Commence par les coups qui obligent une réponse."],[["user","d2d3","Le coup consolide le centre après l’examen des menaces."],["book","g8f6","Le cavalier se développe et attaque e4."],["user","b1c3","Le cavalier renforce le contrôle des cases centrales."]]],
+    ["remove-defender","Identifier le défenseur clé","Avancé","Tactique · Défenseur","b",["e4","e5","Nf3","Nc6","Bc4","Bc5","c3"],"Avant d’échanger, quelle question révèle souvent une tactique ?","Quelle pièce défend plusieurs cases ou pièces importantes ?","Quelle pièce est la plus éloignée du roi ?","Quel pion peut avancer sans calcul ?","Une pièce qui assure plusieurs défenses peut être surchargée; son échange peut rendre une autre cible vulnérable.","Avant une prise, identifie les défenseurs et vérifie ce qui devient sans protection après l’échange.",["Repère les pièces qui défendent le roi et le centre.","Imagine la position après l’échange."],[["user","g8f6","Le cavalier se développe et attaque e4."],["book","d2d4","Les Blancs contestent le centre."],["user","e5d4","Le pion reprend au centre; les échanges doivent être recalculés."]]],
+    ["weak-square","Contester le centre par d4","Avancé","Plan · Rupture centrale","w",["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","O-O","Be7","Re1","b5","Bb3","d6"],"Quel coup conteste e5 et ouvre une ligne pour les pièces ?","Jouer d4 et reprendre avec le cavalier si nécessaire","Pousser h4 sans préparation","Échanger le fou b3 immédiatement","d4 attaque e5 et peut ouvrir des lignes après les échanges; vérifie les reprises avant de jouer.","Avant une rupture centrale, calcule les prises possibles et identifie quelles pièces profiteront des lignes ouvertes.",["La case d5 est au centre.","Le pion d2 peut avancer de deux cases et attaquer e5."],[["user","d2d4","Le pion conteste e5 et ouvre le centre."],["book","e5d4","Le pion noir capture le pion d4."],["user","f3d4","Le cavalier reprend en d4 et occupe le centre."]]],
+    ["exchange-good-bad-bishop","Évaluer l’échange des fous","Intermédiaire","Stratégie · Bons et mauvais fous","w",["d4","d5","c4","e6","Nc3","Nf6","Bg5","Be7"],"Avant d’échanger le fou, quel élément de structure comparer ?","Les chaînes de pions et les cases que chaque fou contrôle","La seule valeur nominale des fous","Le nombre de coups déjà joués","L’activité d’un fou dépend souvent de la couleur des cases bloquées par les pions; un échange peut modifier durablement cette activité.","Avant un échange de fous, observe les pions centraux et les diagonales qui resteront ouvertes.",["Regarde les pions d4, c4 et e6.","Compare les diagonales de chaque fou."],[["user","e2e3","Le pion renforce le centre et libère le fou f1."],["book","e8g8","Les Noirs roquent et mettent le roi à l’abri."],["user","g1f3","Le cavalier se développe et renforce le contrôle central."]]],
+    ["minority-attack","Comprendre l’attaque de majorité minoritaire","Avancé","Plan · Structure de pions","w",["d4","d5","c4","e6","Nc3","Nf6","Nf3","Be7","e3","O-O","Bd3","c5"],"Quel objectif poursuit une poussée de pions sur l’aile où tu es en minorité ?","Créer une faiblesse de pion chez l’adversaire","Ouvrir automatiquement la colonne devant son roi","Échanger tous les pions du centre","Une majorité minoritaire cherche souvent à provoquer un pion arriéré ou isolé; le plan dépend de la structure et de la coordination des pièces.","Repère les majorités de pions avant de choisir une aile où créer une cible durable.",["Compare le nombre de pions sur chaque aile.","Cherche une poussée qui force une décision structurelle."],[["user","c4d5","Le pion échange au centre et transforme la structure."],["book","e6d5","Le pion noir reprend et crée une nouvelle structure."],["user","b2b3","Le pion prépare le développement du fou et soutient le centre."]]],
+    ["prophylaxis","Prévenir le plan adverse","Avancé","Stratégie · Prophylaxie","w",["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","O-O","Be7","Re1","b5","Bb3","d6","c3","O-O"],"Avant de choisir ton plan, quelle question prophylactique poser ?","Que prépare l’adversaire et quelle réponse utile peut le limiter ?","Quel pion d’aile peut avancer le plus vite ?","Comment échanger une pièce au hasard ?","La prophylaxie commence par comprendre le plan adverse, puis trouver une mesure utile qui réduit son efficacité sans créer de faiblesse inutile.","À chaque tour, imagine le meilleur plan adverse avant de choisir le tien.",["Observe les ruptures centrales possibles.","Cherche un coup utile qui améliore aussi une pièce."],[["user","h2h3","Le pion empêche une pièce noire de venir en g4 sans raison urgente."],["book","c6b4","Le cavalier prend la case b4 et exerce une pression sur c2."],["user","d2d4","La poussée centrale conteste l’espace noir."]]],
+    ["calculate-capture","Calculer toute la séquence de prise","Expert","Calcul · Variantes forcées","w",["e4","e5","Nf3","Nc6","Bc4","Nf6","Ng5","d5","exd5","Nxd5"],"Que faut-il calculer avant une combinaison sur f7 ?","Les reprises, les échecs suivants et l’évaluation de la position finale","La première menace seulement","Le gain de pion sans les réponses","Une fourchette apparente peut coûter une pièce; calcule les réponses forcées jusqu’à une position que tu peux évaluer.","Pour chaque prise candidate, calcule la meilleure réponse adverse puis les coups forcés qui suivent.",["Le cavalier g5 peut prendre f7.","Le roi peut reprendre; cherche ensuite les échecs disponibles."],[["user","g5f7","Le cavalier menace deux pièces, mais peut être repris."],["book","e8f7","Le roi prend le cavalier: cette réponse doit être prévue."],["user","d1f3","La dame donne échec; il faut évaluer la suite et le matériel."]]],
+    ["mate-in-one","Voir le mat en un coup","Débutant","Tactique · Mat du berger","w",["e4","e5","Qh5","Nc6","Bc4","Nf6"],"Quel coup termine la partie dans cette position ?","Prendre f7 avec la dame, protégée par le fou","Prendre le cavalier c6","Pousser le pion h2","La coordination de la dame et du fou vise le point f7; le mat existe ici car les Noirs ont laissé cette case accessible.","Dans chaque position, commence par chercher les échecs et confirme que le roi ne peut ni fuir, ni capturer, ni interposer.",["Les deux pièces blanches visent f7.","Vérifie toutes les cases de fuite du roi noir."],[["user","h5f7","La dame prend f7 avec l’appui du fou: échec et mat."]]],
+    ["queen-trade-when-ahead","Échanger les dames pour réduire le contre-jeu","Intermédiaire","Stratégie · Échange des dames","w",["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","O-O","Be7","Re1","b5","Bb3","d6","c3","O-O"],"Avant un échange de dames, quel facteur de position est prioritaire ?","La sécurité du roi et le contre-jeu qui disparaît ou apparaît","Le fait que les dames soient encore sur l’échiquier","La possibilité d’avancer un pion de l’aile","Un échange de dames peut réduire une attaque, mais aussi rendre une finale favorable à l’adversaire; il faut évaluer la position après l’échange.","Calcule la position simplifiée et compare activité des rois, structure et pions passés.",["Repère les menaces près des deux rois.","Imagine la position après l’échange de dames."],[["user","d2d4","Le centre s’ouvre seulement après vérification des menaces."],["book","c6b4","Le cavalier prend une case active et exerce une pression."],["user","h2h3","Le pion demande au cavalier s’il souhaite rester sur cette case."]]],
+    ["candidate-moves","Comparer les coups candidats","Expert","Calcul · Méthode de réflexion","w",["e4","e5","Nf3","Nc6","Bc4","Bc5"],"Comment choisir entre plusieurs coups raisonnables ?","Comparer les coups candidats après les réponses adverses les plus fortes","Jouer le premier coup qui semble actif","Éviter tout calcul pour ne pas perdre de temps","Une bonne décision compare quelques candidats concrets et leurs réponses; les principes réduisent les options mais ne remplacent pas le calcul.","Choisis deux ou trois candidats, calcule les réponses forcées et évalue les positions finales.",["Liste d’abord les échecs, prises et menaces.","Puis compare un coup de développement et une poussée centrale."],[["user","c2c3","Ce coup prépare d4 tout en gardant plusieurs options."],["book","g8f6","Le cavalier se développe et attaque e4."],["user","d2d4","La poussée centrale ouvre le jeu après comparaison des réponses."]]],
+    ["passed-pawn-race","Calculer une course de pions","Avancé","Finale · Course de pions","w",[],"Avant de pousser le pion, que faut-il comparer ?","Les tempos jusqu’à promotion et les cases contrôlées par les rois","La distance au bord de l’échiquier seulement","Le nombre de pièces échangées seulement","Une course de pions se calcule avec le trait, les tempos de poussée, les cases de contrôle et les échecs disponibles.","Compte les coups jusqu’à promotion et intègre les déplacements des rois, pas seulement les pions.",["Le pion blanc est en e2.","Le roi noir est proche; évalue la course avant d’avancer."],[["user","e1d1","Le roi se rapproche du pion avant la course."],["book","e4f4","Le roi noir avance pour contester la promotion."],["user","d1c2","Le roi continue à soutenir le pion." ]], "8/8/8/8/4k3/8/4P3/4K3 w - - 0 1"],
+  ];
+  LESSONS.push(...expandedLessonData.map((item) => {
+    const [id,title,level,category,color,setup,question,correct,distractor1,distractor2,principle,transfer,hints,line,fen] = item;
+    return {
+      id, title, level, category, color, setup, fen,
+      author: "SupaChess Académie",
+      book: "Parcours original inspiré des thèmes des grands manuels d’échecs",
+      reference: "Leçon pédagogique originale · " + level,
+      question, principle, transfer, hints,
+      choices: [{ text: correct, correct: true }, { text: distractor1, correct: false }, { text: distractor2, correct: false }],
+      sequence: line.map(([side,uci,explanation]) => ({ side, uci, explanation })),
+    };
+  }));
+
+
+
+  const academyData = root.SupaChessCurriculum ||
+    (typeof require === "function" ? require("./curriculum.js") : null);
+  const ChessClass = root.Chess || (typeof Chess !== "undefined" ? Chess : null) ||
+    (typeof require === "function" ? require("chess.js").Chess : null);
+  const frenchSanToEngine = (san) => String(san).replace(/([CFDRT])(?=x?[a-h])/g,
+    (piece) => ({ C: "N", F: "B", D: "Q", R: "K", T: "R" })[piece]);
+  const playUci = (position, uci) => position.move({
+    from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.slice(4) || "q",
+  });
+
+  if (academyData && ChessClass) {
+    for (const source of academyData.lessons || []) {
+      if (LESSONS.some((lesson) => lesson.title === source.title)) continue;
+      const position = new ChessClass();
+      const setupPgn = frenchSanToEngine(source.setup);
+      if (!position.load_pgn(setupPgn)) throw new Error("PGN de mise en place invalide: " + source.id);
+      const fen = position.fen();
+      const learnerColor = position.turn();
+      const sequence = [];
+      for (let index = 0; index < source.line.length; index++) {
+        const move = position.move(frenchSanToEngine(source.line[index]));
+        if (!move) throw new Error("Suite illégale du curriculum: " + source.id + " · " + source.line[index]);
+        sequence.push({
+          side: move.color === learnerColor ? "user" : "book",
+          uci: move.from + move.to + (move.promotion || ""),
+          explanation: source.notes[index],
+        });
+      }
+      LESSONS.push({
+        id: "curriculum-" + source.id,
+        level: source.level,
+        title: source.title,
+        category: "Programme · " + source.theme,
+        program: programForLesson({ category: source.theme, title: source.title }),
+        author: "SupaChess Académie",
+        book: "Curriculum original fusionné depuis le parcours local",
+        reference: "Leçon originale · " + source.level,
+        fen,
+        setup: [],
+        color: learnerColor,
+        question: source.question,
+        choices: source.choices.map((choice) => ({
+          text: "Jouer " + choice,
+          correct: choice === source.answer,
+        })),
+        principle: source.why,
+        transfer: source.goal,
+        hints: [source.goal, source.notes[0] || source.why],
+        sequence,
+        pitfall: source.pitfall || "Après chaque réponse adverse, réévalue les menaces avant de poursuivre ton idée.",
+      });
+    }
+  }
+
+  function programForLesson(lesson) {
+    if (lesson.program) return lesson.program;
+    if (lesson.kind === "anticipation") return "Anti-erreurs · anticiper l’adversaire";
+    const category = String(lesson.category || "");
+    const title = String(lesson.title || "");
+    if (/stockfish|comparer les coups|analyse multipv/i.test(category + " " + title))
+      return "Stockfish · comparer et vérifier";
+    if (/tactique|clouage|fourchette|mat|sacrifice/i.test(category + " " + title))
+      return "Tal · tactique et sacrifices à calculer";
+    if (/calcul|candidat|défense forcing|décision/i.test(category + " " + title))
+      return "Kasparov · coups candidats et calcul";
+    if (/finale|roi et pion|tour et roi|conversion/i.test(category))
+      return "Carlsen · finales et conversion";
+    if (/ouverture|développement|centre/i.test(category))
+      return "Fischer · préparation et précision";
+    return "Carlsen · amélioration et conversion";
+  }
+
+  for (const lesson of LESSONS) {
+    lesson.program = programForLesson(lesson);
+    lesson.pitfall = lesson.pitfall || "Ne poursuis pas automatiquement ton plan après le coup adverse : recalcule les menaces et les réponses forcées.";
+  }
+
+  // Turn every studied reply into an active-recall challenge: the learner now plays
+  // the opponent's half-move, then sees the original continuation and its explanation.
+  const sourceLessons = LESSONS.slice();
+  const responseExercises = [];
+  for (const source of sourceLessons) {
+    if (!source.sequence || source.sequence.length < 2) continue;
+    const position = setupGame(source, ChessClass);
+    for (let index = 0; index < source.sequence.length; index++) {
+      const action = source.sequence[index];
+      if (action.side === "book" && index > 0 && source.sequence[index - 1].side === "user") {
+        const replyPosition = new ChessClass(position.fen());
+        const expected = playUci(replyPosition, action.uci);
+        if (expected) {
+          const previous = source.sequence[index - 1];
+          const priorPosition = setupGame(source, ChessClass);
+          for (let prior = 0; prior < index; prior++) playUci(priorPosition, source.sequence[prior].uci);
+          const priorMove = priorPosition.history({ verbose: true }).slice(-1)[0];
+          const replySan = expected.san;
+          responseExercises.push({
+            id: source.id + "-anticipate-" + index,
+            kind: "anticipation",
+            level: source.level,
+            title: "Surprise · prévoir la réponse à " + source.title,
+            category: "Anticipation · " + source.category,
+            program: "Anti-erreurs · anticiper l’adversaire",
+            author: "SupaChess Académie",
+            book: "Programme de renforcement et rappel actif",
+            reference: "Exercice original de prévision du demi-coup adverse",
+            fen: position.fen(),
+            setup: [],
+            color: position.turn(),
+            question: "Après le dernier coup joué, quelle réponse de la ligne faut-il envisager avant de poursuivre ?",
+            choices: [
+              { text: "Anticiper " + replySan + " et vérifier ses conséquences", correct: true },
+              { text: "Continuer son plan sans réexaminer la position", correct: false },
+              { text: "Jouer un coup d’aile sans vérifier les menaces", correct: false },
+            ],
+            principle: "Réponse de la ligne étudiée : " + replySan + ". " + action.explanation,
+            transfer: "Après chaque demi-coup adverse, recommence l’inventaire des échecs, prises et menaces avant de poursuivre ton plan.",
+            pitfall: "Ne considère pas ton coup comme réussi tant que tu n’as pas examiné la réponse adverse la plus gênante.",
+            hints: [
+              "Observe ce que le dernier coup a attaqué ou laissé sans défense.",
+              "Compare les échecs, prises et menaces possibles pour le camp adverse.",
+            ],
+            sequence: source.sequence.slice(index).map((item) => ({
+              side: item.side === "book" ? "user" : "book",
+              uci: item.uci,
+              explanation: item.explanation,
+            })),
+            anticipatedMove: replySan,
+            previousMove: priorMove ? priorMove.san : previous.uci,
+          });
+        }
+      }
+      if (!playUci(position, action.uci)) throw new Error("Coup illégal lors de la création du rappel: " + source.id + " · " + action.uci);
+    }
+  }
+  LESSONS.push(...responseExercises);
+
   const LEVEL_ORDER = { "Débutant": 0, "Intermédiaire": 1, "Avancé": 2, "Expert": 3 };
   LESSONS.sort((a, b) => (LEVEL_ORDER[a.level] ?? 99) - (LEVEL_ORDER[b.level] ?? 99));
 
@@ -192,6 +377,9 @@
   let hintsUsed = 0;
   let principleAnswered = false;
   let waitingForBook = false;
+  let anticipationPractice = false;
+  let anticipatingBook = false;
+  let surpriseMode = false;
   let flipped = false;
   let bookReplyTimer = null;
   let progress = readProgress();
@@ -212,25 +400,43 @@
 
   function renderCatalog() {
     const catalog = $("lesson-catalog");
-    catalog.textContent = "";
-    LESSONS.forEach((lesson, index) => {
+    const search = ($("lesson-search").value || "").trim().toLocaleLowerCase("fr");
+    const level = $("lesson-level-filter").value;
+    const program = $("lesson-program-filter").value;
+    catalog.replaceChildren();
+    const visibleLessons = LESSONS.map((lesson, index) => ({ lesson, index })).filter(({ lesson }) => {
+      const matchesSearch = !search || [lesson.title, lesson.category, lesson.program, lesson.question, lesson.level]
+        .some((value) => String(value || "").toLocaleLowerCase("fr").includes(search));
+      return matchesSearch && (!level || lesson.level === level) && (!program || lesson.program === program);
+    });
+    $("lesson-catalog-count").textContent = visibleLessons.length + " affiché(s) · " + LESSONS.length +
+      " leçons et exercices · " + Object.values(progress).filter((item) => item && item.completed).length + " terminés.";
+    if (!visibleLessons.length) {
+      const empty = document.createElement("p");
+      empty.className = "lesson-catalog-empty";
+      empty.textContent = "Aucun exercice ne correspond à ces filtres.";
+      catalog.appendChild(empty);
+      return;
+    }
+    for (const { lesson, index } of visibleLessons) {
       const button = document.createElement("button");
       button.type = "button";
-      button.className = "lesson-catalog-button";
+      button.className = "lesson-catalog-button" + (lesson.kind === "anticipation" ? " anticipation-exercise" : "");
       button.setAttribute("aria-current", index === lessonIndex ? "true" : "false");
       const title = document.createElement("span");
       title.className = "lesson-catalog-title";
       title.textContent = (index + 1) + ". " + lesson.title;
       const meta = document.createElement("span");
       meta.className = "lesson-catalog-meta";
-      meta.textContent = lesson.level + " · " + lesson.category + " · " + lesson.author;
+      meta.textContent = lesson.level + " · " + lesson.program + " · " + lesson.author;
       const state = document.createElement("span");
       state.className = "lesson-catalog-state";
-      state.textContent = progress[lesson.id] && progress[lesson.id].completed ? "Terminée · à revoir quand tu veux" : "À découvrir";
+      state.textContent = progress[lesson.id] && progress[lesson.id].completed
+        ? "Terminée · à revoir quand tu veux" : lesson.kind === "anticipation" ? "Défi de réponse adverse" : "À découvrir";
       button.append(title, meta, state);
       button.addEventListener("click", () => loadLesson(index));
       catalog.appendChild(button);
-    });
+    }
   }
 
   function renderSource(lesson) {
@@ -246,7 +452,7 @@
     }
   }
 
-  function loadLesson(index) {
+  function loadLesson(index, options = {}) {
     if (bookReplyTimer !== null) {
       root.clearTimeout(bookReplyTimer);
       bookReplyTimer = null;
@@ -260,6 +466,10 @@
     $("lesson-engine-status").textContent = "";
     $("lesson-engine-lines").textContent = "";
     lessonIndex = index;
+    surpriseMode = Boolean(options.surprise);
+    anticipationPractice = Boolean(options.anticipate);
+    anticipatingBook = false;
+    $("lesson-anticipate").setAttribute("aria-pressed", String(anticipationPractice));
     const lesson = LESSONS[lessonIndex];
     game = setupGame(lesson, Chess);
     sequenceIndex = 0;
@@ -274,8 +484,10 @@
     boardUI.selected = null;
     boardUI.legalTargets = [];
     boardUI.lastMove = null;
-    $("lesson-title").textContent = lesson.title;
-    $("lesson-goal").textContent = "Observe la position. Choisis d’abord le principe qui s’applique, puis joue les coups sur l’échiquier.";
+    $("lesson-title").textContent = surpriseMode ? "Exercice surprise" : lesson.title;
+    $("lesson-goal").textContent = surpriseMode
+      ? "Analyse la position sans regarder le thème. Choisis un coup, puis vérifie la réponse adverse sur l’échiquier."
+      : "Observe la position. Choisis d’abord le principe qui s’applique, puis joue les coups sur l’échiquier.";
     $("lesson-question").textContent = lesson.question;
     $("lesson-principle").disabled = false;
     $("lesson-feedback").textContent = "";
@@ -288,6 +500,7 @@
     $("lesson-hint").disabled = false;
     $("lesson-flip").setAttribute("aria-pressed", String(flipped));
     renderSource(lesson);
+    if (surpriseMode) $("lesson-source").textContent = "Défi surprise · thème révélé après l’exercice";
     renderChoices(lesson);
     renderCatalog();
     renderBoard();
@@ -330,10 +543,11 @@
   function onSquareClick(square) {
     if (!game || enginePreview || !principleAnswered || waitingForBook || sequenceIndex >= LESSONS[lessonIndex].sequence.length) return;
     const lesson = LESSONS[lessonIndex];
-    if (game.turn() !== lesson.color) return;
+    const inputColor = anticipatingBook ? (lesson.color === "w" ? "b" : "w") : lesson.color;
+    if (game.turn() !== inputColor) return;
     const piece = game.get(square);
     if (!selectedSquare) {
-      if (piece && piece.color === lesson.color) {
+      if (piece && piece.color === inputColor) {
         selectedSquare = square;
         boardUI.selected = square;
         boardUI.legalTargets = game.moves({ square, verbose: true }).map((move) => move.to);
@@ -348,7 +562,7 @@
     }
     const move = game.move({ from: selectedSquare, to: square, promotion: "q" });
     if (!move) {
-      if (piece && piece.color === lesson.color) {
+      if (piece && piece.color === inputColor) {
         selectedSquare = square;
         boardUI.selected = square;
         boardUI.legalTargets = game.moves({ square, verbose: true }).map((candidate) => candidate.to);
@@ -358,20 +572,25 @@
     }
     const expected = lesson.sequence[sequenceIndex];
     const uci = move.from + move.to + (move.promotion || "");
-    if (expected.side !== "user" || uci !== expected.uci) {
+    const expectedSide = anticipatingBook ? "book" : "user";
+    if (expected.side !== expectedSide || uci !== expected.uci) {
       game.undo();
       attempts++;
       clearSelection();
       renderBoard();
-      $("lesson-feedback").textContent = "Ce coup légal ne suit pas la ligne pédagogique. Compare-le aux autres options avec Stockfish, puis vérifie les indices sur l’échiquier.";
+      $("lesson-feedback").textContent = anticipatingBook
+        ? "Cette réponse légale ne correspond pas à la réponse de la ligne étudiée. Compare les variantes avec Stockfish et cherche les menaces forcées."
+        : "Ce coup légal ne suit pas la ligne pédagogique. Compare-le aux autres options avec Stockfish, puis vérifie les indices sur l’échiquier.";
       updateProgressLabel();
       runEngineComparison(true);
       return;
     }
     sequenceIndex++;
+    const anticipated = anticipatingBook;
+    anticipatingBook = false;
     clearSelection();
     boardUI.lastMove = { from: move.from, to: move.to, san: move.san };
-    appendMove(move.san, "Toi");
+    appendMove(move.san, anticipated ? "Réponse adverse anticipée" : "Toi");
     $("lesson-feedback").textContent = expected.explanation;
     renderBoard();
     updateProgressLabel();
@@ -385,6 +604,12 @@
       return;
     }
     const action = lesson.sequence[sequenceIndex];
+    if (action.side === "book" && anticipationPractice) {
+      anticipatingBook = true;
+      $("lesson-goal").textContent = "Le camp adverse vient de jouer. À toi de prévoir sa réponse la plus gênante dans la ligne étudiée.";
+      $("lesson-status").textContent = "À toi : joue la réponse adverse que tu veux anticiper.";
+      return;
+    }
     if (action.side === "book") {
       waitingForBook = true;
       $("lesson-status").textContent = "Réponse de la ligne du livre…";
@@ -429,6 +654,10 @@
     saveProgress();
     renderCatalog();
 
+    surpriseMode = false;
+    anticipatingBook = false;
+    $("lesson-title").textContent = lesson.title;
+    renderSource(lesson);
     $("lesson-status").textContent = "Leçon terminée : " + lesson.title + ".";
     const explanation = $("lesson-explanation");
     explanation.replaceChildren();
@@ -438,6 +667,9 @@
     const principle = document.createElement("p");
     principle.textContent = lesson.principle;
     explanation.append(heading, principle);
+    const pitfall = document.createElement("p");
+    pitfall.textContent = "À ne pas faire : " + (lesson.pitfall || "ne pas poursuivre son plan sans recalculer les réponses adverses.");
+    explanation.appendChild(pitfall);
 
     const moveHeading = document.createElement("h4");
     moveHeading.textContent = "Explication de chaque demi-coup";
@@ -594,6 +826,28 @@
     }
   }
 
+  $("lesson-search").addEventListener("input", renderCatalog);
+  $("lesson-level-filter").addEventListener("change", renderCatalog);
+  $("lesson-program-filter").addEventListener("change", renderCatalog);
+  $("lesson-anticipate").addEventListener("click", () => {
+    anticipationPractice = !anticipationPractice;
+    $("lesson-anticipate").setAttribute("aria-pressed", String(anticipationPractice));
+    $("lesson-status").textContent = anticipationPractice
+      ? "Mode anticipation actif : tu joueras chaque réponse de la ligne adverse."
+      : "Mode anticipation désactivé : les réponses de la ligne seront jouées automatiquement.";
+  });
+  $("lesson-surprise").addEventListener("click", () => {
+    const candidates = LESSONS.map((lesson, index) => ({ lesson, index }))
+      .filter(({ lesson }) => lesson.kind === "anticipation");
+    if (!candidates.length) return;
+    let choices = candidates.filter(({ lesson }) => !(progress[lesson.id] && progress[lesson.id].completed));
+    if (!choices.length) choices = candidates;
+    const lastId = sessionStorage.getItem("supachess-last-surprise");
+    const fresh = choices.filter(({ lesson }) => lesson.id !== lastId);
+    const selected = (fresh.length ? fresh : choices)[Math.floor(Math.random() * (fresh.length || choices.length))];
+    sessionStorage.setItem("supachess-last-surprise", selected.lesson.id);
+    loadLesson(selected.index, { surprise: true, anticipate: false });
+  });
   $("lesson-engine-analyze").addEventListener("click", () => runEngineComparison(false));
   $("lesson-engine-return").addEventListener("click", () => {
     enginePreview = null;

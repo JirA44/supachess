@@ -69,3 +69,37 @@
 .lesson-next-preview[hidden] { display: none; }
 
 .lesson-subtitle { margin: 2px 0 8px; color: var(--accent); font-size: clamp(1rem, 2.5vw, 1.25rem); font-weight: 700; }
+
+
+/* Green learning mode inherited from the local SupaChess Academy draft. */
+.lesson-mode { min-height: 100vh; background: radial-gradient(ellipse at 16% 0%, #263b35 0, #171d1b 38rem, #111513 100%); color: #f2f5f1; }
+.lesson-mode .lesson-brand { color: #f5f7f3; }
+.lesson-mode .lesson-brand span, .lesson-mode .lesson-eyebrow, .lesson-mode .lesson-subtitle { color: #a9d8a5; }
+.lesson-mode .lesson-intro > p:not(.lesson-eyebrow):not(.lesson-subtitle), .lesson-mode .lesson-method-note { color: #c5d0c8; }
+.lesson-mode .lesson-method-note { max-width: 820px; margin: 8px auto 0; font-size: .88rem; line-height: 1.55; }
+.lesson-mode .lesson-tools { margin: 18px 0 10px; padding: 14px; border: 1px solid #35443b; border-radius: 14px; background: rgba(25,34,29,.96); }
+.lesson-mode .lesson-catalog-count { margin: 0 0 10px; color: #d9e2db; font-weight: 700; }
+.lesson-mode .lesson-filter-row { display: grid; grid-template-columns: minmax(180px,1fr) minmax(140px,.65fr) minmax(220px,1fr) auto; gap: 9px; align-items: end; }
+.lesson-mode .lesson-filter-row label { display: grid; gap: 5px; color: #c5d0c8; font-size: .83rem; font-weight: 700; }
+.lesson-mode .lesson-filter-row input, .lesson-mode .lesson-filter-row select { min-height: 40px; padding: 7px 9px; color: #f2f5f1; background: #202b25; border: 1px solid #526159; border-radius: 7px; }
+.lesson-mode .lesson-surprise { color: #162117; background: #d4ebc9; border-color: #aed59e; font-weight: 800; }
+.lesson-mode .lesson-surprise:hover, .lesson-mode .lesson-surprise:focus-visible { background: #e4f4dd; outline-color: #b9dfa9; }
+.lesson-mode .lesson-catalog-button { background: rgba(25,34,29,.96); border-color: #35443b; }
+.lesson-mode .lesson-catalog-button:hover, .lesson-mode .lesson-catalog-button:focus-visible { border-color: #9bce95; outline-color: #9bce95; }
+.lesson-mode .lesson-catalog-button[aria-current="true"] { border: 2px solid #9bce95; box-shadow: inset 3px 0 #9bce95; }
+.lesson-mode .lesson-catalog-button.anticipation-exercise { border-left: 3px solid #9bce95; }
+.lesson-mode .lesson-card, .lesson-mode .lesson-engine-analysis { background: rgba(25,34,29,.96); border-color: #35443b; }
+.lesson-mode .lesson-choice { background: #202a24; border-color: #405047; }
+.lesson-mode .lesson-choice:hover:not(:disabled), .lesson-mode .lesson-choice:focus-visible { border-color: #9bce95; outline-color: #b9dfa9; }
+.lesson-mode .lesson-choice.correct { border-color: #9bce95; color: #d8ffe0; }
+.lesson-mode .lesson-explanation { background: rgba(76,217,100,.08); border-left-color: #9bce95; }
+.lesson-mode .lesson-explanation h3 { color: #b8e3a9; }
+.lesson-mode .lesson-status { color: #b8e3a9; }
+.lesson-mode .lesson-catalog-empty { padding: 16px; color: #c5d0c8; }
+@media (max-width: 900px) {
+  .lesson-mode .lesson-filter-row { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 520px) {
+  .lesson-mode .lesson-filter-row { grid-template-columns: 1fr; }
+  .lesson-mode .lesson-surprise { width: 100%; }
+}
