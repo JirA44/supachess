@@ -90,7 +90,14 @@ try {
   await page.waitForFunction(() => document.querySelector("[data-review-insights-status]").textContent.includes("5 PGN valide(s) importé(s)"));
   assert.equal(await page.locator("#review-history-list input[data-review-insights-id]:checked").count(), 5);
   await page.click("#review-insights-panel [data-review-insights-run]");
-  await page.waitForFunction(() => document.querySelector("#review-insights-panel [data-review-insights-report]").textContent.includes("Bilan calculé sur 5 partie(s)"));
+  await page.waitForFunction(() => {
+    const report = document.querySelector("#review-insights-panel [data-review-insights-report]").textContent;
+    const status = document.querySelector("[data-review-insights-status]").textContent;
+    return report.includes("Bilan calculé sur 5 partie(s)") || status.includes("Analyse interrompue");
+  });
+  const batchReport = await page.locator("#review-insights-panel [data-review-insights-report]").innerText();
+  const batchStatus = await page.locator("[data-review-insights-status]").innerText();
+  assert.match(batchReport, /Bilan calculé sur 5 partie\(s\)/, "Batch did not finish: " + batchStatus);
   await page.click("#review-insights-panel [data-review-insights-report] .review-path-action");
   await page.waitForURL(/book-lessons\.html#parcours-pgn$/);
   assert.match(await page.locator("#personalized-pgn-path").innerText(), /Alice/);
