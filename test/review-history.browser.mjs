@@ -46,10 +46,30 @@ try {
   assert.match(await page.locator("#review-history-list").innerText(), /Alice vs Bob/);
   assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem("supachess_reviewed_pgns")).length), 1);
 
+  await page.evaluate(() => {
+    const items = JSON.parse(localStorage.getItem("supachess_reviewed_pgns"));
+    const fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    const analysis = ReviewInsights.buildGameSummary({
+      headers: { White: "Alice", Black: "Chloé" }, accuracyW: 90, accuracyB: 80,
+      fens: [fen], moves: [{ san: "d4" }],
+      rows: [{ color: "w", n: 1, san: "d4", lossCp: 0, classification: "best" }],
+    });
+    items.push({ id: "second-game", pgn: '[Event "Second game"]\n1. d4 d5 *',
+      white: "Alice", black: "Chloé", event: "Second game", analysis });
+    localStorage.setItem("supachess_reviewed_pgns", JSON.stringify(items));
+  });
+
   await page.reload();
   await page.waitForFunction(() => document.body.dataset.engineReady === "1");
   await page.waitForSelector("#review-history-list .review-history-row");
   assert.match(await page.locator("#review-history-list").innerText(), /Alice vs Bob/);
+  assert.equal(await page.locator("#review-history-list input[data-review-insights-id]").count(), 2);
+  await page.locator("#review-history-list input[data-review-insights-id]").nth(0).check();
+  await page.locator("#review-history-list input[data-review-insights-id]").nth(1).check();
+  await page.click("#review-insights-panel [data-review-insights-run]");
+  assert.match(await page.locator("#review-insights-report").innerText(), /Bilan calculé sur 2 partie/);
+  assert.match(await page.locator("#review-insights-report").innerText(), /Alice/);
+  assert.match(await page.locator("#review-insights-report").innerText(), /Forces mesurées/);
   await page.click('#review-history-list [data-review-history-act="open"]');
   assert.equal(await page.locator("#pgn-input").inputValue(), pgn);
   await page.click("#btn-close-pgn");

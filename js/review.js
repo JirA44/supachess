@@ -42,7 +42,7 @@ function reviewHistoryLoad() {
   } catch (_e) { return []; }
 }
 
-function reviewHistorySave(pgn, headers = {}, correctionExercises = []) {
+function reviewHistorySave(pgn, headers = {}, correctionExercises = [], analysis = null) {
   const normalizedPgn = String(pgn || "").replace(/\r\n?/g, "\n").trim();
   if (!normalizedPgn) return false;
   const previous = reviewHistoryLoad();
@@ -55,6 +55,7 @@ function reviewHistorySave(pgn, headers = {}, correctionExercises = []) {
     result: headers.Result || "*",
     event: headers.Event || "",
     correctionExercises: Array.isArray(correctionExercises) ? correctionExercises : [],
+    analysis: analysis && analysis.version === 1 ? analysis : (existing && existing.analysis) || null,
     analyzedAt: new Date().toISOString(),
   };
   const next = [item, ...previous.filter((saved) => saved.id !== item.id &&
@@ -251,7 +252,9 @@ async function reviewRun() {
   reviewState.correctionExercises = reviewBuildCorrectionExercises(rows, fens, moves, positionLines);
   reviewSetProgress("Analyse Stockfish terminée — bilan en cours…");
   reviewRenderLocal(rows, accW, accB, headers);
-  reviewHistorySave(pgnText, headers, reviewState.correctionExercises);
+  const analysisSummary = typeof ReviewInsights !== "undefined"
+    ? ReviewInsights.buildGameSummary({ rows, moves, fens, accuracyW: accW, accuracyB: accB, headers }) : null;
+  reviewHistorySave(pgnText, headers, reviewState.correctionExercises, analysisSummary);
   document.getElementById("btn-replay-game").classList.remove("hidden");
 
   // Bilan pédagogique Supa (best-effort).

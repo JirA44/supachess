@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node --test test/blindspots.test.cjs test/centipawns.test.cjs test/learning-loop.test.cjs test/review-report.test.cjs test/review-history.test.cjs test/review-corrections.test.cjs test/board-bubbles.test.cjs test/book-lessons.test.cjs",
+    "test": "node --test test/blindspots.test.cjs test/centipawns.test.cjs test/learning-loop.test.cjs test/review-report.test.cjs test/review-history.test.cjs test/review-corrections.test.cjs test/board-bubbles.test.cjs test/book-lessons.test.cjs test/review-insights.test.cjs",
     "test:review-history-browser": "node test/review-history.browser.mjs"
   },
   "keywords": [],
