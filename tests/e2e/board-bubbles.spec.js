@@ -131,6 +131,7 @@ test("selecting a piece shows independent hot and cold move points and a chosen 
   const target = page.locator(`[data-square="${move.to}"] .legal-hint`);
   await expect(target).toBeVisible();
   await expect(target).toHaveAttribute('aria-label', /coup|evaluation/i);
+  await expect(target).toHaveClass(/q-best/);
   await expect(page.locator('.legal-hint')).toHaveCount(await page.evaluate(() => boardUI.legalTargets.length));
 
   await page.getByRole('button', { name: 'Points chauds/froids : ON' }).click();
@@ -145,7 +146,7 @@ test("selecting a piece shows independent hot and cold move points and a chosen 
   await expect(page.locator('.cdot-stack').first()).toBeVisible();
 
   await page.locator(`[data-square="${move.to}"]`).click();
-  await expect(page.locator('#move-history .mv').first()).toBeVisible();
+  await page.waitForFunction(() => state.chess.history().length >= 2 && state.phase === 'userTurn', { timeout: 45000 });
 
   await page.evaluate(({ from, to }) => {
     boardUI.lastMove = { from, to, san: 'Test', grade: moveGrade(80), evaluation: '-0.80' };
