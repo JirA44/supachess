@@ -86,8 +86,76 @@
     return game;
   }
 
+  function engineLineValue(line) {
+    if (Number.isFinite(line.scoreCp)) return line.scoreCp;
+    if (Number.isFinite(line.mate)) return line.mate > 0
+      ? 100000 - line.mate * 100 : -100000 - line.mate * 100;
+    return null;
+  }
+
+  function formatEngineLineScore(line) {
+    if (Number.isFinite(line.mate)) return line.mate > 0 ? "#+" + line.mate : "#-" + Math.abs(line.mate);
+    if (Number.isFinite(line.scoreCp)) {
+      const pawns = line.scoreCp / 100;
+      return (pawns > 0 ? "+" : "") + pawns.toFixed(2);
+    }
+    return "—";
+  }
+
+  function engineHintForMove(move, piece) {
+    if (move.flags && move.flags.includes("p")) return "La promotion transforme le pion : vérifie aussi les menaces et les échecs immédiats.";
+    if (move.flags && move.flags.includes("c")) return "Après cette prise, vérifie les recaptures, les pièces laissées sans défense et ce que la pièce capturée protégeait.";
+    if (move.flags && move.flags.includes("k")) return "Le roque met le roi à l’abri et développe une tour : compare la sécurité des deux rois.";
+    if (piece === "r") return "Pour une tour, examine les colonnes ouvertes, les rangées actives, les cibles accessibles et la coordination avec l’autre tour.";
+    if (piece === "p") return "Après ce coup de pion, repère les cases libérées, les cases affaiblies et les lignes qui peuvent s’ouvrir.";
+    return "Compare les cases contrôlées avant et après, les menaces créées, les pièces défendues et les réponses forcées de l’adversaire.";
+  }
+
+  function buildEngineChoices(fen, lines, ChessClass) {
+    const position = new ChessClass(fen);
+    const legalCount = position.moves({ verbose: true }).length;
+    const ranked = (lines || []).filter((line) => line && line.pv && line.pv.length)
+      .map((line) => ({ line: line, value: engineLineValue(line) }))
+      .filter((entry) => entry.value !== null)
+      .sort((a, b) => b.value - a.value);
+    if (!ranked.length) return { legalCount: legalCount, choices: [] };
+    const best = ranked[0].line;
+    const choices = ranked.map((entry, index) => {
+      const line = entry.line;
+      const trial = new ChessClass(fen);
+      let firstMove = null;
+      const sanLine = [];
+      for (const uci of line.pv) {
+        const move = trial.move({
+          from: uci.slice(0, 2),
+          to: uci.slice(2, 4),
+          promotion: uci.slice(4) || "q",
+        });
+        if (!move) break;
+        if (!firstMove) firstMove = move;
+        sanLine.push(move.san);
+      }
+      const movedPiece = firstMove ? position.get(firstMove.from) : null;
+      const comparable = Number.isFinite(best.scoreCp) && Number.isFinite(line.scoreCp);
+      const deltaCp = comparable ? Math.max(0, best.scoreCp - line.scoreCp) : null;
+      return {
+        rank: index + 1,
+        san: firstMove ? firstMove.san : line.pv[0],
+        uci: line.pv[0],
+        fen: fen,
+        pv: line.pv.slice(),
+        sanLine: sanLine,
+        score: formatEngineLineScore(line),
+        deltaCp: deltaCp,
+        depth: line.depth || 0,
+        facts: firstMove ? engineHintForMove(firstMove, movedPiece && movedPiece.type) : "",
+      };
+    });
+    return { legalCount: legalCount, choices: choices };
+  }
+
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { LESSONS, setupGame };
+    module.exports = { LESSONS, setupGame, buildEngineChoices, engineHintForMove };
   }
 
   if (typeof document === "undefined") return;
@@ -106,6 +174,10 @@
   let flipped = false;
   let bookReplyTimer = null;
   let progress = readProgress();
+  let lessonEngine = null;
+  let enginePreview = null;
+  let analysisToken = 0;
+  const engineCache = new Map();
 
   function readProgress() {
     try { return JSON.parse(localStorage.getItem(STORE_KEY) || "{}"); }
@@ -158,6 +230,14 @@
       root.clearTimeout(bookReplyTimer);
       bookReplyTimer = null;
     }
+    analysisToken++;
+    enginePreview = null;
+    $("lesson-engine-analysis").hidden = true;
+    $("lesson-engine-return").hidden = true;
+    $("lesson-engine-analyze").disabled = false;
+    $("lesson-engine-analyze").textContent = "Comparer tous les coups avec Stockfish";
+    $("lesson-engine-status").textContent = "";
+    $("lesson-engine-lines").textContent = "";
     lessonIndex = index;
     const lesson = LESSONS[lessonIndex];
     game = setupGame(lesson, Chess);
@@ -225,7 +305,7 @@
   }
 
   function onSquareClick(square) {
-    if (!game || !principleAnswered || waitingForBook || sequenceIndex >= LESSONS[lessonIndex].sequence.length) return;
+    if (!game || enginePreview || !principleAnswered || waitingForBook || sequenceIndex >= LESSONS[lessonIndex].sequence.length) return;
     const lesson = LESSONS[lessonIndex];
     if (game.turn() !== lesson.color) return;
     const piece = game.get(square);
@@ -260,8 +340,9 @@
       attempts++;
       clearSelection();
       renderBoard();
-      $("lesson-feedback").textContent = "Coup légal, mais ce n’est pas l’idée travaillée ici. Prends un temps pour repérer le plan.";
+      $("lesson-feedback").textContent = "Ce coup légal ne suit pas la ligne pédagogique. Compare-le aux autres options avec Stockfish, puis vérifie les indices sur l’échiquier.";
       updateProgressLabel();
+      runEngineComparison(true);
       return;
     }
     sequenceIndex++;
@@ -357,9 +438,101 @@
   }
 
   function renderBoard() {
-    if (game) boardUI.render(game);
+    if (game) boardUI.render(enginePreview || game);
   }
 
+  function previewEngineLine(choice) {
+    const preview = new Chess(choice.fen);
+    let last = null;
+    for (const uci of choice.pv.slice(0, 5)) {
+      last = preview.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.slice(4) || "q" });
+      if (!last) break;
+    }
+    if (!last) return;
+    enginePreview = preview;
+    boardUI.lastMove = { from: last.from, to: last.to, san: last.san };
+    $("lesson-engine-return").hidden = false;
+    $("lesson-status").textContent = "Aperçu Stockfish : " + choice.sanLine.slice(0, 5).join(" ") + ". Reviens à l’exercice pour continuer à jouer.";
+    renderBoard();
+  }
+
+  function renderEngineChoices(result, fen) {
+    const list = $("lesson-engine-lines");
+    list.textContent = "";
+    result.choices.forEach((choice) => {
+      const item = document.createElement("li");
+      item.className = "lesson-engine-line" + (choice.rank === 1 ? " best" : "");
+      const heading = document.createElement("div");
+      heading.className = "lesson-engine-line-head";
+      const move = document.createElement("span");
+      move.textContent = choice.rank + ". " + choice.san + (choice.rank === 1 ? " · meilleur de cette recherche" : "");
+      const evaluation = document.createElement("span");
+      evaluation.textContent = "Éval. côté au trait : " + choice.score;
+      const delta = document.createElement("span");
+      delta.className = "lesson-engine-delta";
+      delta.textContent = choice.deltaCp === null ? "Écart : mat ou score incomparable" : "Écart avec le premier : " + (choice.deltaCp / 100).toFixed(2) + " pion(s)";
+      heading.append(move, evaluation, delta);
+      const facts = document.createElement("p");
+      facts.className = "lesson-engine-facts";
+      facts.textContent = "À examiner : " + choice.facts;
+      const pv = document.createElement("p");
+      pv.className = "lesson-engine-pv";
+      pv.textContent = "Suite calculée : " + (choice.sanLine.length ? choice.sanLine.join(" ") : "non disponible");
+      const preview = document.createElement("button");
+      preview.type = "button";
+      preview.className = "lesson-engine-preview";
+      preview.textContent = "Voir cette suite sur l’échiquier";
+      preview.addEventListener("click", () => previewEngineLine(choice));
+      item.append(heading, facts, pv, preview);
+      list.appendChild(item);
+    });
+    const depth = result.choices.reduce((max, choice) => Math.max(max, choice.depth), 0);
+    $("lesson-engine-status").textContent = "Stockfish a évalué " + result.choices.length + " ligne(s) sur " + result.legalCount + " coup(s) légal(aux), profondeur maximale " + depth + ". L’évaluation est côté au trait; elle dépend de la recherche et ne constitue pas seule une explication humaine.";
+    $("lesson-engine-analysis").hidden = false;
+  }
+
+  async function runEngineComparison(automatic) {
+    if (!game) return;
+    const fen = game.fen();
+    const token = ++analysisToken;
+    const panel = $("lesson-engine-analysis");
+    const button = $("lesson-engine-analyze");
+    panel.hidden = false;
+    button.disabled = true;
+    button.textContent = "Stockfish analyse…";
+    $("lesson-engine-status").textContent = "Analyse des coups légaux avec Stockfish 19…";
+    try {
+      let result = engineCache.get(fen);
+      if (!result) {
+        if (!lessonEngine) lessonEngine = new StockfishEngine("vendor/stockfish-19-lite-single.js");
+        await lessonEngine.ready;
+        if (token !== analysisToken || !game || game.fen() !== fen) return;
+        const legalCount = game.moves({ verbose: true }).length;
+        const response = await lessonEngine.analyze({ fen: fen, multipv: Math.max(1, legalCount), movetime: 1800, elo: 0 });
+        result = buildEngineChoices(fen, response.lines, Chess);
+        engineCache.set(fen, result);
+      }
+      if (token !== analysisToken || !game || game.fen() !== fen) return;
+      renderEngineChoices(result, fen);
+      $("lesson-engine-status").setAttribute("data-source", "stockfish-19");
+    } catch (error) {
+      if (token === analysisToken) $("lesson-engine-status").textContent = "Analyse indisponible : " + (error && error.message ? error.message : "le moteur n’a pas répondu.");
+    } finally {
+      if (token === analysisToken) {
+        button.disabled = false;
+        button.textContent = "Actualiser la comparaison Stockfish";
+      }
+    }
+  }
+
+  $("lesson-engine-analyze").addEventListener("click", () => runEngineComparison(false));
+  $("lesson-engine-return").addEventListener("click", () => {
+    enginePreview = null;
+    boardUI.lastMove = null;
+    $("lesson-engine-return").hidden = true;
+    $("lesson-status").textContent = "Retour à la position de l’exercice. À toi de jouer.";
+    renderBoard();
+  });
   $("lesson-flip").addEventListener("click", () => {
     flipped = !flipped;
     boardUI.setFlipped(flipped);

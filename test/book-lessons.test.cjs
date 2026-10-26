@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { Chess } = require("chess.js");
-const { LESSONS, setupGame } = require("../js/book-lessons.js");
+const { LESSONS, setupGame, buildEngineChoices, engineHintForMove } = require("../js/book-lessons.js");
 
 test("book lesson setups and user/book move sequences are legal", () => {
   for (const lesson of LESSONS) {
@@ -28,4 +28,24 @@ test("each lesson asks for a principle and cites its source", () => {
     assert.ok(lesson.author && lesson.book && lesson.reference);
     assert.ok(lesson.sequence.some((action) => action.side === "user"));
   }
+});
+
+test("Stockfish alternatives are ranked, compared, and shown as legal SAN lines", () => {
+  const fen = new Chess().fen();
+  const result = buildEngineChoices(fen, [
+    { multipv: 1, depth: 18, scoreCp: 34, mate: null, pv: ["e2e4", "e7e5"] },
+    { multipv: 2, depth: 18, scoreCp: 19, mate: null, pv: ["d2d4", "d7d5"] },
+  ], Chess);
+  assert.equal(result.legalCount, 20);
+  assert.equal(result.choices[0].san, "e4");
+  assert.equal(result.choices[0].score, "+0.34");
+  assert.equal(result.choices[0].sanLine.join(" "), "e4 e5");
+  assert.equal(result.choices[1].san, "d4");
+  assert.equal(result.choices[1].deltaCp, 15);
+});
+
+test("move hints describe observable chess facts without claiming Stockfish's private reasoning", () => {
+  assert.match(engineHintForMove({ flags: "n" }, "r"), /colonnes ouvertes/);
+  assert.match(engineHintForMove({ flags: "c" }, "n"), /recaptures/);
+  assert.match(engineHintForMove({ flags: "p" }, "p"), /promotion/);
 });

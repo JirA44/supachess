@@ -42,6 +42,16 @@
           <legend id="lesson-question">Quel principe faut-il appliquer ?</legend>
           <div class="lesson-choices" id="lesson-choices"></div>
         </fieldset>
+        <div class="lesson-engine-actions">
+          <button class="btn" id="lesson-engine-analyze" type="button">Comparer tous les coups avec Stockfish</button>
+          <button class="btn" id="lesson-engine-return" type="button" hidden>Revenir à la position de l’exercice</button>
+        </div>
+        <section class="lesson-engine-analysis" id="lesson-engine-analysis" aria-labelledby="lesson-engine-title" hidden>
+          <h3 id="lesson-engine-title">Comparer les coups légaux</h3>
+          <p class="lesson-engine-status" id="lesson-engine-status" role="status" aria-live="polite"></p>
+          <p class="lesson-engine-note">Stockfish classe les coups et donne une suite calculée. Il n’explique pas lui-même les principes : les indices ci-dessous sont des questions à vérifier sur l’échiquier, pas la pensée interne du moteur.</p>
+          <ol class="lesson-engine-lines" id="lesson-engine-lines"></ol>
+        </section>
         <p class="lesson-feedback" id="lesson-feedback" role="status" aria-live="polite"></p>
         <div class="lesson-explanation" id="lesson-explanation" hidden></div>
         <h3>Suite jouée</h3>
@@ -54,6 +64,7 @@
   </main>
 
   <script src="vendor/chess.js"></script>
+  <script src="js/engine.js"></script>
   <script src="js/board.js"></script>
   <script src="js/book-lessons.js"></script>
 </body>

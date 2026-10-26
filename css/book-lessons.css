@@ -44,3 +44,17 @@
   .lesson-card { padding: 14px; }
   .lesson-board-actions .btn { flex: 1 1 auto; }
 }
+
+.lesson-engine-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.lesson-engine-analysis { margin-top: 10px; padding: 13px; background: #12141c; border: 1px solid var(--panel-edge); border-radius: 9px; }
+.lesson-engine-analysis[hidden] { display: none; }
+.lesson-engine-status { color: var(--accent); font-weight: 700; line-height: 1.4; }
+.lesson-engine-note { color: var(--text-dim); font-size: .82rem; line-height: 1.45; }
+.lesson-engine-lines { display: grid; gap: 8px; max-height: 560px; overflow: auto; padding: 0; list-style: none; }
+.lesson-engine-line { padding: 10px; background: #1a1e29; border: 1px solid var(--panel-edge); border-radius: 8px; }
+.lesson-engine-line.best { border-color: var(--green); }
+.lesson-engine-line-head { display: flex; flex-wrap: wrap; gap: 7px 12px; align-items: baseline; font-weight: 800; }
+.lesson-engine-delta { color: var(--text-dim); font-size: .84rem; }
+.lesson-engine-facts, .lesson-engine-pv { margin: 6px 0 0; color: var(--text-dim); font-size: .84rem; line-height: 1.45; }
+.lesson-engine-preview { margin-top: 8px; padding: 6px 9px; color: var(--text); background: #252b3a; border: 1px solid #414863; border-radius: 6px; cursor: pointer; }
+.lesson-engine-preview:hover, .lesson-engine-preview:focus-visible { border-color: var(--accent); outline: 2px solid rgba(240,179,92,.25); }
