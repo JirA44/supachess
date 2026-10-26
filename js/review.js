@@ -43,10 +43,10 @@ function reviewHistoryLoad() {
 }
 
 function reviewHistorySave(pgn, headers = {}) {
-  const normalizedPgn = String(pgn || "").replace(/\\r\\n?/g, "\\n").trim();
+  const normalizedPgn = String(pgn || "").replace(/\r\n?/g, "\n").trim();
   if (!normalizedPgn) return false;
   const previous = reviewHistoryLoad();
-  const existing = previous.find((item) => item.pgn.replace(/\\r\\n?/g, "\\n").trim() === normalizedPgn);
+  const existing = previous.find((item) => item.pgn.replace(/\r\n?/g, "\n").trim() === normalizedPgn);
   const item = {
     id: existing ? existing.id : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     pgn: normalizedPgn,
@@ -57,7 +57,7 @@ function reviewHistorySave(pgn, headers = {}) {
     analyzedAt: new Date().toISOString(),
   };
   const next = [item, ...previous.filter((saved) => saved.id !== item.id &&
-    saved.pgn.replace(/\\r\\n?/g, "\\n").trim() !== normalizedPgn)].slice(0, REVIEW_HISTORY_LIMIT);
+    saved.pgn.replace(/\r\n?/g, "\n").trim() !== normalizedPgn)].slice(0, REVIEW_HISTORY_LIMIT);
   try {
     localStorage.setItem(REVIEW_HISTORY_KEY, JSON.stringify(next));
   } catch (_e) {
