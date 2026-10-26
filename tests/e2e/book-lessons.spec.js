@@ -30,3 +30,15 @@ test("Larsen lesson starts from the cited position, can flip, and accepts the ce
   const boardBox = await page.locator("#lesson-board").boundingBox();
   expect(boardBox.width).toBeLessThanOrEqual(375);
 });
+
+test("Stockfish compares legal alternatives and previews a continuation on the board", async ({ page }) => {
+  await page.goto("/book-lessons.html");
+  await page.getByRole("button", { name: "Comparer tous les coups avec Stockfish" }).click();
+  await expect(page.locator("#lesson-engine-status")).toContainText("Stockfish a évalué", { timeout: 30000 });
+  await expect(page.locator("#lesson-engine-lines .lesson-engine-line").first()).toContainText("meilleur de cette recherche");
+  await expect(page.locator("#lesson-engine-lines .lesson-engine-line").first()).toContainText("Suite calculée");
+  await page.locator("#lesson-engine-lines .lesson-engine-preview").first().click();
+  await expect(page.locator("#lesson-engine-return")).toBeVisible();
+  await page.locator("#lesson-engine-return").click();
+  await expect(page.locator("#lesson-engine-return")).toBeHidden();
+});
