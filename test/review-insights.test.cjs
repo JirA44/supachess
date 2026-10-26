@@ -64,3 +64,28 @@ test("phase labels use move count for opening and board material for endgame", (
   assert.equal(ReviewInsights.phaseOf(endgameFen, 35), "endgame");
 });
 
+
+test("PGN collection import separates and legally validates all Event games", () => {
+  const source = '[Event "One"]\n[White "A"]\n[Black "B"]\n\n1. e4 e5 *\n\n' +
+    '[Event "Two"]\n[White "A"]\n[Black "C"]\n\n1. d4 d5 *';
+  const parsed = ReviewInsights.validatePgnCollection(source);
+  assert.equal(ReviewInsights.splitPgnCollection(source).length, 2);
+  assert.equal(parsed.valid.length, 2);
+  assert.equal(parsed.valid[0].plies, 2);
+  assert.equal(parsed.valid[1].headers.Event, "Two");
+  assert.equal(parsed.invalid.length, 0);
+});
+
+test("personalized recommendations retain sample-size uncertainty and map phase weaknesses to lessons", () => {
+  const profile = {
+    name: "Alice", games: 2, ratedMoves: 8,
+    grades: { inaccuracy: 2, mistake: 1, blunder: 0 },
+    diagnostics: { PIECE_EN_PRISE_EN_UN_COUP: { count: 2 } },
+    phases: { opening: { moves: 4, issues: 1 }, middlegame: { moves: 4, issues: 2 }, endgame: { moves: 0, issues: 0 } },
+  };
+  const path = ReviewInsights.personalizedPath(profile);
+  assert.equal(path[0].program, "Anti-erreurs · anticiper l’adversaire");
+  assert.ok(path.some((item) => item.program === "Kasparov · coups candidats et calcul"));
+  assert.ok(path.some((item) => item.program === "Stockfish · comparer et vérifier"));
+  assert.ok(path.every((item) => /faible/.test(item.confidence)));
+});

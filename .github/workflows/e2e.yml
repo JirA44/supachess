@@ -28,6 +28,7 @@ jobs:
       - run: npm install --no-save @playwright/test
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test --config=playwright.config.cjs
+      - run: npm run test:review-history-browser
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
