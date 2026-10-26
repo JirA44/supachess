@@ -91,3 +91,11 @@ test('resumes saved correction exercises from a profile link',async({page})=>{
   await expect(page.locator('#review-exercise-heading')).toContainText('Exercice 1/1');
   expect(await page.evaluate(()=>reviewState.currentHeaders.White)).toBe('Alice');
 });
+
+
+test('opens PGN analysis from a profile link when no game is saved yet',async({page})=>{
+  await page.goto('/index.html?open-review=1');
+  await expect(page.locator('body')).toHaveAttribute('data-engine-ready','1',{timeout:30000});
+  await expect(page.locator('#pgn-modal')).toBeVisible({timeout:10000});
+  await expect(page.locator('#pgn-input')).toBeEmpty();
+});
