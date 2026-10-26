@@ -1,9 +1,9 @@
 (function (root, factory) {
-  const api = factory();
+  const api = factory(root);
   if (typeof module === "object" && module.exports) module.exports = api;
   if (root) root.ReviewInsights = api;
   if (root && root.document && typeof root.reviewHistoryLoad === "function") api.attachUI();
-})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+})(typeof globalThis !== "undefined" ? globalThis : this, function (root) {
   "use strict";
 
   const GRADE_IDS = ["brilliant", "best", "very-good", "good", "ok", "inaccuracy", "mistake", "blunder"];
