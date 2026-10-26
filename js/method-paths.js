@@ -6,13 +6,6 @@
   const search = document.getElementById("lesson-search");
   const levelFilter = document.getElementById("lesson-level-filter");
   const programFilter = document.getElementById("lesson-program-filter");
-  const methodDescriptions = {
-    "Carlsen · amélioration et conversion": "Leçons classées sur l’amélioration positionnelle et la conversion.",
-    "Tal · tactique et sacrifices à calculer": "Leçons classées sur la tactique et les sacrifices à vérifier.",
-    "Kasparov · coups candidats et calcul": "Leçons classées sur les coups candidats et le calcul.",
-    "Stockfish · comparer et vérifier": "Positions originales disponibles pour une comparaison avec Stockfish 19.",
-  };
-
   function updatePathCounts() {
     const lessons = Array.isArray(window.SupaChessLessons) ? window.SupaChessLessons : [];
     const originalLessons = lessons.filter((lesson) => lesson.kind !== "anticipation");
