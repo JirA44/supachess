@@ -11,7 +11,7 @@ const document = {
 const context = vm.createContext({ document, esc: String, sanFr: String, reviewState: { grades: [] }, state: { replayIdx: 0 } });
 vm.runInContext(fs.readFileSync(path.join(__dirname, "../js/review.js"), "utf8"), context);
 
-test("builds exercises for measurable blunders, mistakes, and inaccuracies in game order", () => {
+test("builds exercises for measurable blunders, mistakes, and inaccuracies in game order", async () => {
   const rows = [
     { n: 2, color: "w", san: "f3", classification: "blunder", lossCp: 240 },
     { n: 2, color: "b", san: "Nf6", classification: "best", lossCp: 0 },
@@ -31,7 +31,7 @@ test("builds exercises for measurable blunders, mistakes, and inaccuracies in ga
     { scoreCp: 10, mate: null, pv: ["g1f3"] },
     { scoreCp: null, mate: null, pv: [] },
   ];
-  const result = vm.runInContext(
+  const result = await vm.runInContext(
     "reviewBuildCorrectionExercises(" + JSON.stringify(rows) + "," + JSON.stringify(fens) + "," + JSON.stringify(moves) + "," + JSON.stringify(lines) + ")",
     context
   );
@@ -45,12 +45,12 @@ test("builds exercises for measurable blunders, mistakes, and inaccuracies in ga
   assert.equal(plain[1].bestUci, "g1f3");
 });
 
-test("does not create exercises for the best played move or a missing engine PV", () => {
+test("does not create exercises for the best played move or a missing engine PV", async () => {
   const rows = [
     { n: 1, color: "w", san: "e4", classification: "blunder", lossCp: 200 },
     { n: 1, color: "b", san: "e5", classification: "mistake", lossCp: 60 },
   ];
-  const result = vm.runInContext(
+  const result = await vm.runInContext(
     'reviewBuildCorrectionExercises(' + JSON.stringify(rows) + ',["fen-1","fen-2"],[{from:"e2",to:"e4"},{from:"e7",to:"e5"}],[{pv:["e2e4"]},{pv:[]}])',
     context
   );
