@@ -278,3 +278,9 @@ body {
 
 .candidate-move-tooltip::before { content: ""; position: absolute; top: calc(50% - 5px); left: -6px; width: 10px; height: 10px; background: #171a24; border-left: 1px solid var(--accent); border-bottom: 1px solid var(--accent); transform: rotate(45deg); }
 .candidate-move-tooltip[data-side="left"]::before { left: auto; right: -6px; border: 0; border-top: 1px solid var(--accent); border-right: 1px solid var(--accent); transform: rotate(45deg); }
+
+
+/* Engine time and estimated opponent strength */
+.settings .setting-hint { display: block; max-width: 18em; margin-top: 4px; color: var(--text-dim); font-size: .72rem; line-height: 1.35; }
+.settings .opponent-fide-estimate { display: block; max-width: 18em; margin-top: 5px; color: var(--accent); font-size: .78rem; font-weight: 700; line-height: 1.35; }
+.settings .opponent-fide-note { display: block; max-width: 18em; margin-top: 2px; color: var(--text-dim); font-size: .68rem; line-height: 1.3; }
