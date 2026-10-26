@@ -32,7 +32,7 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.length, 15);
+  assert.equal(LESSONS.length, 39);
 });
 
 test("Stockfish alternatives are ranked, compared, and shown as legal SAN lines", () => {
