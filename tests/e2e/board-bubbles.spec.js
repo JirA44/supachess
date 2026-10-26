@@ -67,5 +67,5 @@ test('candidate dots toggle off and on, and preference survives reload', async (
 test('board stylesheet cache key includes the full-size stacked bubble styles', async ({ page }) => {
   await page.goto('/index.html');
   const stylesheet = page.locator('link[href*="css/style.css"]');
-  await expect(stylesheet).toHaveAttribute('href', /stacked-bubbles-20261026/);
+  await expect(stylesheet).toHaveAttribute('href', /live-move-grade-counts-20261026/);
 });

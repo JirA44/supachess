@@ -17,6 +17,7 @@ const state = {
 
   stats: { moves: 0, top1: 0, top3: 0, intercepts: 0, forced: 0 },
   accuracy: { w: [], b: [], pendingEngine: null }, // moveAccuracy [0..100] par couleur
+  moveGradeHistory: [], // demi-coups joués avec catégorie, révisée après analyse moteur
 };
 
 const boardUI = new BoardUI($("board"), onSquareClick);
@@ -49,6 +50,7 @@ async function init() {
 function newGame() {
   state.gen++;
   moveFeedback.clear();
+  state.moveGradeHistory = [];
   state.chess = new Chess();
   state.candidates = [];
   state.pendingMove = null;
@@ -192,7 +194,10 @@ async function playEngineMove() {
     boardUI.lastMove = { from: mv.from, to: mv.to, san: mv.san, grade: moveGrade(null) };
     if (baseline.lines.length) {
       const pending = { color: engineColor, beforeCp: clampCpFromLine(baseline.lines[0]),
-        beforeValue: scoreValue(baseline.lines[0]), san: mv.san, uci: res.bestmove, fen, square: mv.to, moveNumber: moveNumberFromFen(fen), token: gen };
+        beforeValue: scoreValue(baseline.lines[0]), beforeBestUci: baseline.lines[0].pv[0],
+        san: mv.san, uci: res.bestmove, fen, square: mv.to, moveNumber: moveNumberFromFen(fen),
+        ply: state.chess.history().length, token: gen };
+      recordMoveGrade(pending.ply, engineColor, "unrated");
       if (state.chess.game_over()) {
         const terminal = { scoreCp: 0, mate: state.chess.in_checkmate() ? 0 : null, pv: [], depth: baseline.lines[0].depth };
         finishEngineFeedback(pending, terminal);
@@ -200,11 +205,61 @@ async function playEngineMove() {
       } else {
         state.accuracy.pendingEngine = pending;
       }
+    } else {
+      recordMoveGrade(state.chess.history().length, engineColor, "unrated");
     }
     if (typeof gamesAutoSave === "function") gamesAutoSave();
   }
   renderAll();
   startTurn();
+}
+
+function moveGradeCategory(lossCp, brilliant = false, best = false) {
+  if (!Number.isFinite(lossCp)) return "unrated";
+  if (brilliant && lossCp <= 10) return "brilliant";
+  if (lossCp >= 200) return "blunder";
+  if (lossCp >= 60) return "error";
+  if (lossCp >= 30) return "inaccuracy";
+  if (best) return "best";
+  if (lossCp <= 10) return "very-good";
+  if (lossCp < 20) return "good";
+  return "ok";
+}
+
+function recordMoveGrade(ply, color, category) {
+  const existing = state.moveGradeHistory.find((entry) => entry.ply === ply);
+  if (existing) { existing.color = color; existing.category = category; }
+  else state.moveGradeHistory.push({ ply, color, category });
+  renderMoveGradeSummary();
+}
+
+function renderMoveGradeSummary() {
+  const wrap = $("move-grade-summary");
+  if (!wrap) return;
+  const categories = [
+    ["brilliant", "!!", "Brillant"], ["best", "★", "Meilleur coup"],
+    ["very-good", "!", "Très bon coup"], ["good", "✓", "Bon coup"],
+    ["ok", "=", "Coup OK"], ["inaccuracy", "?!", "Imprécision"],
+    ["error", "?", "Erreur"], ["blunder", "??", "Gaffe"], ["unrated", "…", "En attente"],
+  ];
+  wrap.replaceChildren();
+  for (const [color, label] of [["w", "Blancs"], ["b", "Noirs"]]) {
+    const side = document.createElement("section");
+    side.className = "move-grade-side";
+    side.dataset.color = color;
+    const heading = document.createElement("h3");
+    heading.textContent = label;
+    side.appendChild(heading);
+    for (const [key, symbol, name] of categories) {
+      const count = state.moveGradeHistory.filter((entry) => entry.color === color && entry.category === key).length;
+      const row = document.createElement("div");
+      row.className = "move-grade-count-row";
+      row.dataset.grade = key;
+      row.innerHTML = `<span class="move-grade-count-symbol" aria-hidden="true">${symbol}</span><span>${name}</span><strong data-grade-count>${count ? "+" + count : "0"}</strong>`;
+      side.appendChild(row);
+    }
+    wrap.appendChild(side);
+  }
 }
 
 function finishEngineFeedback(pending, replyLine) {
@@ -213,6 +268,7 @@ function finishEngineFeedback(pending, replyLine) {
   const deltaCp = Math.max(0, pending.beforeValue + scoreValue(replyLine));
   const cand = { deltaCp, line: { ...replyLine, pv: [pending.uci, ...replyLine.pv] } };
   const brilliant = isBrilliantCandidate(pending.fen, cand);
+  recordMoveGrade(pending.ply, pending.color, moveGradeCategory(deltaCp, brilliant, pending.uci === pending.beforeBestUci));
   const grade = moveGrade(deltaCp, brilliant);
   moveFeedback.show({ san: pending.san, color: pending.color, moveNumber: pending.moveNumber, square: pending.square,
     deltaCp, brilliant, token: pending.token });
@@ -395,6 +451,8 @@ function commitUserMove(moveObj, cand, forced) {
   moveFeedback.clearPreview();
   const brilliant = isBrilliantCandidate(fenBefore, cand);
   const grade = moveGrade(cand ? cand.deltaCp : null, brilliant);
+  recordMoveGrade(state.chess.history().length, userMoveColor,
+    moveGradeCategory(cand ? cand.deltaCp : null, brilliant, cand?.rank === 1));
   moveFeedback.show({ san: mv.san, color: mv.color, moveNumber: moveNumberFromFen(fenBefore), square: mv.to,
     deltaCp: cand ? cand.deltaCp : null, brilliant });
   const evaluation = cand && cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
@@ -444,7 +502,7 @@ function checkGameOver() {
 }
 
 /* ── Rendu ── */
-function renderAll() { renderBoard(); renderCandidatesList(); renderHistory(); renderStats(); }
+function renderAll() { renderBoard(); renderCandidatesList(); renderHistory(); renderStats(); renderMoveGradeSummary(); }
 function renderBoard() { boardUI.render(state.chess); }
 
 /* Cartes candidats dépliables (clic sur l'en-tête). Le 1er candidat est
@@ -667,6 +725,7 @@ $("btn-undo").addEventListener("click", () => {
     if (state.chess.turn() === state.userColor) break;
   }
   if (state.stats.moves > 0) state.stats.moves--;
+  state.moveGradeHistory = state.moveGradeHistory.filter((entry) => entry.ply <= state.chess.history().length);
   state.accuracy.pendingEngine = null;
   boardUI.lastMove = null;
   renderAll();
