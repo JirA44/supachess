@@ -18,6 +18,8 @@ class BoardUI {
     this.showDots = true;
     this.previewDot = null;
     this.legalTargets = [];
+    this.legalTargetHints = {}; // destination -> {quality, capture, san, evaluation}
+    this.showMoveDots = true;
   }
 
   setFlipped(f) { this.flipped = f; }
@@ -45,10 +47,28 @@ class BoardUI {
         if (this.lastMove && (this.lastMove.from === sq || this.lastMove.to === sq)) {
           cell.classList.add("lastmove");
         }
-        if (this.legalTargets.includes(sq)) {
+        if (this.showMoveDots && this.legalTargets.includes(sq)) {
           const hint = document.createElement("span");
-          hint.className = "legal-hint";
+          const detail = this.legalTargetHints[sq] || {};
+          hint.className = "legal-hint" + (detail.quality ? " " + detail.quality : " q-neutral") + (detail.capture ? " capture" : "");
+          hint.title = detail.san
+            ? `${detail.capture ? "Prise possible" : "Coup possible"} : ${detail.san} · évaluation ${detail.evaluation || "en cours"}`
+            : "Coup légal possible";
+          hint.setAttribute("aria-label", hint.title);
           cell.appendChild(hint);
+        }
+        const playedError = this.lastMove && this.lastMove.to === sq && this.lastMove.grade && this.lastMove.grade.tone === "bad";
+        const previewError = this.previewDot && this.previewDot.square === sq && this.previewDot.quality === "bad";
+        if (playedError || previewError) {
+          cell.classList.add("bad-move");
+          const marker = document.createElement("span");
+          marker.className = "bad-move-marker";
+          marker.textContent = "!";
+          marker.title = playedError
+            ? `${this.lastMove.san || "Coup joué"} — ${this.lastMove.grade.label}`
+            : this.previewDot.title || "Coup testé : erreur";
+          marker.setAttribute("aria-label", marker.title);
+          cell.appendChild(marker);
         }
         const dotsHere = this.showDots ? this.dots.filter((d) => d.square === sq) : [];
         if (dotsHere.length) {

@@ -40,9 +40,9 @@ test('several candidate moves on one square stay distinct and do not overlap', a
 });
 
 
-test('candidate dots toggle off and on, and preference survives reload', async ({ page }) => {
+test('candidate bubbles toggle off and on, and preference survives reload', async ({ page }) => {
   await page.goto('/index.html');
-  const toggle = page.getByRole('button', { name: 'Dots : ON' });
+  const toggle = page.getByRole('button', { name: 'Bulles candidates : ON' });
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await page.evaluate(() => {
     boardUI.dots = [{ square: 'e4', label: '★10', evaluation: '+0.11', quality: 'best', title: 'Best move' }];
@@ -50,16 +50,16 @@ test('candidate dots toggle off and on, and preference survives reload', async (
   });
   await expect(page.locator(".sq[data-square='e4'] .cdot-stack .cdot")).toHaveCount(1);
   await toggle.click();
-  await expect(page.getByRole('button', { name: 'Dots : OFF' })).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByRole('button', { name: 'Bulles candidates : OFF' })).toHaveAttribute('aria-pressed', 'false');
   await expect(page.locator('.cdot-stack')).toHaveCount(0);
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Dots : OFF' })).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByRole('button', { name: 'Bulles candidates : OFF' })).toHaveAttribute('aria-pressed', 'false');
   await page.evaluate(() => {
     boardUI.dots = [{ square: 'e4', label: '★10', evaluation: '+0.11', quality: 'best', title: 'Best move' }];
     boardUI.render(state.chess);
   });
   await expect(page.locator('.cdot-stack')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Dots : OFF' }).click();
+  await page.getByRole('button', { name: 'Bulles candidates : OFF' }).click();
   await expect(page.locator(".sq[data-square='e4'] .cdot-stack .cdot")).toHaveCount(1);
 });
 
@@ -120,4 +120,37 @@ test("each recorded half-move reports its precision loss", async ({ page }) => {
   await expect(page.locator("#stat-accuracy")).toContainText("-1% de précision sur ce demi-coup");
   await page.evaluate(() => resetAccuracy());
   await expect(page.locator("#stat-accuracy")).not.toContainText("de précision sur ce demi-coup");
+});
+
+
+test("selecting a piece shows independent hot and cold move points and a chosen move works", async ({ page }) => {
+  await page.goto('/index.html');
+  await page.waitForFunction(() => document.body.dataset.engineReady === '1' && state.phase === 'userTurn');
+  const move = await page.evaluate(() => ({ from: state.candidates[0].uci.slice(0, 2), to: state.candidates[0].uci.slice(2, 4) }));
+  await page.locator(`[data-square="${move.from}"]`).click();
+  const target = page.locator(`[data-square="${move.to}"] .legal-hint`);
+  await expect(target).toBeVisible();
+  await expect(target).toHaveAttribute('aria-label', /coup|evaluation/i);
+  await expect(target).toHaveClass(/q-best/);
+  await expect(page.locator('.legal-hint')).toHaveCount(await page.evaluate(() => boardUI.legalTargets.length));
+
+  await page.getByRole('button', { name: 'Points chauds/froids : ON' }).click();
+  await expect(page.locator('.legal-hint')).toHaveCount(0);
+  await expect(page.locator('.cdot-stack').first()).toBeVisible();
+  await page.getByRole('button', { name: 'Points chauds/froids : OFF' }).click();
+  await expect(target).toBeVisible();
+  await page.getByRole('button', { name: 'Bulles candidates : ON' }).click();
+  await expect(page.locator('.cdot-stack')).toHaveCount(0);
+  await expect(target).toBeVisible();
+  await page.getByRole('button', { name: 'Bulles candidates : OFF' }).click();
+  await expect(page.locator('.cdot-stack').first()).toBeVisible();
+
+  await page.locator(`[data-square="${move.to}"]`).click();
+  await page.waitForFunction(() => state.chess.history().length >= 2 && state.phase === 'userTurn', { timeout: 45000 });
+
+  await page.evaluate(({ from, to }) => {
+    boardUI.lastMove = { from, to, san: 'Test', grade: moveGrade(80), evaluation: '-0.80' };
+    boardUI.render(state.chess);
+  }, move);
+  await expect(page.locator(`[data-square="${move.to}"].bad-move .bad-move-marker`)).toHaveText('!');
 });
