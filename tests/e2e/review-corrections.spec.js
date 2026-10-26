@@ -19,7 +19,7 @@ test('plays correction exercises from a saved analyzed game',async({page})=>{
   await page.click('#review-history-list [data-review-history-act="exercise"]');
   await expect(page.locator('#review-exercise-panel')).toBeVisible();
   await expect(page.locator('#review-exercise-prompt')).toContainText('4,2 centipions');
-  await expect(page.locator('#review-exercise-prompt')).toContainText('Coup OK');
+  await expect(page.locator('#review-exercise-prompt')).toContainText('coup ok');
   await expect(page.locator('#review-exercise-prompt')).toContainText('f3');
 
   await page.locator('#board [data-square="e2"]').click();
