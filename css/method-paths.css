@@ -1,0 +1,39 @@
+.method-paths {
+  margin: 22px 0 28px;
+  padding: 22px;
+  background: linear-gradient(145deg, #1b2820, #17211b);
+  border: 1px solid #415647;
+  border-radius: 18px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .18);
+}
+.method-paths-heading { max-width: 820px; margin: 0 auto 18px; text-align: center; }
+.method-paths-heading h2 { margin: 4px 0 8px; color: #f1f6f1; font-size: clamp(1.35rem, 3vw, 2rem); }
+.method-paths-heading > p:last-child { margin: 0; color: #cbd7cd; line-height: 1.55; }
+.method-path-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.method-path {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 17px;
+  color: #f1f6f1;
+  background: rgba(27, 39, 31, .96);
+  border: 1px solid #415647;
+  border-top: 3px solid #9bce95;
+  border-radius: 14px;
+}
+.method-path-engine { border-top-color: #c1d8a4; }
+.method-path-kicker { color: #b8e3a9; font-size: .73rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.method-path h3 { margin: 8px 0; font-size: 1.18rem; }
+.method-path > p:not(.method-path-count) { margin: 0 0 8px; color: #cbd7cd; line-height: 1.45; }
+.method-path ol { margin: 4px 0 12px; padding-left: 1.25rem; color: #e4ebe5; line-height: 1.45; }
+.method-path li + li { margin-top: 5px; }
+.method-path-count { margin: auto 0 12px; color: #b8e3a9; font-weight: 750; }
+.method-path-action { width: 100%; min-height: 44px; color: #142016; background: #b8e3a9; border: 1px solid #d5f0ca; border-radius: 9px; font-weight: 800; cursor: pointer; }
+.method-path-action:hover, .method-path-action:focus-visible { background: #d2efc5; outline: 3px solid rgba(184, 227, 169, .35); outline-offset: 2px; }
+.method-path[aria-current="true"] { border-color: #b8e3a9; box-shadow: 0 0 0 2px rgba(184, 227, 169, .2); }
+@media (max-width: 1100px) { .method-path-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px) {
+  .method-paths { padding: 16px; border-radius: 14px; }
+  .method-path-grid { grid-template-columns: 1fr; }
+  .method-path { padding: 16px; }
+}
