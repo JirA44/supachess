@@ -40,7 +40,7 @@
       const firstLesson = catalog.querySelector(".lesson-catalog-button");
       if (firstLesson) firstLesson.click();
     }
-    catalog.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.querySelector(".lesson-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   for (const path of paths) {
