@@ -147,7 +147,8 @@
 
   const academyData = root.SupaChessCurriculum ||
     (typeof require === "function" ? require("./curriculum.js") : null);
-  const ChessClass = root.Chess || (typeof require === "function" ? require("chess.js").Chess : null);
+  const ChessClass = root.Chess || (typeof Chess !== "undefined" ? Chess : null) ||
+    (typeof require === "function" ? require("chess.js").Chess : null);
   const frenchSanToEngine = (san) => String(san).replace(/([CFDRT])(?=x?[a-h])/g,
     (piece) => ({ C: "N", F: "B", D: "Q", R: "K", T: "R" })[piece]);
   const playUci = (position, uci) => position.move({
