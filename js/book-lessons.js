@@ -201,20 +201,24 @@
     if (lesson.program) return lesson.program;
     if (lesson.kind === "anticipation") return "Anti-erreurs · anticiper l’adversaire";
     const category = String(lesson.category || "");
-    if (/tactique|clouage|fourchette|mat|calcul/i.test(category + " " + lesson.title))
+    const title = String(lesson.title || "");
+    if (/stockfish|comparer les coups|analyse multipv/i.test(category + " " + title))
+      return "Stockfish · comparer et vérifier";
+    if (/tactique|clouage|fourchette|mat|sacrifice/i.test(category + " " + title))
       return "Tal · tactique et sacrifices à calculer";
-    if (/calcul|candidat|défense forcing/i.test(category + " " + lesson.title))
+    if (/calcul|candidat|défense forcing|décision/i.test(category + " " + title))
       return "Kasparov · coups candidats et calcul";
-    if (/finale|roi et pion|tour et roi/i.test(category))
+    if (/finale|roi et pion|tour et roi|conversion/i.test(category))
       return "Carlsen · finales et conversion";
     if (/ouverture|développement|centre/i.test(category))
       return "Fischer · préparation et précision";
-    if (/Stockfish|analyse/i.test(category + " " + lesson.title))
-      return "Stockfish · comparer et vérifier";
     return "Carlsen · amélioration et conversion";
   }
 
-  for (const lesson of LESSONS) lesson.program = programForLesson(lesson);
+  for (const lesson of LESSONS) {
+    lesson.program = programForLesson(lesson);
+    lesson.pitfall = lesson.pitfall || "Ne poursuis pas automatiquement ton plan après le coup adverse : recalcule les menaces et les réponses forcées.";
+  }
 
   // Turn every studied reply into an active-recall challenge: the learner now plays
   // the opponent's half-move, then sees the original continuation and its explanation.
