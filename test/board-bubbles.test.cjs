@@ -5,21 +5,23 @@ const test = require("node:test");
 const vm = require("node:vm");
 
 function makeElement(tagName) {
-  return {
+  const element = {
     tagName,
     children: [],
     dataset: {},
     attributes: {},
     className: "",
-    classList: { add() {} },
+    classList: { add(name) { this.owner.className += (this.owner.className ? " " : "") + name; } },
     append(...children) { this.children.push(...children); },
     appendChild(child) { this.children.push(child); },
     addEventListener() {},
     setAttribute(name, value) { this.attributes[name] = value; },
   };
+  element.classList.owner = element;
+  return element;
 }
 
-function renderBubble({ dots = [], lastMove = null, previewDot = null }) {
+function renderBubble({ dots = [], lastMove = null, previewDot = null, legalTargets = [], legalTargetHints = {}, showMoveDots = true }) {
   const root = makeElement("div");
   const context = vm.createContext({ document: { createElement: makeElement } });
   const source = fs.readFileSync(path.join(__dirname, "../js/board.js"), "utf8");
@@ -28,6 +30,9 @@ function renderBubble({ dots = [], lastMove = null, previewDot = null }) {
   board.dots = dots;
   board.lastMove = lastMove;
   board.previewDot = previewDot;
+  board.legalTargets = legalTargets;
+  board.legalTargetHints = legalTargetHints;
+  board.showMoveDots = showMoveDots;
   board.render({ board: () => Array.from({ length: 8 }, () => Array(8).fill(null)) });
   const square = root.children.find((cell) => cell.dataset.square === "e4");
   return square;
@@ -85,4 +90,33 @@ test("preview bubble also shows the evaluation beneath its rating", () => {
   } });
   const bubble = square.children.find((child) => child.className.includes("preview-move-bubble"));
   assert.deepEqual(bubbleLines(bubble), ["?3", "+0.11"]);
+});
+
+
+test("legal move dots are independent of candidate bubbles and use move quality", () => {
+  const square = renderBubble({
+    dots: [{ square: "e4", label: "★10", evaluation: "+0.11", quality: "best" }],
+    legalTargets: ["e4"],
+    legalTargetHints: { e4: { quality: "q-bad", capture: true, san: "Nxe4", evaluation: "-1.20" } },
+  });
+  const marker = square.children.find((child) => child.className.includes("legal-hint"));
+  const bubbles = square.children.find((child) => child.className.includes("cdot-stack"));
+  assert.match(marker.className, /q-bad/);
+  assert.match(marker.className, /capture/);
+  assert.equal(marker.title, "Nxe4 — -1.20");
+  assert.ok(bubbles, "candidate evaluation bubble remains visible");
+
+  const hiddenSquare = renderBubble({ legalTargets: ["e4"], showMoveDots: false });
+  assert.equal(hiddenSquare.children.some((child) => child.className.includes("legal-hint")), false);
+});
+
+test("played mistake leaves a red marker on its destination square", () => {
+  const square = renderBubble({ lastMove: {
+    from: "e2", to: "e4", san: "Qe4", evaluation: "-1.20",
+    grade: { symbol: "?", rating: 3, label: "Erreur", tone: "bad" },
+  } });
+  assert.match(square.className, /bad-move/);
+  const marker = square.children.find((child) => child.className.includes("bad-move-marker"));
+  assert.equal(marker.textContent, "!");
+  assert.match(marker.title, /Erreur/);
 });
