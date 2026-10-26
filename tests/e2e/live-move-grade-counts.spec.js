@@ -19,6 +19,7 @@ test('live move-grade counters update for both players and roll back on undo', a
   await expect(page.locator('#move-grade-summary [data-color="w"][data-grade="best"] [data-grade-count]')).toHaveText('+1');
   await expect.poll(async () => (await page.locator('#move-grade-summary [data-color="b"] [data-grade-count]').allTextContents())
     .reduce((sum, value) => sum + Number(value), 0), { timeout: 30000 }).toBe(1);
+  await expect(page.locator('#move-grade-summary [data-color="b"][data-grade="unrated"] [data-grade-count]')).toHaveText('0', { timeout: 30000 });
 
   await page.locator('#btn-undo').click();
   await expect.poll(async () => (await counts.allTextContents()).reduce((sum, value) => sum + Number(value), 0)).toBe(0);
