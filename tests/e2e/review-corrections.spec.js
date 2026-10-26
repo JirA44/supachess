@@ -2,7 +2,7 @@ const {test,expect}=require('@playwright/test');
 
 test('plays correction exercises from a saved analyzed game',async({page})=>{
   await page.goto('/index.html');
-  await page.waitForFunction(()=>document.body.dataset.engineReady==='1',{timeout:60000});
+  await expect(page.locator('#review-history-list')).toBeVisible();
   await page.evaluate(()=>{
     localStorage.clear();
     localStorage.setItem('supachess_reviewed_pgns',JSON.stringify([{
