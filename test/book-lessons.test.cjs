@@ -56,6 +56,19 @@ test("Stockfish alternatives are ranked, compared, and shown as legal SAN lines"
   assert.equal(result.choices[1].deltaCp, 15);
 });
 
+test("each application lesson offers only legal move choices from its position", () => {
+  const toEnglish = (san) => san
+    .replace(/^([CFDRT])(?=x?[a-h])/, (piece) => ({ C: "N", F: "B", D: "Q", R: "K", T: "R" })[piece])
+    .replace(/=([CFDRT])([+#]?)$/, (_match, piece, suffix) => "=" + ({ C: "N", F: "B", D: "Q", R: "K", T: "R" })[piece] + suffix);
+  for (const lesson of LESSONS.filter((item) => item.kind === "reinforcement")) {
+    const game = setupGame(lesson, Chess);
+    for (const choice of lesson.choices) {
+      const san = choice.text.replace(/^Jouer /, "");
+      assert.ok(game.moves().includes(toEnglish(san)), lesson.id + " has illegal answer option " + san);
+    }
+  }
+});
+
 test("move hints describe observable chess facts without claiming Stockfish's private reasoning", () => {
   assert.match(engineHintForMove({ flags: "n" }, "r"), /colonnes ouvertes/);
   assert.match(engineHintForMove({ flags: "c" }, "n"), /recaptures/);
