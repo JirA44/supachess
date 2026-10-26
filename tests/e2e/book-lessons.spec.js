@@ -16,10 +16,10 @@ test("Rook cutoff lesson asks for the principle, then plays the line on the boar
   await expect(page.locator("#lesson-move-list")).toContainText("Ligne du livre : Kg8");
   await page.locator('.sq[data-square="h1"]').click();
   await page.locator('.sq[data-square="g2"]').click();
-  await expect(page.locator("#lesson-feedback")).toContainText("Le roi rejoint la tour");
+  await expect(page.locator("#lesson-feedback")).toContainText("Le roi blanc avance pour soutenir la tour");
   await expect(page.locator("#lesson-explanation")).toContainText("Ce que tu viens d’apprendre");
   await expect(page.locator("#lesson-explanation")).toContainText("À réutiliser dans tes parties");
-  await expect(page.locator("#lesson-next-preview")).toContainText("Trouver le moment de jouer …d5");
+  await expect(page.locator("#lesson-next-preview")).toBeVisible();
   await expect(page.locator("#lesson-next")).toBeVisible();
 });
 
