@@ -23,6 +23,7 @@ class BoardUI {
   setFlipped(f) { this.flipped = f; }
 
   render(chess) {
+    hideCandidateMoveTooltip();
     this.el.innerHTML = "";
     const board = chess.board();
     for (let vr = 0; vr < 8; vr++) {
@@ -57,8 +58,17 @@ class BoardUI {
             const bubble = document.createElement("span");
             bubble.className = "cdot tone-" + dot.quality;
             appendBoardBubbleText(bubble, dot.label || dot.rank, dot.evaluation);
-            bubble.title = dot.title || "Coup candidat";
-            bubble.setAttribute("aria-label", bubble.title);
+            const moveSan = dot.san || dot.moveSan || "";
+            bubble.setAttribute("aria-label", moveSan
+              ? `${dot.label || dot.rank || "Coup candidat"} · ${dot.evaluation || "évaluation indisponible"} · coup à jouer ${moveSan}`
+              : dot.title || "Coup candidat");
+            if (moveSan) {
+              bubble.tabIndex = 0;
+              bubble.addEventListener("pointerenter", () => showCandidateMoveTooltip(bubble, moveSan));
+              bubble.addEventListener("pointerleave", hideCandidateMoveTooltip);
+              bubble.addEventListener("focus", () => showCandidateMoveTooltip(bubble, moveSan));
+              bubble.addEventListener("blur", hideCandidateMoveTooltip);
+            }
             stack.appendChild(bubble);
           }
           cell.appendChild(stack);
@@ -99,10 +109,52 @@ class BoardUI {
   }
 }
 
+let activeCandidateTooltipAnchor = null;
+function showCandidateMoveTooltip(anchor, moveSan) {
+  if (!anchor || !moveSan) return;
+  let tooltip = document.getElementById("candidate-move-tooltip");
+  if (!tooltip) {
+    tooltip = document.createElement("div");
+    tooltip.id = "candidate-move-tooltip";
+    tooltip.className = "candidate-move-tooltip";
+    tooltip.setAttribute("role", "tooltip");
+    document.body.appendChild(tooltip);
+  }
+  if (activeCandidateTooltipAnchor && activeCandidateTooltipAnchor !== anchor) activeCandidateTooltipAnchor.removeAttribute("aria-describedby");
+  activeCandidateTooltipAnchor = anchor;
+  tooltip.textContent = "À jouer : " + moveSan;
+  tooltip.hidden = false;
+  tooltip.setAttribute("aria-hidden", "false");
+  anchor.setAttribute("aria-describedby", tooltip.id);
+  tooltip.style.left = "0px";
+  tooltip.style.top = "0px";
+  const anchorRect = anchor.getBoundingClientRect();
+  const tooltipRect = tooltip.getBoundingClientRect();
+  const gap = 8;
+  let left = anchorRect.right + gap;
+  let side = "right";
+  if (left + tooltipRect.width > window.innerWidth - gap) {
+    left = anchorRect.left - tooltipRect.width - gap;
+    side = "left";
+  }
+  tooltip.dataset.side = side;
+  left = Math.max(gap, Math.min(left, window.innerWidth - tooltipRect.width - gap));
+  const top = Math.max(gap, Math.min(anchorRect.top + (anchorRect.height - tooltipRect.height) / 2, window.innerHeight - tooltipRect.height - gap));
+  tooltip.style.left = left + "px";
+  tooltip.style.top = top + "px";
+}
+function hideCandidateMoveTooltip() {
+  const tooltip = document.getElementById("candidate-move-tooltip");
+  if (tooltip) { tooltip.hidden = true; tooltip.setAttribute("aria-hidden", "true"); }
+  if (activeCandidateTooltipAnchor) activeCandidateTooltipAnchor.removeAttribute("aria-describedby");
+  activeCandidateTooltipAnchor = null;
+}
+
 function candidateDotsFromGroups(dotsBySquare) {
   return Array.from(dotsBySquare, ([square, moves]) => moves.map((move) => ({
     square,
     label: move.label,
+    san: move.san,
     evaluation: move.evaluation,
     quality: move.grade.tone,
     title: `${move.san}: ${move.label} · ${move.evaluation}`,
