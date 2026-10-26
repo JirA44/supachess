@@ -102,12 +102,17 @@ test("home header has a prominent lessons button beside SupaChess Coach IA", asy
 
 test("catalog filters and surprise exercise explicitly train opponent replies in green learning mode", async ({ page }) => {
   await page.goto("/book-lessons.html");
+  await page.locator("#lesson-program-filter").selectOption("Carlsen · amélioration et conversion");
+  await expect(page.locator("#lesson-surprise")).toHaveText("Exercice surprise");
   expect(await page.locator(".lesson-catalog-button").count()).toBeGreaterThanOrEqual(100);
   await expect(page.locator(".lesson-intro .lesson-eyebrow")).toContainText("mode apprentissage");
   await page.selectOption("#lesson-program-filter", "Anti-erreurs · anticiper l’adversaire");
   await expect(page.locator(".lesson-catalog-button.anticipation-exercise").first()).toBeVisible();
   await page.click("#lesson-surprise");
   await expect(page.locator("#lesson-title")).toHaveText("Exercice surprise");
+  await expect(page.locator("#lesson-workspace")).toBeInViewport();
+  await expect(page.locator("#lesson-program-filter")).toHaveValue("");
+  await expect(page.locator(".lesson-catalog-button.anticipation-exercise[aria-current=true]")).toBeVisible();
   await expect(page.locator("#lesson-source")).toContainText("thème révélé après l’exercice");
   await expect(page.locator("#lesson-anticipate")).toHaveAttribute("aria-pressed", "false");
   await page.click("#lesson-anticipate");
