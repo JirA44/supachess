@@ -410,8 +410,11 @@
         .some((value) => String(value || "").toLocaleLowerCase("fr").includes(search));
       return matchesSearch && (!level || lesson.level === level) && (!program || lesson.program === program);
     });
-    $("lesson-catalog-count").textContent = visibleLessons.length + " affiché(s) · " + LESSONS.length +
-      " leçons et exercices · " + Object.values(progress).filter((item) => item && item.completed).length + " terminés.";
+    const originalLessonCount = LESSONS.filter((lesson) => lesson.kind !== "anticipation").length;
+    const anticipationCount = LESSONS.length - originalLessonCount;
+    $("lesson-catalog-count").textContent = visibleLessons.length + " affiché(s) · " + originalLessonCount +
+      " leçons originales + " + anticipationCount + " exercices d’anticipation · " + LESSONS.length +
+      " entrées au total · " + Object.values(progress).filter((item) => item && item.completed).length + " terminés.";
     if (!visibleLessons.length) {
       const empty = document.createElement("p");
       empty.className = "lesson-catalog-empty";
