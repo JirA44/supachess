@@ -49,15 +49,18 @@ class BoardUI {
           cell.appendChild(hint);
         }
         const dotsHere = this.dots.filter((d) => d.square === sq);
-        const dot = dotsHere[0];
-        if (dot) {
-          const d = document.createElement("span");
-          d.className = "cdot tone-" + dot.quality;
-          const label = dotsHere.length > 1 ? `${dot.label} +${dotsHere.length - 1}` : dot.label || dot.rank;
-          appendBoardBubbleText(d, label, dot.evaluation);
-          d.title = dotsHere.map((move) => move.title).join("\n") || "Coup candidat";
-          d.setAttribute("aria-label", d.title);
-          cell.appendChild(d);
+        if (dotsHere.length) {
+          const stack = document.createElement("span");
+          stack.className = "cdot-stack" + (dotsHere.length > 1 ? " multiple" : "");
+          for (const dot of dotsHere) {
+            const bubble = document.createElement("span");
+            bubble.className = "cdot tone-" + dot.quality;
+            appendBoardBubbleText(bubble, dot.label || dot.rank, dot.evaluation);
+            bubble.title = dot.title || "Coup candidat";
+            bubble.setAttribute("aria-label", bubble.title);
+            stack.appendChild(bubble);
+          }
+          cell.appendChild(stack);
         }
         if (this.previewDot && this.previewDot.square === sq) {
           const preview = document.createElement("span");
@@ -95,6 +98,15 @@ class BoardUI {
   }
 }
 
+function candidateDotsFromGroups(dotsBySquare) {
+  return Array.from(dotsBySquare, ([square, moves]) => moves.map((move) => ({
+    square,
+    label: move.label,
+    evaluation: move.evaluation,
+    quality: move.grade.tone,
+    title: `${move.san}: ${move.label} · ${move.evaluation}`,
+  }))).flat();
+}
 function appendBoardBubbleText(bubble, grade, evaluation) {
   const gradeLine = document.createElement("span");
   gradeLine.className = "board-bubble-grade";
