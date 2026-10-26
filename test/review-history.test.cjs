@@ -5,7 +5,7 @@ const test = require("node:test");
 const vm = require("node:vm");
 
 const KEY = "supachess_reviewed_pgns";
-const pgn = '[Event "Club night"]\\n[White "Alice"]\\n[Black "Bob"]\\n[Result "1-0"]\\n\\n1. e4 e5 *';
+const pgn = '[Event "Club night"]\n[White "Alice"]\n[Black "Bob"]\n[Result "1-0"]\n\n1. e4 e5 *';
 const storage = new Map();
 
 function createContext() {
@@ -53,6 +53,6 @@ test("successfully analyzed PGNs are saved, deduplicated, and rendered after rel
   const second = createContext();
   assert.equal(second.elements.get("review-history-list").innerHTML, first.elements.get("review-history-list").innerHTML);
 
-  vm.runInContext(`reviewHistorySave(${JSON.stringify(pgn.replace(/\\n/g, "\\r\\n"))}, { White: "Alice", Black: "Bob" })`, second.context);
+  vm.runInContext(`reviewHistorySave(${JSON.stringify(pgn.replace(/\n/g, "\r\n"))}, { White: "Alice", Black: "Bob" })`, second.context);
   assert.equal(JSON.parse(storage.get(KEY)).length, 1);
 });
