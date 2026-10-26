@@ -8,7 +8,7 @@ test('live move-grade counters update for both players and roll back on undo', a
   await expect.poll(async () => (await counts.allTextContents()).reduce((sum, value) => sum + Number(value), 0)).toBe(0);
 
   await page.evaluate(() => {
-    const best = { rank: 1, uci: 'e2e4', san: 'e4', deltaCp: 0,
+    const best = { rank: 1, uci: 'e2e4', san: 'e4', deltaCp: 0, args: { pros: [], cons: [] },
       line: { scoreCp: 0, mate: null, pv: ['e2e4'], depth: 1 } };
     state.userColor = 'w';
     state.chess = new Chess();
