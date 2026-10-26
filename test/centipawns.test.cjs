@@ -22,6 +22,17 @@ test("centipawn loss uses same mover perspective before and after",()=>{
   assert.equal(r.swingWhiteCp,80);
   assert.match(r.explanation,/c5/);
 });
+test("a missed engine-preferred check is explained as a candidate, not a universal rule",()=>{
+  const before="4k3/8/8/8/8/8/4R3/4K3 w - - 0 1";
+  const c=new Chess(before);c.move("Kd1");
+  const r=explain({fenBefore:before,fenAfter:c.fen(),uci:"e1d1",
+    bestBefore:{scoreCp:250,mate:null,depth:18,pv:["e2e7"]},
+    bestAfter:{scoreCp:-100,mate:null,depth:18,pv:["e8d7"]}});
+  assert.equal(r.status,"OK");
+  assert.equal(r.principles[0].code,"LOOK_FOR_CHECKS");
+  assert.equal(r.principles[0].confidence,"candidate");
+  assert.match(r.principles[0].caveat,/ne prouve pas que tout échec est bon/);
+});
 test("checkmate is not represented as fake centipawns",()=>{
   const c=new Chess();c.move("f3");c.move("e5");c.move("g4");const before=c.fen();c.move("Qh4#");
   const r=explain({fenBefore:before,fenAfter:c.fen(),uci:"d8h4",
