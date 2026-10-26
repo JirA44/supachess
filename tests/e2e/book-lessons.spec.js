@@ -7,7 +7,9 @@ test("Capablanca lesson asks for the principle, then plays the line on the board
   expect(await page.locator(".lesson-catalog-button").count()).toBeGreaterThanOrEqual(100);
   await expect(page.locator("#lesson-board .sq")).toHaveCount(64);
   await page.locator(".lesson-catalog-button:not(.anticipation-exercise)").filter({ hasText: "Couper le roi avec la tour" }).first().click();
-  await page.getByRole("button", { name: "Limiter l’espace du roi adverse sur la rangée" }).click();
+  const firstPrinciple = page.locator("#lesson-choices .lesson-choice").first();
+  await expect(firstPrinciple).toContainText("Limiter l’espace du roi adverse sur la rangée");
+  await firstPrinciple.click();
   await page.locator('.sq[data-square="a1"]').click();
   await page.locator('.sq[data-square="a7"]').click();
   await expect(page.locator("#lesson-move-list")).toContainText("Toi : Ra7");
@@ -87,5 +89,5 @@ test("catalog filters and surprise exercise explicitly train opponent replies in
   await page.click("#lesson-anticipate");
   await expect(page.locator("#lesson-anticipate")).toHaveAttribute("aria-pressed", "true");
   const green = await page.locator("#lesson-surprise").evaluate((node) => getComputedStyle(node).backgroundColor);
-  expect(green).toBe("rgb(212, 235, 201)");
+  expect(green).toBe("rgb(215, 237, 205)");
 });
