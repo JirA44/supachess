@@ -613,5 +613,7 @@
   $("lesson-restart").addEventListener("click", () => loadLesson(lessonIndex));
   $("lesson-next").addEventListener("click", () => loadLesson((lessonIndex + 1) % LESSONS.length));
   renderCatalog();
-  loadLesson(0);
+  const requestedNext = new URLSearchParams(location.search).get("next") === "1";
+  const firstIncomplete = LESSONS.findIndex((lesson) => !(progress[lesson.id] && progress[lesson.id].completed));
+  loadLesson(requestedNext && firstIncomplete >= 0 ? firstIncomplete : 0);
 })(typeof window !== "undefined" ? window : globalThis);
