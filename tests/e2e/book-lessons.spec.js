@@ -6,7 +6,7 @@ test("Capablanca lesson asks for the principle, then plays the line on the board
   await expect(page.locator(".lesson-subtitle")).toHaveText("La route vers l’excellence");
   expect(await page.locator(".lesson-catalog-button").count()).toBeGreaterThanOrEqual(100);
   await expect(page.locator("#lesson-board .sq")).toHaveCount(64);
-  await page.locator(".lesson-catalog-button").filter({ hasText: "Couper le roi avec la tour" }).click();
+  await page.locator(".lesson-catalog-button:not(.anticipation-exercise)").filter({ hasText: "Couper le roi avec la tour" }).click();
   await page.getByRole("button", { name: "Limiter l’espace du roi adverse sur la rangée" }).click();
   await page.locator('.sq[data-square="a1"]').click();
   await page.locator('.sq[data-square="a7"]').click();
@@ -23,7 +23,7 @@ test("Capablanca lesson asks for the principle, then plays the line on the board
 
 test("Larsen lesson starts from the cited position, can flip, and accepts the central break", async ({ page }) => {
   await page.goto("/book-lessons.html");
-  await page.locator(".lesson-catalog-button").filter({ hasText: "Trouver le moment de jouer …d5" }).click();
+  await page.locator(".lesson-catalog-button:not(.anticipation-exercise)").filter({ hasText: "Trouver le moment de jouer …d5" }).click();
   await expect(page.locator("#lesson-board .sq").first()).toHaveAttribute("data-square", "h1");
   await expect(page.getByRole("link", { name: "Ouvrir le livre" })).toHaveAttribute("href", /Larsen%20Best%20Move%20Guide\.pdf/);
   await page.locator("#lesson-choices").getByRole("button", { name: "Ouvrir le centre par …d5" }).click();
