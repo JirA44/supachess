@@ -129,17 +129,7 @@ function buildCandidates(lines, fen) {
     if (!dotsBySquare.has(square)) dotsBySquare.set(square, []);
     dotsBySquare.get(square).push(moveBadge);
   }
-  boardUI.dots = Array.from(dotsBySquare, ([square, moves]) => {
-    const featured = moves.reduce((best, move) =>
-      !best || move.grade.rating > best.grade.rating ? move : best, null);
-    return {
-      square,
-      label: featured.label,
-      evaluation: featured.evaluation,
-      quality: featured.grade.tone,
-      title: moves.map((move) => `${move.san}: ${move.label} · ${move.evaluation}`).join("\n"),
-    };
-  });
+  boardUI.dots = candidateDotsFromGroups(dotsBySquare);
 }
 
 /* ── Décomposition heuristique des "micro-points" d'un candidat ──

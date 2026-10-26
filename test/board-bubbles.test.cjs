@@ -30,7 +30,7 @@ function renderBubble({ dots = [], lastMove = null, previewDot = null }) {
   board.previewDot = previewDot;
   board.render({ board: () => Array.from({ length: 8 }, () => Array(8).fill(null)) });
   const square = root.children.find((cell) => cell.dataset.square === "e4");
-  return square.children.find((child) => /cdot|played-move-bubble/.test(child.className));
+  return square;
 }
 
 function bubbleLines(bubble) {
@@ -38,23 +38,51 @@ function bubbleLines(bubble) {
 }
 
 test("candidate bubble shows the rating above the evaluation without /10", () => {
-  const bubble = renderBubble({ dots: [{ square: "e4", label: "?3", evaluation: "+0.11", quality: "bad" }] });
+  const square = renderBubble({ dots: [{ square: "e4", label: "?3", evaluation: "+0.11", quality: "bad" }] });
+  const bubble = square.children.find((child) => child.className.includes("cdot-stack")).children[0];
   assert.deepEqual(bubbleLines(bubble), ["?3", "+0.11"]);
   assert.doesNotMatch(bubbleLines(bubble).join(" "), /\/10/);
 });
 
+test("candidate moves landing on the same square get separate stacked bubbles", () => {
+  const square = renderBubble({ dots: [
+    { square: "e4", label: "★10", evaluation: "+0.11", quality: "best", title: "Nf6" },
+    { square: "e4", label: "✓8", evaluation: "+0.05", quality: "good", title: "Nc6" },
+  ] });
+  const stack = square.children.find((child) => child.className.includes("cdot-stack"));
+  assert.match(stack.className, /multiple/);
+  assert.equal(stack.children.length, 2);
+  assert.deepEqual(stack.children.map((bubble) => bubble.children[0].textContent), ["★10", "✓8"]);
+  assert.deepEqual(stack.children.map((bubble) => bubble.children[1].textContent), ["+0.11", "+0.05"]);
+  assert.deepEqual(stack.children.map((bubble) => bubble.title), ["Nf6", "Nc6"]);
+});
+
+test("candidate grouping keeps every move that shares a destination", () => {
+  const context = vm.createContext({});
+  const source = fs.readFileSync(path.join(__dirname, "../js/board.js"), "utf8");
+  vm.runInContext(`${source}\nglobalThis.candidateDotsFromGroups = candidateDotsFromGroups;`, context);
+  const dots = context.candidateDotsFromGroups(new Map([["d3", [
+    { san: "Nbd3", label: "★10", evaluation: "+0.11", grade: { tone: "best" } },
+    { san: "Nfd3", label: "✓8", evaluation: "+0.05", grade: { tone: "good" } },
+  ]]]));
+  assert.deepEqual(Array.from(dots, (dot) => dot.square), ["d3", "d3"]);
+  assert.deepEqual(Array.from(dots, (dot) => dot.label), ["★10", "✓8"]);
+  assert.deepEqual(Array.from(dots, (dot) => dot.title), ["Nbd3: ★10 · +0.11", "Nfd3: ✓8 · +0.05"]);
+});
+
 test("played-move bubble keeps the rating and evaluation on separate lines", () => {
-  const bubble = renderBubble({ lastMove: {
+  const square = renderBubble({ lastMove: {
     from: "e2", to: "e4", san: "e4", evaluation: "+0.11",
     grade: { symbol: "?", rating: 3, label: "Erreur", tone: "bad" },
   } });
+  const bubble = square.children.find((child) => child.className.includes("played-move-bubble"));
   assert.deepEqual(bubbleLines(bubble), ["?3", "+0.11"]);
 });
 
 test("preview bubble also shows the evaluation beneath its rating", () => {
-  const bubble = renderBubble({ previewDot: {
+  const square = renderBubble({ previewDot: {
     square: "e4", label: "?3", evaluation: "+0.11", quality: "bad", title: "Coup testé",
   } });
+  const bubble = square.children.find((child) => child.className.includes("preview-move-bubble"));
   assert.deepEqual(bubbleLines(bubble), ["?3", "+0.11"]);
 });
-
