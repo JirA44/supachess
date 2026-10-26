@@ -671,11 +671,14 @@ if (reviewHistoryList) reviewHistoryList.addEventListener("click", (event) => {
 reviewHistoryRender();
 function resumeCorrectionExercisesFromUrl() {
   if (typeof URLSearchParams === "undefined") return;
-  const resumeId = new URLSearchParams(location.search).get("resume-exercises");
-  if (!resumeId) return;
-  const item = reviewHistoryLoad().find((saved) => saved.id === resumeId);
-  if (!item) return;
+  const params = new URLSearchParams(location.search);
+  const resumeId = params.get("resume-exercises");
+  const openReview = params.get("open-review") === "1";
+  if (!resumeId && !openReview) return;
+  const item = resumeId ? reviewHistoryLoad().find((saved) => saved.id === resumeId) : null;
+  if (resumeId && !item) return;
   const resume = () => {
+    if (!item) { reviewShowModal(); return; }
     const exercises = Array.isArray(item.correctionExercises) ? item.correctionExercises : [];
     if (exercises.length) {
       reviewState.currentHeaders = { White: item.white, Black: item.black };
