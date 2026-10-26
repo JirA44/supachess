@@ -36,3 +36,17 @@ test('plays correction exercises from a saved analyzed game',async({page})=>{
   await expect(page.locator('#review-history-list')).toContainText('Alice vs Bob');
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('supachess_reviewed_pgns')).length)).toBe(1);
 });
+
+test('offers reanalysis for a saved game without correction data',async({page})=>{
+  await page.goto('/index.html');
+  await page.evaluate(()=>{
+    localStorage.clear();
+    localStorage.setItem('supachess_reviewed_pgns',JSON.stringify([{
+      id:'legacy-game',pgn:'1. e4 e5',white:'Carol',black:'Dan',result:'*'
+    }]));
+    reviewHistoryRender();
+  });
+  await page.click('#review-history-list [data-review-history-act="reanalyze-corrections"]');
+  await expect(page.locator('#pgn-modal')).toBeVisible();
+  await expect(page.locator('#pgn-input')).toHaveValue('1. e4 e5');
+});
