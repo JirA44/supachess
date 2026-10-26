@@ -29,6 +29,10 @@ body {
   padding: 14px 28px; border-bottom: 1px solid var(--panel-edge);
 }
 .brand { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; }
+.brand-navigation { display: flex; align-items: center; gap: 18px; }
+.topbar-lessons-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 24px; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent); color: #191817; font-size: 1.05rem; font-weight: 800; text-decoration: none; box-shadow: 0 4px 16px rgba(240,179,92,.24); }
+.topbar-lessons-btn:hover, .topbar-lessons-btn:focus-visible { background: #ffd28f; border-color: #ffd28f; outline: 2px solid var(--text); outline-offset: 2px; }
+@media (max-width: 700px) { .topbar { flex-wrap: wrap; gap: 10px 14px; padding: 12px 14px; } .brand-navigation { flex: 1 0 100%; justify-content: space-between; } .engine-status { font-size: .78rem; } }
 .brand span { color: var(--accent); }
 .engine-status { display: flex; align-items: center; gap: 8px; color: var(--text-dim); font-size: .9rem; }
 .status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); display: inline-block; }
