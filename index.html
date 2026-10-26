@@ -25,6 +25,12 @@
     padding: 3px 0; border-bottom: 1px dashed rgba(128,128,128,.25); font-size: .85em; }
   .game-row:last-child { border-bottom: none; }
   .game-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .review-history-list { display: grid; gap: 5px; margin-top: 8px; }
+  .review-history-row { display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 6px 0; border-bottom: 1px dashed rgba(128,128,128,.25); font-size: .85em; }
+  .review-history-meta { min-width: 0; overflow-wrap: anywhere; }
+  .review-history-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .review-history-status { min-height: 1em; font-size: .78em; opacity: .75; }
   .pgn-modal { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex;
     align-items: center; justify-content: center; z-index: 50; }
   .pgn-modal.hidden { display: none; }
@@ -176,6 +182,9 @@
       <h2>Parties</h2>
       <div id="games-list" class="games-list"><em>Aucune partie enregistrée.</em></div>
       <button id="btn-export-all" class="btn" style="margin-top:6px">Tout exporter (.pgn)</button>
+      <h3 style="margin:14px 0 4px">PGN analysés</h3>
+      <div id="review-history-status" class="review-history-status" aria-live="polite"></div>
+      <div id="review-history-list" class="review-history-list"><em>Aucun PGN analysé.</em></div>
     </div>
 
     <div class="panel">
