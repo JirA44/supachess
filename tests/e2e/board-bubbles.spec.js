@@ -78,3 +78,28 @@ test("evaluation bar keeps centipawn precision", async ({ page }) => {
   await page.evaluate(() => updateEvalBar({ scoreCp: -3, mate: null }));
   await expect(page.locator("#evalbar-label")).toHaveText("-0.03");
 });
+
+
+test("hovering a candidate bubble shows the move to play beside it", async ({ page }) => {
+  await page.goto("/index.html");
+  await page.waitForFunction(() => document.body.dataset.engineReady === "1");
+  await page.evaluate(() => {
+    state.gen++;
+    state.phase = "userTurn";
+    boardUI.showDots = true;
+    boardUI.dots = candidateDotsFromGroups(new Map([["e4", [
+      { san: "Nf3", label: "★10", evaluation: "+0.10", grade: { tone: "best" } },
+    ]]]));
+    boardUI.render(state.chess);
+  });
+  const candidate = page.locator(".sq[data-square=\"e4\"] .cdot");
+  await candidate.hover();
+  const tooltip = page.locator("#candidate-move-tooltip");
+  await expect(tooltip).toBeVisible();
+  await expect(tooltip).toHaveText("À jouer : Nf3");
+  const bounds = await tooltip.boundingBox();
+  expect(bounds.x).toBeGreaterThanOrEqual(0);
+  expect(bounds.x + bounds.width).toBeLessThanOrEqual(1440);
+  await page.mouse.move(0, 0);
+  await expect(tooltip).toBeHidden();
+});

@@ -112,6 +112,9 @@ body {
   width: max-content; max-width: none; overflow: visible; pointer-events: none;
 }
 .sq .cdot-stack .cdot { position: relative; top: auto; right: auto; min-width: 30px; max-width: 78px; flex: none; }
+.sq .cdot-stack .cdot { pointer-events: auto; cursor: help; }
+.candidate-move-tooltip { position: fixed; z-index: 1000; max-width: min(220px, calc(100vw - 16px)); padding: 8px 11px; border: 1px solid var(--accent); border-radius: 8px; background: #171a24; color: #fff; font-size: .95rem; font-weight: 800; line-height: 1.25; white-space: nowrap; box-shadow: 0 5px 18px rgba(0,0,0,.65); pointer-events: none; }
+.candidate-move-tooltip[hidden] { display: none; }
 .played-move-bubble { bottom: 2px; left: 2px; }
 .board-bubble-grade { font-size: 1em; }
 .board-bubble-eval { font-size: .82em; font-weight: 750; opacity: .88; }
@@ -258,3 +261,6 @@ body {
 .move-grade-count-symbol { text-align: center; font-weight: 900; color: var(--text-dim); }
 .move-grade-count-row strong { min-width: 22px; text-align: right; font-variant-numeric: tabular-nums; }
 @media (max-width: 420px) { .move-grade-summary { gap: 8px; } .move-grade-count-row { font-size: .75rem; grid-template-columns: 18px minmax(0,1fr) auto; gap: 4px; } }
+
+.candidate-move-tooltip::before { content: ""; position: absolute; top: calc(50% - 5px); left: -6px; width: 10px; height: 10px; background: #171a24; border-left: 1px solid var(--accent); border-bottom: 1px solid var(--accent); transform: rotate(45deg); }
+.candidate-move-tooltip[data-side="left"]::before { left: auto; right: -6px; border: 0; border-top: 1px solid var(--accent); border-right: 1px solid var(--accent); transform: rotate(45deg); }

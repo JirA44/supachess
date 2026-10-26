@@ -54,7 +54,7 @@ test("candidate moves landing on the same square get separate stacked bubbles", 
   assert.equal(stack.children.length, 2);
   assert.deepEqual(stack.children.map((bubble) => bubble.children[0].textContent), ["★10", "✓8"]);
   assert.deepEqual(stack.children.map((bubble) => bubble.children[1].textContent), ["+0.11", "+0.05"]);
-  assert.deepEqual(stack.children.map((bubble) => bubble.title), ["Nf6", "Nc6"]);
+  assert.deepEqual(stack.children.map((bubble) => bubble.attributes["aria-label"]), ["Nf6", "Nc6"]);
 });
 
 test("candidate grouping keeps every move that shares a destination", () => {
