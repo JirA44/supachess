@@ -248,7 +248,7 @@
               choices.push({ text: "Jouer " + san, correct: false });
               if (choices.length === 3) break;
             }
-            if (choices.length === 3) {
+            if (choices.length >= 2) {
               let replay = new ChessClass(fen);
               const remaining = source.sequence.slice(index);
               let legalLine = true;
