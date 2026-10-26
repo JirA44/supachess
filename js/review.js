@@ -308,10 +308,23 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     const evalChange = Number.isFinite(cp.swingWhiteCp)
       ? ` · variation côté Blancs : ${cp.swingWhiteCp>=0?"+":""}${cp.swingWhiteCp.toFixed(0)} cp` : "";
     const facts = (cp.observations||[]).map(o=>o.text).join(" ");
-    return `<li class="review-ply" data-review-ply="${idx + 1}">${moveLink} — perte / meilleur coup : ${esc(loss)}${esc(evalChange)}. ${esc(cp.explanation)} ${esc(facts)}</li>`;
+    const principles = (cp.principles||[]).map(p=>`<strong>Principe à vérifier : ${esc(p.label)}.</strong> ${esc(p.text)} <small>${esc(p.caveat)}</small>`).join(" ");
+    return `<li class="review-ply" data-review-ply="${idx + 1}">${moveLink} — perte / meilleur coup : ${esc(loss)}${esc(evalChange)}. ${esc(cp.explanation)} ${esc(facts)} ${principles || "<small>Aucun principe précis ne peut être confirmé à partir des preuves disponibles pour ce demi-coup.</small>"}</li>`;
   }).join("");
   const blindspots = rows.flatMap((r) => (r.diagnostics || []).map((d) => ({ ...d, n: r.n, color: r.color })));
   const examples = blindspots.slice(0, 8).map((d) => `<li><strong>${d.n}${d.color === "w" ? "." : "..."} :</strong> ${esc(d.text)} <small>${esc(d.caveat)}</small></li>`).join("");
+  const principleGroups = new Map();
+  rows.forEach((row) => (row.centipawns?.principles || []).forEach((principle) => {
+    const current = principleGroups.get(principle.code) || { ...principle, plies: [] };
+    current.plies.push(`${row.n}${row.color === "w" ? "." : "..."} ${sanFr(row.san)}`);
+    principleGroups.set(principle.code, current);
+  }));
+  const principlesToWork = [...principleGroups.values()].map((principle) => {
+    const candidatesOnly = principle.confidence !== "evidence";
+    const status = candidatesOnly ? "Piste suggérée par le moteur, à vérifier dans la variante" :
+      principle.plies.length > 1 ? "Motif observé plusieurs fois dans cette partie" : "Observation ponctuelle, récurrence à confirmer";
+    return `<li><strong>${esc(principle.label)} :</strong> ${principle.plies.map(esc).join(", ")}. ${esc(status)}. <small>${esc(principle.caveat)}</small></li>`;
+  }).join("");
   const lessonRows = rows.map((r, idx) => ({
     color:r.color, san:r.san, ply:idx+1, fenBefore:null,
     diagnostics:r.diagnostics || []
@@ -339,6 +352,7 @@ function reviewRenderLocal(rows, accW, accB, headers) {
         : "<div class='review-worst'>Aucune erreur notable détectée.</div>"}
     </div>
     ${examples ? `<div class="review-worst"><h4>Vérification des pièces en prise (preuve d’une capture légale)</h4><ul>${examples}</ul></div>` : ""}
+    <div class="review-worst"><h4>Principes et fondamentaux à travailler</h4>${principlesToWork ? `<ul>${principlesToWork}</ul>` : "<p>Aucun fondamental précis n’est confirmé par les preuves de cette partie. Une partie seule ne suffit pas à établir une lacune récurrente.</p>"}</div>
     <div class="review-worst"><h4>Habitude à entraîner : échecs, prises, menaces</h4><p>${pedagogical}</p></div>
     ${nextPractice ? `<div class="review-worst"><h4>Plan d’entraînement personnalisé</h4><ol>${nextPractice}</ol></div>` : ""}
     <div class="review-worst"><h4>Chaque demi-coup expliqué : centipions et causes démontrables</h4><p><small>Perte relative au meilleur coup ≠ variation absolue de l’évaluation. Le moteur ne peut pas toujours établir le pourquoi en une phrase; les mats sont traités séparément.</small></p><ol>${halfmoveExplanations}</ol></div>
