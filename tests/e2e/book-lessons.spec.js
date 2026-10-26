@@ -12,6 +12,9 @@ test("Capablanca lesson asks for the principle, then plays the line on the board
   await page.locator('.sq[data-square="h1"]').click();
   await page.locator('.sq[data-square="g2"]').click();
   await expect(page.locator("#lesson-feedback")).toContainText("Le roi rejoint la tour");
+  await expect(page.locator("#lesson-explanation")).toContainText("Ce que tu viens d’apprendre");
+  await expect(page.locator("#lesson-explanation")).toContainText("À réutiliser dans tes parties");
+  await expect(page.locator("#lesson-next-preview")).toContainText("Activer le roi avant le pion");
   await expect(page.locator("#lesson-next")).toBeVisible();
 });
 

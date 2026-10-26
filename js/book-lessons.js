@@ -20,6 +20,7 @@
         { text: "Avancer le roi blanc sans regarder le roi adverse", correct: false },
       ],
       principle: "La tour coupe d’abord le roi adverse; ensuite, le roi blanc vient aider la tour à le repousser.",
+      transfer: "En finale, demande-toi si ta tour peut limiter le roi adverse avant de chercher un échec. Puis active ton roi sans laisser la tour perdre sa coupure.",
       hints: ["Cherche une rangée qui empêche le roi noir de descendre vers le centre.", "Le coup de tour du livre est Ra7."],
       sequence: [
         { side: "user", uci: "a1a7", explanation: "La tour barre la septième rangée et réduit les cases du roi noir." },
@@ -43,6 +44,7 @@
         { text: "La position du roi adverse en échangeant les rois", correct: false },
       ],
       principle: "En finale, le roi est une pièce active. Fais-le progresser tant que le pion reste en sécurité; pousse le pion quand la position l’exige.",
+      transfer: "Avant de pousser un pion passé, vérifie l’activité des deux rois, l’opposition et si ton roi peut soutenir la case de promotion.",
       hints: ["Le roi blanc peut avancer vers le centre sans abandonner la défense du pion e2.", "Le premier coup illustré est Ke4."],
       sequence: [
         { side: "user", uci: "f4e4", explanation: "Le roi gagne une case centrale tout en gardant le pion e2 sous protection." },
@@ -67,6 +69,7 @@
         { text: "Échanger le fou actif contre un pion de l’aile", correct: false },
       ],
       principle: "Quand l’adversaire installe un centre de pions, un coup central au bon moment peut éviter de subir son espace.",
+      transfer: "Face à un centre adverse, cherche une rupture centrale et calcule les échanges qui en découlent. Un principe guide l’analyse; il ne remplace pas le calcul des variantes.",
       hints: ["Le pion d7 peut avancer de deux cases et attaquer le centre.", "La ligne du livre commence par …d5, puis répond à e5 par …Ng4."],
       sequence: [
         { side: "user", uci: "d7d5", explanation: "Le pion noir conteste immédiatement le centre au lieu d’attendre que les Blancs le consolident." },
@@ -262,6 +265,8 @@
     $("lesson-explanation").textContent = "";
     $("lesson-move-list").textContent = "";
     $("lesson-next").hidden = true;
+    $("lesson-next-preview").hidden = true;
+    $("lesson-next-preview").textContent = "";
     $("lesson-hint").disabled = false;
     $("lesson-flip").setAttribute("aria-pressed", String(flipped));
     renderSource(lesson);
@@ -405,16 +410,53 @@
     };
     saveProgress();
     renderCatalog();
-    $("lesson-status").textContent = "Leçon réussie.";
-    const userMoves = lesson.sequence.filter((action) => action.side === "user");
-    const finalMove = userMoves[userMoves.length - 1];
-    $("lesson-feedback").textContent = "Tu as joué la ligne pédagogique. " + (finalMove ? finalMove.explanation : "");
+
+    $("lesson-status").textContent = "Leçon terminée : " + lesson.title + ".";
     const explanation = $("lesson-explanation");
-    explanation.textContent = "Principe à retenir : " + lesson.principle;
-    explanation.hidden = false;
+    explanation.replaceChildren();
+
+    const heading = document.createElement("h3");
+    heading.textContent = "Ce que tu viens d’apprendre";
+    const principle = document.createElement("p");
+    principle.textContent = lesson.principle;
+    explanation.append(heading, principle);
+
+    const moveHeading = document.createElement("h4");
+    moveHeading.textContent = "Tes coups et leur idée";
+    const moveList = document.createElement("ul");
+    const replay = setupGame(lesson, Chess);
+    for (const action of lesson.sequence) {
+      const move = replay.move({
+        from: action.uci.slice(0, 2),
+        to: action.uci.slice(2, 4),
+        promotion: action.uci.slice(4) || "q",
+      });
+      if (!move) continue;
+      if (action.side === "user") {
+        const item = document.createElement("li");
+        item.textContent = move.san + " — " + action.explanation;
+        moveList.appendChild(item);
+      }
+    }
+    explanation.append(moveHeading, moveList);
+
+    const transferHeading = document.createElement("h4");
+    transferHeading.textContent = "À réutiliser dans tes parties";
+    const transfer = document.createElement("p");
+    transfer.textContent = lesson.transfer || lesson.principle;
+    explanation.append(transferHeading, transfer);
+
+    const nextIndex = (lessonIndex + 1) % LESSONS.length;
+    const nextLesson = LESSONS[nextIndex];
+    $("lesson-next-preview").textContent = (lessonIndex + 1 < LESSONS.length ? "Prochaine étape : " : "Pour revoir le parcours : ") +
+      nextLesson.title + " — " + nextLesson.category + ".";
+    $("lesson-next-preview").hidden = false;
     $("lesson-next").hidden = false;
-    $("lesson-next").textContent = lessonIndex + 1 < LESSONS.length ? "Leçon suivante" : "Rejouer la première leçon";
+    $("lesson-next").textContent = lessonIndex + 1 < LESSONS.length ? "Leçon suivante" : "Revoir la première leçon";
     updateProgressLabel();
+    $("lesson-progress").textContent = "Essais et indices utilisés : " + attempts + " · " + hintsUsed +
+      (hintsUsed === 1 ? " indice." : " indices.");
+    explanation.hidden = false;
   }
 
   function showHint() {
