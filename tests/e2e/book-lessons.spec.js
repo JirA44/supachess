@@ -37,7 +37,7 @@ test("filtered lesson numbers are consecutive and completed lessons open in view
   const cards = page.locator(".lesson-catalog-button");
   const titles = await cards.locator(".lesson-catalog-title").allTextContents();
   expect(titles.length).toBeGreaterThan(3);
-  expect(titles.slice(0, 4).map((title) => Number(title.match(/^(\\d+)\\./)?.[1]))).toEqual([1, 2, 3, 4]);
+  expect(titles.slice(0, 4).map((title) => Number(title.match(/^(\d+)\./)?.[1]))).toEqual([1, 2, 3, 4]);
 
   const completed = cards.filter({ hasText: "Activer le roi avant le pion" });
   await expect(completed).toContainText("Terminée · à revoir quand tu veux");
