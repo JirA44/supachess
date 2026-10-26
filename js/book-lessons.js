@@ -157,6 +157,7 @@
 
   if (academyData && ChessClass) {
     for (const source of academyData.lessons || []) {
+      if (LESSONS.some((lesson) => lesson.title === source.title)) continue;
       const position = new ChessClass();
       const setupPgn = frenchSanToEngine(source.setup);
       if (!position.load_pgn(setupPgn)) throw new Error("PGN de mise en place invalide: " + source.id);
