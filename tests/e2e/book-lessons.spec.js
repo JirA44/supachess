@@ -110,7 +110,7 @@ test("catalog filters and surprise exercise explicitly train opponent replies in
   await expect(page.locator(".lesson-catalog-button.anticipation-exercise").first()).toBeVisible();
   await page.click("#lesson-surprise");
   await expect(page.locator("#lesson-title")).toHaveText("Exercice surprise");
-  await expect(page.locator("#lesson-workspace")).toBeInViewport();
+  await expect(page.locator(".lesson-workspace")).toBeInViewport();
   await expect(page.locator("#lesson-program-filter")).toHaveValue("");
   await expect(page.locator(".lesson-catalog-button.anticipation-exercise[aria-current=true]")).toBeVisible();
   await expect(page.locator("#lesson-source")).toContainText("thème révélé après l’exercice");
