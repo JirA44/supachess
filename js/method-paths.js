@@ -6,6 +6,7 @@
   const search = document.getElementById("lesson-search");
   const levelFilter = document.getElementById("lesson-level-filter");
   const programFilter = document.getElementById("lesson-program-filter");
+  let activePath = null;
   function updatePathCounts() {
     const lessons = Array.isArray(window.SupaChessLessons) ? window.SupaChessLessons : [];
     const originalLessons = lessons.filter((lesson) => lesson.kind !== "anticipation");
@@ -25,6 +26,7 @@
 
   function openPath(path) {
     const program = path.dataset.methodPath;
+    activePath = path;
     for (const item of paths) item.setAttribute("aria-current", String(item === path));
     if (search) search.value = "";
     if (levelFilter) levelFilter.value = "";
@@ -50,10 +52,12 @@
   }
   if (programFilter) {
     programFilter.addEventListener("change", () => {
-      const selected = paths.find((path) => path.dataset.methodPath === programFilter.value);
+      const selected = paths.find((path) => path.dataset.methodPath === programFilter.value) ||
+        (programFilter.value === "" && activePath && activePath.dataset.methodPath === "Stockfish · comparer et vérifier" ? activePath : null);
       if (selected) {
         for (const item of paths) item.setAttribute("aria-current", String(item === selected));
       } else {
+        activePath = null;
         for (const item of paths) item.removeAttribute("aria-current");
       }
     });
