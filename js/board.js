@@ -52,17 +52,21 @@ class BoardUI {
           const detail = this.legalTargetHints[sq] || {};
           hint.className = "legal-hint" + (detail.quality ? " " + detail.quality : " q-neutral") + (detail.capture ? " capture" : "");
           hint.title = detail.san
-            ? `${detail.san} — ${detail.evaluation || "évaluation en cours"}`
+            ? `${detail.capture ? "Prise possible" : "Coup possible"} : ${detail.san} · évaluation ${detail.evaluation || "en cours"}`
             : "Coup légal possible";
           hint.setAttribute("aria-label", hint.title);
           cell.appendChild(hint);
         }
-        if (this.lastMove && this.lastMove.to === sq && this.lastMove.grade && this.lastMove.grade.tone === "bad") {
+        const playedError = this.lastMove && this.lastMove.to === sq && this.lastMove.grade && this.lastMove.grade.tone === "bad";
+        const previewError = this.previewDot && this.previewDot.square === sq && this.previewDot.quality === "bad";
+        if (playedError || previewError) {
           cell.classList.add("bad-move");
           const marker = document.createElement("span");
           marker.className = "bad-move-marker";
           marker.textContent = "!";
-          marker.title = `${this.lastMove.san || "Coup joué"} — ${this.lastMove.grade.label}`;
+          marker.title = playedError
+            ? `${this.lastMove.san || "Coup joué"} — ${this.lastMove.grade.label}`
+            : this.previewDot.title || "Coup testé : erreur";
           marker.setAttribute("aria-label", marker.title);
           cell.appendChild(marker);
         }
