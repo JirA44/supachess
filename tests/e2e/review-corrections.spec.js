@@ -89,5 +89,5 @@ test('resumes saved correction exercises from a profile link',async({page})=>{
   await expect(page.locator('body')).toHaveAttribute('data-engine-ready','1',{timeout:30000});
   await expect(page.locator('#review-exercise-panel')).toBeVisible({timeout:10000});
   await expect(page.locator('#review-exercise-heading')).toContainText('Exercice 1/1');
-  await expect(page.locator('#review-exercise-prompt')).toContainText('Alice');
+  expect(await page.evaluate(()=>reviewState.currentHeaders.White)).toBe('Alice');
 });
