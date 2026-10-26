@@ -6,6 +6,8 @@
 
 const REVIEW_BASE = "http://localhost:8778";
 const REVIEW_TIMEOUT_MS = 150000;
+const REVIEW_HISTORY_KEY = "supachess_reviewed_pgns";
+const REVIEW_HISTORY_LIMIT = 50;
 const REVIEW_MOVE_CLASSES = [
   { id: "brilliant", symbol: "!!", label: "Brillant" },
   { id: "best", symbol: "★", label: "Meilleur coup" },
@@ -31,6 +33,67 @@ function reviewHideModal() {
 /* Point d'entrée (bouton "Analyser PGN (Supa)" ou panneau Parties). */
 function reviewStart(pgn) {
   reviewShowModal(pgn || "");
+}
+
+function reviewHistoryLoad() {
+  try {
+    const items = JSON.parse(localStorage.getItem(REVIEW_HISTORY_KEY) || "[]");
+    return Array.isArray(items) ? items.filter((item) => item && typeof item.pgn === "string" && item.pgn.trim()) : [];
+  } catch (_e) { return []; }
+}
+
+function reviewHistorySave(pgn, headers = {}) {
+  const normalizedPgn = String(pgn || "").replace(/\\r\\n?/g, "\\n").trim();
+  if (!normalizedPgn) return false;
+  const previous = reviewHistoryLoad();
+  const existing = previous.find((item) => item.pgn.replace(/\\r\\n?/g, "\\n").trim() === normalizedPgn);
+  const item = {
+    id: existing ? existing.id : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    pgn: normalizedPgn,
+    white: headers.White || "Blancs",
+    black: headers.Black || "Noirs",
+    result: headers.Result || "*",
+    event: headers.Event || "",
+    analyzedAt: new Date().toISOString(),
+  };
+  const next = [item, ...previous.filter((saved) => saved.id !== item.id &&
+    saved.pgn.replace(/\\r\\n?/g, "\\n").trim() !== normalizedPgn)].slice(0, REVIEW_HISTORY_LIMIT);
+  try {
+    localStorage.setItem(REVIEW_HISTORY_KEY, JSON.stringify(next));
+  } catch (_e) {
+    const status = document.getElementById("review-history-status");
+    if (status) status.textContent = "Analyse terminée, mais l’historique n’a pas pu être enregistré sur cet appareil.";
+    return false;
+  }
+  reviewHistoryRender("PGN enregistré sur cet appareil.");
+  return true;
+}
+
+function reviewHistoryRender(statusText) {
+  const list = document.getElementById("review-history-list");
+  if (!list || typeof localStorage === "undefined") return;
+  const items = reviewHistoryLoad();
+  list.innerHTML = items.length ? items.map((item) => {
+    const when = item.analyzedAt ? new Date(item.analyzedAt).toLocaleDateString("fr-FR") : "";
+    const title = `${item.white || "Blancs"} vs ${item.black || "Noirs"}`;
+    const detail = [item.event, item.result, when].filter(Boolean).join(" · ");
+    return `<div class="review-history-row" data-review-history-id="${esc(item.id)}">
+      <span class="review-history-meta"><strong>${esc(title)}</strong>${detail ? `<br><small>${esc(detail)}</small>` : ""}</span>
+      <span class="review-history-actions">
+        <button class="btn mini" type="button" data-review-history-act="open">Analyser à nouveau</button>
+        <button class="btn mini danger" type="button" data-review-history-act="delete" aria-label="Supprimer ${esc(title)}">×</button>
+      </span>
+    </div>`;
+  }).join("") : "<em>Aucun PGN analysé.</em>";
+  const status = document.getElementById("review-history-status");
+  if (status && statusText) status.textContent = statusText;
+}
+
+function reviewHistoryRemove(id) {
+  const remaining = reviewHistoryLoad().filter((item) => item.id !== id);
+  try { localStorage.setItem(REVIEW_HISTORY_KEY, JSON.stringify(remaining)); }
+  catch (_e) { return; }
+  reviewHistoryRender("PGN supprimé de cet appareil.");
 }
 
 function reviewSetProgress(txt) {
@@ -157,6 +220,7 @@ async function reviewRun() {
   rows.forEach((row, i) => { row.classification = reviewClassOf(row, reviewState.grades[i]); });
   reviewSetProgress("Analyse Stockfish terminée — bilan en cours…");
   reviewRenderLocal(rows, accW, accB, headers);
+  reviewHistorySave(pgnText, headers);
   document.getElementById("btn-replay-game").classList.remove("hidden");
 
   // Bilan pédagogique Supa (best-effort).
@@ -374,6 +438,17 @@ async function replayGoto(i) {
 document.getElementById("btn-analyze-pgn").addEventListener("click", () => reviewStart(""));
 document.getElementById("btn-run-review").addEventListener("click", () => { reviewRun().catch(console.error); });
 document.getElementById("btn-close-pgn").addEventListener("click", reviewHideModal);
+const reviewHistoryList = document.getElementById("review-history-list");
+if (reviewHistoryList) reviewHistoryList.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-review-history-act]");
+  const row = button && button.closest("[data-review-history-id]");
+  if (!button || !row) return;
+  const id = row.dataset.reviewHistoryId;
+  const item = reviewHistoryLoad().find((saved) => saved.id === id);
+  if (button.dataset.reviewHistoryAct === "delete") reviewHistoryRemove(id);
+  else if (button.dataset.reviewHistoryAct === "open" && item) reviewStart(item.pgn);
+});
+reviewHistoryRender();
 document.getElementById("btn-replay-game").addEventListener("click", () => {
   reviewBeginReplay();
   document.getElementById("replay-bar").classList.remove("hidden");
