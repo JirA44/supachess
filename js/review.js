@@ -670,6 +670,7 @@ if (reviewHistoryList) reviewHistoryList.addEventListener("click", (event) => {
 });
 reviewHistoryRender();
 function resumeCorrectionExercisesFromUrl() {
+  if (typeof URLSearchParams === "undefined") return;
   const resumeId = new URLSearchParams(location.search).get("resume-exercises");
   if (!resumeId) return;
   const item = reviewHistoryLoad().find((saved) => saved.id === resumeId);
