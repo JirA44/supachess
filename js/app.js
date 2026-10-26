@@ -629,11 +629,13 @@ function moveAccuracyPct(beforeCp, afterCp) {
   return Math.max(0, Math.min(100, acc));
 }
 function recordAccuracy(color, beforeCp, afterCp) {
-  state.accuracy[color].push(moveAccuracyPct(beforeCp, afterCp));
+  const moveAccuracy = moveAccuracyPct(beforeCp, afterCp);
+  state.accuracy[color].push(moveAccuracy);
+  state.accuracy.lastMove = { color, lostPct: Math.max(0, 100 - moveAccuracy) };
   renderAccuracy();
 }
 function resetAccuracy() {
-  state.accuracy = { w: [], b: [], pendingEngine: null };
+  state.accuracy = { w: [], b: [], pendingEngine: null, lastMove: null };
   renderAccuracy();
 }
 function avgAccuracy(arr) {
@@ -649,7 +651,12 @@ function accuracyHtml() {
                  ["b", youAreWhite ? "Noirs (SF)" : "Noirs (toi)"]].map(([c, label]) => {
     const v = avgAccuracy(state.accuracy[c]);
     if (v === null) return `${esc(label)}: <span style="color:var(--text-dim)">—</span>`;
-    return `${esc(label)}: <span style="color:${accColor(v)};font-weight:600">${v.toFixed(1)}%</span>`;
+    const last = state.accuracy.lastMove;
+    const moveLoss = last && last.color === c ? Math.round(last.lostPct) : null;
+    const moveNote = moveLoss === null ? "" : moveLoss === 0
+      ? ` · 0% de précision perdue sur ce demi-coup`
+      : ` · -${moveLoss}% de précision sur ce demi-coup`;
+    return `${esc(label)}: <span style="color:${accColor(v)};font-weight:600">${v.toFixed(1)}%</span>${moveNote}`;
   });
   return parts.join(" &nbsp;·&nbsp; ");
 }
