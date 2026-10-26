@@ -69,3 +69,12 @@ test('board stylesheet cache key includes the full-size stacked bubble styles', 
   const stylesheet = page.locator('link[href*="css/style.css"]');
   await expect(stylesheet).toHaveAttribute('href', /live-move-grade-counts-20261026/);
 });
+
+
+test("evaluation bar keeps centipawn precision", async ({ page }) => {
+  await page.goto("/index.html");
+  await page.evaluate(() => updateEvalBar({ scoreCp: 10, mate: null }));
+  await expect(page.locator("#evalbar-label")).toHaveText("+0.10");
+  await page.evaluate(() => updateEvalBar({ scoreCp: -3, mate: null }));
+  await expect(page.locator("#evalbar-label")).toHaveText("-0.03");
+});
