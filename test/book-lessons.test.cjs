@@ -35,7 +35,7 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.length, 113, "the merged catalog contains 58 lessons and 55 opponent-reply drills");
+  assert.equal(LESSONS.length, 110, "the merged catalog contains 57 unique lessons and 53 opponent-reply drills");
   assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
 });
 
