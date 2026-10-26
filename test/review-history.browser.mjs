@@ -54,7 +54,7 @@ try {
       fens: [fen], moves: [{ san: "d4" }],
       rows: [{ color: "w", n: 1, san: "d4", lossCp: 0, classification: "best" }],
     });
-    items.push({ id: "second-game", pgn: '[Event "Second game"]\\n1. d4 d5 *',
+    items.push({ id: "second-game", pgn: '[Event "Second game"]\n1. d4 d5 *',
       white: "Alice", black: "Chloé", event: "Second game", analysis });
     localStorage.setItem("supachess_reviewed_pgns", JSON.stringify(items));
   });
