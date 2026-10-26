@@ -20,7 +20,7 @@ const REVIEW_MOVE_CLASSES = [
   { id: "unrated", symbol: "…", label: "Non évalué" },
 ];
 
-const reviewState = { fens: [], moves: [], grades: [], running: false, returnState: null };
+const reviewState = { fens: [], moves: [], grades: [], correctionExercises: [], currentHeaders: {}, exercise: null, running: false, returnState: null };
 
 function reviewShowModal(pgn) {
   document.getElementById("pgn-modal").classList.remove("hidden");
@@ -42,7 +42,7 @@ function reviewHistoryLoad() {
   } catch (_e) { return []; }
 }
 
-function reviewHistorySave(pgn, headers = {}) {
+function reviewHistorySave(pgn, headers = {}, correctionExercises = []) {
   const normalizedPgn = String(pgn || "").replace(/\r\n?/g, "\n").trim();
   if (!normalizedPgn) return false;
   const previous = reviewHistoryLoad();
@@ -54,6 +54,7 @@ function reviewHistorySave(pgn, headers = {}) {
     black: headers.Black || "Noirs",
     result: headers.Result || "*",
     event: headers.Event || "",
+    correctionExercises: Array.isArray(correctionExercises) ? correctionExercises : [],
     analyzedAt: new Date().toISOString(),
   };
   const next = [item, ...previous.filter((saved) => saved.id !== item.id &&
@@ -120,7 +121,24 @@ function reviewClassOf(row, grade = {}) {
   return "ok";
 }
 
-async function reviewRun() {
+async function reviewBuildCorrectionExercises(rows,fens,moves,positionLines){
+  const correctionClasses=new Set(["inaccuracy","mistake","blunder"]);
+  return rows.flatMap((row,index)=>{
+    if(!correctionClasses.has(row.classification))return [];
+    const move=moves[index], bestLine=positionLines[index], bestUci=bestLine&&bestLine.pv&&bestLine.pv[0];
+    if(!move||!fens[index]||typeof bestUci!=="string"||!/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(bestUci))return [];
+    const playedUci=move.from+move.to+(move.promotion||"");
+    if(bestUci===playedUci)return [];
+    return [{fen:fens[index],bestUci,bestScoreCp:bestLine.scoreCp,bestMate:bestLine.mate,
+      moveNumber:row.n,color:row.color,playedSan:row.san,classification:row.classification,lossCp:row.lossCp}];
+  });
+}
+
+function reviewCorrectionLabel(classification){
+  return ({inaccuracy:"Imprécision",mistake:"Erreur",blunder:"Gaffe"})[classification]||"Coup à corriger";
+}
+
+function reviewRun() {
   if (reviewState.running) return;
   const pgnText = document.getElementById("pgn-input").value.trim();
   if (!pgnText) { alert("Collez un PGN d'abord."); return; }
@@ -207,6 +225,7 @@ async function reviewRun() {
 
   reviewState.fens = fens;
   reviewState.moves = moves;
+  reviewState.currentHeaders = { ...headers };
   reviewState.grades = rows.map((row, i) => {
     const reply = positionLines[i + 1];
     const move = moves[i];
@@ -218,9 +237,10 @@ async function reviewRun() {
     return { deltaCp: eligible ? cand.deltaCp : null, brilliant: eligible ? isBrilliantCandidate(fens[i], cand) : false, evaluation };
   });
   rows.forEach((row, i) => { row.classification = reviewClassOf(row, reviewState.grades[i]); });
+  reviewState.correctionExercises = reviewBuildCorrectionExercises(rows, fens, moves, positionLines);
   reviewSetProgress("Analyse Stockfish terminée — bilan en cours…");
   reviewRenderLocal(rows, accW, accB, headers);
-  reviewHistorySave(pgnText, headers);
+  reviewHistorySave(pgnText, headers, reviewState.correctionExercises);
   document.getElementById("btn-replay-game").classList.remove("hidden");
 
   // Bilan pédagogique Supa (best-effort).
