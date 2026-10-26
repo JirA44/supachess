@@ -32,3 +32,27 @@ test('several candidate moves on one square stay distinct and do not overlap', a
     expect(layout.boxes.at(-1).bottom).toBeLessThanOrEqual(layout.square.bottom);
   }
 });
+
+
+test('candidate dots toggle off and on, and preference survives reload', async ({ page }) => {
+  await page.goto('/index.html');
+  const toggle = page.getByRole('button', { name: 'Dots : ON' });
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await page.evaluate(() => {
+    boardUI.dots = [{ square: 'e4', label: '★10', evaluation: '+0.11', quality: 'best', title: 'Best move' }];
+    boardUI.render(state.chess);
+  });
+  await expect(page.locator(".sq[data-square='e4'] .cdot-stack .cdot")).toHaveCount(1);
+  await toggle.click();
+  await expect(page.getByRole('button', { name: 'Dots : OFF' })).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('.cdot-stack')).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Dots : OFF' })).toHaveAttribute('aria-pressed', 'false');
+  await page.evaluate(() => {
+    boardUI.dots = [{ square: 'e4', label: '★10', evaluation: '+0.11', quality: 'best', title: 'Best move' }];
+    boardUI.render(state.chess);
+  });
+  await expect(page.locator('.cdot-stack')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Dots : OFF' }).click();
+  await expect(page.locator(".sq[data-square='e4'] .cdot-stack .cdot")).toHaveCount(1);
+});
