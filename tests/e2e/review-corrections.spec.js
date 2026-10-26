@@ -77,3 +77,17 @@ test('offers reanalysis for a saved game without correction data',async({page})=
   await expect(page.locator('#pgn-modal')).toBeVisible();
   await expect(page.locator('#pgn-input')).toHaveValue('1. e4 e5');
 });
+
+test('resumes saved correction exercises from a profile link',async({page})=>{
+  await page.addInitScript(()=>localStorage.setItem('supachess_reviewed_pgns',JSON.stringify([{
+    id:'resume-game',pgn:'1. f3 e5',white:'Alice',black:'Bob',result:'*',correctionExercises:[{
+      fen:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+      bestUci:'e2e4',bestScoreCp:12,bestMate:null,moveNumber:1,color:'w',playedSan:'f3',classification:'ok',lossCp:4.2
+    }]
+  }])));
+  await page.goto('/index.html?resume-exercises=resume-game');
+  await expect(page.locator('body')).toHaveAttribute('data-engine-ready','1',{timeout:30000});
+  await expect(page.locator('#review-exercise-panel')).toBeVisible({timeout:10000});
+  await expect(page.locator('#review-exercise-heading')).toContainText('Exercice 1/1');
+  await expect(page.locator('#review-exercise-prompt')).toContainText('Alice');
+});
