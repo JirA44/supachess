@@ -58,3 +58,12 @@
 .lesson-engine-facts, .lesson-engine-pv { margin: 6px 0 0; color: var(--text-dim); font-size: .84rem; line-height: 1.45; }
 .lesson-engine-preview { margin-top: 8px; padding: 6px 9px; color: var(--text); background: #252b3a; border: 1px solid #414863; border-radius: 6px; cursor: pointer; }
 .lesson-engine-preview:hover, .lesson-engine-preview:focus-visible { border-color: var(--accent); outline: 2px solid rgba(240,179,92,.25); }
+
+.lesson-explanation { padding: 13px 14px; line-height: 1.5; }
+.lesson-explanation h3 { margin: 0 0 7px; color: var(--green); font-size: 1.02rem; }
+.lesson-explanation h4 { margin: 12px 0 5px; color: var(--accent); font-size: .9rem; }
+.lesson-explanation p { margin: 0; }
+.lesson-explanation ul { margin: 5px 0 0; padding-left: 20px; }
+.lesson-explanation li + li { margin-top: 5px; }
+.lesson-next-preview { margin: 12px 0 0; padding: 9px 11px; background: rgba(240,179,92,.08); border-left: 3px solid var(--accent); border-radius: 4px; line-height: 1.45; }
+.lesson-next-preview[hidden] { display: none; }
