@@ -144,6 +144,137 @@
   }));
 
 
+
+  const academyData = root.SupaChessCurriculum ||
+    (typeof require === "function" ? require("./curriculum.js") : null);
+  const ChessClass = root.Chess || (typeof require === "function" ? require("chess.js").Chess : null);
+  const frenchSanToEngine = (san) => String(san).replace(/([CFDRT])(?=x?[a-h])/g,
+    (piece) => ({ C: "N", F: "B", D: "Q", R: "K", T: "R" })[piece]);
+  const playUci = (position, uci) => position.move({
+    from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.slice(4) || "q",
+  });
+
+  if (academyData && ChessClass) {
+    for (const source of academyData.lessons || []) {
+      const position = new ChessClass();
+      const setupPgn = frenchSanToEngine(source.setup);
+      if (!position.load_pgn(setupPgn)) throw new Error("PGN de mise en place invalide: " + source.id);
+      const fen = position.fen();
+      const learnerColor = position.turn();
+      const sequence = [];
+      for (let index = 0; index < source.line.length; index++) {
+        const move = position.move(frenchSanToEngine(source.line[index]));
+        if (!move) throw new Error("Suite illégale du curriculum: " + source.id + " · " + source.line[index]);
+        sequence.push({
+          side: move.color === learnerColor ? "user" : "book",
+          uci: move.from + move.to + (move.promotion || ""),
+          explanation: source.notes[index],
+        });
+      }
+      LESSONS.push({
+        id: "curriculum-" + source.id,
+        level: source.level,
+        title: source.title,
+        category: "Programme · " + source.theme,
+        program: programForLesson({ category: source.theme, title: source.title }),
+        author: "SupaChess Académie",
+        book: "Curriculum original fusionné depuis le parcours local",
+        reference: "Leçon originale · " + source.level,
+        fen,
+        setup: [],
+        color: learnerColor,
+        question: source.question,
+        choices: source.choices.map((choice) => ({
+          text: "Jouer " + choice,
+          correct: choice === source.answer,
+        })),
+        principle: source.why,
+        transfer: source.goal,
+        hints: [source.goal, source.notes[0] || source.why],
+        sequence,
+        pitfall: source.pitfall || "Après chaque réponse adverse, réévalue les menaces avant de poursuivre ton idée.",
+      });
+    }
+  }
+
+  function programForLesson(lesson) {
+    if (lesson.program) return lesson.program;
+    if (lesson.kind === "anticipation") return "Anti-erreurs · anticiper l’adversaire";
+    const category = String(lesson.category || "");
+    if (/tactique|clouage|fourchette|mat|calcul/i.test(category + " " + lesson.title))
+      return "Tal · tactique et sacrifices à calculer";
+    if (/calcul|candidat|défense forcing/i.test(category + " " + lesson.title))
+      return "Kasparov · coups candidats et calcul";
+    if (/finale|roi et pion|tour et roi/i.test(category))
+      return "Carlsen · finales et conversion";
+    if (/ouverture|développement|centre/i.test(category))
+      return "Fischer · préparation et précision";
+    if (/Stockfish|analyse/i.test(category + " " + lesson.title))
+      return "Stockfish · comparer et vérifier";
+    return "Carlsen · amélioration et conversion";
+  }
+
+  for (const lesson of LESSONS) lesson.program = programForLesson(lesson);
+
+  // Turn every studied reply into an active-recall challenge: the learner now plays
+  // the opponent's half-move, then sees the original continuation and its explanation.
+  const sourceLessons = LESSONS.slice();
+  const responseExercises = [];
+  for (const source of sourceLessons) {
+    if (!source.sequence || source.sequence.length < 2) continue;
+    const position = setupGame(source, ChessClass);
+    for (let index = 0; index < source.sequence.length; index++) {
+      const action = source.sequence[index];
+      if (action.side === "book" && index > 0 && source.sequence[index - 1].side === "user") {
+        const replyPosition = new ChessClass(position.fen());
+        const expected = playUci(replyPosition, action.uci);
+        if (expected) {
+          const previous = source.sequence[index - 1];
+          const priorPosition = setupGame(source, ChessClass);
+          for (let prior = 0; prior < index; prior++) playUci(priorPosition, source.sequence[prior].uci);
+          const priorMove = priorPosition.history({ verbose: true }).slice(-1)[0];
+          const replySan = expected.san;
+          responseExercises.push({
+            id: source.id + "-anticipate-" + index,
+            kind: "anticipation",
+            level: source.level,
+            title: "Surprise · prévoir la réponse à " + source.title,
+            category: "Anticipation · " + source.category,
+            program: "Anti-erreurs · anticiper l’adversaire",
+            author: "SupaChess Académie",
+            book: "Programme de renforcement et rappel actif",
+            reference: "Exercice original de prévision du demi-coup adverse",
+            fen: position.fen(),
+            setup: [],
+            color: position.turn(),
+            question: "Après le dernier coup joué, quelle réponse de la ligne faut-il envisager avant de poursuivre ?",
+            choices: [
+              { text: "Anticiper " + replySan + " et vérifier ses conséquences", correct: true },
+              { text: "Continuer son plan sans réexaminer la position", correct: false },
+              { text: "Jouer un coup d’aile sans vérifier les menaces", correct: false },
+            ],
+            principle: "Réponse de la ligne étudiée : " + replySan + ". " + action.explanation,
+            transfer: "Après chaque demi-coup adverse, recommence l’inventaire des échecs, prises et menaces avant de poursuivre ton plan.",
+            pitfall: "Ne considère pas ton coup comme réussi tant que tu n’as pas examiné la réponse adverse la plus gênante.",
+            hints: [
+              "Observe ce que le dernier coup a attaqué ou laissé sans défense.",
+              "Compare les échecs, prises et menaces possibles pour le camp adverse.",
+            ],
+            sequence: source.sequence.slice(index).map((item) => ({
+              side: item.side === "book" ? "user" : "book",
+              uci: item.uci,
+              explanation: item.explanation,
+            })),
+            anticipatedMove: replySan,
+            previousMove: priorMove ? priorMove.san : previous.uci,
+          });
+        }
+      }
+      if (!playUci(position, action.uci)) throw new Error("Coup illégal lors de la création du rappel: " + source.id + " · " + action.uci);
+    }
+  }
+  LESSONS.push(...responseExercises);
+
   const LEVEL_ORDER = { "Débutant": 0, "Intermédiaire": 1, "Avancé": 2, "Expert": 3 };
   LESSONS.sort((a, b) => (LEVEL_ORDER[a.level] ?? 99) - (LEVEL_ORDER[b.level] ?? 99));
 
