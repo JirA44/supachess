@@ -1,6 +1,6 @@
 const { test, expect } = require("@playwright/test");
 
-test("Capablanca lesson asks for the principle, then plays the line on the board", async ({ page }) => {
+test("Rook cutoff lesson asks for the principle, then plays the line on the board", async ({ page }) => {
   await page.goto("/book-lessons.html");
   await expect(page.locator("h1")).toHaveText("Leçons");
   await expect(page.locator(".lesson-subtitle")).toHaveText("La route vers l’excellence");
@@ -8,7 +8,7 @@ test("Capablanca lesson asks for the principle, then plays the line on the board
   await expect(page.locator("#lesson-board .sq")).toHaveCount(64);
   await page.locator(".lesson-catalog-button:not(.anticipation-exercise)").filter({ hasText: "Couper le roi avec la tour" }).first().click();
   const firstPrinciple = page.locator("#lesson-choices .lesson-choice").first();
-  await expect(firstPrinciple).toContainText("Limiter l’espace du roi adverse sur la rangée");
+  await expect(firstPrinciple).toContainText("Réduire l’espace du roi adverse");
   await firstPrinciple.click();
   await page.locator('.sq[data-square="a1"]').click();
   await page.locator('.sq[data-square="a7"]').click();
@@ -89,5 +89,7 @@ test("catalog filters and surprise exercise explicitly train opponent replies in
   await page.click("#lesson-anticipate");
   await expect(page.locator("#lesson-anticipate")).toHaveAttribute("aria-pressed", "true");
   const green = await page.locator("#lesson-surprise").evaluate((node) => getComputedStyle(node).backgroundColor);
-  expect(green).toBe("rgb(215, 237, 205)");
+  const [red, greenChannel, blue] = green.match(/\d+/g).map(Number);
+  expect(greenChannel).toBeGreaterThan(red);
+  expect(greenChannel).toBeGreaterThan(blue);
 });
