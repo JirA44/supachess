@@ -211,7 +211,7 @@
     if (/calcul|candidat|défense forcing|décision/i.test(category + " " + title))
       return "Kasparov · coups candidats et calcul";
     if (/finale|roi et pion|tour et roi|conversion/i.test(category))
-      return "Carlsen · finales et conversion";
+      return "Carlsen · amélioration et conversion";
     if (/ouverture|développement|centre/i.test(category))
       return "Fischer · préparation et précision";
     return "Carlsen · amélioration et conversion";
@@ -283,6 +283,7 @@
 
   const LEVEL_ORDER = { "Débutant": 0, "Intermédiaire": 1, "Avancé": 2, "Expert": 3 };
   LESSONS.sort((a, b) => (LEVEL_ORDER[a.level] ?? 99) - (LEVEL_ORDER[b.level] ?? 99));
+  root.SupaChessLessons = LESSONS;
 
   function setupGame(lesson, ChessClass) {
     const game = new ChessClass(lesson.fen);
@@ -409,8 +410,11 @@
         .some((value) => String(value || "").toLocaleLowerCase("fr").includes(search));
       return matchesSearch && (!level || lesson.level === level) && (!program || lesson.program === program);
     });
-    $("lesson-catalog-count").textContent = visibleLessons.length + " affiché(s) · " + LESSONS.length +
-      " leçons et exercices · " + Object.values(progress).filter((item) => item && item.completed).length + " terminés.";
+    const originalLessonCount = LESSONS.filter((lesson) => lesson.kind !== "anticipation").length;
+    const anticipationCount = LESSONS.length - originalLessonCount;
+    $("lesson-catalog-count").textContent = visibleLessons.length + " affiché(s) · " + originalLessonCount +
+      " leçons originales + " + anticipationCount + " exercices d’anticipation · " + LESSONS.length +
+      " entrées au total · " + Object.values(progress).filter((item) => item && item.completed).length + " terminés.";
     if (!visibleLessons.length) {
       const empty = document.createElement("p");
       empty.className = "lesson-catalog-empty";
@@ -422,6 +426,7 @@
       const button = document.createElement("button");
       button.type = "button";
       button.className = "lesson-catalog-button" + (lesson.kind === "anticipation" ? " anticipation-exercise" : "");
+      button.dataset.program = lesson.program || "";
       button.setAttribute("aria-current", index === lessonIndex ? "true" : "false");
       const title = document.createElement("span");
       title.className = "lesson-catalog-title";
