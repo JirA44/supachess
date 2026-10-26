@@ -2,7 +2,8 @@ const { test, expect } = require("@playwright/test");
 
 test("Capablanca lesson asks for the principle, then plays the line on the board", async ({ page }) => {
   await page.goto("/book-lessons.html");
-  await expect(page.locator("h1")).toHaveText("La route vers l’excellence");
+  await expect(page.locator("h1")).toHaveText("Leçons");
+  await expect(page.locator(".lesson-subtitle")).toHaveText("La route vers l’excellence");
   await expect(page.locator(".lesson-catalog-button")).toHaveCount(15);
   await expect(page.locator("#lesson-board .sq")).toHaveCount(64);
   await page.locator(".lesson-catalog-button").filter({ hasText: "Couper le roi avec la tour" }).click();
@@ -56,4 +57,18 @@ test('profile link opens the first lesson not yet completed',async({page})=>{
   await page.addInitScript((progress)=>localStorage.setItem('supachess-book-lessons-v1',JSON.stringify(progress)),saved);
   await page.goto('/book-lessons.html?next=1');
   await expect(page.locator('#lesson-catalog .lesson-catalog-button[aria-current="true"]')).toContainText('Activer le roi avant le pion');
+});
+
+
+test("home header has a prominent lessons button beside SupaChess Coach IA", async ({ page }) => {
+  await page.goto("/index.html");
+  const brand = page.locator(".brand-navigation");
+  await expect(brand.locator(".brand")).toContainText("SupaChess");
+  await expect(brand.locator(".brand")).toContainText("Coach IA");
+  const lessons = brand.getByRole("link", { name: "Leçons" });
+  await expect(lessons).toHaveAttribute("href", "book-lessons.html");
+  await lessons.click();
+  await expect(page).toHaveURL(/book-lessons\.html/);
+  await expect(page.locator("h1")).toHaveText("Leçons");
+  await expect(page.locator(".lesson-subtitle")).toHaveText("La route vers l’excellence");
 });

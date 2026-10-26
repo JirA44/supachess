@@ -67,3 +67,5 @@
 .lesson-explanation li + li { margin-top: 5px; }
 .lesson-next-preview { margin: 12px 0 0; padding: 9px 11px; background: rgba(240,179,92,.08); border-left: 3px solid var(--accent); border-radius: 4px; line-height: 1.45; }
 .lesson-next-preview[hidden] { display: none; }
+
+.lesson-subtitle { margin: 2px 0 8px; color: var(--accent); font-size: clamp(1rem, 2.5vw, 1.25rem); font-weight: 700; }
