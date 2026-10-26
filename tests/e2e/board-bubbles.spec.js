@@ -82,7 +82,10 @@ test("evaluation bar keeps centipawn precision", async ({ page }) => {
 
 test("hovering a candidate bubble shows the move to play beside it", async ({ page }) => {
   await page.goto("/index.html");
+  await page.waitForFunction(() => document.body.dataset.engineReady === "1");
   await page.evaluate(() => {
+    state.gen++;
+    state.phase = "userTurn";
     boardUI.showDots = true;
     boardUI.dots = candidateDotsFromGroups(new Map([["e4", [
       { san: "Nf3", label: "★10", evaluation: "+0.10", grade: { tone: "best" } },
