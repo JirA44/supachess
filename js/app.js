@@ -672,7 +672,7 @@ function updateEvalBar(bestLine) {
   $("evalbar-white").style.height = pct.toFixed(1) + "%";
   $("evalbar-label").textContent = bestLine.mate !== null
     ? "#" + Math.abs(bestLine.mate)
-    : (cp / 100).toFixed(1);
+    : (cp > 0 ? "+" : "") + (cp / 100).toFixed(2);
 }
 
 // La barre d'évaluation est calée sur l'échiquier en CSS (.board-row, align-items: stretch).
