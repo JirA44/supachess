@@ -363,6 +363,107 @@ function reviewSyncSelectedPly(ply) {
   });
 }
 
+function reviewStartCorrectionExercises(items,headers={}){
+  const valid=Array.isArray(items)?items.filter((item)=>item&&item.fen&&item.bestUci):[];
+  if(!valid.length)return;
+  reviewBeginReplay();
+  reviewState.currentHeaders={...reviewState.currentHeaders,...headers};
+  reviewState.exercise={items:valid,index:0,solved:false};
+  const panel=document.getElementById("review-exercise-panel");
+  if(panel)panel.classList.remove("hidden");
+  reviewShowCorrectionExercise(0);
+}
+
+function reviewShowCorrectionExercise(index){
+  const exercise=reviewState.exercise;
+  if(!exercise)return;
+  if(index>=exercise.items.length){reviewExitCorrectionExercises();return;}
+  exercise.index=index;
+  exercise.solved=false;
+  const item=exercise.items[index];
+  state.gen++;
+  state.chess=new Chess(item.fen);
+  state.fenHistory=[fenKey(state.chess.fen())];
+  state.evalHistory=[];
+  state.candidates=[];
+  state.pendingMove=null;
+  state.phase="userTurn";
+  state.userColor=state.chess.turn();
+  boardUI.setFlipped(state.userColor==="b");
+  boardUI.selected=null;
+  boardUI.legalTargets=[];
+  boardUI.dots=[];
+  boardUI.lastMove=null;
+  hideCoach();
+  moveFeedback.clear();
+  const colorName=item.color==="w"?(reviewState.currentHeaders.White||"Blancs"):(reviewState.currentHeaders.Black||"Noirs");
+  document.getElementById("review-exercise-heading").textContent=
+    `Exercice ${index+1}/${exercise.items.length} · ${reviewCorrectionLabel(item.classification)} · ${colorName}`;
+  const moveHeading=`${item.moveNumber}${item.color==="w"?".":"..."} ${item.playedSan}`;
+  document.getElementById("review-exercise-prompt").textContent=
+    `Dans la partie, ${moveHeading} était classé ${reviewCorrectionLabel(item.classification).toLowerCase()}. Trouve un meilleur coup.`;
+  document.getElementById("review-exercise-feedback").textContent="À toi de jouer : clique une pièce puis sa case cible.";
+  const next=document.getElementById("btn-review-exercise-next");
+  next.disabled=true;
+  next.textContent=index===exercise.items.length-1?"Terminer":"Exercice suivant";
+  setStatus("Exercice de correction — trouve le meilleur coup.");
+  renderAll();
+  if(Number.isFinite(item.bestScoreCp)||Number.isFinite(item.bestMate)){
+    updateEvalBar({scoreCp:Number.isFinite(item.bestScoreCp)?item.bestScoreCp:null,
+      mate:Number.isFinite(item.bestMate)?item.bestMate:null,pv:[item.bestUci]});
+  }else document.getElementById("evalbar-label").textContent="—";
+}
+
+function reviewHandleExerciseSquareClick(square){
+  const exercise=reviewState.exercise;
+  if(!exercise)return false;
+  if(exercise.solved)return true;
+  const item=exercise.items[exercise.index];
+  const piece=state.chess.get(square);
+  const selected=boardUI.selected;
+  if(selected){
+    if(selected===square){
+      boardUI.selected=null;boardUI.legalTargets=[];renderBoard();return true;
+    }
+    const legal=state.chess.moves({square:selected,verbose:true}).find((move)=>move.to===square);
+    if(legal){
+      const bestPromotion=item.bestUci.length>4?item.bestUci[4]:null;
+      const promotion=legal.flags.includes("p")
+        ? (item.bestUci.slice(0,4)===selected+square&&bestPromotion?bestPromotion:"q")
+        : undefined;
+      const uci=selected+square+(promotion||"");
+      if(uci!==item.bestUci){
+        document.getElementById("review-exercise-feedback").textContent=
+          "Ce coup ne corrige pas encore l’erreur. Essaie une autre idée.";
+        boardUI.selected=null;boardUI.legalTargets=[];renderBoard();return true;
+      }
+      const played=state.chess.move({from:selected,to:square,promotion});
+      exercise.solved=true;
+      boardUI.selected=null;boardUI.legalTargets=[];
+      boardUI.lastMove={from:selected,to:square,san:played.san};
+      document.getElementById("review-exercise-feedback").textContent=
+        `Bien joué : ${played.san} est le meilleur coup. Dans la partie, ${item.playedSan} était classé ${reviewCorrectionLabel(item.classification).toLowerCase()}.`;
+      document.getElementById("btn-review-exercise-next").disabled=false;
+      setStatus("Position corrigée.");
+      renderAll();
+      return true;
+    }
+  }
+  if(piece&&piece.color===state.chess.turn()){
+    boardUI.selected=square;
+    boardUI.legalTargets=state.chess.moves({square,verbose:true}).map((move)=>move.to);
+  }else{
+    boardUI.selected=null;boardUI.legalTargets=[];
+  }
+  renderBoard();
+  return true;
+}
+
+function reviewExitCorrectionExercises(){
+  reviewState.exercise=null;
+  reviewRestoreAfterReplay();
+}
+
 function reviewBeginReplay() {
   if (reviewState.returnState) return;
   const feedback = document.getElementById("move-feedback");
@@ -380,6 +481,9 @@ function reviewBeginReplay() {
 }
 
 function reviewRestoreAfterReplay() {
+  const exercisePanel = document.getElementById("review-exercise-panel");
+  if (exercisePanel) exercisePanel.classList.add("hidden");
+  reviewState.exercise = null;
   const saved = reviewState.returnState;
   if (!saved) return;
   const nextGen = state.gen + 1; // invalidate any analysis started by the replay
@@ -484,6 +588,13 @@ async function replayGoto(i) {
 document.getElementById("btn-analyze-pgn").addEventListener("click", () => reviewStart(""));
 document.getElementById("btn-run-review").addEventListener("click", () => { reviewRun().catch(console.error); });
 document.getElementById("btn-close-pgn").addEventListener("click", reviewHideModal);
+document.getElementById("btn-review-exercise-next").addEventListener("click", () => {
+  const exercise = reviewState.exercise;
+  if (!exercise || !exercise.solved) return;
+  if (exercise.index + 1 < exercise.items.length) reviewShowCorrectionExercise(exercise.index + 1);
+  else reviewExitCorrectionExercises();
+});
+document.getElementById("btn-review-exercise-quit").addEventListener("click", reviewExitCorrectionExercises);
 const reviewHistoryList = document.getElementById("review-history-list");
 if (reviewHistoryList) reviewHistoryList.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-review-history-act]");
