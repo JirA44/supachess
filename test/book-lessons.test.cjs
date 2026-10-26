@@ -20,15 +20,19 @@ test("book lesson setups and user/book move sequences are legal", () => {
   }
 });
 
-test("each lesson asks for a principle and cites its source", () => {
+test("each lesson has a level, principle, transfer, source, and explanation for every half-move", () => {
   for (const lesson of LESSONS) {
+    assert.ok(["Débutant", "Intermédiaire", "Avancé", "Expert"].includes(lesson.level), `${lesson.id} should have a level`);
     assert.ok(lesson.question);
     assert.ok(lesson.choices.some((choice) => choice.correct));
     assert.ok(lesson.principle);
     assert.ok(lesson.transfer, `${lesson.id} should tell the learner how to reuse the idea`);
     assert.ok(lesson.author && lesson.book && lesson.reference);
     assert.ok(lesson.sequence.some((action) => action.side === "user"));
+    for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
+  assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
+  assert.equal(LESSONS.length, 15);
 });
 
 test("Stockfish alternatives are ranked, compared, and shown as legal SAN lines", () => {

@@ -6,6 +6,7 @@
   const LESSONS = [
     {
       id: "capablanca-rook-king",
+      level: "Avancé",
       title: "Couper le roi avec la tour",
       category: "Finale · Tour et roi contre roi",
       author: "J. R. Capablanca",
@@ -24,12 +25,13 @@
       hints: ["Cherche une rangée qui empêche le roi noir de descendre vers le centre.", "Le coup de tour du livre est Ra7."],
       sequence: [
         { side: "user", uci: "a1a7", explanation: "La tour barre la septième rangée et réduit les cases du roi noir." },
-        { side: "book", uci: "h8g8" },
+        { side: "book", uci: "h8g8", explanation: "Le roi noir quitte la rangée où la tour le confinait." },
         { side: "user", uci: "h1g2", explanation: "Le roi rejoint la tour: les deux pièces coopèrent pour repousser le roi adverse." },
       ],
     },
     {
       id: "capablanca-king-pawn",
+      level: "Débutant",
       title: "Activer le roi avant le pion",
       category: "Finale · Roi et pion",
       author: "J. R. Capablanca",
@@ -48,12 +50,13 @@
       hints: ["Le roi blanc peut avancer vers le centre sans abandonner la défense du pion e2.", "Le premier coup illustré est Ke4."],
       sequence: [
         { side: "user", uci: "f4e4", explanation: "Le roi gagne une case centrale tout en gardant le pion e2 sous protection." },
-        { side: "book", uci: "f6e6" },
+        { side: "book", uci: "f6e6", explanation: "Le roi noir se rapproche du centre pour contester l’activité du roi blanc." },
         { side: "user", uci: "e2e3", explanation: "Le pion avance maintenant pour libérer la route du roi et rester défendu." },
       ],
     },
     {
       id: "larsen-center-break",
+      level: "Avancé",
       title: "Trouver le moment de jouer …d5",
       category: "Milieu de jeu · Plan et centre",
       author: "Bent Larsen",
@@ -73,13 +76,28 @@
       hints: ["Le pion d7 peut avancer de deux cases et attaquer le centre.", "La ligne du livre commence par …d5, puis répond à e5 par …Ng4."],
       sequence: [
         { side: "user", uci: "d7d5", explanation: "Le pion noir conteste immédiatement le centre au lieu d’attendre que les Blancs le consolident." },
-        { side: "book", uci: "e4e5" },
+        { side: "book", uci: "e4e5", explanation: "Le pion blanc avance et ferme le centre, ce qui change les cases disponibles." },
         { side: "user", uci: "f6g4", explanation: "Après la fermeture du centre, le cavalier prend une case active et met la pression sur le camp blanc." },
-        { side: "book", uci: "c1f4" },
+        { side: "book", uci: "c1f4", explanation: "Le fou blanc se développe sur une diagonale active." },
         { side: "user", uci: "f8c5", explanation: "Le fou se développe sur une diagonale active, conformément à la suite de Larsen." },
       ],
     },
+      {"id":"develop-before-attack","title":"Développer avant l’attaque","category":"Ouverture · Développement","level":"Débutant","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Débutant","setup":["e4","e5"],"color":"w","question":"Quel coup développe une pièce tout en préparant le roque ?","choices":[{"text":"Développer le cavalier vers le centre","correct":true},{"text":"Avancer un pion de l’aile sans raison","correct":false},{"text":"Sortir la dame pour chasser un pion","correct":false}],"principle":"Le cavalier f3 contrôle des cases centrales et aide à préparer le roque. Un développement utile crée des options sans lancer une attaque prématurée.","transfer":"À l’ouverture, développe une pièce vers le centre, puis vérifie la sécurité du roi avant d’ouvrir le jeu.","hints":["Le cavalier g1 peut attaquer le pion e5.","Le coup de développement est Cf3."],"sequence":[{"side":"user","uci":"g1f3","explanation":"Le cavalier se développe vers le centre et attaque le pion e5."},{"side":"book","uci":"b8c6","explanation":"Le cavalier noir défend e5 et occupe une case centrale."},{"side":"user","uci":"f1c4","explanation":"Le fou vise le centre et complète le développement."}]},
+    {"id":"castle-safely","title":"Roi à l’abri, pièces en jeu","category":"Ouverture · Sécurité du roi","level":"Débutant","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Débutant","setup":["e4","e5","Nf3","Nc6","Bc4","Nf6"],"color":"w","question":"Quel coup met le roi à l’abri et active une tour ?","choices":[{"text":"Roquer côté roi","correct":true},{"text":"Pousser un pion devant le roi","correct":false},{"text":"Jouer plusieurs coups de dame","correct":false}],"principle":"Le petit roque met le roi derrière ses pions et amène la tour f1 vers le centre.","transfer":"Avant d’attaquer, demande-toi si ton roi est en sécurité et si le roque est encore possible.","hints":["Le roi blanc peut aller en g1 avec la tour h1.","Le coup est le petit roque."],"sequence":[{"side":"user","uci":"e1g1","explanation":"Le roi se met à l’abri et la tour rejoint la colonne f."},{"side":"book","uci":"f8c5","explanation":"Le fou noir sort sur une diagonale active."},{"side":"user","uci":"d2d3","explanation":"Le pion soutient le centre et ouvre la diagonale du fou c1."}]},
+    {"id":"central-recapture","title":"Reprendre vers le centre","category":"Ouverture · Structure de pions","level":"Débutant","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Débutant","setup":["e4","c5","Nf3","d6","d4","cxd4"],"color":"w","question":"Quelle pièce reprend le pion central ?","choices":[{"text":"Le cavalier f3 reprend en d4","correct":true},{"text":"La dame reprend en d4","correct":false},{"text":"Ignorer le pion et jouer un coup d’aile","correct":false}],"principle":"Le cavalier reprend en développant une pièce vers le centre. La dame reste à l’abri d’un gain de tempo.","transfer":"Après une prise, compare les recaptures : développement, contrôle central et sécurité de la pièce qui reprend.","hints":["Le cavalier f3 peut atteindre d4.","Choisis la reprise qui développe une pièce."],"sequence":[{"side":"user","uci":"f3d4","explanation":"Le cavalier reprend le pion en occupant une case centrale."},{"side":"book","uci":"g8f6","explanation":"Le cavalier noir se développe et attaque le pion e4."},{"side":"user","uci":"b1c3","explanation":"Le second cavalier renforce le contrôle du centre."}]},
+    {"id":"trade-not-retreat","title":"Répondre à l’attaque du fou","category":"Ouverture · Gain de temps","level":"Débutant","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Débutant","setup":["e4","e5","Nf3","Nc6","Bb5"],"color":"b","question":"Comment gagner du temps sur le fou tout en développant ?","choices":[{"text":"Jouer …a6 puis développer le cavalier","correct":true},{"text":"Déplacer un pion devant le roi","correct":false},{"text":"Échanger une pièce sans calculer","correct":false}],"principle":"…a6 demande au fou de choisir une case; …Cf6 développe ensuite une pièce avec une menace sur e4.","transfer":"Quand une pièce adverse est avancée, cherche un coup utile qui la questionne sans retarder ton propre développement.","hints":["Un pion peut attaquer le fou b5 depuis a7.","Le coup est …a6."],"sequence":[{"side":"user","uci":"a7a6","explanation":"Le pion demande au fou blanc de préciser sa case."},{"side":"book","uci":"b5a4","explanation":"Le fou se replie en gardant la pression sur la diagonale."},{"side":"user","uci":"g8f6","explanation":"Le cavalier se développe et attaque le pion e4."}]},
+    {"id":"knight-fork","title":"Fourchette avec tempo","category":"Tactique · Fourchette","level":"Intermédiaire","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Intermédiaire","setup":["e4","e5","Nf3","Nc6","Bc4","Nf6","Ng5","d5","exd5","Nxd5"],"color":"w","question":"Quel coup attaque deux pièces à la fois ?","choices":[{"text":"Le cavalier prend f7","correct":true},{"text":"Reculer le cavalier en h3","correct":false},{"text":"Échanger le fou contre le cavalier c6","correct":false}],"principle":"Le cavalier en f7 attaque la dame d8 et la tour h8. La suite montre que le roi peut reprendre; il faut calculer la réponse avant de jouer.","transfer":"Une fourchette n’est utile que si tu as calculé les prises et les cases de sortie des pièces attaquées.","hints":["Le cavalier g5 peut prendre le pion f7.","Après la prise, vérifie les menaces sur la dame et la tour."],"sequence":[{"side":"user","uci":"g5f7","explanation":"Le cavalier attaque simultanément la dame d8 et la tour h8."},{"side":"book","uci":"e8f7","explanation":"Le roi reprend le cavalier: cette réponse est à intégrer au calcul."},{"side":"user","uci":"d1f3","explanation":"La dame donne échec sur la colonne f et poursuit l’attaque."}]},
+    {"id":"relative-pin","title":"Clouer avant de pousser","category":"Tactique · Clouage relatif","level":"Intermédiaire","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Intermédiaire","setup":["e4","e5","Nf3","Nc6","Bc4","Bc5","d3","Nf6","Nc3","d6"],"color":"w","question":"Quel plan met une pression sur le cavalier f6 ?","choices":[{"text":"Placer le fou en g5","correct":true},{"text":"Échanger le fou c4 contre le fou c5","correct":false},{"text":"Pousser les pions de l’aile sans développer","correct":false}],"principle":"Le fou g5 attaque le cavalier f6; celui-ci est lié à la dame d8 sur la diagonale vers le roi.","transfer":"Un clouage relatif vise une pièce importante derrière la pièce attaquée. Vérifie toujours si la pièce clouée peut bouger sans conséquence.","hints":["La diagonale c1–g5 est libre.","Le fou peut attaquer le cavalier f6 depuis g5."],"sequence":[{"side":"user","uci":"c1g5","explanation":"Le fou attaque le cavalier f6, placé devant la dame noire."},{"side":"book","uci":"h7h6","explanation":"Le pion demande au fou de choisir entre échange et retrait."},{"side":"user","uci":"g5h4","explanation":"Le fou se retire tout en conservant sa pression à distance."}]},
+    {"id":"central-break","title":"Ouvrir le centre au bon moment","category":"Plan · Rupture centrale","level":"Intermédiaire","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Intermédiaire","setup":["e4","e5","Nf3","Nc6","Bc4","Nf6"],"color":"w","question":"Quel coup conteste le centre noir et libère des lignes ?","choices":[{"text":"Pousser d4","correct":true},{"text":"Pousser a3","correct":false},{"text":"Reculer le fou sans raison","correct":false}],"principle":"d4 attaque le pion e5 et ouvre des lignes si les pions centraux s’échangent.","transfer":"Avant une rupture, calcule les prises possibles et vérifie quelles pièces profiteront des lignes ouvertes.","hints":["Le pion d2 peut avancer de deux cases.","Cherche un coup qui attaque e5 et libère le fou c1."],"sequence":[{"side":"user","uci":"d2d4","explanation":"Le pion attaque e5 et ouvre le centre à une éventuelle prise."},{"side":"book","uci":"e5d4","explanation":"Le pion noir prend en d4."},{"side":"user","uci":"f3d4","explanation":"Le cavalier reprend en d4 et occupe le centre."}]},
+    {"id":"bishop-retreat","title":"Choisir une retraite utile","category":"Ouverture · Conservation des pièces","level":"Intermédiaire","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Intermédiaire","setup":["e4","e5","Nf3","Nc6","Bb5","a6"],"color":"w","question":"Quelle case garde le fou actif après …a6 ?","choices":[{"text":"Reculer en a4","correct":true},{"text":"Échanger en c6 sans regarder la position","correct":false},{"text":"Reculer en h4","correct":false}],"principle":"Ba4 préserve le fou et garde la diagonale vers le centre; il n’est pas nécessaire d’échanger immédiatement.","transfer":"Quand une pièce est attaquée, compare les retraites qui gardent son activité et les échanges qui changent la structure.","hints":["Le fou peut suivre la diagonale b5–a4.","La retraite en a4 garde la pression sur e8."],"sequence":[{"side":"user","uci":"b5a4","explanation":"Le fou se retire en gardant sa diagonale vers le centre."},{"side":"book","uci":"g8f6","explanation":"Le cavalier noir se développe en attaquant le pion e4."},{"side":"user","uci":"e1g1","explanation":"Les Blancs mettent le roi à l’abri avant de poursuivre le plan."}]},
+    {"id":"intermezzo-check","title":"L’échec intermédiaire","category":"Tactique · Coup intermédiaire","level":"Avancé","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Avancé","setup":["e4","e5","Nf3","Nc6","Bc4","Nf6","Ng5","d5","exd5","Na5"],"color":"w","question":"Avant de reprendre une pièce, quel coup force une réponse ?","choices":[{"text":"Donner échec par Fb5+","correct":true},{"text":"Reprendre immédiatement en c6","correct":false},{"text":"Déplacer la dame sans menace","correct":false}],"principle":"Fb5+ exploite la diagonale libérée par le cavalier qui a quitté c6. Après …c6, le pion d5 peut reprendre en c6.","transfer":"Dans une séquence de prises, cherche un échec ou une menace intermédiaire qui change l’ordre des échanges.","hints":["Le fou c4 peut aller en b5.","Le cavalier noir a quitté c6, libérant la diagonale vers le roi e8."],"sequence":[{"side":"user","uci":"c4b5","explanation":"Le fou donne échec sur la diagonale désormais ouverte."},{"side":"book","uci":"c7c6","explanation":"Le pion bloque l’échec et attaque le fou."},{"side":"user","uci":"d5c6","explanation":"Le pion reprend en c6 pendant que le fou est encore attaqué."}]},
+    {"id":"rook-file","title":"Placer la tour sur la colonne utile","category":"Plan · Coordination des pièces","level":"Avancé","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Avancé","setup":["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","O-O","Be7"],"color":"w","question":"Quel coup relie le roi à la tour et prépare la colonne e ?","choices":[{"text":"Jouer Te1","correct":true},{"text":"Pousser h4 immédiatement","correct":false},{"text":"Reculer le cavalier en g1","correct":false}],"principle":"Te1 place la tour derrière le pion e et prépare son soutien si le centre s’ouvre.","transfer":"Après le roque, cherche une colonne où la tour peut soutenir un pion ou une pièce active.","hints":["La tour f1 peut aller en e1.","La tour peut soutenir le pion e4."],"sequence":[{"side":"user","uci":"f1e1","explanation":"La tour soutient le pion e4 et se place sur une colonne centrale."},{"side":"book","uci":"e8g8","explanation":"Le roi noir roque et met la tour h8 en jeu."},{"side":"user","uci":"b1c3","explanation":"Le cavalier rejoint le centre pour renforcer e4 et d5."}]},
+    {"id":"improve-piece","title":"Améliorer la pièce la moins active","category":"Plan · Repositionnement","level":"Avancé","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Avancé","setup":["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","O-O","Be7","Re1","b5"],"color":"w","question":"Comment garder le fou tout en choisissant une diagonale durable ?","choices":[{"text":"Le replier en b3","correct":true},{"text":"L’échanger contre le cavalier c6","correct":false},{"text":"Le ramener en c2 sans nécessité","correct":false}],"principle":"Bb3 conserve le fou et le place sur une diagonale qui regarde le roi et le centre.","transfer":"Dans une position calme, repère ta pièce la moins active et cherche une case plus utile sans affaiblir ton roi.","hints":["Le fou a4 peut reculer sur la diagonale vers b3.","Le pion b5 attaque le fou."],"sequence":[{"side":"user","uci":"a4b3","explanation":"Le fou se retire sur une diagonale active."},{"side":"book","uci":"d7d6","explanation":"Le pion renforce e5 et ouvre la diagonale du fou c8."},{"side":"user","uci":"c2c3","explanation":"Le pion prépare un centre stable et libère la case c2 pour une pièce."}]},
+    {"id":"calculate-before-capture","title":"Calculer avant de capturer","category":"Calcul · Sécurité tactique","level":"Expert","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Expert","setup":["e4","e5","Nf3","Nc6","Bc4","Nf6","Ng5","d5","exd5","Nxd5"],"color":"w","question":"Après …Cxd5, que faut-il vérifier avant de prendre f7 ?","choices":[{"text":"Les réponses forcées du roi et les menaces sur les pièces lourdes","correct":true},{"text":"Uniquement la valeur du pion","correct":false},{"text":"Le nombre de pièces déjà développées","correct":false}],"principle":"Nxf7 crée une fourchette, mais …Kxf7 reprend le cavalier. La valeur du motif dépend des suites calculées, pas du seul coup spectaculaire.","transfer":"Avant toute combinaison, calcule les réponses forcées jusqu’à une position que tu peux évaluer; ne t’arrête pas à la première menace.","hints":["Le cavalier g5 peut prendre f7.","Calcule la reprise du roi puis cherche un échec utile."],"sequence":[{"side":"user","uci":"g5f7","explanation":"Le cavalier attaque la dame et la tour, mais il peut être repris."},{"side":"book","uci":"e8f7","explanation":"Le roi prend le cavalier: cette réponse doit être prévue."},{"side":"user","uci":"d1f3","explanation":"La dame donne échec au roi f7; évalue alors la suite et le matériel."}]}
   ];
+
+  const LEVEL_ORDER = { "Débutant": 0, "Intermédiaire": 1, "Avancé": 2, "Expert": 3 };
+  LESSONS.sort((a, b) => (LEVEL_ORDER[a.level] ?? 99) - (LEVEL_ORDER[b.level] ?? 99));
 
   function setupGame(lesson, ChessClass) {
     const game = new ChessClass(lesson.fen);
@@ -205,7 +223,7 @@
       title.textContent = (index + 1) + ". " + lesson.title;
       const meta = document.createElement("span");
       meta.className = "lesson-catalog-meta";
-      meta.textContent = lesson.author + " · " + lesson.category;
+      meta.textContent = lesson.level + " · " + lesson.category + " · " + lesson.author;
       const state = document.createElement("span");
       state.className = "lesson-catalog-state";
       state.textContent = progress[lesson.id] && progress[lesson.id].completed ? "Terminée · à revoir quand tu veux" : "À découvrir";
@@ -422,7 +440,7 @@
     explanation.append(heading, principle);
 
     const moveHeading = document.createElement("h4");
-    moveHeading.textContent = "Tes coups et leur idée";
+    moveHeading.textContent = "Explication de chaque demi-coup";
     const moveList = document.createElement("ul");
     const replay = setupGame(lesson, Chess);
     for (const action of lesson.sequence) {
@@ -432,11 +450,9 @@
         promotion: action.uci.slice(4) || "q",
       });
       if (!move) continue;
-      if (action.side === "user") {
-        const item = document.createElement("li");
-        item.textContent = move.san + " — " + action.explanation;
-        moveList.appendChild(item);
-      }
+      const item = document.createElement("li");
+      item.textContent = (action.side === "user" ? "Ton coup : " : "Réponse : ") + move.san + " — " + action.explanation;
+      moveList.appendChild(item);
     }
     explanation.append(moveHeading, moveList);
 
@@ -446,17 +462,28 @@
     transfer.textContent = lesson.transfer || lesson.principle;
     explanation.append(transferHeading, transfer);
 
-    const nextIndex = (lessonIndex + 1) % LESSONS.length;
+    const nextIndex = recommendedNextLessonIndex();
     const nextLesson = LESSONS[nextIndex];
     $("lesson-next-preview").textContent = (lessonIndex + 1 < LESSONS.length ? "Prochaine étape : " : "Pour revoir le parcours : ") +
       nextLesson.title + " — " + nextLesson.category + ".";
     $("lesson-next-preview").hidden = false;
     $("lesson-next").hidden = false;
-    $("lesson-next").textContent = lessonIndex + 1 < LESSONS.length ? "Leçon suivante" : "Revoir la première leçon";
+    $("lesson-next").textContent = nextIndex === (lessonIndex + 1) % LESSONS.length ? "Leçon suivante" : "Leçon recommandée";
     updateProgressLabel();
     $("lesson-progress").textContent = "Essais et indices utilisés : " + attempts + " · " + hintsUsed +
       (hintsUsed === 1 ? " indice." : " indices.");
     explanation.hidden = false;
+  }
+
+  function recommendedNextLessonIndex() {
+    const sequential = (lessonIndex + 1) % LESSONS.length;
+    if (attempts < 3 && hintsUsed < 2) return sequential;
+    const level = LEVEL_ORDER[LESSONS[lessonIndex].level] ?? 0;
+    for (let i = 0; i < LESSONS.length; i++) {
+      if (i === lessonIndex || (LEVEL_ORDER[LESSONS[i].level] ?? 0) > level) continue;
+      if (!(progress[LESSONS[i].id] && progress[LESSONS[i].id].completed)) return i;
+    }
+    return sequential;
   }
 
   function showHint() {
