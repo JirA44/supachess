@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SupaChess Coach IA — Entraîneur d'échecs</title>
-<link rel="stylesheet" href="css/style.css?v=live-move-grade-counts-20261026-lessons-nav-20261026-move-hover-20261026">>
+<link rel="stylesheet" href="css/style.css?v=live-move-grade-counts-20261026-lessons-nav-20261026-move-hover-20261026-legal-move-dots-20261026">>
 <style>
   .supa-section { margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(128,128,128,.4); }
   .supa-head { font-weight: 600; font-size: .85em; opacity: .9; }
@@ -113,7 +113,8 @@
       <div class="board-controls">
         <button id="btn-new" class="btn">Nouvelle partie</button>
         <button id="btn-undo" class="btn">Annuler le coup</button>
-        <button id="btn-dots" class="btn" type="button" aria-pressed="true">Dots : ON</button>
+        <button id="btn-dots" class="btn" type="button" aria-pressed="true">Bulles candidates : ON</button>
+        <button id="btn-move-dots" class="btn" type="button" aria-pressed="true">Points chauds/froids : ON</button>
         <select id="sel-color" class="btn select">
           <option value="w">Je joue les Blancs</option>
           <option value="b">Je joue les Noirs</option>
