@@ -47,3 +47,13 @@ test("Stockfish compares legal alternatives and previews a continuation on the b
   await page.locator("#lesson-engine-return").click();
   await expect(page.locator("#lesson-engine-return")).toBeHidden();
 });
+
+
+test('profile link opens the first lesson not yet completed',async({page})=>{
+  const {LESSONS}=require('../../js/book-lessons.js');
+  const target='capablanca-king-pawn';
+  const saved=Object.fromEntries(LESSONS.filter((lesson)=>lesson.id!==target).map((lesson)=>[lesson.id,{completed:true}]));
+  await page.addInitScript((progress)=>localStorage.setItem('supachess-book-lessons-v1',JSON.stringify(progress)),saved);
+  await page.goto('/book-lessons.html?next=1');
+  await expect(page.locator('#lesson-catalog .lesson-catalog-button[aria-current="true"]')).toContainText('Activer le roi avant le pion');
+});
