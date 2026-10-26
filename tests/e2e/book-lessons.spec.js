@@ -145,6 +145,14 @@ test("five methodology cards explain their routines and open matching lessons", 
     await card.getByRole("button", { name: action }).click();
     await expect(page.locator("#lesson-program-filter")).toHaveValue(program);
     await expect(page.locator("#lesson-catalog .lesson-catalog-button").first()).toHaveAttribute("data-program", program);
+    const visibleTitles = page.locator("#lesson-catalog .lesson-catalog-button .lesson-catalog-title");
+    const expectedTitle = (await visibleTitles.first().innerText()).replace(/^\d+\.\s*/, "");
+    await expect(page.locator("#lesson-title")).toHaveText(expectedTitle);
+    await expect(page.locator(".lesson-workspace")).toBeInViewport();
+    const levels = await page.locator("#lesson-catalog .lesson-catalog-button .lesson-catalog-meta").allTextContents();
+    const levelOrder = { "Débutant": 0, "Intermédiaire": 1, "Avancé": 2, "Expert": 3 };
+    const ranks = levels.map((meta) => levelOrder[meta.split(" · ")[0]]);
+    expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
   }
 
   const stockfish = page.locator('[data-method-path="Stockfish · comparer et vérifier"]');

@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { Chess } = require("chess.js");
-const { LESSONS, setupGame, buildEngineChoices, engineHintForMove } = require("../js/book-lessons.js");
+const { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex } = require("../js/book-lessons.js");
 
 test("book lesson setups and user/book move sequences are legal", () => {
   for (const lesson of LESSONS) {
@@ -40,6 +40,31 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 79, "opponent-reply drills remain counted separately");
   assert.equal(LESSONS.length, 190, "guided lessons and anticipation drills are separate catalog entries");
   assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
+});
+
+test("method paths include all their lessons in progressive level order", () => {
+  const programs = [
+    "Carlsen · amélioration et conversion",
+    "Fischer · préparation et précision",
+    "Tal · tactique et sacrifices à calculer",
+    "Kasparov · coups candidats et calcul",
+  ];
+  const ranks = { Débutant: 0, Intermédiaire: 1, Avancé: 2, Expert: 3 };
+  for (const program of programs) {
+    const indices = methodPathLessonIndices(program);
+    const expected = LESSONS.map((lesson, index) => ({ lesson, index }))
+      .filter(({ lesson }) => lesson.program === program)
+      .sort((a, b) => ranks[a.lesson.level] - ranks[b.lesson.level] || a.index - b.index)
+      .map(({ index }) => index);
+    assert.ok(indices.length > 0, program + " should contain lessons");
+    assert.deepEqual(indices, expected, program + " should retain all lessons in level order");
+    const pathRanks = indices.map((index) => ranks[LESSONS[index].level]);
+    assert.deepEqual(pathRanks, [...pathRanks].sort((a, b) => a - b), program + " should progress from easier to harder levels");
+    for (let i = 0; i < indices.length; i++) {
+      assert.equal(nextMethodPathLessonIndex(indices[i], program), indices[(i + 1) % indices.length],
+        program + " should continue to its next lesson");
+    }
+  }
 });
 
 test("Stockfish alternatives are ranked, compared, and shown as legal SAN lines", () => {

@@ -380,6 +380,21 @@
 
   const LEVEL_ORDER = { "Débutant": 0, "Intermédiaire": 1, "Avancé": 2, "Expert": 3 };
   LESSONS.sort((a, b) => (LEVEL_ORDER[a.level] ?? 99) - (LEVEL_ORDER[b.level] ?? 99));
+
+  function methodPathLessonIndices(program) {
+    return LESSONS.map((lesson, index) => ({ lesson, index }))
+      .filter(({ lesson }) => lesson.program === program)
+      .sort((a, b) => (LEVEL_ORDER[a.lesson.level] ?? 99) - (LEVEL_ORDER[b.lesson.level] ?? 99) || a.index - b.index)
+      .map(({ index }) => index);
+  }
+
+  function nextMethodPathLessonIndex(currentIndex, program) {
+    const path = methodPathLessonIndices(program);
+    if (!path.length) return (currentIndex + 1) % LESSONS.length;
+    const position = path.indexOf(currentIndex);
+    return path[position < 0 ? 0 : (position + 1) % path.length];
+  }
+
   root.SupaChessLessons = LESSONS;
 
   function setupGame(lesson, ChessClass) {
@@ -459,7 +474,7 @@
   }
 
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { LESSONS, setupGame, buildEngineChoices, engineHintForMove };
+    module.exports = { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex };
   }
 
   if (typeof document === "undefined") return;
@@ -507,6 +522,9 @@
         .some((value) => String(value || "").toLocaleLowerCase("fr").includes(search));
       return matchesSearch && (!level || lesson.level === level) && (!program || lesson.program === program);
     });
+    if (program) {
+      visibleLessons.sort((a, b) => (LEVEL_ORDER[a.lesson.level] ?? 99) - (LEVEL_ORDER[b.lesson.level] ?? 99) || a.index - b.index);
+    }
     const originalLessonCount = LESSONS.filter((lesson) => lesson.kind !== "anticipation").length;
     const anticipationCount = LESSONS.length - originalLessonCount;
     $("lesson-catalog-count").textContent = visibleLessons.length + " affiché(s) · " + originalLessonCount +
@@ -555,6 +573,12 @@
       link.textContent = " Ouvrir le livre";
       source.appendChild(link);
     }
+  }
+
+  function nextLessonIndex(currentIndex) {
+    const program = $("lesson-program-filter").value;
+    if (program && LESSONS[currentIndex]?.program === program) return nextMethodPathLessonIndex(currentIndex, program);
+    return (currentIndex + 1) % LESSONS.length;
   }
 
   function loadLesson(index, options = {}) {
@@ -805,7 +829,12 @@
       nextLesson.title + " — " + nextLesson.category + ".";
     $("lesson-next-preview").hidden = false;
     $("lesson-next").hidden = false;
-    $("lesson-next").textContent = nextIndex === (lessonIndex + 1) % LESSONS.length ? "Leçon suivante" : "Leçon recommandée";
+    const pathProgram = $("lesson-program-filter").value;
+    const followsPath = Boolean(pathProgram && LESSONS[lessonIndex].program === pathProgram);
+    $("lesson-next").textContent = followsPath ? "Étape suivante du parcours" :
+      (nextIndex === (lessonIndex + 1) % LESSONS.length ? "Leçon suivante" : "Leçon recommandée");
+    if (followsPath) $("lesson-next-preview").textContent = "Prochaine étape du parcours " + pathProgram + " : " +
+      nextLesson.title + " (" + nextLesson.level + ") — " + nextLesson.category + ".";
     updateProgressLabel();
     $("lesson-progress").textContent = "Essais et indices utilisés : " + attempts + " · " + hintsUsed +
       (hintsUsed === 1 ? " indice." : " indices.");
@@ -813,7 +842,9 @@
   }
 
   function recommendedNextLessonIndex() {
-    const sequential = (lessonIndex + 1) % LESSONS.length;
+    const sequential = nextLessonIndex(lessonIndex);
+    const pathProgram = $("lesson-program-filter").value;
+    if (pathProgram && LESSONS[lessonIndex].program === pathProgram) return sequential;
     if (attempts < 3 && hintsUsed < 2) return sequential;
     const level = LEVEL_ORDER[LESSONS[lessonIndex].level] ?? 0;
     for (let i = 0; i < LESSONS.length; i++) {
@@ -974,7 +1005,7 @@
   });
   $("lesson-hint").addEventListener("click", showHint);
   $("lesson-restart").addEventListener("click", () => loadLesson(lessonIndex));
-  $("lesson-next").addEventListener("click", () => loadLesson((lessonIndex + 1) % LESSONS.length));
+  $("lesson-next").addEventListener("click", () => loadLesson(nextLessonIndex(lessonIndex)));
   function renderPersonalizedPgnPath() {
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem("supachess_personalized_path") || "null"); } catch (_) {}
