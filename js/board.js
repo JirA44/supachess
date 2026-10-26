@@ -18,6 +18,8 @@ class BoardUI {
     this.showDots = true;
     this.previewDot = null;
     this.legalTargets = [];
+    this.legalTargetHints = {}; // destination -> {quality, capture, san, evaluation}
+    this.showMoveDots = true;
   }
 
   setFlipped(f) { this.flipped = f; }
@@ -45,10 +47,24 @@ class BoardUI {
         if (this.lastMove && (this.lastMove.from === sq || this.lastMove.to === sq)) {
           cell.classList.add("lastmove");
         }
-        if (this.legalTargets.includes(sq)) {
+        if (this.showMoveDots && this.legalTargets.includes(sq)) {
           const hint = document.createElement("span");
-          hint.className = "legal-hint";
+          const detail = this.legalTargetHints[sq] || {};
+          hint.className = "legal-hint" + (detail.quality ? " " + detail.quality : " q-neutral") + (detail.capture ? " capture" : "");
+          hint.title = detail.san
+            ? `${detail.san} — ${detail.evaluation || "évaluation en cours"}`
+            : "Coup légal possible";
+          hint.setAttribute("aria-label", hint.title);
           cell.appendChild(hint);
+        }
+        if (this.lastMove && this.lastMove.to === sq && this.lastMove.grade && this.lastMove.grade.tone === "bad") {
+          cell.classList.add("bad-move");
+          const marker = document.createElement("span");
+          marker.className = "bad-move-marker";
+          marker.textContent = "!";
+          marker.title = `${this.lastMove.san || "Coup joué"} — ${this.lastMove.grade.label}`;
+          marker.setAttribute("aria-label", marker.title);
+          cell.appendChild(marker);
         }
         const dotsHere = this.showDots ? this.dots.filter((d) => d.square === sq) : [];
         if (dotsHere.length) {
