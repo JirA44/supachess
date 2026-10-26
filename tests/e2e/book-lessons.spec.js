@@ -166,7 +166,7 @@ test("five methodology cards explain their routines and open matching lessons", 
         await page.locator(".sq[data-square=\"" + action.uci.slice(0, 2) + "\"]").click();
         await page.locator(".sq[data-square=\"" + action.uci.slice(2, 4) + "\"]").click();
         if (first.sequence[i + 1]?.side === "book") {
-          await expect(page.locator("#lesson-status")).toContainText("À toi : joue la suite.");
+          await expect(page.locator("#lesson-status")).toContainText("À toi : continue la ligne.");
         }
       }
       const second = pathLessons[1];
