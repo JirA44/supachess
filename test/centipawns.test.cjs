@@ -22,6 +22,28 @@ test("centipawn loss uses same mover perspective before and after",()=>{
   assert.equal(r.swingWhiteCp,80);
   assert.match(r.explanation,/c5/);
 });
+test("an engine top move is not called a 95 cp mistake when separate searches disagree",()=>{
+  const c=new Chess();c.move("e4");const before=c.fen();c.move("e5");
+  const r=explain({fenBefore:before,fenAfter:c.fen(),uci:"e7e5",
+    bestBefore:{scoreCp:-30,mate:null,depth:18,pv:["e7e5"]},
+    bestAfter:{scoreCp:125,mate:null,depth:18,pv:["g1f3"]}});
+  assert.equal(r.bestMove,"e5");
+  assert.equal(r.lossCp,0);
+  assert.equal(r.swingWhiteCp,95);
+  assert.match(r.explanation,/0 cp de perte relative au meilleur coup/);
+  assert.match(r.explanation,/\+95 cp côté Blancs/);
+});
+test("a missed engine-preferred check is explained as a candidate, not a universal rule",()=>{
+  const before="4k3/8/8/8/8/8/4R3/4K3 w - - 0 1";
+  const c=new Chess(before);c.move("Kd1");
+  const r=explain({fenBefore:before,fenAfter:c.fen(),uci:"e1d1",
+    bestBefore:{scoreCp:250,mate:null,depth:18,pv:["e2e7"]},
+    bestAfter:{scoreCp:-100,mate:null,depth:18,pv:["e8d7"]}});
+  assert.equal(r.status,"OK");
+  assert.equal(r.principles[0].code,"LOOK_FOR_CHECKS");
+  assert.equal(r.principles[0].confidence,"candidate");
+  assert.match(r.principles[0].caveat,/pas la preuve que tout échec est bon/);
+});
 test("checkmate is not represented as fake centipawns",()=>{
   const c=new Chess();c.move("f3");c.move("e5");c.move("g4");const before=c.fen();c.move("Qh4#");
   const r=explain({fenBefore:before,fenAfter:c.fen(),uci:"d8h4",

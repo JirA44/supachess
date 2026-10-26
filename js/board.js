@@ -12,6 +12,7 @@ class BoardUI {
     this.el = el;
     this.onSquareClick = onSquareClick;
     this.flipped = false;
+    this.showDots = true;
     this.selected = null;
     this.lastMove = null;   // {from, to}
     this.dots = [];         // [{square, label, quality, title}]
@@ -49,27 +50,33 @@ class BoardUI {
           cell.appendChild(hint);
         }
         const dotsHere = this.dots.filter((d) => d.square === sq);
-        const dot = dotsHere[0];
-        if (dot) {
-          const d = document.createElement("span");
-          d.className = "cdot tone-" + dot.quality;
-          d.textContent = dotsHere.length > 1 ? `${dot.label} +${dotsHere.length - 1}` : dot.label || dot.rank;
-          d.title = dotsHere.map((move) => move.title).join("\n") || "Coup candidat";
-          d.setAttribute("aria-label", d.title);
-          cell.appendChild(d);
+        if (this.showDots && dotsHere.length) {
+          const stack = document.createElement("span");
+          stack.className = "cdot-stack" + (dotsHere.length > 1 ? " multiple" : "");
+          for (const dot of dotsHere) {
+            const bubble = document.createElement("span");
+            bubble.className = "cdot tone-" + dot.quality;
+            appendBoardBubbleText(bubble, dot.label || dot.rank, dot.evaluation);
+            bubble.title = dot.title || "Coup candidat";
+            bubble.setAttribute("aria-label", bubble.title);
+            stack.appendChild(bubble);
+          }
+          cell.appendChild(stack);
         }
         if (this.previewDot && this.previewDot.square === sq) {
           const preview = document.createElement("span");
           preview.className = "cdot preview-move-bubble tone-" + this.previewDot.quality;
-          preview.textContent = this.previewDot.label;
+          appendBoardBubbleText(preview, this.previewDot.label, this.previewDot.evaluation);
           preview.title = this.previewDot.title;
           cell.appendChild(preview);
         }
         if (this.lastMove && this.lastMove.to === sq && this.lastMove.grade) {
           const note = document.createElement("span");
           note.className = "played-move-bubble tone-" + this.lastMove.grade.tone;
-          note.textContent = `${this.lastMove.grade.symbol} ${this.lastMove.grade.rating === null ? "…" : this.lastMove.grade.rating + "/10"}`;
+          const rating = this.lastMove.grade.rating === null ? "…" : this.lastMove.grade.rating;
+          appendBoardBubbleText(note, `${this.lastMove.grade.symbol}${rating}`, this.lastMove.evaluation);
           note.title = `${this.lastMove.san || "Coup joué"} · ${this.lastMove.grade.rating === null ? "analyse en cours" : this.lastMove.grade.label}`;
+          note.setAttribute("aria-label", `${note.title} · évaluation ${this.lastMove.evaluation || "indisponible"}`);
           cell.appendChild(note);
         }
         // Coordonnées sur les bords
@@ -90,6 +97,26 @@ class BoardUI {
       }
     }
   }
+}
+
+function candidateDotsFromGroups(dotsBySquare) {
+  return Array.from(dotsBySquare, ([square, moves]) => moves.map((move) => ({
+    square,
+    label: move.label,
+    evaluation: move.evaluation,
+    quality: move.grade.tone,
+    title: `${move.san}: ${move.label} · ${move.evaluation}`,
+  }))).flat();
+}
+
+function appendBoardBubbleText(bubble, grade, evaluation) {
+  const gradeLine = document.createElement("span");
+  gradeLine.className = "board-bubble-grade";
+  gradeLine.textContent = grade || "…";
+  const evalLine = document.createElement("span");
+  evalLine.className = "board-bubble-eval";
+  evalLine.textContent = evaluation || "—";
+  bubble.append(gradeLine, evalLine);
 }
 
 /* Couleur de qualité d'un coup candidat selon sa perte d'éval vs le top-1. */

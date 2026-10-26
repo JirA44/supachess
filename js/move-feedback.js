@@ -44,7 +44,8 @@ const moveFeedback = {
     const preview = this.cards.get("preview");
     boardUI.previewDot = preview ? {
       square: preview.square,
-      label: `${preview.symbol} ${preview.rating === null ? "…" : preview.rating + "/10"}`,
+      label: `${preview.symbol}${preview.rating === null ? "…" : preview.rating}`,
+      evaluation: preview.evaluation,
       quality: preview.tone,
       title: `${preview.san} — coup testé`,
     } : null;
@@ -87,5 +88,7 @@ function previewCandidate(cand) {
   if (!["userTurn", "coach"].includes(state.phase)) return;
   moveFeedback.show({ san: cand.san, color: state.chess.turn(), moveNumber: moveNumberFromFen(state.chess.fen()),
     square: cand.uci.slice(2, 4), deltaCp: cand.deltaCp,
+    evaluation: cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
+      ? formatScore(cand.line, state.chess.turn() === "w") : "—",
     brilliant: isBrilliantCandidate(state.chess.fen(), cand), mode: "preview" });
 }

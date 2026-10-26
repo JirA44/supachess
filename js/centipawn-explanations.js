@@ -22,15 +22,42 @@ const SupaChessCentipawns = (() => {
     const after=new Chess(fenAfter);
     if(after.turn()===mover)return {status:"INVALID_POSITIONS"};
     const bestMove=bestBefore && bestBefore.pv && uciSan(fenBefore,bestBefore.pv[0]);
+    const candidateUci=bestBefore?.pv?.[0];
+    const playedEngineBest=candidateUci===uci;
+    const candidatePosition=candidateUci?new Chess(fenBefore):null;
+    const bestCandidate=candidateUci&&candidateUci!==uci
+      ?candidatePosition.move({from:candidateUci.slice(0,2),to:candidateUci.slice(2,4),
+        promotion:candidateUci.length===5?candidateUci[4]:undefined}) : null;
     const beforeCp=cp(bestBefore), afterCp=cp(bestAfter);
     // UCI output is always POV side-to-move. After the move, the opposite
     // player moves: multiply by -1 to express both evaluations in mover POV.
     const afterMoverCp=afterCp===null?null:-afterCp;
-    const loss=beforeCp===null||afterMoverCp===null?null:Math.max(0,beforeCp-afterMoverCp);
+    const loss=beforeCp===null||afterMoverCp===null?null:
+      playedEngineBest?0:Math.max(0,beforeCp-afterMoverCp);
     const signedSwing=beforeCp===null||afterMoverCp===null?null:afterMoverCp-beforeCp;
     const beforeWhiteCp=beforeCp===null?null:(mover==="w"?beforeCp:-beforeCp);
     const afterWhiteCp=afterCp===null?null:(mover==="w"?-afterCp:afterCp);
     const whiteSwing=beforeWhiteCp===null||afterWhiteCp===null?null:afterWhiteCp-beforeWhiteCp;
+    const principles=[];
+    if(bestCandidate&&loss!==null&&loss>=30&&bestCandidate.san.includes("+")) {
+      principles.push({code:"LOOK_FOR_CHECKS",label:"Chercher les échecs utiles",
+        evidence:"ENGINE_PREFERRED_CHECK",confidence:"candidate",
+        text:`Stockfish privilégie ${bestCandidate.san}, un échec, dans cette position.`,
+        caveat:"C'est une piste calculée par le moteur, pas la preuve que tout échec est bon."});
+    }
+    if(bestCandidate&&bestCandidate.captured&&loss!==null&&loss>=30) {
+      principles.push({code:"LOOK_FOR_CAPTURES",label:"Examiner les prises candidates",
+        evidence:"ENGINE_PREFERRED_CAPTURE",confidence:"candidate",
+        text:`Stockfish privilégie ${bestCandidate.san}, une prise, dans cette position.`,
+        caveat:"Vérifier la suite avant de conclure que la prise gagne du matériel."});
+    }
+    const newlyExposed=captureFacts.filter(f=>f&&f.id==="LEGAL_CAPTURE_NEXT_PLY"&&f.newlyExposed);
+    if(newlyExposed.length&&loss!==null&&loss>=60) {
+      principles.push({code:"CHECK_OPPONENT_THREATS",label:"Vérifier les menaces adverses avant de jouer",
+        evidence:"NEW_LEGAL_CAPTURE_NEXT_PLY",confidence:"evidence",
+        text:`Après ${played}, une pièce est exposée à une prise légale immédiate (${newlyExposed.slice(0,3).map(f=>f.captureSan).join(", ")}).`,
+        caveat:"Une prise légale ne prouve pas à elle seule une perte nette de matériel."});
+    }
 
     const observations=[];
     const legalCaptures=captureFacts.filter(f=>f&&f.id==="LEGAL_CAPTURE_NEXT_PLY")
@@ -45,7 +72,7 @@ const SupaChessCentipawns = (() => {
     }
     if(mate(bestBefore)!==null || mate(bestAfter)!==null || after.in_checkmate()) {
       return {
-        status:"MATE_EVALUATION",played,mover,bestMove,
+        status:"MATE_EVALUATION",played,mover,bestMove,principles,
         lossCp:null,swingWhiteCp:null,beforeWhiteCp:null,afterWhiteCp:null,
         observations,
         explanation:after.in_checkmate()?"Ce coup conclut par échec et mat. Une valeur en centipions serait trompeuse.":
@@ -54,16 +81,20 @@ const SupaChessCentipawns = (() => {
       };
     }
     if(loss===null) return {
-      status:"UNKNOWN_CP",played,mover,bestMove,lossCp:null,swingWhiteCp:null,
+      status:"UNKNOWN_CP",played,mover,bestMove,principles,lossCp:null,swingWhiteCp:null,
       observations,explanation:"Évaluation moteur incomplète : impossible de quantifier honnêtement la différence en centipions.",
       analysisDepthBefore:bestBefore?.depth??null,analysisDepthAfter:bestAfter?.depth??null
     };
     const pretty=n=>(Math.round(n*10)/10).toLocaleString("fr-FR");
     let explanation;
-    if(loss<=10) explanation=`${played} : perte de ${pretty(loss)} centipion(s) face au meilleur coup calculé. Ce coup préserve presque toute l'évaluation, sans démontrer qu'il est objectivement parfait.`;
+    if(playedEngineBest&&Math.abs(signedSwing)>10) {
+      const swing=`${whiteSwing>=0?"+":""}${pretty(whiteSwing)}`;
+      explanation=`${played} : Stockfish classe ce coup en tête dans la position avant le demi-coup, donc 0 cp de perte relative au meilleur coup. Les deux évaluations séparées divergent toutefois de ${swing} cp côté Blancs; cette variation ne concorde pas avec le classement du coup.`;
+    }
+    else if(loss<=10) explanation=`${played} : perte de ${pretty(loss)} centipion(s) face au meilleur coup calculé. Ce coup préserve presque toute l'évaluation, sans démontrer qu'il est objectivement parfait.`;
     else explanation=`${played} : perte estimée de ${pretty(loss)} centipion(s) par rapport au meilleur coup${bestMove?" ("+bestMove+")":""}. ${legalCaptures.length?"Prises possibles vérifiées ci-dessous.":"La cause tactique ou positionnelle exacte reste à établir par une variante et une analyse plus profonde."}`;
     return {
-      status:"OK",played,mover,bestMove,
+      status:"OK",played,mover,bestMove,principles,
       beforeWhiteCp,afterWhiteCp,swingWhiteCp:whiteSwing,
       lossCp:loss, signedMoverSwingCp:signedSwing,
       observations,explanation,

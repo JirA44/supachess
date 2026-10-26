@@ -18,7 +18,7 @@ const REVIEW_MOVE_CLASSES = [
   { id: "unrated", symbol: "…", label: "Non évalué" },
 ];
 
-const reviewState = { fens: [], moves: [], grades: [], running: false, returnState: null };
+const reviewState = { fens: [], moves: [], grades: [], rows: [], trainingRows: [], running: false, returnState: null, training: null };
 
 function reviewShowModal(pgn) {
   document.getElementById("pgn-modal").classList.remove("hidden");
@@ -115,6 +115,9 @@ async function reviewRun() {
 
     const uciMove = moves[i].from + moves[i].to + (moves[i].promotion || "");
     const bestMove = positionLines[i]?.pv?.[0] === uciMove;
+    const bestMoveUci = positionLines[i]?.pv?.[0] || null;
+    const bestPosition = bestMoveUci ? new Chess(fens[i]) : null;
+    const bestMoveObj = bestMoveUci ? bestPosition.move({ from: bestMoveUci.slice(0, 2), to: bestMoveUci.slice(2, 4), promotion: bestMoveUci.slice(4) || "q" }) : null;
     const blindspot = typeof ChessBlindspots !== "undefined"
       ? ChessBlindspots.tacticalMisses(fens[i], uciMove, { lossCp: delta * 100 }) : null;
     const cpEvidence = typeof SupaChessCentipawns !== "undefined"
@@ -131,6 +134,9 @@ async function reviewRun() {
       color: moves[i].color,
       san: moves[i].san,
       bestMove,
+      bestMoveUci,
+      bestMoveSan: bestMoveObj?.san || null,
+      bestLine: positionLines[i]?.pv || [],
       delta: displayDelta === null ? null : +displayDelta.toFixed(2),
       tag: displayDelta === null ? "" : reviewTagOf(displayDelta),
       diagnostics: blindspot && blindspot.status === "OK" ? blindspot.diagnostics : [],
@@ -144,13 +150,16 @@ async function reviewRun() {
 
   reviewState.fens = fens;
   reviewState.moves = moves;
+  reviewState.rows = rows;
   reviewState.grades = rows.map((row, i) => {
     const reply = positionLines[i + 1];
     const move = moves[i];
     const uci = move.from + move.to + (move.promotion || "");
     const cand = { deltaCp: row.lossCp, line: reply ? { ...reply, pv: [uci, ...reply.pv] } : null };
     const eligible = Number.isFinite(cand.deltaCp);
-    return { deltaCp: eligible ? cand.deltaCp : null, brilliant: eligible ? isBrilliantCandidate(fens[i], cand) : false };
+    const evaluation = reply && (reply.scoreCp !== null || reply.mate !== null)
+      ? formatScore(reply, move.color === "b") : "—";
+    return { deltaCp: eligible ? cand.deltaCp : null, brilliant: eligible ? isBrilliantCandidate(fens[i], cand) : false, evaluation };
   });
   rows.forEach((row, i) => { row.classification = reviewClassOf(row, reviewState.grades[i]); });
   reviewSetProgress("Analyse Stockfish terminée — bilan en cours…");
@@ -172,6 +181,8 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     row.ply = i + 1;
   });
   const worst = rows.filter((r) => r.tag).sort((a, b) => b.delta - a.delta).slice(0, 6);
+  const trainingRows = rows.filter((row) => ["inaccuracy", "mistake", "blunder"].includes(row.classification) && row.bestMoveUci);
+  reviewState.trainingRows = trainingRows;
   const moveLabel = (r) => `${r.n}.${r.color === "b" ? ".." : ""} ${sanFr(r.san)} ${r.tag} (${Number.isFinite(r.delta) ? "−" + r.delta.toFixed(2) : "non chiffrable"})`;
   const moveButton = (row) => {
     const heading = `${row.n}${row.color === "w" ? "." : "..."} ${sanFr(row.san)}`;
@@ -198,10 +209,23 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     const evalChange = Number.isFinite(cp.swingWhiteCp)
       ? ` · variation côté Blancs : ${cp.swingWhiteCp>=0?"+":""}${cp.swingWhiteCp.toFixed(0)} cp` : "";
     const facts = (cp.observations||[]).map(o=>o.text).join(" ");
-    return `<li class="review-ply" data-review-ply="${idx + 1}">${moveLink} — perte / meilleur coup : ${esc(loss)}${esc(evalChange)}. ${esc(cp.explanation)} ${esc(facts)}</li>`;
+    const principles = (cp.principles||[]).map(p=>`<strong>Principe à vérifier : ${esc(p.label)}.</strong> ${esc(p.text)} <small>${esc(p.caveat)}</small>`).join(" ");
+    return `<li class="review-ply" data-review-ply="${idx + 1}">${moveLink} — perte / meilleur coup : ${esc(loss)}${esc(evalChange)}. ${esc(cp.explanation)} ${esc(facts)} ${principles || "<small>Aucun principe précis ne peut être confirmé à partir des preuves disponibles pour ce demi-coup.</small>"}</li>`;
   }).join("");
   const blindspots = rows.flatMap((r) => (r.diagnostics || []).map((d) => ({ ...d, n: r.n, color: r.color })));
   const examples = blindspots.slice(0, 8).map((d) => `<li><strong>${d.n}${d.color === "w" ? "." : "..."} :</strong> ${esc(d.text)} <small>${esc(d.caveat)}</small></li>`).join("");
+  const principleGroups = new Map();
+  rows.forEach((row) => (row.centipawns?.principles || []).forEach((principle) => {
+    const current = principleGroups.get(principle.code) || { ...principle, plies: [] };
+    current.plies.push(`${row.n}${row.color === "w" ? "." : "..."} ${sanFr(row.san)}`);
+    principleGroups.set(principle.code, current);
+  }));
+  const principlesToWork = [...principleGroups.values()].map((principle) => {
+    const candidatesOnly = principle.confidence !== "evidence";
+    const status = candidatesOnly ? "Piste suggérée par le moteur, à vérifier dans la variante" :
+      principle.plies.length > 1 ? "Motif observé plusieurs fois dans cette partie" : "Observation ponctuelle, récurrence à confirmer";
+    return `<li><strong>${esc(principle.label)} :</strong> ${principle.plies.map(esc).join(", ")}. ${esc(status)}. <small>${esc(principle.caveat)}</small></li>`;
+  }).join("");
   const lessonRows = rows.map((r, idx) => ({
     color:r.color, san:r.san, ply:idx+1, fenBefore:null,
     diagnostics:r.diagnostics || []
@@ -229,14 +253,203 @@ function reviewRenderLocal(rows, accW, accB, headers) {
         : "<div class='review-worst'>Aucune erreur notable détectée.</div>"}
     </div>
     ${examples ? `<div class="review-worst"><h4>Vérification des pièces en prise (preuve d’une capture légale)</h4><ul>${examples}</ul></div>` : ""}
+    <div class="review-worst"><h4>Principes et fondamentaux à travailler</h4>${principlesToWork ? `<ul>${principlesToWork}</ul>` : "<p>Aucun fondamental précis n’est confirmé par les preuves de cette partie. Une partie seule ne suffit pas à établir une lacune récurrente.</p>"}</div>
     <div class="review-worst"><h4>Habitude à entraîner : échecs, prises, menaces</h4><p>${pedagogical}</p></div>
+    <div class="review-training-entry"><h4>Exercices de correction par partie</h4><p>Rejoue chaque demi-coup coté imprécision, erreur ou gaffe, pour les Blancs comme pour les Noirs. Un coup incorrect reviendra à sa position de départ.</p>${trainingRows.length ? `<button type="button" id="btn-practice-errors" class="btn">Corriger ${trainingRows.length} demi-coup${trainingRows.length === 1 ? "" : "s"} dans l’échiquier</button>` : `<p class="review-training-empty">Aucun demi-coup coté ?!, ? ou ?? avec un meilleur coup calculé n’est disponible pour cet entraînement.</p>`}</div>
     ${nextPractice ? `<div class="review-worst"><h4>Plan d’entraînement personnalisé</h4><ol>${nextPractice}</ol></div>` : ""}
     <div class="review-worst"><h4>Chaque demi-coup expliqué : centipions et causes démontrables</h4><p><small>Perte relative au meilleur coup ≠ variation absolue de l’évaluation. Le moteur ne peut pas toujours établir le pourquoi en une phrase; les mats sont traités séparément.</small></p><ol>${halfmoveExplanations}</ol></div>
     <div id="review-supa"></div>`;
   document.querySelectorAll("#review-report .review-ply-link").forEach((link) => {
     link.addEventListener("click", () => reviewJumpToPly(Number(link.dataset.reviewPly)));
   });
+  document.getElementById("btn-practice-errors")?.addEventListener("click", reviewTrainingStart);
   reviewSyncSelectedPly(state.replayIdx || 0);
+}
+
+function reviewTrainingPhase(fen, ply) {
+  const pieces = new Chess(fen).board().flat().filter(Boolean).filter((piece) => piece.type !== "k" && piece.type !== "p");
+  const queens = pieces.filter((piece) => piece.type === "q").length;
+  if (!queens || pieces.length <= 4) return "Finale";
+  if (Math.ceil(ply / 2) <= 10 && queens === 2 && pieces.length >= 12) return "Ouverture";
+  return "Milieu de jeu";
+}
+
+function reviewTrainingPhaseKey(fen, ply) {
+  const phase = reviewTrainingPhase(fen, ply);
+  return phase === "Ouverture" ? "opening" : phase === "Finale" ? "endgame" : "middlegame";
+}
+
+function reviewTrainingStart() {
+  if (!reviewState.trainingRows.length) return;
+  reviewState.training = { pool: reviewState.trainingRows, items: reviewState.trainingRows, phase: "all", index: 0, solved: 0, attempts: 0, game: null, board: null, selected: null, solvedCurrent: false, revealed: false, flippedByUser: false };
+  document.getElementById("review-training-phase").value = "all";
+  document.getElementById("review-training-modal").classList.remove("hidden");
+  if (!reviewState.training.board) {
+    reviewState.training.board = new BoardUI(document.getElementById("review-training-board"), reviewTrainingSquareClick);
+  }
+  reviewTrainingRender();
+}
+
+function reviewTrainingExplanation(row) {
+  const principle = row.centipawns?.principles?.[0];
+  if (principle) return `Principe à vérifier : ${principle.label}. ${principle.text} ${principle.caveat || ""}`;
+  return row.centipawns?.explanation || "Compare le coup joué avec le meilleur coup et la variante Stockfish.";
+}
+
+function reviewTrainingLine(row) {
+  if (!row.bestLine?.length) return "";
+  const game = new Chess(reviewState.fens[row.ply - 1]);
+  const line = [];
+  for (const uci of row.bestLine) {
+    const move = game.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.slice(4) || "q" });
+    if (!move) break;
+    line.push(move.san);
+  }
+  return line.length ? ` Suite Stockfish : ${line.join(" ")}.` : "";
+}
+
+function reviewTrainingRender() {
+  const training = reviewState.training;
+  if (!training) return;
+  if (!training.items.length) {
+    document.getElementById("review-training-progress").textContent = "Aucun demi-coup coté ?!, ? ou ?? n’est disponible dans cette phase.";
+    document.getElementById("review-training-feedback").textContent = "Choisis une autre phase ou affiche toutes les phases.";
+    document.getElementById("review-training-board").innerHTML = "";
+    document.getElementById("btn-review-training-next").hidden = true;
+    document.getElementById("btn-review-training-hint").hidden = true;
+    document.getElementById("btn-review-training-solution").hidden = true;
+    return;
+  }
+  if (training.index >= training.items.length) {
+    document.getElementById("review-training-progress").textContent = `Entraînement terminé · ${training.solved} coup${training.solved === 1 ? "" : "s"} corrigé${training.solved === 1 ? "" : "s"} sur ${training.items.length}.`;
+    document.getElementById("review-training-feedback").textContent = "Tu peux fermer l’exercice ou relancer l’analyse pour revoir les explications de la partie.";
+    document.getElementById("btn-review-training-next").hidden = true;
+    document.getElementById("btn-review-training-hint").hidden = true;
+    document.getElementById("btn-review-training-solution").hidden = true;
+    return;
+  }
+  const row = training.items[training.index];
+  const fen = reviewState.fens[row.ply - 1];
+  training.game = new Chess(fen);
+  training.current = row;
+  training.selected = null;
+  training.solvedCurrent = false;
+  training.revealed = false;
+  training.flippedByUser = row.color === "b";
+  training.board.setFlipped(training.flippedByUser);
+  training.board.flipped = training.flippedByUser;
+  training.board.selected = null;
+  training.board.legalTargets = [];
+  training.board.lastMove = null;
+  const moveName = `${row.n}${row.color === "w" ? "." : "..."} ${sanFr(row.san)}`;
+  const color = row.color === "w" ? "Blancs" : "Noirs";
+  const phase = reviewTrainingPhase(fen, row.ply);
+  document.getElementById("review-training-progress").textContent = `Exercice ${training.index + 1}/${training.items.length} · ${phase} · ${color} · ${moveName} · ${row.classification === "inaccuracy" ? "Imprécision" : row.classification === "mistake" ? "Erreur" : "Gaffe"} · ${Math.round(row.lossCp)} cp perdus`;
+  document.getElementById("review-training-feedback").textContent = `Joue le meilleur coup dans cette position. ${phase} : repère les menaces avant d’engager ton demi-coup.`;
+  document.getElementById("btn-review-training-next").hidden = true;
+  document.getElementById("btn-review-training-hint").hidden = false;
+  document.getElementById("btn-review-training-solution").hidden = false;
+  document.getElementById("btn-review-training-flip").setAttribute("aria-pressed", String(training.flippedByUser));
+  training.board.render(training.game);
+}
+
+function reviewTrainingSquareClick(square) {
+  const training = reviewState.training;
+  if (!training || !training.current || training.solvedCurrent || training.revealed) return;
+  const game = training.game;
+  const piece = game.get(square);
+  if (!training.selected) {
+    if (piece && piece.color === training.current.color) {
+      training.selected = square;
+      training.board.selected = square;
+      training.board.legalTargets = game.moves({ square, verbose: true }).map((move) => move.to);
+      training.board.render(game);
+    }
+    return;
+  }
+  if (training.selected === square) {
+    reviewTrainingClearSelection();
+    training.board.render(game);
+    return;
+  }
+  const move = game.move({ from: training.selected, to: square, promotion: "q" });
+  if (!move) {
+    if (piece && piece.color === training.current.color) {
+      training.selected = square;
+      training.board.selected = square;
+      training.board.legalTargets = game.moves({ square, verbose: true }).map((candidate) => candidate.to);
+    } else reviewTrainingClearSelection();
+    training.board.render(game);
+    return;
+  }
+  const uci = move.from + move.to + (move.promotion || "");
+  const feedback = document.getElementById("review-training-feedback");
+  if (uci !== training.current.bestMoveUci) {
+    game.undo();
+    reviewTrainingClearSelection();
+    training.attempts++;
+    training.board.lastMove = null;
+    training.board.render(game);
+    feedback.textContent = `Ce coup ne corrige pas l’erreur : il est annulé et l’échiquier revient à la position initiale. ${reviewTrainingExplanation(training.current)}`;
+    return;
+  }
+  training.solvedCurrent = true;
+  training.solved++;
+  reviewTrainingClearSelection();
+  training.board.lastMove = { from: move.from, to: move.to, san: move.san };
+  training.board.render(game);
+  feedback.textContent = `Bien joué : ${move.san} est le meilleur coup trouvé par Stockfish dans cette analyse. ${reviewTrainingExplanation(training.current)}${reviewTrainingLine(training.current)}`;
+  document.getElementById("btn-review-training-next").hidden = false;
+  document.getElementById("btn-review-training-hint").hidden = true;
+  document.getElementById("btn-review-training-solution").hidden = true;
+}
+
+function reviewTrainingClearSelection() {
+  const training = reviewState.training;
+  training.selected = null;
+  training.board.selected = null;
+  training.board.legalTargets = [];
+}
+
+function reviewTrainingHint() {
+  const training = reviewState.training;
+  if (!training?.current) return;
+  const principle = training.current.centipawns?.principles?.[0];
+  document.getElementById("review-training-feedback").textContent = principle
+    ? `Indice — ${principle.label} : ${principle.text}`
+    : "Indice — vérifie d’abord les échecs, les prises et les menaces adverses, puis compare les coups candidats.";
+}
+
+function reviewTrainingReveal() {
+  const training = reviewState.training;
+  if (!training?.current || training.solvedCurrent) return;
+  const uci = training.current.bestMoveUci;
+  const move = training.game.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.slice(4) || "q" });
+  if (!move) return;
+  training.revealed = true;
+  training.board.lastMove = { from: move.from, to: move.to, san: move.san };
+  training.board.render(training.game);
+  document.getElementById("review-training-feedback").textContent = `Solution Stockfish : ${move.san}. ${reviewTrainingExplanation(training.current)}${reviewTrainingLine(training.current)}`;
+  document.getElementById("btn-review-training-next").hidden = false;
+  document.getElementById("btn-review-training-hint").hidden = true;
+  document.getElementById("btn-review-training-solution").hidden = true;
+}
+
+function reviewTrainingNext() {
+  if (!reviewState.training) return;
+  reviewState.training.index++;
+  reviewTrainingRender();
+}
+
+function reviewTrainingSetPhase(phase) {
+  const training = reviewState.training;
+  if (!training) return;
+  training.phase = phase;
+  training.items = phase === "all" ? training.pool : training.pool.filter((row) => reviewTrainingPhaseKey(reviewState.fens[row.ply - 1], row.ply) === phase);
+  training.index = 0;
+  training.solved = 0;
+  training.selected = null;
+  reviewTrainingRender();
 }
 
 function reviewSyncSelectedPly(ply) {
@@ -344,7 +557,8 @@ async function replayGoto(i) {
     moveFeedback.show({ san: move.san, color: move.color, moveNumber: moveNumberFromFen(reviewState.fens[idx - 1]),
       square: move.to, deltaCp: grade ? grade.deltaCp : null, brilliant: grade ? grade.brilliant : false, mode: "replay" });
     const replayGrade = moveGrade(grade ? grade.deltaCp : null, grade ? grade.brilliant : false);
-    boardUI.lastMove = { from: move.from, to: move.to, san: move.san, grade: replayGrade };
+    boardUI.lastMove = { from: move.from, to: move.to, san: move.san, grade: replayGrade,
+      evaluation: reviewState.grades[idx - 1]?.evaluation || "—" };
   }
   state.replayIdx = idx;
   state.chess = new Chess(reviewState.fens[idx]);
@@ -353,7 +567,9 @@ async function replayGoto(i) {
   state.candidates = [];
   state.accuracy.pendingEngine = null;
   state.pendingMove = null;
-  boardUI.lastMove = idx > 0 ? { from: reviewState.moves[idx - 1].from, to: reviewState.moves[idx - 1].to, san: reviewState.moves[idx - 1].san, grade: moveGrade(reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].deltaCp : null, reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].brilliant : false) } : null;
+  boardUI.lastMove = idx > 0 ? { from: reviewState.moves[idx - 1].from, to: reviewState.moves[idx - 1].to, san: reviewState.moves[idx - 1].san,
+    grade: moveGrade(reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].deltaCp : null, reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].brilliant : false),
+    evaluation: reviewState.grades[idx - 1]?.evaluation || "—" } : null;
   boardUI.dots = [];
   boardUI.selected = null;
   boardUI.legalTargets = [];
@@ -377,3 +593,17 @@ document.getElementById("btn-replay-game").addEventListener("click", () => {
 document.getElementById("btn-replay-prev").addEventListener("click", () => replayGoto((state.replayIdx || 0) - 1).catch(console.error));
 document.getElementById("btn-replay-next").addEventListener("click", () => replayGoto((state.replayIdx || 0) + 1).catch(console.error));
 document.getElementById("btn-replay-quit").addEventListener("click", reviewRestoreAfterReplay);
+document.getElementById("btn-review-training-close").addEventListener("click", () => document.getElementById("review-training-modal").classList.add("hidden"));
+document.getElementById("btn-review-training-next").addEventListener("click", reviewTrainingNext);
+document.getElementById("review-training-phase").addEventListener("change", (event) => reviewTrainingSetPhase(event.target.value));
+document.getElementById("btn-review-training-hint").addEventListener("click", reviewTrainingHint);
+document.getElementById("btn-review-training-solution").addEventListener("click", reviewTrainingReveal);
+document.getElementById("btn-review-training-flip").addEventListener("click", () => {
+  const training = reviewState.training;
+  if (!training?.board) return;
+  training.flippedByUser = !training.flippedByUser;
+  training.board.setFlipped(training.flippedByUser);
+  training.board.flipped = training.flippedByUser;
+  training.board.render(training.game);
+  document.getElementById("btn-review-training-flip").setAttribute("aria-pressed", String(training.flippedByUser));
+});

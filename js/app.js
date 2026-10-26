@@ -20,6 +20,17 @@ const state = {
 };
 
 const boardUI = new BoardUI($("board"), onSquareClick);
+const DOTS_PREF_KEY = "supachess-show-candidate-dots";
+try { boardUI.showDots = localStorage.getItem(DOTS_PREF_KEY) !== "false"; }
+catch (_) { boardUI.showDots = true; }
+
+function renderDotsToggle() {
+  const button = $("btn-dots");
+  if (!button) return;
+  button.setAttribute("aria-pressed", String(boardUI.showDots));
+  button.textContent = `Dots : ${boardUI.showDots ? "ON" : "OFF"}`;
+}
+renderDotsToggle();
 
 /* ── Réglages ── */
 function thresholdCp() { return Math.round(parseFloat($("sel-threshold").value) * 100); }
@@ -123,20 +134,13 @@ function buildCandidates(lines, fen) {
   for (const cand of state.candidates) {
     const square = cand.uci.slice(2, 4);
     const grade = moveGrade(cand.deltaCp, isBrilliantCandidate(fen, cand));
-    const moveBadge = { san: cand.san, label: `${grade.symbol} ${grade.rating} / 10`, grade, rank: cand.rank };
+    const evaluation = cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
+      ? formatScore(cand.line, state.chess.turn() === "w") : "—";
+    const moveBadge = { san: cand.san, label: `${grade.symbol}${grade.rating ?? "…"}`, evaluation, grade, rank: cand.rank };
     if (!dotsBySquare.has(square)) dotsBySquare.set(square, []);
     dotsBySquare.get(square).push(moveBadge);
   }
-  boardUI.dots = Array.from(dotsBySquare, ([square, moves]) => {
-    const featured = moves.reduce((best, move) =>
-      !best || move.grade.rating > best.grade.rating ? move : best, null);
-    return {
-      square,
-      label: featured.label,
-      quality: featured.grade.tone,
-      title: moves.map((move) => `${move.san}: ${move.label}`).join("\n"),
-    };
-  });
+  boardUI.dots = candidateDotsFromGroups(dotsBySquare);
 }
 
 /* ── Décomposition heuristique des "micro-points" d'un candidat ──
@@ -217,6 +221,8 @@ function finishEngineFeedback(pending, replyLine) {
     deltaCp, brilliant, token: pending.token });
   if (boardUI.lastMove && boardUI.lastMove.to === pending.square) {
     boardUI.lastMove.grade = grade;
+    boardUI.lastMove.evaluation = replyLine && (replyLine.scoreCp !== null || replyLine.mate !== null)
+      ? formatScore(replyLine, pending.color === "b") : "—";
     renderBoard();
   }
 }
@@ -393,7 +399,9 @@ function commitUserMove(moveObj, cand, forced) {
   const grade = moveGrade(cand ? cand.deltaCp : null, brilliant);
   moveFeedback.show({ san: mv.san, color: mv.color, moveNumber: moveNumberFromFen(fenBefore), square: mv.to,
     deltaCp: cand ? cand.deltaCp : null, brilliant });
-  boardUI.lastMove = { from: mv.from, to: mv.to, san: mv.san, grade };
+  const evaluation = cand && cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
+    ? formatScore(cand.line, userMoveColor === "w") : "—";
+  boardUI.lastMove = { from: mv.from, to: mv.to, san: mv.san, grade, evaluation };
   // Précision du coup utilisateur : avant = meilleur candidat, après = candidat joué.
   if (cand && state.candidates.length) {
     recordAccuracy(userMoveColor,
@@ -618,6 +626,13 @@ function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
 /* ── Boutons ── */
 $("btn-new").addEventListener("click", newGame);
 $("sel-color").addEventListener("change", newGame);
+$("btn-dots").addEventListener("click", () => {
+  boardUI.showDots = !boardUI.showDots;
+  try { localStorage.setItem(DOTS_PREF_KEY, String(boardUI.showDots)); }
+  catch (_) { /* Keep the current toggle usable when storage is unavailable. */ }
+  renderDotsToggle();
+  renderBoard();
+});
 $("sel-elo").addEventListener("change", () => {
   // Changement de mode en cours de partie : on invalide les analyses en vol
   // et on relance le tour (l'engine reprend la main si c'est son tour).

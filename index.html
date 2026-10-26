@@ -64,6 +64,14 @@
   .review-grade-moves summary { cursor: pointer; color: var(--text-dim, #9aa); font-size: .9em; }
   .review-grade-moves ol { margin: 3px 0 0 16px; padding: 0; }
   .review-grade-moves .review-ply { padding-left: 0; }
+  .review-training-box { width: min(980px, 96vw); max-height: 94vh; overflow: auto; }
+  .review-training-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .review-training-head h2 { margin: 0; }
+  .review-training-layout { display: grid; grid-template-columns: minmax(280px, 1.15fr) minmax(240px, .85fr); gap: 18px; align-items: start; }
+  #review-training-board { max-width: min(64vh, 560px); margin: 0 auto; }
+  .review-training-feedback { min-height: 5em; padding: 10px; border-radius: 7px; background: rgba(128,128,128,.1); line-height: 1.5; }
+  .review-training-phase-label { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: .9em; }
+  @media (max-width: 720px) { .review-training-layout { grid-template-columns: 1fr; gap: 10px; } #review-training-board { max-width: min(78vw, 480px); } }
   @media (max-width: 560px) { .review-player-grid { grid-template-columns: minmax(0, 1fr); } }
   #replay-bar.hidden { display: none; }
   .site-footer { padding: 10px 16px; border-top: 1px solid rgba(128,128,128,.25);
@@ -107,6 +115,7 @@
           <option value="w">Je joue les Blancs</option>
           <option value="b">Je joue les Noirs</option>
         </select>
+        <button id="btn-dots" class="btn" type="button" aria-pressed="true" title="Afficher ou masquer les coups candidats sur l’échiquier">Dots : ON</button>
         <button id="btn-fen" class="btn">Importer FEN</button>
         <button id="btn-pgn" class="btn">⬇ PGN</button>
         <button id="btn-analyze-pgn" class="btn">Analyser PGN (Supa)</button>
@@ -211,6 +220,40 @@
   </div>
 </div>
 
+<div id="review-training-modal" class="pgn-modal hidden" role="dialog" aria-modal="true" aria-labelledby="review-training-title">
+  <div class="pgn-modal-box review-training-box">
+    <div class="review-training-head">
+      <h2 id="review-training-title">Corriger les coups de la partie</h2>
+      <button id="btn-review-training-close" class="btn" type="button">Fermer</button>
+    </div>
+    <p id="review-training-progress" class="review-progress" role="status" aria-live="polite"></p>
+    <label class="review-training-phase-label" for="review-training-phase">Phase de la partie
+      <select id="review-training-phase" class="btn select">
+        <option value="all">Toutes les phases</option>
+        <option value="opening">Ouverture</option>
+        <option value="middlegame">Milieu de jeu</option>
+        <option value="endgame">Finale</option>
+      </select>
+    </label>
+    <div class="review-training-layout">
+      <div>
+        <div id="review-training-board" class="board" aria-label="Échiquier d’exercice"></div>
+        <div class="coach-actions">
+          <button id="btn-review-training-flip" class="btn" type="button" aria-pressed="false">Retourner l’échiquier</button>
+        </div>
+      </div>
+      <div>
+        <p id="review-training-feedback" class="review-training-feedback" role="status" aria-live="polite">Joue le meilleur coup dans cette position.</p>
+        <div class="coach-actions">
+          <button id="btn-review-training-hint" class="btn" type="button">Indice</button>
+          <button id="btn-review-training-solution" class="btn" type="button">Voir la solution</button>
+          <button id="btn-review-training-next" class="btn" type="button" hidden>Exercice suivant</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <footer class="site-footer">\n  <a href="learn-moves.html" class="hub-link">🎓 Apprendre à compter & calculer les coups</a>
   <a href="https://jira44.github.io/supachess-web/" target="_blank" rel="noopener" class="hub-link">♞ Hub SupaChess</a>
   <span class="visitor-counter">
@@ -224,7 +267,7 @@
 <script src="js/supa.js"></script>
 <script src="js/board.js"></script>
 <script src="js/move-feedback.js"></script>
-<script src="js/app.js?v=grades-20261008-2"></script>
+<script src="js/app.js?v=grades-20261026-dots-toggle"></script>
 <script src="js/games.js"></script>
 <script src="js/blindspots.js"></script>
   <script src="js/learning-loop.js"></script>

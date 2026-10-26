@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#12141c">
+  <title>Leçons sur l’échiquier — SupaChess</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/book-lessons.css?v=lessons-deep-dive-20261026">
+</head>
+<body>
+  <header class="topbar lesson-topbar">
+    <a class="brand lesson-brand" href="index.html" aria-label="Retour à SupaChess">♞ Supa<span>Chess</span></a>
+    <a class="btn" href="index.html">Retour à l’échiquier</a>
+  </header>
+
+  <main class="book-lessons" id="book-lessons">
+    <section class="lesson-intro">
+      <p class="lesson-eyebrow">Apprendre en jouant</p>
+      <h1>Leçons sur l’échiquier</h1>
+      <p>Retrouve le principe, joue le coup, puis observe la suite. Les leçons transforment des idées de Capablanca et de Larsen en petits exercices interactifs.</p>
+    </section>
+
+    <section class="lesson-catalog-panel" aria-label="Catalogue des leçons">
+      <div class="lesson-catalog-tools">
+        <label for="lesson-search">Rechercher une leçon, un thème ou un joueur</label>
+        <input id="lesson-search" type="search" autocomplete="off" placeholder="Ex. finale, centre, Capablanca">
+        <span id="lesson-catalog-count" role="status" aria-live="polite"></span>
+      </div>
+      <nav class="lesson-catalog" id="lesson-catalog" aria-label="Choisir une leçon"></nav>
+    </section>
+
+    <section class="lesson-workspace" aria-labelledby="lesson-title">
+      <div class="lesson-board-column">
+        <p class="lesson-status" id="lesson-status" role="status" aria-live="polite">Choisis une leçon pour commencer.</p>
+        <div id="lesson-board" class="board" aria-label="Échiquier d’exercice"></div>
+        <div class="lesson-board-actions">
+          <button class="btn" id="lesson-flip" type="button" aria-pressed="false">Retourner l’échiquier</button>
+          <button class="btn" id="lesson-hint" type="button">Indice</button>
+          <button class="btn" id="lesson-restart" type="button">Recommencer</button>
+        </div>
+      </div>
+
+      <article class="lesson-card">
+        <p class="lesson-source" id="lesson-source"></p>
+        <h2 id="lesson-title">Choisis une leçon</h2>
+        <p class="lesson-goal" id="lesson-goal">Tu devras d’abord rappeler le principe, puis trouver le coup sur l’échiquier.</p>
+        <fieldset class="lesson-principle" id="lesson-principle" disabled>
+          <legend id="lesson-question">Quel principe faut-il appliquer ?</legend>
+          <div class="lesson-choices" id="lesson-choices"></div>
+        </fieldset>
+        <p class="lesson-feedback" id="lesson-feedback" role="status" aria-live="polite"></p>
+        <section class="lesson-deep-dive" id="lesson-deep-dive" aria-live="polite" hidden></section>
+        <button class="btn lesson-compare" id="lesson-compare" type="button" disabled>Comparer tous les coups avec Stockfish</button>
+        <section class="lesson-comparison" id="lesson-comparison" aria-live="polite" hidden></section>
+        <div class="lesson-explanation" id="lesson-explanation" hidden></div>
+        <h3>Suite jouée</h3>
+        <ol class="lesson-move-list" id="lesson-move-list"></ol>
+        <p class="lesson-progress" id="lesson-progress"></p>
+        <button class="btn lesson-next" id="lesson-next" type="button" hidden>Leçon suivante</button>
+      </article>
+    </section>
+    <p class="lesson-note">Les positions et lignes sont référencées aux pages des ouvrages. Les explications de SupaChess sont reformulées pour l’entraînement.</p>
+  </main>
+
+  <script src="vendor/chess.js"></script>
+<script src="js/engine.js"></script>
+  <script src="js/board.js"></script>
+  <script src="js/book-lessons.js?v=lessons-deep-dive-20261026"></script>
+</body>
+</html>
