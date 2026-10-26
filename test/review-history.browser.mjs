@@ -6,7 +6,7 @@ import { chromium } from "playwright";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const pgn = '[Event "Browser history test"]\\n[White "Alice"]\\n[Black "Bob"]\\n[Result "1-0"]\\n\\n1. e4 e5 *';
+const pgn = '[Event "Browser history test"]\n[White "Alice"]\n[Black "Bob"]\n[Result "1-0"]\n\n1. e4 e5 *';
 const server = http.createServer((req, res) => {
   const pathname = decodeURIComponent(new URL(req.url, "http://localhost").pathname);
   const file = path.resolve(root, `.${pathname === "/" ? "/index.html" : pathname}`);
