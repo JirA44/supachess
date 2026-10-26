@@ -228,6 +228,7 @@ function finishEngineFeedback(pending, replyLine) {
 
 /* ── Interaction échiquier ── */
 function onSquareClick(sq) {
+  if (typeof reviewHandleExerciseSquareClick === "function" && reviewHandleExerciseSquareClick(sq)) return;
   if (state.phase !== "userTurn") return;
   const piece = state.chess.get(sq);
   if (boardUI.selected) {

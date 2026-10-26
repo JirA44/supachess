@@ -20,7 +20,7 @@ const REVIEW_MOVE_CLASSES = [
   { id: "unrated", symbol: "…", label: "Non évalué" },
 ];
 
-const reviewState = { fens: [], moves: [], grades: [], running: false, returnState: null };
+const reviewState = { fens: [], moves: [], grades: [], correctionExercises: [], currentHeaders: {}, exercise: null, running: false, returnState: null };
 
 function reviewShowModal(pgn) {
   document.getElementById("pgn-modal").classList.remove("hidden");
@@ -42,7 +42,7 @@ function reviewHistoryLoad() {
   } catch (_e) { return []; }
 }
 
-function reviewHistorySave(pgn, headers = {}) {
+function reviewHistorySave(pgn, headers = {}, correctionExercises = []) {
   const normalizedPgn = String(pgn || "").replace(/\r\n?/g, "\n").trim();
   if (!normalizedPgn) return false;
   const previous = reviewHistoryLoad();
@@ -54,6 +54,7 @@ function reviewHistorySave(pgn, headers = {}) {
     black: headers.Black || "Noirs",
     result: headers.Result || "*",
     event: headers.Event || "",
+    correctionExercises: Array.isArray(correctionExercises) ? correctionExercises : [],
     analyzedAt: new Date().toISOString(),
   };
   const next = [item, ...previous.filter((saved) => saved.id !== item.id &&
@@ -69,6 +70,11 @@ function reviewHistorySave(pgn, headers = {}) {
   return true;
 }
 
+function reviewHistoryExerciseButton(item){
+  const count=Array.isArray(item.correctionExercises)?item.correctionExercises.length:0;
+  return count?`<button class="btn mini" type="button" data-review-history-act="exercise">Exercices (${count})</button>`:"";
+}
+
 function reviewHistoryRender(statusText) {
   const list = document.getElementById("review-history-list");
   if (!list || typeof localStorage === "undefined") return;
@@ -81,6 +87,7 @@ function reviewHistoryRender(statusText) {
       <span class="review-history-meta"><strong>${esc(title)}</strong>${detail ? `<br><small>${esc(detail)}</small>` : ""}</span>
       <span class="review-history-actions">
         <button class="btn mini" type="button" data-review-history-act="open">Analyser à nouveau</button>
+        ${reviewHistoryExerciseButton(item)}
         <button class="btn mini danger" type="button" data-review-history-act="delete" aria-label="Supprimer ${esc(title)}">×</button>
       </span>
     </div>`;
@@ -118,6 +125,23 @@ function reviewClassOf(row, grade = {}) {
   if (row.lossCp <= 10) return "very-good";
   if (row.lossCp <= 20) return "good";
   return "ok";
+}
+
+function reviewBuildCorrectionExercises(rows,fens,moves,positionLines){
+  const correctionClasses=new Set(["inaccuracy","mistake","blunder"]);
+  return rows.flatMap((row,index)=>{
+    if(!correctionClasses.has(row.classification))return [];
+    const move=moves[index], bestLine=positionLines[index], bestUci=bestLine&&bestLine.pv&&bestLine.pv[0];
+    if(!move||!fens[index]||typeof bestUci!=="string"||!/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(bestUci))return [];
+    const playedUci=move.from+move.to+(move.promotion||"");
+    if(bestUci===playedUci)return [];
+    return [{fen:fens[index],bestUci,bestScoreCp:bestLine.scoreCp,bestMate:bestLine.mate,
+      moveNumber:row.n,color:row.color,playedSan:row.san,classification:row.classification,lossCp:row.lossCp}];
+  });
+}
+
+function reviewCorrectionLabel(classification){
+  return ({inaccuracy:"Imprécision",mistake:"Erreur",blunder:"Gaffe"})[classification]||"Coup à corriger";
 }
 
 async function reviewRun() {
@@ -207,6 +231,7 @@ async function reviewRun() {
 
   reviewState.fens = fens;
   reviewState.moves = moves;
+  reviewState.currentHeaders = { ...headers };
   reviewState.grades = rows.map((row, i) => {
     const reply = positionLines[i + 1];
     const move = moves[i];
@@ -218,9 +243,10 @@ async function reviewRun() {
     return { deltaCp: eligible ? cand.deltaCp : null, brilliant: eligible ? isBrilliantCandidate(fens[i], cand) : false, evaluation };
   });
   rows.forEach((row, i) => { row.classification = reviewClassOf(row, reviewState.grades[i]); });
+  reviewState.correctionExercises = reviewBuildCorrectionExercises(rows, fens, moves, positionLines);
   reviewSetProgress("Analyse Stockfish terminée — bilan en cours…");
   reviewRenderLocal(rows, accW, accB, headers);
-  reviewHistorySave(pgnText, headers);
+  reviewHistorySave(pgnText, headers, reviewState.correctionExercises);
   document.getElementById("btn-replay-game").classList.remove("hidden");
 
   // Bilan pédagogique Supa (best-effort).
@@ -230,6 +256,22 @@ async function reviewRun() {
 
 function reviewCount(rows, color, tag) {
   return rows.filter((r) => r.color === color && r.classification === tag).length;
+}
+
+function reviewCorrectionExercisesHtml(items){
+  const list=Array.isArray(items)?items:[];
+  const count=list.length;
+  const counts=["blunder","mistake","inaccuracy"].map((classification)=>{
+    const n=list.filter((item)=>item.classification===classification).length;
+    return n?`${n} ${reviewCorrectionLabel(classification).toLowerCase()}${n===1?"":"s"}`:"";
+  }).filter(Boolean).join(" · ");
+  const description=count?`${count} position(s) à rejouer${counts?` : ${esc(counts)}`:""}. Retrouve le meilleur coup dans chaque position.`:
+    "Aucune gaffe, erreur ou imprécision évaluable à travailler dans cette partie.";
+  return `<section class="review-correction-practice">
+    <h3>Exercices de correction par partie</h3>
+    <p>${esc(description)}</p>
+    <button id="btn-review-corrections" class="btn" type="button" ${count?"":"disabled"}>Corriger ces coups (${count})</button>
+  </section>`;
 }
 
 function reviewRenderLocal(rows, accW, accB, headers) {
@@ -298,7 +340,11 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     <div class="review-worst"><h4>Habitude à entraîner : échecs, prises, menaces</h4><p>${pedagogical}</p></div>
     ${nextPractice ? `<div class="review-worst"><h4>Plan d’entraînement personnalisé</h4><ol>${nextPractice}</ol></div>` : ""}
     <div class="review-worst"><h4>Chaque demi-coup expliqué : centipions et causes démontrables</h4><p><small>Perte relative au meilleur coup ≠ variation absolue de l’évaluation. Le moteur ne peut pas toujours établir le pourquoi en une phrase; les mats sont traités séparément.</small></p><ol>${halfmoveExplanations}</ol></div>
+    ${reviewCorrectionExercisesHtml(reviewState.correctionExercises)}
     <div id="review-supa"></div>`;
+  const correctionButton = document.getElementById("btn-review-corrections");
+  if (correctionButton) correctionButton.addEventListener("click", () =>
+    reviewStartCorrectionExercises(reviewState.correctionExercises, reviewState.currentHeaders));
   document.querySelectorAll("#review-report .review-ply-link").forEach((link) => {
     link.addEventListener("click", () => reviewJumpToPly(Number(link.dataset.reviewPly)));
   });
@@ -315,6 +361,107 @@ function reviewSyncSelectedPly(ply) {
       else link.removeAttribute("aria-current");
     }
   });
+}
+
+function reviewStartCorrectionExercises(items,headers={}){
+  const valid=Array.isArray(items)?items.filter((item)=>item&&item.fen&&item.bestUci):[];
+  if(!valid.length)return;
+  reviewBeginReplay();
+  reviewState.currentHeaders={...reviewState.currentHeaders,...headers};
+  reviewState.exercise={items:valid,index:0,solved:false};
+  const panel=document.getElementById("review-exercise-panel");
+  if(panel)panel.classList.remove("hidden");
+  reviewShowCorrectionExercise(0);
+}
+
+function reviewShowCorrectionExercise(index){
+  const exercise=reviewState.exercise;
+  if(!exercise)return;
+  if(index>=exercise.items.length){reviewExitCorrectionExercises();return;}
+  exercise.index=index;
+  exercise.solved=false;
+  const item=exercise.items[index];
+  state.gen++;
+  state.chess=new Chess(item.fen);
+  state.fenHistory=[fenKey(state.chess.fen())];
+  state.evalHistory=[];
+  state.candidates=[];
+  state.pendingMove=null;
+  state.phase="userTurn";
+  state.userColor=state.chess.turn();
+  boardUI.setFlipped(state.userColor==="b");
+  boardUI.selected=null;
+  boardUI.legalTargets=[];
+  boardUI.dots=[];
+  boardUI.lastMove=null;
+  hideCoach();
+  moveFeedback.clear();
+  const colorName=item.color==="w"?(reviewState.currentHeaders.White||"Blancs"):(reviewState.currentHeaders.Black||"Noirs");
+  document.getElementById("review-exercise-heading").textContent=
+    `Exercice ${index+1}/${exercise.items.length} · ${reviewCorrectionLabel(item.classification)} · ${colorName}`;
+  const moveHeading=`${item.moveNumber}${item.color==="w"?".":"..."} ${item.playedSan}`;
+  document.getElementById("review-exercise-prompt").textContent=
+    `Dans la partie, ${moveHeading} était classé ${reviewCorrectionLabel(item.classification).toLowerCase()}. Trouve un meilleur coup.`;
+  document.getElementById("review-exercise-feedback").textContent="À toi de jouer : clique une pièce puis sa case cible.";
+  const next=document.getElementById("btn-review-exercise-next");
+  next.disabled=true;
+  next.textContent=index===exercise.items.length-1?"Terminer":"Exercice suivant";
+  setStatus("Exercice de correction — trouve le meilleur coup.");
+  renderAll();
+  if(Number.isFinite(item.bestScoreCp)||Number.isFinite(item.bestMate)){
+    updateEvalBar({scoreCp:Number.isFinite(item.bestScoreCp)?item.bestScoreCp:null,
+      mate:Number.isFinite(item.bestMate)?item.bestMate:null,pv:[item.bestUci]});
+  }else document.getElementById("evalbar-label").textContent="—";
+}
+
+function reviewHandleExerciseSquareClick(square){
+  const exercise=reviewState.exercise;
+  if(!exercise)return false;
+  if(exercise.solved)return true;
+  const item=exercise.items[exercise.index];
+  const piece=state.chess.get(square);
+  const selected=boardUI.selected;
+  if(selected){
+    if(selected===square){
+      boardUI.selected=null;boardUI.legalTargets=[];renderBoard();return true;
+    }
+    const legal=state.chess.moves({square:selected,verbose:true}).find((move)=>move.to===square);
+    if(legal){
+      const bestPromotion=item.bestUci.length>4?item.bestUci[4]:null;
+      const promotion=legal.flags.includes("p")
+        ? (item.bestUci.slice(0,4)===selected+square&&bestPromotion?bestPromotion:"q")
+        : undefined;
+      const uci=selected+square+(promotion||"");
+      if(uci!==item.bestUci){
+        document.getElementById("review-exercise-feedback").textContent=
+          "Ce coup ne corrige pas encore l’erreur. Essaie une autre idée.";
+        boardUI.selected=null;boardUI.legalTargets=[];renderBoard();return true;
+      }
+      const played=state.chess.move({from:selected,to:square,promotion});
+      exercise.solved=true;
+      boardUI.selected=null;boardUI.legalTargets=[];
+      boardUI.lastMove={from:selected,to:square,san:played.san};
+      document.getElementById("review-exercise-feedback").textContent=
+        `Bien joué : ${played.san} est le meilleur coup. Dans la partie, ${item.playedSan} était classé ${reviewCorrectionLabel(item.classification).toLowerCase()}.`;
+      document.getElementById("btn-review-exercise-next").disabled=false;
+      setStatus("Position corrigée.");
+      renderAll();
+      return true;
+    }
+  }
+  if(piece&&piece.color===state.chess.turn()){
+    boardUI.selected=square;
+    boardUI.legalTargets=state.chess.moves({square,verbose:true}).map((move)=>move.to);
+  }else{
+    boardUI.selected=null;boardUI.legalTargets=[];
+  }
+  renderBoard();
+  return true;
+}
+
+function reviewExitCorrectionExercises(){
+  reviewState.exercise=null;
+  reviewRestoreAfterReplay();
 }
 
 function reviewBeginReplay() {
@@ -334,6 +481,9 @@ function reviewBeginReplay() {
 }
 
 function reviewRestoreAfterReplay() {
+  const exercisePanel = document.getElementById("review-exercise-panel");
+  if (exercisePanel) exercisePanel.classList.add("hidden");
+  reviewState.exercise = null;
   const saved = reviewState.returnState;
   if (!saved) return;
   const nextGen = state.gen + 1; // invalidate any analysis started by the replay
@@ -438,6 +588,13 @@ async function replayGoto(i) {
 document.getElementById("btn-analyze-pgn").addEventListener("click", () => reviewStart(""));
 document.getElementById("btn-run-review").addEventListener("click", () => { reviewRun().catch(console.error); });
 document.getElementById("btn-close-pgn").addEventListener("click", reviewHideModal);
+document.getElementById("btn-review-exercise-next").addEventListener("click", () => {
+  const exercise = reviewState.exercise;
+  if (!exercise || !exercise.solved) return;
+  if (exercise.index + 1 < exercise.items.length) reviewShowCorrectionExercise(exercise.index + 1);
+  else reviewExitCorrectionExercises();
+});
+document.getElementById("btn-review-exercise-quit").addEventListener("click", reviewExitCorrectionExercises);
 const reviewHistoryList = document.getElementById("review-history-list");
 if (reviewHistoryList) reviewHistoryList.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-review-history-act]");
@@ -447,6 +604,10 @@ if (reviewHistoryList) reviewHistoryList.addEventListener("click", (event) => {
   const item = reviewHistoryLoad().find((saved) => saved.id === id);
   if (button.dataset.reviewHistoryAct === "delete") reviewHistoryRemove(id);
   else if (button.dataset.reviewHistoryAct === "open" && item) reviewStart(item.pgn);
+  else if (button.dataset.reviewHistoryAct === "exercise" && item) {
+    reviewState.currentHeaders = { White: item.white, Black: item.black };
+    reviewStartCorrectionExercises(item.correctionExercises, reviewState.currentHeaders);
+  }
 });
 reviewHistoryRender();
 document.getElementById("btn-replay-game").addEventListener("click", () => {
