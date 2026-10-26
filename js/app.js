@@ -20,6 +20,14 @@ const state = {
 };
 
 const boardUI = new BoardUI($("board"), onSquareClick);
+const DOTS_STORAGE_KEY = "supachess-show-candidate-dots";
+boardUI.showDots = localStorage.getItem(DOTS_STORAGE_KEY) !== "false";
+function syncDotsButton() {
+  const button = $("btn-dots");
+  if (!button) return;
+  button.textContent = "Dots : " + (boardUI.showDots ? "ON" : "OFF");
+  button.setAttribute("aria-pressed", String(boardUI.showDots));
+}
 
 /* ── Réglages ── */
 function thresholdCp() { return Math.round(parseFloat($("sel-threshold").value) * 100); }
@@ -615,6 +623,13 @@ function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
 
 /* ── Boutons ── */
 $("btn-new").addEventListener("click", newGame);
+syncDotsButton();
+$("btn-dots").addEventListener("click", () => {
+  boardUI.showDots = !boardUI.showDots;
+  localStorage.setItem(DOTS_STORAGE_KEY, String(boardUI.showDots));
+  syncDotsButton();
+  renderBoard();
+});
 $("sel-color").addEventListener("change", newGame);
 $("sel-elo").addEventListener("change", () => {
   // Changement de mode en cours de partie : on invalide les analyses en vol

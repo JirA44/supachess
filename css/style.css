@@ -90,7 +90,7 @@ body {
   position: absolute; width: 26%; height: 26%; border-radius: 50%;
   background: rgba(20,22,30,.35); z-index: 1;
 }
-.sq .coord { position: absolute; font-size: .6rem; color: rgba(20,22,30,.6); }
+.sq .coord { position: absolute; z-index: 5; font-size: clamp(.82rem, 1.7vw, 1rem); font-weight: 900; color: #111722; line-height: 1; text-shadow: 0 0 2px rgba(255,255,255,.95), 0 1px 2px rgba(255,255,255,.9); pointer-events: none; }
 .sq .coord.file { right: 3px; bottom: 2px; }
 .sq .coord.rank { left: 3px; top: 2px; }
 
