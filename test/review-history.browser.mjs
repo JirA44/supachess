@@ -67,9 +67,9 @@ try {
   await page.locator("#review-history-list input[data-review-insights-id]").nth(0).check();
   await page.locator("#review-history-list input[data-review-insights-id]").nth(1).check();
   await page.click("#review-insights-panel [data-review-insights-run]");
-  assert.match(await page.locator("#review-insights-report").innerText(), /Bilan calculé sur 2 partie/);
-  assert.match(await page.locator("#review-insights-report").innerText(), /Alice/);
-  assert.match(await page.locator("#review-insights-report").innerText(), /Forces mesurées/);
+  assert.match(await page.locator("#review-insights-panel [data-review-insights-report]").innerText(), /Bilan calculé sur 2 partie/);
+  assert.match(await page.locator("#review-insights-panel [data-review-insights-report]").innerText(), /Alice/);
+  assert.match(await page.locator("#review-insights-panel [data-review-insights-report]").innerText(), /Forces mesurées/);
   await page.click('#review-history-list [data-review-history-act="open"]');
   assert.equal(await page.locator("#pgn-input").inputValue(), pgn);
   await page.click("#btn-close-pgn");
@@ -90,8 +90,8 @@ try {
   await page.waitForFunction(() => document.querySelector("[data-review-insights-status]").textContent.includes("5 PGN valide(s) importé(s)"));
   assert.equal(await page.locator("#review-history-list input[data-review-insights-id]:checked").count(), 5);
   await page.click("#review-insights-panel [data-review-insights-run]");
-  await page.waitForFunction(() => document.querySelector("#review-insights-report").textContent.includes("Bilan calculé sur 5 partie(s)"));
-  await page.click("#review-insights-report .review-path-action");
+  await page.waitForFunction(() => document.querySelector("#review-insights-panel [data-review-insights-report]").textContent.includes("Bilan calculé sur 5 partie(s)"));
+  await page.click("#review-insights-panel [data-review-insights-report] .review-path-action");
   await page.waitForURL(/book-lessons\.html#parcours-pgn$/);
   assert.match(await page.locator("#personalized-pgn-path").innerText(), /Alice/);
   assert.ok(await page.locator("#personalized-pgn-path .method-path").count() > 0);
