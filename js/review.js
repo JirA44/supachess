@@ -127,7 +127,7 @@ function reviewClassOf(row, grade = {}) {
   return "ok";
 }
 
-async function reviewBuildCorrectionExercises(rows,fens,moves,positionLines){
+function reviewBuildCorrectionExercises(rows,fens,moves,positionLines){
   const correctionClasses=new Set(["inaccuracy","mistake","blunder"]);
   return rows.flatMap((row,index)=>{
     if(!correctionClasses.has(row.classification))return [];
@@ -144,7 +144,7 @@ function reviewCorrectionLabel(classification){
   return ({inaccuracy:"Imprécision",mistake:"Erreur",blunder:"Gaffe"})[classification]||"Coup à corriger";
 }
 
-function reviewRun() {
+async function reviewRun() {
   if (reviewState.running) return;
   const pgnText = document.getElementById("pgn-input").value.trim();
   if (!pgnText) { alert("Collez un PGN d'abord."); return; }
