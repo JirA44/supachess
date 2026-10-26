@@ -103,3 +103,21 @@ test("hovering a candidate bubble shows the move to play beside it", async ({ pa
   await page.mouse.move(0, 0);
   await expect(tooltip).toBeHidden();
 });
+
+
+test("each recorded half-move reports its precision loss", async ({ page }) => {
+  await page.goto("/index.html");
+  await page.waitForFunction(() => document.body.dataset.engineReady === "1");
+  await page.evaluate(() => {
+    state.gen++;
+    state.phase = "userTurn";
+    recordAccuracy("w", 0, -2);
+  });
+  await expect(page.locator("#stat-accuracy")).toContainText("Blancs (toi)");
+  await expect(page.locator("#stat-accuracy")).toContainText("-1% de précision sur ce demi-coup");
+  await page.evaluate(() => recordAccuracy("b", 0, -2));
+  await expect(page.locator("#stat-accuracy")).toContainText("Noirs (SF)");
+  await expect(page.locator("#stat-accuracy")).toContainText("-1% de précision sur ce demi-coup");
+  await page.evaluate(() => resetAccuracy());
+  await expect(page.locator("#stat-accuracy")).not.toContainText("de précision sur ce demi-coup");
+});
