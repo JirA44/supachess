@@ -396,6 +396,7 @@ function reviewShowCorrectionExercise(index){
   state.phase="userTurn";
   state.userColor=state.chess.turn();
   boardUI.setFlipped(state.userColor==="b");
+  document.getElementById("btn-review-exercise-flip").setAttribute("aria-pressed",String(boardUI.flipped));
   boardUI.selected=null;
   boardUI.legalTargets=[];
   boardUI.dots=[];
@@ -595,6 +596,12 @@ async function replayGoto(i) {
 document.getElementById("btn-analyze-pgn").addEventListener("click", () => reviewStart(""));
 document.getElementById("btn-run-review").addEventListener("click", () => { reviewRun().catch(console.error); });
 document.getElementById("btn-close-pgn").addEventListener("click", reviewHideModal);
+document.getElementById("btn-review-exercise-flip").addEventListener("click", () => {
+  if (!reviewState.exercise) return;
+  boardUI.setFlipped(!boardUI.flipped);
+  document.getElementById("btn-review-exercise-flip").setAttribute("aria-pressed",String(boardUI.flipped));
+  renderBoard();
+});
 document.getElementById("btn-review-exercise-next").addEventListener("click", () => {
   const exercise = reviewState.exercise;
   if (!exercise || !exercise.solved) return;
