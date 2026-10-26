@@ -33,7 +33,6 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
   assert.equal(LESSONS.length, 15);
-  }
 });
 
 test("Stockfish alternatives are ranked, compared, and shown as legal SAN lines", () => {
