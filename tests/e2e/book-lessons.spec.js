@@ -93,3 +93,38 @@ test("catalog filters and surprise exercise explicitly train opponent replies in
   expect(greenChannel).toBeGreaterThan(red);
   expect(greenChannel).toBeGreaterThan(blue);
 });
+
+
+test("four methodology cards explain their routines and open matching lessons", async ({ page }) => {
+  await page.goto("/book-lessons.html");
+  await expect(page.locator("#method-paths-title")).toHaveText("Quatre parcours méthodologiques");
+  const cards = page.locator(".method-path");
+  await expect(cards).toHaveCount(4);
+
+  const paths = [
+    ["Carlsen · amélioration et conversion", "Explorer les leçons Carlsen"],
+    ["Tal · tactique et sacrifices à calculer", "Explorer les leçons Tal"],
+    ["Kasparov · coups candidats et calcul", "Explorer les leçons Kasparov"],
+  ];
+  for (const [program, action] of paths) {
+    const card = page.locator(`[data-method-path="${program}"]`);
+    await expect(card.locator("[data-method-count]")).toContainText("leçons du parcours");
+    await card.getByRole("button", { name: action }).click();
+    await expect(page.locator("#lesson-program-filter")).toHaveValue(program);
+    await expect(page.locator("#lesson-catalog .lesson-catalog-button").first()).toHaveAttribute("data-program", program);
+  }
+
+  const stockfish = page.locator('[data-method-path="Stockfish · comparer et vérifier"]');
+  await expect(stockfish).toContainText("Forme d’abord ta propre analyse");
+  await expect(stockfish.locator("[data-method-count]")).toContainText("positions de leçons analysables");
+  await stockfish.getByRole("button", { name: "Commencer sur une position" }).click();
+  await expect(page.locator("#lesson-program-filter")).toHaveValue("");
+  await expect(page.locator("#lesson-catalog .lesson-catalog-button:not(.anticipation-exercise)").first()).toBeVisible();
+  await expect(page.locator("#lesson-engine-analyze")).toBeVisible();
+  await expect(stockfish).toHaveAttribute("aria-current", "true");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const cardBox = await page.locator(".method-path-grid").boundingBox();
+  expect(cardBox.x + cardBox.width).toBeLessThanOrEqual(390);
+  await expect(cards).toHaveCount(4);
+});
