@@ -72,7 +72,8 @@ function reviewHistorySave(pgn, headers = {}, correctionExercises = []) {
 
 function reviewHistoryExerciseButton(item){
   const count=Array.isArray(item.correctionExercises)?item.correctionExercises.length:0;
-  return count?`<button class="btn mini" type="button" data-review-history-act="exercise">Exercices (${count})</button>`:"";
+  const title=`${item.white||"Blancs"} vs ${item.black||"Noirs"}`;
+  return count?`<button class="btn mini" type="button" data-review-history-act="exercise" aria-label="Corriger les coups de ${esc(title)} (${count})">Corriger (${count})</button>`:"";
 }
 
 function reviewHistoryRender(statusText) {
@@ -128,9 +129,8 @@ function reviewClassOf(row, grade = {}) {
 }
 
 function reviewBuildCorrectionExercises(rows,fens,moves,positionLines){
-  const correctionClasses=new Set(["inaccuracy","mistake","blunder"]);
   return rows.flatMap((row,index)=>{
-    if(!correctionClasses.has(row.classification))return [];
+    if(!Number.isFinite(row.lossCp)||row.lossCp<=0)return [];
     const move=moves[index], bestLine=positionLines[index], bestUci=bestLine&&bestLine.pv&&bestLine.pv[0];
     if(!move||!fens[index]||typeof bestUci!=="string"||!/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(bestUci))return [];
     const playedUci=move.from+move.to+(move.promotion||"");
@@ -141,7 +141,10 @@ function reviewBuildCorrectionExercises(rows,fens,moves,positionLines){
 }
 
 function reviewCorrectionLabel(classification){
-  return ({inaccuracy:"Imprécision",mistake:"Erreur",blunder:"Gaffe"})[classification]||"Coup à corriger";
+  return ({
+    brilliant:"Brillant",best:"Meilleur coup","very-good":"Très bon coup",good:"Bon coup",
+    ok:"Coup OK",inaccuracy:"Imprécision",mistake:"Erreur",blunder:"Gaffe",unrated:"Non évalué"
+  })[classification]||"Coup à corriger";
 }
 
 async function reviewRun() {
@@ -261,12 +264,9 @@ function reviewCount(rows, color, tag) {
 function reviewCorrectionExercisesHtml(items){
   const list=Array.isArray(items)?items:[];
   const count=list.length;
-  const counts=["blunder","mistake","inaccuracy"].map((classification)=>{
-    const n=list.filter((item)=>item.classification===classification).length;
-    return n?`${n} ${reviewCorrectionLabel(classification).toLowerCase()}${n===1?"":"s"}`:"";
-  }).filter(Boolean).join(" · ");
-  const description=count?`${count} position(s) à rejouer${counts?` : ${esc(counts)}`:""}. Retrouve le meilleur coup dans chaque position.`:
-    "Aucune gaffe, erreur ou imprécision évaluable à travailler dans cette partie.";
+  const description=count
+    ? `${count} demi-coup(s) avec une perte mesurée en centipions. Choisis cette partie et retrouve le meilleur coup à chaque position.`
+    : "Aucun demi-coup avec une perte mesurable en centipions et un meilleur coup distinct dans cette partie.";
   return `<section class="review-correction-practice">
     <h3>Exercices de correction par partie</h3>
     <p>${esc(description)}</p>
@@ -400,8 +400,9 @@ function reviewShowCorrectionExercise(index){
   document.getElementById("review-exercise-heading").textContent=
     `Exercice ${index+1}/${exercise.items.length} · ${reviewCorrectionLabel(item.classification)} · ${colorName}`;
   const moveHeading=`${item.moveNumber}${item.color==="w"?".":"..."} ${item.playedSan}`;
+  const lossText=Number.isFinite(item.lossCp)?`${(item.lossCp/100).toLocaleString("fr-FR",{maximumFractionDigits:2})} pion(s)`:"perte mesurée";
   document.getElementById("review-exercise-prompt").textContent=
-    `Dans la partie, ${moveHeading} était classé ${reviewCorrectionLabel(item.classification).toLowerCase()}. Trouve un meilleur coup.`;
+    `Dans la partie, ${moveHeading} (${reviewCorrectionLabel(item.classification).toLowerCase()}) faisait perdre ${lossText}. Trouve le meilleur coup.`;
   document.getElementById("review-exercise-feedback").textContent="À toi de jouer : clique une pièce puis sa case cible.";
   const next=document.getElementById("btn-review-exercise-next");
   next.disabled=true;
@@ -442,7 +443,7 @@ function reviewHandleExerciseSquareClick(square){
       boardUI.selected=null;boardUI.legalTargets=[];
       boardUI.lastMove={from:selected,to:square,san:played.san};
       document.getElementById("review-exercise-feedback").textContent=
-        `Bien joué : ${played.san} est le meilleur coup. Dans la partie, ${item.playedSan} était classé ${reviewCorrectionLabel(item.classification).toLowerCase()}.`;
+        `Bien joué : ${played.san} est le meilleur coup. Dans la partie, ${item.playedSan} faisait perdre ${lossText}.`;
       document.getElementById("btn-review-exercise-next").disabled=false;
       setStatus("Position corrigée.");
       renderAll();
