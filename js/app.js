@@ -45,6 +45,7 @@ async function init() {
   $("engine-label").textContent = state.engine.engineName + " (NNUE) — prêt";
   document.body.dataset.engineReady = "1";
   newGame();
+  document.dispatchEvent(new Event("supachess:engine-ready"));
 }
 
 function newGame() {
