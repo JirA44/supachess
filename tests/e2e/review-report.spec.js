@@ -11,7 +11,8 @@ test('PGN report: per-ply losses, evidence and training are actually rendered',a
       {n:1,color:"b",san:"e5",delta:0.8,lossCp:80,tag:"?",
        diagnostics:[{code:"PIECE_EN_PRISE_EN_UN_COUP",text:"Prise légale démontrée en d8",caveat:"Échange à vérifier."}],
        centipawns:{status:"OK",lossCp:80,swingWhiteCp:80,
-         explanation:"e5 : perte estimée face au meilleur coup.",observations:[]}}
+         explanation:"e5 : perte estimée face au meilleur coup.",observations:[],
+         principles:[{code:"CHECK_OPPONENT_THREATS",confidence:"evidence",label:"Vérifier les menaces adverses avant de jouer",text:"Une pièce est exposée à une prise légale.",caveat:"Une prise légale ne prouve pas une perte nette."}]}}
     ];
     reviewRenderLocal(rows,98,72,{White:"Test",Black:"Test",Result:"*"});
     return true;
@@ -20,6 +21,10 @@ test('PGN report: per-ply losses, evidence and training are actually rendered',a
   await expect(page.locator('#review-report')).toContainText('Chaque demi-coup expliqué');
   await expect(page.locator('#review-report')).toContainText('80 cp');
   await expect(page.locator('#review-report')).toContainText('Prise légale démontrée');
+  await expect(page.locator('#review-report')).toContainText('Principe à vérifier');
+  await expect(page.locator('#review-report')).toContainText('Vérifier les menaces adverses avant de jouer');
+  await expect(page.locator('#review-report')).toContainText('Principes et fondamentaux à travailler');
+  await expect(page.locator('#review-report')).toContainText('Observation ponctuelle, récurrence à confirmer');
   await expect(page.locator('#review-report')).toContainText('Plan d’entraînement personnalisé');
 });
 
