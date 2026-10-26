@@ -26,10 +26,10 @@ test('plays correction exercises from a saved analyzed game',async({page})=>{
   await expect(flipButton).toHaveAttribute('aria-pressed','false');
   await flipButton.click();
   await expect(flipButton).toHaveAttribute('aria-pressed','true');
-  await expect(page.locator('#board [data-square]').first()).toHaveAttribute('data-square','h8');
+  await expect(page.locator('#board [data-square]').first()).toHaveAttribute('data-square','h1');
   await flipButton.click();
   await expect(flipButton).toHaveAttribute('aria-pressed','false');
-  await expect(page.locator('#board [data-square]').first()).toHaveAttribute('data-square','a1');
+  await expect(page.locator('#board [data-square]').first()).toHaveAttribute('data-square','a8');
   await expect(page.locator('#review-exercise-prompt')).toContainText('4,2 centipions');
   await expect(page.locator('#review-exercise-prompt')).toContainText('coup ok');
   await expect(page.locator('#review-exercise-prompt')).toContainText('f3');
@@ -47,7 +47,7 @@ test('plays correction exercises from a saved analyzed game',async({page})=>{
   await expect(page.locator('#review-exercise-panel')).toBeVisible();
   await expect(page.locator('#review-exercise-heading')).toContainText('Bob');
   await expect(flipButton).toHaveAttribute('aria-pressed','true');
-  await expect(page.locator('#board [data-square]').first()).toHaveAttribute('data-square','h8');
+  await expect(page.locator('#board [data-square]').first()).toHaveAttribute('data-square','h1');
   await flipButton.click();
   await expect(flipButton).toHaveAttribute('aria-pressed','false');
   await page.locator('#board [data-square="e7"]').click();
