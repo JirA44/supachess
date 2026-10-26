@@ -31,6 +31,9 @@
   .review-history-meta { min-width: 0; overflow-wrap: anywhere; }
   .review-history-actions { display: flex; gap: 4px; flex-shrink: 0; }
   .review-history-status { min-height: 1em; font-size: .78em; opacity: .75; }
+  .review-correction-practice { margin-top: 10px; padding: 10px; border: 1px solid rgba(240,179,92,.5); border-radius: 8px; }
+  .review-exercise-panel { width: min(720px, 96%); margin: 8px auto; padding: 10px; border: 1px solid rgba(240,179,92,.5); border-radius: 8px; background: var(--panel, #222); }
+  .review-exercise-feedback { min-height: 1.4em; color: var(--accent, #f0b35c); }
   .pgn-modal { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex;
     align-items: center; justify-content: center; z-index: 50; }
   .pgn-modal.hidden { display: none; }
@@ -122,6 +125,15 @@
         <span id="replay-label">Coup 0/0</span>
         <button id="btn-replay-next" class="btn">▶</button>
         <button id="btn-replay-quit" class="btn">Quitter la relecture</button>
+      </div>
+      <div id="review-exercise-panel" class="review-exercise-panel hidden" aria-live="polite">
+        <strong id="review-exercise-heading"></strong>
+        <p id="review-exercise-prompt"></p>
+        <p id="review-exercise-feedback" class="review-exercise-feedback" role="status"></p>
+        <div class="coach-actions">
+          <button id="btn-review-exercise-next" class="btn" type="button" disabled>Exercice suivant</button>
+          <button id="btn-review-exercise-quit" class="btn" type="button">Quitter les exercices</button>
+        </div>
       </div>
       <div class="board-controls settings">
         <label>Tolérance
