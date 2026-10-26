@@ -87,7 +87,9 @@ try {
   await page.locator("[data-review-insights-import]").setInputFiles({
     name: "five-games.pgn", mimeType: "application/x-chess-pgn", buffer: Buffer.from(imported),
   });
-  await page.waitForFunction(() => document.querySelector("[data-review-insights-status]").textContent.includes("5 PGN valide(s) importé(s)"));
+  await page.waitForTimeout(1000);
+  const importStatus = await page.locator("[data-review-insights-status]").innerText();
+  assert.match(importStatus, /5 PGN valide\(s\) importé\(s\)/, "PGN import did not complete: " + importStatus);
   assert.equal(await page.locator("#review-history-list input[data-review-insights-id]:checked").count(), 5);
   await page.click("#review-insights-panel [data-review-insights-run]");
   await page.waitForTimeout(5000);
