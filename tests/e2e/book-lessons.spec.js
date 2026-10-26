@@ -98,6 +98,9 @@ test("catalog filters and surprise exercise explicitly train opponent replies in
 test("four methodology cards explain their routines and open matching lessons", async ({ page }) => {
   await page.goto("/book-lessons.html");
   await expect(page.locator("#method-paths-title")).toHaveText("Quatre parcours méthodologiques");
+  await expect(page.locator("#lesson-catalog-count")).toContainText("leçons originales +");
+  await expect(page.locator("#lesson-catalog-count")).toContainText("exercices d’anticipation");
+  await expect(page.locator("#lesson-catalog-count")).toContainText("entrées au total");
   const cards = page.locator(".method-path");
   await expect(cards).toHaveCount(4);
 
