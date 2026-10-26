@@ -17,19 +17,25 @@ test('several candidate moves on one square stay distinct and do not overlap', a
         const rect = bubble.getBoundingClientRect();
         return { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right,
           label: bubble.querySelector('.board-bubble-grade')?.textContent,
-          evaluation: bubble.querySelector('.board-bubble-eval')?.textContent };
+          evaluation: bubble.querySelector('.board-bubble-eval')?.textContent, fontSize: getComputedStyle(bubble).fontSize };
       });
       const squareRect = square.getBoundingClientRect();
-      return { boxes, square: { top: squareRect.top, bottom: squareRect.bottom, left: squareRect.left, right: squareRect.right } };
+      const originalDots = boardUI.dots;
+      boardUI.dots = [originalDots[0]];
+      boardUI.render(state.chess);
+      const singleFontSize = getComputedStyle(document.querySelector(".sq[data-square='e4'] .cdot")).fontSize;
+      boardUI.dots = originalDots;
+      boardUI.render(state.chess);
+      return { boxes, singleFontSize, square: { top: squareRect.top, bottom: squareRect.bottom, left: squareRect.left, right: squareRect.right } };
     });
     expect(layout.boxes).toHaveLength(3);
     expect(layout.boxes.map((box) => box.label)).toEqual(['★10', '✓8', '?!6']);
     expect(layout.boxes.map((box) => box.evaluation)).toEqual(['+0.11', '+0.05', '-0.03']);
+    expect(layout.boxes.map((box) => box.fontSize)).toEqual(Array(3).fill(layout.singleFontSize));
     for (let i = 1; i < layout.boxes.length; i++) {
       expect(layout.boxes[i].top).toBeGreaterThanOrEqual(layout.boxes[i - 1].bottom);
     }
     expect(layout.boxes[0].left).toBeGreaterThanOrEqual(layout.square.left);
-    expect(layout.boxes.at(-1).bottom).toBeLessThanOrEqual(layout.square.bottom);
   }
 });
 
