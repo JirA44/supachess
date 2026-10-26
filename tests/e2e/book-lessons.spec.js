@@ -4,7 +4,7 @@ test("Capablanca lesson asks for the principle, then plays the line on the board
   await page.goto("/book-lessons.html");
   await expect(page.locator("h1")).toHaveText("Leçons");
   await expect(page.locator(".lesson-subtitle")).toHaveText("La route vers l’excellence");
-  await expect(page.locator(".lesson-catalog-button")).toHaveCount(15);
+  expect(await page.locator(".lesson-catalog-button").count()).toBeGreaterThanOrEqual(100);
   await expect(page.locator("#lesson-board .sq")).toHaveCount(64);
   await page.locator(".lesson-catalog-button").filter({ hasText: "Couper le roi avec la tour" }).click();
   await page.getByRole("button", { name: "Limiter l’espace du roi adverse sur la rangée" }).click();
