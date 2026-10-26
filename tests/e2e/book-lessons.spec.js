@@ -79,7 +79,7 @@ test("home header has a prominent lessons button beside SupaChess Coach IA", asy
 test("catalog filters and surprise exercise explicitly train opponent replies in green learning mode", async ({ page }) => {
   await page.goto("/book-lessons.html");
   expect(await page.locator(".lesson-catalog-button").count()).toBeGreaterThanOrEqual(100);
-  await expect(page.locator(".lesson-mode .lesson-eyebrow")).toContainText("mode apprentissage");
+  await expect(page.locator(".lesson-intro .lesson-eyebrow")).toContainText("mode apprentissage");
   await page.selectOption("#lesson-program-filter", "Anti-erreurs · anticiper l’adversaire");
   await expect(page.locator(".lesson-catalog-button.anticipation-exercise").first()).toBeVisible();
   await page.click("#lesson-surprise");
