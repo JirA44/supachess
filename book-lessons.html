@@ -7,6 +7,7 @@
   <title>SupaChess Académie — La route vers l’excellence</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/book-lessons.css?v=academy-green-20261026">
+  <link rel="stylesheet" href="css/method-paths.css?v=methods-20261026">
 </head>
 <body class="lesson-mode">
   <header class="topbar lesson-topbar">
@@ -20,6 +21,48 @@
       <h1>Leçons</h1>
       <p class="lesson-subtitle">La route vers l’excellence</p>
       <p>Progresse du débutant à l’expert avec des leçons originales, des coups adverses à anticiper, des exercices surprise et des retours sur les erreurs à éviter. Compare les coups candidats avec Stockfish 19.</p><p class="lesson-method-note">Parcours thématiques inspirés de principes publics associés aux parties de Fischer, Carlsen, Tal et Kasparov. Ce ne sont ni des méthodes officielles attribuées à ces joueurs ni des textes copiés. Stockfish vérifie des variantes selon sa recherche; aucune leçon ne garantit un classement donné.</p>
+    </section>
+
+    <section class="method-paths" aria-labelledby="method-paths-title">
+      <div class="method-paths-heading">
+        <p class="lesson-eyebrow">SupaChess Académie · méthodes de travail</p>
+        <h2 id="method-paths-title">Quatre parcours méthodologiques</h2>
+        <p>Choisis une routine de pensée, travaille les leçons associées, puis vérifie tes idées sur l’échiquier. Ces parcours s’inspirent de principes publics et ne prétendent pas reproduire une méthode officielle ou la pensée privée d’un joueur.</p>
+      </div>
+      <div class="method-path-grid">
+        <article class="method-path" data-method-path="Carlsen · amélioration et conversion">
+          <div class="method-path-kicker">1 · Position et conversion</div>
+          <h3>Méthode Carlsen</h3>
+          <p>Améliore une pièce à la fois, garde la pression et transforme un petit avantage lorsque la position le permet.</p>
+          <ol><li>Repère la pièce la moins active.</li><li>Anticipe le meilleur plan adverse.</li><li>Améliore ta position sans créer de faiblesse.</li><li>Calcule les échanges et la finale avant de convertir.</li></ol>
+          <p class="method-path-count" data-method-count>Leçons du parcours en cours de comptage…</p>
+          <button class="btn method-path-action" type="button" data-method-action="Carlsen · amélioration et conversion">Explorer les leçons Carlsen</button>
+        </article>
+        <article class="method-path" data-method-path="Tal · tactique et sacrifices à calculer">
+          <div class="method-path-kicker">2 · Imagination et vérification</div>
+          <h3>Méthode Tal</h3>
+          <p>Repère les coups brillants, avec ou sans sacrifice, puis teste les défenses au lieu de te fier à l’apparence.</p>
+          <ol><li>Liste les échecs, prises et menaces.</li><li>Ajoute les sacrifices comme coups candidats.</li><li>Calcule les reprises et la meilleure défense.</li><li>Évalue la position finale : un sacrifice n’est pas automatiquement juste.</li></ol>
+          <p class="method-path-count" data-method-count>Leçons du parcours en cours de comptage…</p>
+          <button class="btn method-path-action" type="button" data-method-action="Tal · tactique et sacrifices à calculer">Explorer les leçons Tal</button>
+        </article>
+        <article class="method-path" data-method-path="Kasparov · coups candidats et calcul">
+          <div class="method-path-kicker">3 · Candidats et calcul profond</div>
+          <h3>Méthode Kasparov</h3>
+          <p>Compare plusieurs coups prometteurs et calcule leurs variantes contre les réponses les plus fortes.</p>
+          <ol><li>Établis les coups candidats, surtout les coups forcing.</li><li>Calcule chaque ligne sans déplacer les pièces sur l’échiquier.</li><li>À chaque demi-coup, cherche la réponse adverse la plus gênante.</li><li>Compare les positions finales avant de choisir.</li></ol>
+          <p class="method-path-count" data-method-count>Leçons du parcours en cours de comptage…</p>
+          <button class="btn method-path-action" type="button" data-method-action="Kasparov · coups candidats et calcul">Explorer les leçons Kasparov</button>
+        </article>
+        <article class="method-path method-path-engine" data-method-path="Stockfish · comparer et vérifier">
+          <div class="method-path-kicker">4 · Analyse assistée par moteur</div>
+          <h3>Méthode Stockfish</h3>
+          <p>Forme d’abord ta propre analyse, puis utilise Stockfish 19 pour confronter et approfondir tes variantes.</p>
+          <ol><li>Note ton coup candidat et la réponse que tu prévois.</li><li>Compare plusieurs coups légaux avec le moteur.</li><li>Rejoue les variantes demi-coup par demi-coup.</li><li>Explique l’écart entre ton calcul et la ligne du moteur; une évaluation dépend de la recherche et n’est pas une explication humaine.</li></ol>
+          <p class="method-path-count" data-method-count>Positions analysables en cours de comptage…</p>
+          <button class="btn method-path-action" type="button" data-method-action="Stockfish · comparer et vérifier">Commencer sur une position</button>
+        </article>
+      </div>
     </section>
 
     <section class="lesson-tools" aria-label="Programmes de renforcement">
@@ -78,6 +121,7 @@
   <script src="js/engine.js"></script>
   <script src="js/board.js"></script>
   <script src="js/curriculum.js?v=academy-green-20261026"></script>
-  <script src="js/book-lessons.js?v=academy-106-programs-20261026"></script>
+  <script src="js/book-lessons.js?v=academy-methods-20261026"></script>
+  <script src="js/method-paths.js?v=methods-20261026"></script>
 </body>
 </html>
