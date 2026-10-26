@@ -290,10 +290,10 @@
     }
   }
   const reinforcementTargets = [
-    ["Carlsen · amélioration et conversion", 11],
-    ["Tal · tactique et sacrifices à calculer", 11],
-    ["Kasparov · coups candidats et calcul", 11],
-    ["Stockfish · comparer et vérifier", 10],
+    ["Carlsen · amélioration et conversion", 14],
+    ["Tal · tactique et sacrifices à calculer", 14],
+    ["Kasparov · coups candidats et calcul", 13],
+    ["Stockfish · comparer et vérifier", 13],
   ];
   const reinforcementAdded = [];
   const reinforcementUsed = new Set();
@@ -312,8 +312,8 @@
       if (reinforcementAdded.length === reinforcementTargets.slice(0, reinforcementTargets.findIndex((entry) => entry[0] === program) + 1).reduce((sum, entry) => sum + entry[1], 0)) break;
     }
   }
-  if (reinforcementAdded.length !== 43) {
-    throw new Error("Leçons de renforcement insuffisantes: " + reinforcementAdded.length + "/43 positions distinctes vérifiées.");
+  if (reinforcementAdded.length !== 54) {
+    throw new Error("Leçons de renforcement insuffisantes: " + reinforcementAdded.length + "/54 positions distinctes vérifiées.");
   }
   LESSONS.push(...reinforcementAdded);
 
