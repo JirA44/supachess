@@ -73,7 +73,9 @@ function reviewHistorySave(pgn, headers = {}, correctionExercises = []) {
 function reviewHistoryExerciseButton(item){
   const count=Array.isArray(item.correctionExercises)?item.correctionExercises.length:0;
   const title=`${item.white||"Blancs"} vs ${item.black||"Noirs"}`;
-  return count?`<button class="btn mini" type="button" data-review-history-act="exercise" aria-label="Corriger les coups de ${esc(title)} (${count})">Corriger (${count})</button>`:"";
+  return count
+    ? `<button class="btn mini" type="button" data-review-history-act="exercise" aria-label="Corriger les coups de ${esc(title)} (${count})">Corriger (${count})</button>`
+    : `<button class="btn mini" type="button" data-review-history-act="reanalyze-corrections" aria-label="Analyser ${esc(title)} pour créer ses exercices">Analyser pour corriger</button>`;
 }
 
 function reviewHistoryRender(statusText) {
@@ -609,6 +611,7 @@ if (reviewHistoryList) reviewHistoryList.addEventListener("click", (event) => {
   const item = reviewHistoryLoad().find((saved) => saved.id === id);
   if (button.dataset.reviewHistoryAct === "delete") reviewHistoryRemove(id);
   else if (button.dataset.reviewHistoryAct === "open" && item) reviewStart(item.pgn);
+  else if (button.dataset.reviewHistoryAct === "reanalyze-corrections" && item) reviewStart(item.pgn);
   else if (button.dataset.reviewHistoryAct === "exercise" && item) {
     reviewState.currentHeaders = { White: item.white, Black: item.black };
     reviewStartCorrectionExercises(item.correctionExercises, reviewState.currentHeaders);
