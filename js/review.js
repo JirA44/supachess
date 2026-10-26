@@ -383,12 +383,33 @@ function reviewCorrectionLossText(lossCp){
   return Number.isFinite(lossCp)?`${lossCp.toLocaleString("fr-FR",{maximumFractionDigits:1})} centipions`:"perte mesurée";
 }
 
+function reviewCorrectionPhase(item){
+  const pieces=new Chess(item.fen).board().flat().filter((piece)=>piece&&piece.type!=="k"&&piece.type!=="p");
+  const queens=pieces.filter((piece)=>piece.type==="q").length;
+  if(queens===0||pieces.length<=4)return "endgame";
+  if(item.moveNumber<=10&&queens===2&&pieces.length>=12)return "opening";
+  return "middlegame";
+}
+
+function reviewSetCorrectionPhase(phase){
+  const exercise=reviewState.exercise;
+  if(!exercise)return;
+  exercise.phase=phase;
+  exercise.items=phase==="all"?exercise.allItems:
+    exercise.allItems.filter((item)=>reviewCorrectionPhase(item)===phase);
+  exercise.index=0;
+  exercise.solved=false;
+  reviewShowCorrectionExercise(0);
+}
+
 function reviewStartCorrectionExercises(items,headers={}){
   const valid=Array.isArray(items)?items.filter((item)=>item&&item.fen&&item.bestUci):[];
   if(!valid.length)return;
   reviewBeginReplay();
   reviewState.currentHeaders={...reviewState.currentHeaders,...headers};
-  reviewState.exercise={items:valid,index:0,solved:false};
+  reviewState.exercise={allItems:valid,items:valid,index:0,solved:false,phase:"all"};
+  const phaseSelect=document.getElementById("review-exercise-phase");
+  if(phaseSelect)phaseSelect.value="all";
   const panel=document.getElementById("review-exercise-panel");
   if(panel)panel.classList.remove("hidden");
   reviewShowCorrectionExercise(0);
@@ -397,6 +418,14 @@ function reviewStartCorrectionExercises(items,headers={}){
 function reviewShowCorrectionExercise(index){
   const exercise=reviewState.exercise;
   if(!exercise)return;
+  if(!exercise.items.length){
+    exercise.index=0;
+    document.getElementById("review-exercise-heading").textContent="Aucun exercice dans cette phase.";
+    document.getElementById("review-exercise-prompt").textContent="Choisis une autre phase ou affiche toutes les phases.";
+    document.getElementById("review-exercise-feedback").textContent="";
+    document.getElementById("btn-review-exercise-next").disabled=true;
+    return;
+  }
   if(index>=exercise.items.length){reviewExitCorrectionExercises();return;}
   exercise.index=index;
   exercise.solved=false;
@@ -623,6 +652,7 @@ document.getElementById("btn-review-exercise-next").addEventListener("click", ()
   else reviewExitCorrectionExercises();
 });
 document.getElementById("btn-review-exercise-quit").addEventListener("click", reviewExitCorrectionExercises);
+document.getElementById("review-exercise-phase").addEventListener("change",(event)=>reviewSetCorrectionPhase(event.target.value));
 const reviewHistoryList = document.getElementById("review-history-list");
 if (reviewHistoryList) reviewHistoryList.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-review-history-act]");

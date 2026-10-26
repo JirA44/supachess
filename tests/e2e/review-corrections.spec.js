@@ -22,6 +22,11 @@ test('plays correction exercises from a saved analyzed game',async({page})=>{
   await expect(page.locator('#review-history-list')).toContainText('Corriger (2)');
   await page.click('#review-history-list [data-review-history-act="exercise"]');
   await expect(page.locator('#review-exercise-panel')).toBeVisible();
+  const phase=page.locator('#review-exercise-phase');
+  await phase.selectOption('endgame');
+  await expect(page.locator('#review-exercise-heading')).toHaveText('Aucun exercice dans cette phase.');
+  await phase.selectOption('opening');
+  await expect(page.locator('#review-exercise-heading')).toContainText('Exercice 1/2');
   const flipButton=page.locator('#btn-review-exercise-flip');
   await expect(flipButton).toHaveAttribute('aria-pressed','false');
   await flipButton.click();
