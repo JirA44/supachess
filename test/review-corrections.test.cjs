@@ -1,0 +1,58 @@
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const test = require("node:test");
+const vm = require("node:vm");
+
+const document = {
+  getElementById() { return { innerHTML: "", textContent: "", addEventListener() {}, classList: { add() {}, remove() {}, toggle() {} } }; },
+  querySelectorAll() { return []; },
+};
+const context = vm.createContext({ document, esc: String, sanFr: String, reviewState: { grades: [] }, state: { replayIdx: 0 } });
+vm.runInContext(fs.readFileSync(path.join(__dirname, "../js/review.js"), "utf8"), context);
+
+test("builds exercises for measurable blunders, mistakes, and inaccuracies in game order", () => {
+  const rows = [
+    { n: 2, color: "w", san: "f3", classification: "blunder", lossCp: 240 },
+    { n: 2, color: "b", san: "Nf6", classification: "best", lossCp: 0 },
+    { n: 3, color: "w", san: "d3", classification: "inaccuracy", lossCp: 35 },
+    { n: 3, color: "b", san: "Bc5", classification: "unrated", lossCp: null },
+  ];
+  const fens = ["fen-w-blunder", "fen-best", "fen-w-inaccuracy", "fen-unrated"];
+  const moves = [
+    { from: "f2", to: "f3" },
+    { from: "g8", to: "f6" },
+    { from: "d2", to: "d3" },
+    { from: "f8", to: "c5" },
+  ];
+  const lines = [
+    { scoreCp: 25, mate: null, pv: ["e2e4"] },
+    { scoreCp: 4, mate: null, pv: ["g8f6"] },
+    { scoreCp: 10, mate: null, pv: ["g1f3"] },
+    { scoreCp: null, mate: null, pv: [] },
+  ];
+  const result = vm.runInContext(
+    "reviewBuildCorrectionExercises(" + JSON.stringify(rows) + "," + JSON.stringify(fens) + "," + JSON.stringify(moves) + "," + JSON.stringify(lines) + ")",
+    context
+  );
+  const plain = JSON.parse(JSON.stringify(result));
+  assert.equal(plain.length, 2);
+  assert.deepEqual(plain.map((item) => item.classification), ["blunder", "inaccuracy"]);
+  assert.equal(plain[0].fen, "fen-w-blunder");
+  assert.equal(plain[0].bestUci, "e2e4");
+  assert.equal(plain[0].playedSan, "f3");
+  assert.equal(plain[0].lossCp, 240);
+  assert.equal(plain[1].bestUci, "g1f3");
+});
+
+test("does not create exercises for the best played move or a missing engine PV", () => {
+  const rows = [
+    { n: 1, color: "w", san: "e4", classification: "blunder", lossCp: 200 },
+    { n: 1, color: "b", san: "e5", classification: "mistake", lossCp: 60 },
+  ];
+  const result = vm.runInContext(
+    'reviewBuildCorrectionExercises(' + JSON.stringify(rows) + ',["fen-1","fen-2"],[{from:"e2",to:"e4"},{from:"e7",to:"e5"}],[{pv:["e2e4"]},{pv:[]}])',
+    context
+  );
+  assert.equal(result.length, 0);
+});
