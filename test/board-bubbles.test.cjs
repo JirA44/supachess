@@ -120,3 +120,14 @@ test("played mistake leaves a red marker on its destination square", () => {
   assert.equal(marker.textContent, "!");
   assert.match(marker.title, /Erreur/);
 });
+
+
+test("a bad candidate preview marks its destination red before it is played", () => {
+  const square = renderBubble({ previewDot: {
+    square: "e4", label: "?3", evaluation: "-1.20", quality: "bad", title: "e4 — erreur",
+  } });
+  assert.match(square.className, /bad-move/);
+  const marker = square.children.find((child) => child.className.includes("bad-move-marker"));
+  assert.equal(marker.textContent, "!");
+  assert.match(marker.title, /erreur/);
+});
