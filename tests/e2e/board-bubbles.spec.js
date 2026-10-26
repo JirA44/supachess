@@ -53,13 +53,13 @@ test('candidate bubbles toggle off and on, and preference survives reload', asyn
   await expect(page.getByRole('button', { name: 'Bulles candidates : OFF' })).toHaveAttribute('aria-pressed', 'false');
   await expect(page.locator('.cdot-stack')).toHaveCount(0);
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Dots : OFF' })).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByRole('button', { name: 'Bulles candidates : OFF' })).toHaveAttribute('aria-pressed', 'false');
   await page.evaluate(() => {
     boardUI.dots = [{ square: 'e4', label: '★10', evaluation: '+0.11', quality: 'best', title: 'Best move' }];
     boardUI.render(state.chess);
   });
   await expect(page.locator('.cdot-stack')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Dots : OFF' }).click();
+  await page.getByRole('button', { name: 'Bulles candidates : OFF' }).click();
   await expect(page.locator(".sq[data-square='e4'] .cdot-stack .cdot")).toHaveCount(1);
 });
 
