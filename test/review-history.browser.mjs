@@ -74,8 +74,28 @@ try {
   assert.equal(await page.locator("#pgn-input").inputValue(), pgn);
   await page.click("#btn-close-pgn");
   await page.click('#review-history-list [data-review-history-act="delete"]');
-  assert.match(await page.locator("#review-history-list").innerText(), /Aucun PGN analysé/);
-  console.log("Browser check passed: analysis is listed, persists after reload, can be reopened, and can be deleted.");
+  assert.doesNotMatch(await page.locator("#review-history-list").innerText(), /Alice vs Bob/);
+  await page.click("#review-insights-panel [data-review-insights-select-all]");
+
+  const imported = [
+    '[Event "Imported 1"]\n[White "Alice"]\n[Black "Dora"]\n[Result "*"]\n\n1. e4 e5 *',
+    '[Event "Imported 2"]\n[White "Alice"]\n[Black "Eli"]\n[Result "*"]\n\n1. d4 d5 *',
+    '[Event "Imported 3"]\n[White "Alice"]\n[Black "Fay"]\n[Result "*"]\n\n1. c4 e5 *',
+    '[Event "Imported 4"]\n[White "Alice"]\n[Black "Gus"]\n[Result "*"]\n\n1. Nf3 d5 *',
+    '[Event "Imported 5"]\n[White "Alice"]\n[Black "Hal"]\n[Result "*"]\n\n1. f4 d5 *',
+  ].join("\n\n");
+  await page.locator("[data-review-insights-import]").setInputFiles({
+    name: "five-games.pgn", mimeType: "application/x-chess-pgn", buffer: Buffer.from(imported),
+  });
+  await page.waitForFunction(() => document.querySelector("[data-review-insights-status]").textContent.includes("5 PGN valide(s) importé(s)"));
+  assert.equal(await page.locator("#review-history-list input[data-review-insights-id]:checked").count(), 5);
+  await page.click("#review-insights-panel [data-review-insights-run]");
+  await page.waitForFunction(() => document.querySelector("#review-insights-report").textContent.includes("Bilan calculé sur 5 partie(s)"));
+  await page.click("#review-insights-report .review-path-action");
+  await page.waitForURL(/book-lessons\.html#parcours-pgn$/);
+  assert.match(await page.locator("#personalized-pgn-path").innerText(), /Alice/);
+  assert.ok(await page.locator("#personalized-pgn-path .method-path").count() > 0);
+  console.log("Browser check passed: multi-PGN import, local batch analysis, player-specific path, and linked Academy practice.");
 } finally {
   await browser.close();
   await new Promise((resolve) => server.close(resolve));

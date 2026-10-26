@@ -968,8 +968,72 @@
   $("lesson-hint").addEventListener("click", showHint);
   $("lesson-restart").addEventListener("click", () => loadLesson(lessonIndex));
   $("lesson-next").addEventListener("click", () => loadLesson((lessonIndex + 1) % LESSONS.length));
+  function renderPersonalizedPgnPath() {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem("supachess_personalized_path") || "null"); } catch (_) {}
+    const recommendations = saved && Array.isArray(saved.recommendations) ? saved.recommendations : [];
+    const tools = document.querySelector(".lesson-tools");
+    if (!tools || !recommendations.length || document.getElementById("personalized-pgn-path")) return;
+    const section = document.createElement("section");
+    section.id = "personalized-pgn-path";
+    section.className = "method-paths";
+    section.setAttribute("aria-labelledby", "personalized-pgn-path-title");
+    const heading = document.createElement("div");
+    heading.className = "method-paths-heading";
+    const title = document.createElement("h2");
+    title.id = "personalized-pgn-path-title";
+    title.textContent = "Ton parcours après l’analyse de tes PGN";
+    const summary = document.createElement("p");
+    summary.textContent = "Profil : " + (saved.player || "joueur") + " · " +
+      (saved.gameCount || 0) + " partie(s) analysée(s). Chaque étape vient des points observés dans cet échantillon.";
+    heading.append(title, summary);
+    section.appendChild(heading);
+    const list = document.createElement("ol");
+    list.className = "method-path-grid";
+    recommendations.forEach((step, index) => {
+      const item = document.createElement("li");
+      item.className = "method-path";
+      const label = document.createElement("div");
+      label.className = "method-path-kicker";
+      label.textContent = "Étape " + (index + 1) + " · " + step.confidence;
+      const skill = document.createElement("h3");
+      skill.textContent = step.skill + " · " + step.program;
+      const evidence = document.createElement("p");
+      evidence.textContent = "Observation : " + step.evidence + ".";
+      const practice = document.createElement("p");
+      practice.textContent = step.practice;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "btn method-path-action";
+      button.textContent = "Commencer cette étape";
+      button.addEventListener("click", () => {
+        const program = step.program;
+        let index = LESSONS.findIndex((lesson) => lesson.program === program);
+        if (index < 0 && program === "Stockfish · comparer et vérifier") {
+          index = LESSONS.findIndex((lesson) => lesson.kind !== "anticipation");
+        }
+        if (index < 0) {
+          $("lesson-status").textContent = "Aucune leçon n’est encore reliée à ce parcours.";
+          return;
+        }
+        $("lesson-program-filter").value = program;
+        $("lesson-search").value = "";
+        renderCatalog();
+        loadLesson(index);
+        if (program === "Stockfish · comparer et vérifier") runEngineComparison(false);
+        document.querySelector(".lesson-workspace").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      item.append(label, skill, evidence, practice, button);
+      list.appendChild(item);
+    });
+    section.appendChild(list);
+    tools.parentNode.insertBefore(section, tools);
+    if (location.hash === "#parcours-pgn") section.scrollIntoView({ block: "start" });
+  }
+
   renderCatalog();
   const requestedNext = new URLSearchParams(location.search).get("next") === "1";
   const firstIncomplete = LESSONS.findIndex((lesson) => !(progress[lesson.id] && progress[lesson.id].completed));
   loadLesson(requestedNext && firstIncomplete >= 0 ? firstIncomplete : 0);
+  renderPersonalizedPgnPath();
 })(typeof window !== "undefined" ? window : globalThis);

@@ -150,15 +150,15 @@ function reviewCorrectionLabel(classification){
   })[classification]||"Coup à corriger";
 }
 
-async function reviewRun() {
-  if (reviewState.running) return;
+async function reviewRun(options = {}) {
+  if (reviewState.running) return false;
   const pgnText = document.getElementById("pgn-input").value.trim();
-  if (!pgnText) { alert("Collez un PGN d'abord."); return; }
+  if (!pgnText) { alert("Collez un PGN d'abord."); return false; }
   const game = new Chess();
   const loadFn = game.load_pgn ? "load_pgn" : "loadPgn";
-  if (!game[loadFn](pgnText, { sloppy: true })) { alert("PGN invalide ou illisible."); return; }
+  if (!game[loadFn](pgnText, { sloppy: true })) { alert("PGN invalide ou illisible."); return false; }
   const moves = game.history({ verbose: true });
-  if (!moves.length) { alert("Aucun coup dans ce PGN."); return; }
+  if (!moves.length) { alert("Aucun coup dans ce PGN."); return false; }
   const headers = typeof game.header === "function" ? game.header() : {};
 
   reviewState.running = true;
@@ -189,7 +189,7 @@ async function reviewRun() {
   } catch (e) {
     reviewSetProgress("Erreur d'analyse : " + e);
     reviewState.running = false;
-    return;
+    return false;
   }
 
   // Deltas par coup + précision par joueur.
@@ -257,9 +257,27 @@ async function reviewRun() {
   reviewHistorySave(pgnText, headers, reviewState.correctionExercises, analysisSummary);
   document.getElementById("btn-replay-game").classList.remove("hidden");
 
-  // Bilan pédagogique Supa (best-effort).
-  await reviewAskSupa(rows, accW, accB, headers);
+  // Le lot reste local : le bilan transversal est calculé après les analyses.
+  if (!options.batch) await reviewAskSupa(rows, accW, accB, headers);
   reviewState.running = false;
+  return true;
+}
+
+async function reviewRunBatch(items, onProgress) {
+  const queue = (Array.isArray(items) ? items : []).map((item) =>
+    typeof item === "string" ? { pgn: item } : item
+  ).filter((item) => item && typeof item.pgn === "string" && item.pgn.trim());
+  const results = [];
+  for (let index = 0; index < queue.length; index++) {
+    const item = queue[index];
+    const input = document.getElementById("pgn-input");
+    if (input) input.value = item.pgn;
+    if (typeof onProgress === "function") onProgress({ index: index + 1, total: queue.length, item });
+    const completed = await reviewRun({ batch: true });
+    results.push({ pgn: item.pgn, completed: completed === true });
+    if (completed !== true) break;
+  }
+  return results;
 }
 
 function reviewCount(rows, color, tag) {
