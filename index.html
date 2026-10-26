@@ -161,17 +161,18 @@
             <option value="1500" selected>Normale (1.5s)</option>
             <option value="3000">Profonde (3s)</option>
           </select>
+          <small class="setting-hint">Le temps choisi s’applique aussi à la réflexion de l’adversaire.</small>
         </label>
         <label>Adversaire
           <select id="sel-elo" class="btn select">
-            <option value="1320">Elo 1320</option>
-            <option value="1600" selected>Elo 1600</option>
-            <option value="2000">Elo 2000</option>
-            <option value="2400">Elo 2400</option>
-            <option value="0">Pleine force (~Elo 3100)</option>
+            <option value="1320">Elo moteur UCI 1320</option>
+            <option value="1600" selected>Elo moteur UCI 1600</option>
+            <option value="2000">Elo moteur UCI 2000</option>
+            <option value="2400">Elo moteur UCI 2400</option>
+            <option value="0">Pleine puissance — Stockfish 19</option>
             <option value="manual">Manuel (auto-entraînement)</option>
           </select>
-        </label>
+          <small id="opponent-fide-estimate" class="opponent-fide-estimate" role="status" aria-live="polite"></small>
       </div>
     </div>
   </section>
