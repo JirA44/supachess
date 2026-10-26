@@ -371,6 +371,9 @@
   let hintsUsed = 0;
   let principleAnswered = false;
   let waitingForBook = false;
+  let anticipationPractice = false;
+  let anticipatingBook = false;
+  let surpriseMode = false;
   let flipped = false;
   let bookReplyTimer = null;
   let progress = readProgress();
@@ -391,25 +394,43 @@
 
   function renderCatalog() {
     const catalog = $("lesson-catalog");
-    catalog.textContent = "";
-    LESSONS.forEach((lesson, index) => {
+    const search = ($("lesson-search").value || "").trim().toLocaleLowerCase("fr");
+    const level = $("lesson-level-filter").value;
+    const program = $("lesson-program-filter").value;
+    catalog.replaceChildren();
+    const visibleLessons = LESSONS.map((lesson, index) => ({ lesson, index })).filter(({ lesson }) => {
+      const matchesSearch = !search || [lesson.title, lesson.category, lesson.program, lesson.question, lesson.level]
+        .some((value) => String(value || "").toLocaleLowerCase("fr").includes(search));
+      return matchesSearch && (!level || lesson.level === level) && (!program || lesson.program === program);
+    });
+    $("lesson-catalog-count").textContent = visibleLessons.length + " affiché(s) · " + LESSONS.length +
+      " leçons et exercices · " + Object.values(progress).filter((item) => item && item.completed).length + " terminés.";
+    if (!visibleLessons.length) {
+      const empty = document.createElement("p");
+      empty.className = "lesson-catalog-empty";
+      empty.textContent = "Aucun exercice ne correspond à ces filtres.";
+      catalog.appendChild(empty);
+      return;
+    }
+    for (const { lesson, index } of visibleLessons) {
       const button = document.createElement("button");
       button.type = "button";
-      button.className = "lesson-catalog-button";
+      button.className = "lesson-catalog-button" + (lesson.kind === "anticipation" ? " anticipation-exercise" : "");
       button.setAttribute("aria-current", index === lessonIndex ? "true" : "false");
       const title = document.createElement("span");
       title.className = "lesson-catalog-title";
       title.textContent = (index + 1) + ". " + lesson.title;
       const meta = document.createElement("span");
       meta.className = "lesson-catalog-meta";
-      meta.textContent = lesson.level + " · " + lesson.category + " · " + lesson.author;
+      meta.textContent = lesson.level + " · " + lesson.program + " · " + lesson.author;
       const state = document.createElement("span");
       state.className = "lesson-catalog-state";
-      state.textContent = progress[lesson.id] && progress[lesson.id].completed ? "Terminée · à revoir quand tu veux" : "À découvrir";
+      state.textContent = progress[lesson.id] && progress[lesson.id].completed
+        ? "Terminée · à revoir quand tu veux" : lesson.kind === "anticipation" ? "Défi de réponse adverse" : "À découvrir";
       button.append(title, meta, state);
       button.addEventListener("click", () => loadLesson(index));
       catalog.appendChild(button);
-    });
+    }
   }
 
   function renderSource(lesson) {
@@ -425,7 +446,7 @@
     }
   }
 
-  function loadLesson(index) {
+  function loadLesson(index, options = {}) {
     if (bookReplyTimer !== null) {
       root.clearTimeout(bookReplyTimer);
       bookReplyTimer = null;
@@ -439,6 +460,10 @@
     $("lesson-engine-status").textContent = "";
     $("lesson-engine-lines").textContent = "";
     lessonIndex = index;
+    surpriseMode = Boolean(options.surprise);
+    anticipationPractice = Boolean(options.anticipate);
+    anticipatingBook = false;
+    $("lesson-anticipate").setAttribute("aria-pressed", String(anticipationPractice));
     const lesson = LESSONS[lessonIndex];
     game = setupGame(lesson, Chess);
     sequenceIndex = 0;
@@ -453,8 +478,10 @@
     boardUI.selected = null;
     boardUI.legalTargets = [];
     boardUI.lastMove = null;
-    $("lesson-title").textContent = lesson.title;
-    $("lesson-goal").textContent = "Observe la position. Choisis d’abord le principe qui s’applique, puis joue les coups sur l’échiquier.";
+    $("lesson-title").textContent = surpriseMode ? "Exercice surprise" : lesson.title;
+    $("lesson-goal").textContent = surpriseMode
+      ? "Analyse la position sans regarder le thème. Choisis un coup, puis vérifie la réponse adverse sur l’échiquier."
+      : "Observe la position. Choisis d’abord le principe qui s’applique, puis joue les coups sur l’échiquier.";
     $("lesson-question").textContent = lesson.question;
     $("lesson-principle").disabled = false;
     $("lesson-feedback").textContent = "";
@@ -467,6 +494,7 @@
     $("lesson-hint").disabled = false;
     $("lesson-flip").setAttribute("aria-pressed", String(flipped));
     renderSource(lesson);
+    if (surpriseMode) $("lesson-source").textContent = "Défi surprise · thème révélé après l’exercice";
     renderChoices(lesson);
     renderCatalog();
     renderBoard();
@@ -509,10 +537,11 @@
   function onSquareClick(square) {
     if (!game || enginePreview || !principleAnswered || waitingForBook || sequenceIndex >= LESSONS[lessonIndex].sequence.length) return;
     const lesson = LESSONS[lessonIndex];
-    if (game.turn() !== lesson.color) return;
+    const inputColor = anticipatingBook ? (lesson.color === "w" ? "b" : "w") : lesson.color;
+    if (game.turn() !== inputColor) return;
     const piece = game.get(square);
     if (!selectedSquare) {
-      if (piece && piece.color === lesson.color) {
+      if (piece && piece.color === inputColor) {
         selectedSquare = square;
         boardUI.selected = square;
         boardUI.legalTargets = game.moves({ square, verbose: true }).map((move) => move.to);
@@ -527,7 +556,7 @@
     }
     const move = game.move({ from: selectedSquare, to: square, promotion: "q" });
     if (!move) {
-      if (piece && piece.color === lesson.color) {
+      if (piece && piece.color === inputColor) {
         selectedSquare = square;
         boardUI.selected = square;
         boardUI.legalTargets = game.moves({ square, verbose: true }).map((candidate) => candidate.to);
@@ -537,20 +566,25 @@
     }
     const expected = lesson.sequence[sequenceIndex];
     const uci = move.from + move.to + (move.promotion || "");
-    if (expected.side !== "user" || uci !== expected.uci) {
+    const expectedSide = anticipatingBook ? "book" : "user";
+    if (expected.side !== expectedSide || uci !== expected.uci) {
       game.undo();
       attempts++;
       clearSelection();
       renderBoard();
-      $("lesson-feedback").textContent = "Ce coup légal ne suit pas la ligne pédagogique. Compare-le aux autres options avec Stockfish, puis vérifie les indices sur l’échiquier.";
+      $("lesson-feedback").textContent = anticipatingBook
+        ? "Cette réponse légale ne correspond pas à la réponse de la ligne étudiée. Compare les variantes avec Stockfish et cherche les menaces forcées."
+        : "Ce coup légal ne suit pas la ligne pédagogique. Compare-le aux autres options avec Stockfish, puis vérifie les indices sur l’échiquier.";
       updateProgressLabel();
       runEngineComparison(true);
       return;
     }
     sequenceIndex++;
+    const anticipated = anticipatingBook;
+    anticipatingBook = false;
     clearSelection();
     boardUI.lastMove = { from: move.from, to: move.to, san: move.san };
-    appendMove(move.san, "Toi");
+    appendMove(move.san, anticipated ? "Réponse adverse anticipée" : "Toi");
     $("lesson-feedback").textContent = expected.explanation;
     renderBoard();
     updateProgressLabel();
@@ -564,6 +598,12 @@
       return;
     }
     const action = lesson.sequence[sequenceIndex];
+    if (action.side === "book" && anticipationPractice) {
+      anticipatingBook = true;
+      $("lesson-goal").textContent = "Le camp adverse vient de jouer. À toi de prévoir sa réponse la plus gênante dans la ligne étudiée.";
+      $("lesson-status").textContent = "À toi : joue la réponse adverse que tu veux anticiper.";
+      return;
+    }
     if (action.side === "book") {
       waitingForBook = true;
       $("lesson-status").textContent = "Réponse de la ligne du livre…";
@@ -608,6 +648,10 @@
     saveProgress();
     renderCatalog();
 
+    surpriseMode = false;
+    anticipatingBook = false;
+    $("lesson-title").textContent = lesson.title;
+    renderSource(lesson);
     $("lesson-status").textContent = "Leçon terminée : " + lesson.title + ".";
     const explanation = $("lesson-explanation");
     explanation.replaceChildren();
@@ -617,6 +661,9 @@
     const principle = document.createElement("p");
     principle.textContent = lesson.principle;
     explanation.append(heading, principle);
+    const pitfall = document.createElement("p");
+    pitfall.textContent = "À ne pas faire : " + (lesson.pitfall || "ne pas poursuivre son plan sans recalculer les réponses adverses.");
+    explanation.appendChild(pitfall);
 
     const moveHeading = document.createElement("h4");
     moveHeading.textContent = "Explication de chaque demi-coup";
@@ -773,6 +820,28 @@
     }
   }
 
+  $("lesson-search").addEventListener("input", renderCatalog);
+  $("lesson-level-filter").addEventListener("change", renderCatalog);
+  $("lesson-program-filter").addEventListener("change", renderCatalog);
+  $("lesson-anticipate").addEventListener("click", () => {
+    anticipationPractice = !anticipationPractice;
+    $("lesson-anticipate").setAttribute("aria-pressed", String(anticipationPractice));
+    $("lesson-status").textContent = anticipationPractice
+      ? "Mode anticipation actif : tu joueras chaque réponse de la ligne adverse."
+      : "Mode anticipation désactivé : les réponses de la ligne seront jouées automatiquement.";
+  });
+  $("lesson-surprise").addEventListener("click", () => {
+    const candidates = LESSONS.map((lesson, index) => ({ lesson, index }))
+      .filter(({ lesson }) => lesson.kind === "anticipation");
+    if (!candidates.length) return;
+    let choices = candidates.filter(({ lesson }) => !(progress[lesson.id] && progress[lesson.id].completed));
+    if (!choices.length) choices = candidates;
+    const lastId = sessionStorage.getItem("supachess-last-surprise");
+    const fresh = choices.filter(({ lesson }) => lesson.id !== lastId);
+    const selected = (fresh.length ? fresh : choices)[Math.floor(Math.random() * (fresh.length || choices.length))];
+    sessionStorage.setItem("supachess-last-surprise", selected.lesson.id);
+    loadLesson(selected.index, { surprise: true, anticipate: false });
+  });
   $("lesson-engine-analyze").addEventListener("click", () => runEngineComparison(false));
   $("lesson-engine-return").addEventListener("click", () => {
     enginePreview = null;
