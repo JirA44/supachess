@@ -23,6 +23,30 @@ test("Rook cutoff lesson asks for the principle, then plays the line on the boar
   await expect(page.locator("#lesson-next")).toBeVisible();
 });
 
+
+test("filtered lesson numbers are consecutive and completed lessons open in view", async ({ page }) => {
+  const { LESSONS } = require("../../js/book-lessons.js");
+  const target = LESSONS.find((lesson) => lesson.title === "Activer le roi avant le pion");
+  expect(target).toBeTruthy();
+  await page.addInitScript((id) => {
+    localStorage.setItem("supachess-book-lessons-v1", JSON.stringify({ [id]: { completed: true } }));
+  }, target.id);
+  await page.goto("/book-lessons.html");
+  await page.locator("#lesson-program-filter").selectOption(target.program);
+
+  const cards = page.locator(".lesson-catalog-button");
+  const titles = await cards.locator(".lesson-catalog-title").allTextContents();
+  expect(titles.length).toBeGreaterThan(3);
+  expect(titles.slice(0, 4).map((title) => Number(title.match(/^(\\d+)\\./)?.[1]))).toEqual([1, 2, 3, 4]);
+
+  const completed = cards.filter({ hasText: "Activer le roi avant le pion" });
+  await expect(completed).toContainText("Terminée · à revoir quand tu veux");
+  await completed.click();
+  await expect(page.locator("#lesson-title")).toHaveText("Activer le roi avant le pion");
+  await expect(page.locator(".lesson-workspace")).toBeInViewport();
+  await expect(page.locator("#lesson-status")).toContainText("À toi de jouer");
+});
+
 test("Larsen lesson starts from the cited position, can flip, and accepts the central break", async ({ page }) => {
   await page.goto("/book-lessons.html");
   await page.locator(".lesson-catalog-button:not(.anticipation-exercise)").filter({ hasText: "Trouver le moment de jouer …d5" }).filter({ hasText: "Bent Larsen" }).click();

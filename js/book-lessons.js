@@ -519,7 +519,7 @@
       catalog.appendChild(empty);
       return;
     }
-    for (const { lesson, index } of visibleLessons) {
+    for (const [visibleIndex, { lesson, index }] of visibleLessons.entries()) {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "lesson-catalog-button" + (lesson.kind === "anticipation" ? " anticipation-exercise" : "");
@@ -527,7 +527,7 @@
       button.setAttribute("aria-current", index === lessonIndex ? "true" : "false");
       const title = document.createElement("span");
       title.className = "lesson-catalog-title";
-      title.textContent = (index + 1) + ". " + lesson.title;
+      title.textContent = (visibleIndex + 1) + ". " + lesson.title;
       const meta = document.createElement("span");
       meta.className = "lesson-catalog-meta";
       meta.textContent = lesson.level + " · " + lesson.program + " · " + lesson.author;
@@ -536,7 +536,10 @@
       state.textContent = progress[lesson.id] && progress[lesson.id].completed
         ? "Terminée · à revoir quand tu veux" : lesson.kind === "anticipation" ? "Défi de réponse adverse" : "À découvrir";
       button.append(title, meta, state);
-      button.addEventListener("click", () => loadLesson(index));
+      button.addEventListener("click", () => {
+        loadLesson(index);
+        document.querySelector(".lesson-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
       catalog.appendChild(button);
     }
   }
