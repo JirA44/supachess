@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#12141c">
+  <meta name="theme-color" content="#17211a">
   <title>SupaChess Académie — La route vers l’excellence</title>
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/book-lessons.css?v=lesson-subtitle-20261026">
+  <link rel="stylesheet" href="css/book-lessons.css?v=academy-green-20261026">
 </head>
-<body>
+<body class="lesson-mode">
   <header class="topbar lesson-topbar">
     <a class="brand lesson-brand" href="index.html" aria-label="Retour à SupaChess">♞ Supa<span>Chess</span></a>
     <a class="btn" href="index.html">Retour à l’échiquier</a>
@@ -16,20 +16,29 @@
 
   <main class="book-lessons" id="book-lessons">
     <section class="lesson-intro">
-      <p class="lesson-eyebrow">SupaChess Académie</p>
+      <p class="lesson-eyebrow">SupaChess Académie · mode apprentissage</p>
       <h1>Leçons</h1>
       <p class="lesson-subtitle">La route vers l’excellence</p>
-      <p>Progresse du débutant à l’expert : comprends le principe, joue chaque coup, puis examine la suite avec Stockfish. Les leçons originales s’inspirent des méthodes pédagogiques des grands ouvrages, sans en reprendre les textes.</p>
+      <p>Progresse du débutant à l’expert avec des leçons originales, des coups adverses à anticiper, des exercices surprise et des retours sur les erreurs à éviter. Compare les coups candidats avec Stockfish 19.</p><p class="lesson-method-note">Parcours thématiques inspirés de principes publics associés aux parties de Fischer, Carlsen, Tal et Kasparov. Ce ne sont ni des méthodes officielles attribuées à ces joueurs ni des textes copiés. Stockfish vérifie des variantes selon sa recherche; aucune leçon ne garantit un classement donné.</p>
     </section>
 
-    <nav class="lesson-catalog" id="lesson-catalog" aria-label="Choisir une leçon"></nav>
+    <section class="lesson-tools" aria-label="Programmes de renforcement">
+      <p id="lesson-catalog-count" class="lesson-catalog-count" aria-live="polite"></p>
+      <div class="lesson-filter-row">
+        <label>Rechercher<input id="lesson-search" type="search" placeholder="thème, coup ou méthode"></label>
+        <label>Niveau<select id="lesson-level-filter"><option value="">Tous les niveaux</option><option>Débutant</option><option>Intermédiaire</option><option>Avancé</option><option>Expert</option></select></label>
+        <label>Parcours<select id="lesson-program-filter"><option value="">Tous les parcours</option><option>Fischer · préparation et précision</option><option>Carlsen · amélioration et conversion</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Anti-erreurs · anticiper l’adversaire</option></select></label>
+        <button class="btn lesson-surprise" id="lesson-surprise" type="button">Exercice surprise · prévoir le demi-coup adverse</button>
+      </div>
+    </section>
+    <nav class="lesson-catalog" id="lesson-catalog" aria-label="Choisir une leçon ou un exercice"></nav>
 
     <section class="lesson-workspace" aria-labelledby="lesson-title">
       <div class="lesson-board-column">
         <p class="lesson-status" id="lesson-status" role="status" aria-live="polite">Choisis une leçon pour commencer.</p>
         <div id="lesson-board" class="board" aria-label="Échiquier d’exercice"></div>
         <div class="lesson-board-actions">
-          <button class="btn" id="lesson-flip" type="button" aria-pressed="false">Retourner l’échiquier</button>
+          <button class="btn" id="lesson-anticipate" type="button" aria-pressed="false">Prévoir la réponse adverse</button><button class="btn" id="lesson-flip" type="button" aria-pressed="false">Retourner l’échiquier</button>
           <button class="btn" id="lesson-hint" type="button">Indice</button>
           <button class="btn" id="lesson-restart" type="button">Recommencer</button>
         </div>
@@ -62,12 +71,13 @@
         <button class="btn lesson-next" id="lesson-next" type="button" hidden>Leçon suivante</button>
       </article>
     </section>
-    <p class="lesson-note">Les exercices originaux sont rédigés pour SupaChess. Les lignes issues d’ouvrages sont citées lorsqu’elles sont utilisées; les évaluations Stockfish dépendent de la recherche.</p>
+    <p class="lesson-note">Les exercices sont rédigés pour SupaChess. Chaque FEN et chaque demi-coup des lignes étudiées sont vérifiés par les tests; les variantes Stockfish restent dépendantes du temps de recherche.</p>
   </main>
 
   <script src="vendor/chess.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/board.js"></script>
-  <script src="js/book-lessons.js"></script>
+  <script src="js/curriculum.js?v=academy-green-20261026"></script>
+  <script src="js/book-lessons.js?v=academy-106-programs-20261026"></script>
 </body>
 </html>
