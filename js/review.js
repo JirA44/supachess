@@ -400,7 +400,7 @@ function reviewShowCorrectionExercise(index){
   document.getElementById("review-exercise-heading").textContent=
     `Exercice ${index+1}/${exercise.items.length} · ${reviewCorrectionLabel(item.classification)} · ${colorName}`;
   const moveHeading=`${item.moveNumber}${item.color==="w"?".":"..."} ${item.playedSan}`;
-  const lossText=Number.isFinite(item.lossCp)?`${(item.lossCp/100).toLocaleString("fr-FR",{maximumFractionDigits:2})} pion(s)`:"perte mesurée";
+  const lossText=Number.isFinite(item.lossCp)?`${item.lossCp.toLocaleString("fr-FR",{maximumFractionDigits:1})} centipions`:"perte mesurée";
   document.getElementById("review-exercise-prompt").textContent=
     `Dans la partie, ${moveHeading} (${reviewCorrectionLabel(item.classification).toLowerCase()}) faisait perdre ${lossText}. Trouve le meilleur coup.`;
   document.getElementById("review-exercise-feedback").textContent="À toi de jouer : clique une pièce puis sa case cible.";
