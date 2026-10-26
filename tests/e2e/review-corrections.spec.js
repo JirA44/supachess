@@ -10,14 +10,16 @@ test('plays correction exercises from a saved analyzed game',async({page})=>{
       correctionExercises:[{
         fen:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
         bestUci:'e2e4',bestScoreCp:12,bestMate:null,moveNumber:1,color:'w',
-        playedSan:'f3',classification:'blunder',lossCp:220
+        playedSan:'f3',classification:'ok',lossCp:4.2
       }]
     }]));
     reviewHistoryRender();
   });
-  await expect(page.locator('#review-history-list')).toContainText('Exercices (1)');
+  await expect(page.locator('#review-history-list')).toContainText('Corriger (1)');
   await page.click('#review-history-list [data-review-history-act="exercise"]');
   await expect(page.locator('#review-exercise-panel')).toBeVisible();
+  await expect(page.locator('#review-exercise-prompt')).toContainText('4,2 pion(s)');
+  await expect(page.locator('#review-exercise-prompt')).toContainText('Coup OK');
   await expect(page.locator('#review-exercise-prompt')).toContainText('f3');
 
   await page.locator('#board [data-square="e2"]').click();
@@ -31,4 +33,6 @@ test('plays correction exercises from a saved analyzed game',async({page})=>{
   await expect(page.locator('#btn-review-exercise-next')).toBeEnabled();
   await page.click('#btn-review-exercise-next');
   await expect(page.locator('#review-exercise-panel')).toBeHidden();
+  await expect(page.locator('#review-history-list')).toContainText('Alice vs Bob');
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('supachess_reviewed_pgns')).length)).toBe(1);
 });
