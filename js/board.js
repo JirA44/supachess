@@ -23,7 +23,7 @@ class BoardUI {
   setFlipped(f) { this.flipped = f; }
 
   render(chess) {
-    hideCandidateMoveTooltip();
+    if (activeCandidateTooltipAnchor) hideCandidateMoveTooltip();
     this.el.innerHTML = "";
     const board = chess.board();
     for (let vr = 0; vr < 8; vr++) {
