@@ -19,7 +19,7 @@ test('plays correction exercises from a saved analyzed game',async({page})=>{
     }]));
     reviewHistoryRender();
   });
-  await expect(page.locator('#review-history-list')).toContainText('Corriger (1)');
+  await expect(page.locator('#review-history-list')).toContainText('Corriger (2)');
   await page.click('#review-history-list [data-review-history-act="exercise"]');
   await expect(page.locator('#review-exercise-panel')).toBeVisible();
   const flipButton=page.locator('#btn-review-exercise-flip');
