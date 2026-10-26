@@ -103,7 +103,7 @@ test("legal move dots are independent of candidate bubbles and use move quality"
   const bubbles = square.children.find((child) => child.className.includes("cdot-stack"));
   assert.match(marker.className, /q-bad/);
   assert.match(marker.className, /capture/);
-  assert.equal(marker.title, "Nxe4 — -1.20");
+  assert.equal(marker.title, "Prise possible : Nxe4 · évaluation -1.20");
   assert.ok(bubbles, "candidate evaluation bubble remains visible");
 
   const hiddenSquare = renderBubble({ legalTargets: ["e4"], showMoveDots: false });
