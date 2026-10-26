@@ -951,7 +951,11 @@
     const fresh = choices.filter(({ lesson }) => lesson.id !== lastId);
     const selected = (fresh.length ? fresh : choices)[Math.floor(Math.random() * (fresh.length || choices.length))];
     sessionStorage.setItem("supachess-last-surprise", selected.lesson.id);
+    $("lesson-search").value = "";
+    $("lesson-level-filter").value = "";
+    $("lesson-program-filter").value = "";
     loadLesson(selected.index, { surprise: true, anticipate: false });
+    document.querySelector(".lesson-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
   $("lesson-engine-analyze").addEventListener("click", () => runEngineComparison(false));
   $("lesson-engine-return").addEventListener("click", () => {
