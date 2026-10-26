@@ -22,12 +22,20 @@ const state = {
 
 const boardUI = new BoardUI($("board"), onSquareClick);
 const DOTS_STORAGE_KEY = "supachess-show-candidate-dots";
+const MOVE_DOTS_STORAGE_KEY = "supachess-show-legal-move-dots";
 boardUI.showDots = localStorage.getItem(DOTS_STORAGE_KEY) !== "false";
+boardUI.showMoveDots = localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false";
 function syncDotsButton() {
   const button = $("btn-dots");
   if (!button) return;
-  button.textContent = "Dots : " + (boardUI.showDots ? "ON" : "OFF");
+  button.textContent = "Bulles candidates : " + (boardUI.showDots ? "ON" : "OFF");
   button.setAttribute("aria-pressed", String(boardUI.showDots));
+}
+function syncMoveDotsButton() {
+  const button = $("btn-move-dots");
+  if (!button) return;
+  button.textContent = "Points chauds/froids : " + (boardUI.showMoveDots ? "ON" : "OFF");
+  button.setAttribute("aria-pressed", String(boardUI.showMoveDots));
 }
 
 /* ── Réglages ── */
@@ -64,6 +72,7 @@ function newGame() {
   boardUI.lastMove = null;
   boardUI.dots = [];
   boardUI.legalTargets = [];
+  boardUI.legalTargetHints = {};
   hideCoach();
   if (typeof gamesNewEntry === "function") gamesNewEntry();
   renderAll();
@@ -288,7 +297,7 @@ function onSquareClick(sq) {
   const piece = state.chess.get(sq);
   if (boardUI.selected) {
     if (boardUI.selected === sq) {
-      boardUI.selected = null; boardUI.legalTargets = [];
+      boardUI.selected = null; boardUI.legalTargets = []; boardUI.legalTargetHints = {};
       renderBoard(); return;
     }
     const legal = state.chess.moves({ square: boardUI.selected, verbose: true })
@@ -302,9 +311,27 @@ function onSquareClick(sq) {
   const selectableColor = isManualMode() ? state.chess.turn() : state.userColor;
   if (piece && piece.color === selectableColor) {
     boardUI.selected = sq;
-    boardUI.legalTargets = state.chess.moves({ square: sq, verbose: true }).map((m) => m.to);
+    const legalMoves = state.chess.moves({ square: sq, verbose: true });
+    boardUI.legalTargets = [...new Set(legalMoves.map((m) => m.to))];
+    boardUI.legalTargetHints = {};
+    for (const move of legalMoves) {
+      const prefix = move.from + move.to;
+      const candidate = state.candidates
+        .filter((c) => c.uci.startsWith(prefix))
+        .sort((a, b) => a.deltaCp - b.deltaCp)[0];
+      const previous = boardUI.legalTargetHints[move.to];
+      if (previous && candidate && previous.rank <= candidate.rank) continue;
+      boardUI.legalTargetHints[move.to] = {
+        quality: candidate ? qualityClass(candidate.deltaCp, candidate.rank) : null,
+        rank: candidate?.rank ?? 999,
+        capture: move.flags.includes("c") || move.flags.includes("e"),
+        san: move.san,
+        evaluation: candidate && (candidate.line.scoreCp !== null || candidate.line.mate !== null)
+          ? formatScore(candidate.line, state.chess.turn() === "w") : "—",
+      };
+    }
   } else {
-    boardUI.selected = null; boardUI.legalTargets = [];
+    boardUI.selected = null; boardUI.legalTargets = []; boardUI.legalTargetHints = {};
   }
   renderBoard();
 }
@@ -319,6 +346,7 @@ async function attemptUserMove(moveObj) {
   if (!attempted) return;
   boardUI.selected = null;
   boardUI.legalTargets = [];
+  boardUI.legalTargetHints = {};
   const uci = moveObj.from + moveObj.to + (moveObj.promotion || "");
   let cand = state.candidates.find((c) => c.uci === uci);
 
@@ -690,10 +718,17 @@ function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
 /* ── Boutons ── */
 $("btn-new").addEventListener("click", newGame);
 syncDotsButton();
+syncMoveDotsButton();
 $("btn-dots").addEventListener("click", () => {
   boardUI.showDots = !boardUI.showDots;
   localStorage.setItem(DOTS_STORAGE_KEY, String(boardUI.showDots));
   syncDotsButton();
+  renderBoard();
+});
+$("btn-move-dots").addEventListener("click", () => {
+  boardUI.showMoveDots = !boardUI.showMoveDots;
+  localStorage.setItem(MOVE_DOTS_STORAGE_KEY, String(boardUI.showMoveDots));
+  syncMoveDotsButton();
   renderBoard();
 });
 $("sel-color").addEventListener("change", newGame);
