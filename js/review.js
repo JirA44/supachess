@@ -70,6 +70,11 @@ function reviewHistorySave(pgn, headers = {}, correctionExercises = []) {
   return true;
 }
 
+function reviewHistoryExerciseButton(item){
+  const count=Array.isArray(item.correctionExercises)?item.correctionExercises.length:0;
+  return count?`<button class="btn mini" type="button" data-review-history-act="exercise">Exercices (${count})</button>`:"";
+}
+
 function reviewHistoryRender(statusText) {
   const list = document.getElementById("review-history-list");
   if (!list || typeof localStorage === "undefined") return;
@@ -82,6 +87,7 @@ function reviewHistoryRender(statusText) {
       <span class="review-history-meta"><strong>${esc(title)}</strong>${detail ? `<br><small>${esc(detail)}</small>` : ""}</span>
       <span class="review-history-actions">
         <button class="btn mini" type="button" data-review-history-act="open">Analyser à nouveau</button>
+        ${reviewHistoryExerciseButton(item)}
         <button class="btn mini danger" type="button" data-review-history-act="delete" aria-label="Supprimer ${esc(title)}">×</button>
       </span>
     </div>`;
@@ -252,6 +258,22 @@ function reviewCount(rows, color, tag) {
   return rows.filter((r) => r.color === color && r.classification === tag).length;
 }
 
+function reviewCorrectionExercisesHtml(items){
+  const list=Array.isArray(items)?items:[];
+  const count=list.length;
+  const counts=["blunder","mistake","inaccuracy"].map((classification)=>{
+    const n=list.filter((item)=>item.classification===classification).length;
+    return n?`${n} ${reviewCorrectionLabel(classification).toLowerCase()}${n===1?"":"s"}`:"";
+  }).filter(Boolean).join(" · ");
+  const description=count?`${count} position(s) à rejouer${counts?` : ${esc(counts)}`:""}. Retrouve le meilleur coup dans chaque position.`:
+    "Aucune gaffe, erreur ou imprécision évaluable à travailler dans cette partie.";
+  return `<section class="review-correction-practice">
+    <h3>Exercices de correction par partie</h3>
+    <p>${esc(description)}</p>
+    <button id="btn-review-corrections" class="btn" type="button" ${count?"":"disabled"}>Corriger ces coups (${count})</button>
+  </section>`;
+}
+
 function reviewRenderLocal(rows, accW, accB, headers) {
   rows.forEach((row, i) => {
     row.classification = reviewClassOf(row, reviewState.grades[i]);
@@ -318,7 +340,11 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     <div class="review-worst"><h4>Habitude à entraîner : échecs, prises, menaces</h4><p>${pedagogical}</p></div>
     ${nextPractice ? `<div class="review-worst"><h4>Plan d’entraînement personnalisé</h4><ol>${nextPractice}</ol></div>` : ""}
     <div class="review-worst"><h4>Chaque demi-coup expliqué : centipions et causes démontrables</h4><p><small>Perte relative au meilleur coup ≠ variation absolue de l’évaluation. Le moteur ne peut pas toujours établir le pourquoi en une phrase; les mats sont traités séparément.</small></p><ol>${halfmoveExplanations}</ol></div>
+    ${reviewCorrectionExercisesHtml(reviewState.correctionExercises)}
     <div id="review-supa"></div>`;
+  const correctionButton = document.getElementById("btn-review-corrections");
+  if (correctionButton) correctionButton.addEventListener("click", () =>
+    reviewStartCorrectionExercises(reviewState.correctionExercises, reviewState.currentHeaders));
   document.querySelectorAll("#review-report .review-ply-link").forEach((link) => {
     link.addEventListener("click", () => reviewJumpToPly(Number(link.dataset.reviewPly)));
   });
@@ -467,6 +493,10 @@ if (reviewHistoryList) reviewHistoryList.addEventListener("click", (event) => {
   const item = reviewHistoryLoad().find((saved) => saved.id === id);
   if (button.dataset.reviewHistoryAct === "delete") reviewHistoryRemove(id);
   else if (button.dataset.reviewHistoryAct === "open" && item) reviewStart(item.pgn);
+  else if (button.dataset.reviewHistoryAct === "exercise" && item) {
+    reviewState.currentHeaders = { White: item.white, Black: item.black };
+    reviewStartCorrectionExercises(item.correctionExercises, reviewState.currentHeaders);
+  }
 });
 reviewHistoryRender();
 document.getElementById("btn-replay-game").addEventListener("click", () => {
