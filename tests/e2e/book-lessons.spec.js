@@ -153,6 +153,29 @@ test("five methodology cards explain their routines and open matching lessons", 
     const levelOrder = { "Débutant": 0, "Intermédiaire": 1, "Avancé": 2, "Expert": 3 };
     const ranks = levels.map((meta) => levelOrder[meta.split(" · ")[0]]);
     expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
+    if (program === "Carlsen · amélioration et conversion") {
+      const { LESSONS, methodPathLessonIndices } = require("../../js/book-lessons.js");
+      const pathLessons = methodPathLessonIndices(program).map((index) => LESSONS[index]);
+      expect(pathLessons.length).toBeGreaterThan(1);
+      const first = pathLessons[0];
+      const correctChoice = first.choices.find((choice) => choice.correct);
+      await page.locator("#lesson-choices .lesson-choice").filter({ hasText: correctChoice.text }).click();
+      for (let i = 0; i < first.sequence.length; i++) {
+        const action = first.sequence[i];
+        if (action.side !== "user") continue;
+        await page.locator(".sq[data-square=\"" + action.uci.slice(0, 2) + "\"]").click();
+        await page.locator(".sq[data-square=\"" + action.uci.slice(2, 4) + "\"]").click();
+        if (first.sequence[i + 1]?.side === "book") {
+          await expect(page.locator("#lesson-status")).toContainText("À toi : joue la suite.");
+        }
+      }
+      const second = pathLessons[1];
+      await expect(page.locator("#lesson-next-preview")).toContainText(second.title);
+      await expect(page.locator("#lesson-next-preview")).toContainText(second.level);
+      await page.locator("#lesson-next").click();
+      await expect(page.locator("#lesson-title")).toHaveText(second.title);
+      await expect(page.locator("#lesson-program-filter")).toHaveValue(program);
+    }
   }
 
   const stockfish = page.locator('[data-method-path="Stockfish · comparer et vérifier"]');
