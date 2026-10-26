@@ -224,6 +224,101 @@
     lesson.pitfall = lesson.pitfall || "Ne poursuis pas automatiquement ton plan après le coup adverse : recalcule les menaces et les réponses forcées.";
   }
 
+  // Add 53 original application lessons at new, legal positions from the studied lines.
+  // Each module asks the learner to replay a decision from a fresh point in the line;
+  // it carries the original move-by-move explanations and remains separate from recall drills.
+  const reinforcementSources = LESSONS.slice();
+  const reinforcementPools = new Map();
+  const reinforcementSeen = new Set();
+  for (const source of reinforcementSources) {
+    if (!Array.isArray(source.sequence) || !source.sequence.length || !Array.isArray(source.setup)) continue;
+    let position;
+    try { position = setupGame(source, ChessClass); } catch (_) { continue; }
+    for (let index = 0; index < source.sequence.length; index++) {
+      const action = source.sequence[index];
+      if (action.side === "user") {
+        const fen = position.fen();
+        if (!reinforcementSeen.has(fen)) {
+          const branch = new ChessClass(fen);
+          const played = playUci(branch, action.uci);
+          if (played) {
+            const legal = position.moves({ verbose: true });
+            const choices = [{ text: "Jouer " + played.san.replace(/N/g, "C").replace(/B/g, "F").replace(/Q/g, "D").replace(/R/g, "T").replace(/K/g, "R"), correct: true }];
+            for (const option of legal) {
+              if (option.from + option.to + (option.promotion || "") === action.uci) continue;
+              const san = option.san.replace(/N/g, "C").replace(/B/g, "F").replace(/Q/g, "D").replace(/R/g, "T").replace(/K/g, "R");
+              choices.push({ text: "Jouer " + san, correct: false });
+              if (choices.length === 3) break;
+            }
+            if (choices.length >= 2) {
+              let replay = new ChessClass(fen);
+              const remaining = source.sequence.slice(index);
+              let legalLine = true;
+              for (const ply of remaining) {
+                if (!playUci(replay, ply.uci)) { legalLine = false; break; }
+              }
+              if (legalLine) {
+                const program = source.program || "Carlsen · amélioration et conversion";
+                const item = {
+                  id: "application-" + reinforcementSeen.size,
+                  kind: "reinforcement",
+                  level: source.level,
+                  title: "Application · " + source.title + " · position " + (index + 1),
+                  category: "Leçon de renforcement · " + program,
+                  program,
+                  author: "SupaChess Académie",
+                  book: "Parcours original de renforcement SupaChess",
+                  reference: "Application approfondie · " + source.level,
+                  fen,
+                  setup: [],
+                  color: position.turn(),
+                  question: "À partir de cette nouvelle position, retrouve le coup de la ligne étudiée puis calcule chaque réponse.",
+                  choices,
+                  principle: source.principle || "Compare les coups candidats et vérifie les menaces après la réponse adverse.",
+                  transfer: source.transfer || "Recalcule la position après chaque demi-coup avant de poursuivre ton plan.",
+                  hints: ["Repars des menaces et du thème de la leçon source.", "Calcule la meilleure réponse adverse avant de confirmer ton choix."],
+                  sequence: remaining.map((ply) => ({ side: ply.side, uci: ply.uci, explanation: ply.explanation })),
+                  pitfall: "Ne poursuis pas automatiquement la variante : arrête-toi après chaque réponse adverse et réévalue."
+                };
+                reinforcementSeen.add(fen);
+                if (!reinforcementPools.has(program)) reinforcementPools.set(program, []);
+                reinforcementPools.get(program).push(item);
+              }
+            }
+          }
+        }
+      }
+      if (!playUci(position, action.uci)) break;
+    }
+  }
+  const reinforcementTargets = [
+    ["Carlsen · amélioration et conversion", 14],
+    ["Tal · tactique et sacrifices à calculer", 14],
+    ["Kasparov · coups candidats et calcul", 13],
+    ["Stockfish · comparer et vérifier", 12],
+  ];
+  const reinforcementAdded = [];
+  const reinforcementUsed = new Set();
+  for (const [program, count] of reinforcementTargets) {
+    const preferred = reinforcementPools.get(program) || [];
+    const fallback = Array.from(reinforcementPools.values()).flat();
+    for (const item of [...preferred, ...fallback]) {
+      if (reinforcementAdded.length >= reinforcementTargets.slice(0, reinforcementTargets.findIndex((entry) => entry[0] === program) + 1).reduce((sum, entry) => sum + entry[1], 0)) break;
+      if (reinforcementUsed.has(item.fen)) continue;
+      reinforcementUsed.add(item.fen);
+      item.program = program;
+      item.category = "Leçon de renforcement · " + program;
+      item.id = "application-" + (reinforcementAdded.length + 1);
+      item.title = "Application · " + program.split(" · ")[0] + " · " + String(reinforcementAdded.length + 1).padStart(2, "0");
+      reinforcementAdded.push(item);
+      if (reinforcementAdded.length === reinforcementTargets.slice(0, reinforcementTargets.findIndex((entry) => entry[0] === program) + 1).reduce((sum, entry) => sum + entry[1], 0)) break;
+    }
+  }
+  if (reinforcementAdded.length !== 53) {
+    throw new Error("Leçons de renforcement insuffisantes: " + reinforcementAdded.length + "/53 positions distinctes vérifiées.");
+  }
+  LESSONS.push(...reinforcementAdded);
+
   // Turn every studied reply into an active-recall challenge: the learner now plays
   // the opponent's half-move, then sees the original continuation and its explanation.
   const sourceLessons = LESSONS.slice();

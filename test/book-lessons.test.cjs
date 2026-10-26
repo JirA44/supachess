@@ -35,7 +35,10 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.length, 111, "the merged catalog contains 57 unique lessons and 54 opponent-reply drills");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 111, "the academy contains 111 guided lessons");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind === "reinforcement").length, 53, "53 legal application lessons reinforce the four methods");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 79, "opponent-reply drills remain counted separately");
+  assert.equal(LESSONS.length, 190, "guided lessons and anticipation drills are separate catalog entries");
   assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
 });
 
@@ -51,6 +54,19 @@ test("Stockfish alternatives are ranked, compared, and shown as legal SAN lines"
   assert.equal(result.choices[0].sanLine.join(" "), "e4 e5");
   assert.equal(result.choices[1].san, "d4");
   assert.equal(result.choices[1].deltaCp, 15);
+});
+
+test("each application lesson offers only legal move choices from its position", () => {
+  const toEnglish = (san) => san
+    .replace(/^([CFDRT])(?=x?[a-h])/, (piece) => ({ C: "N", F: "B", D: "Q", R: "K", T: "R" })[piece])
+    .replace(/=([CFDRT])([+#]?)$/, (_match, piece, suffix) => "=" + ({ C: "N", F: "B", D: "Q", R: "K", T: "R" })[piece] + suffix);
+  for (const lesson of LESSONS.filter((item) => item.kind === "reinforcement")) {
+    const game = setupGame(lesson, Chess);
+    for (const choice of lesson.choices) {
+      const san = choice.text.replace(/^Jouer /, "");
+      assert.ok(game.moves().includes(toEnglish(san)), lesson.id + " has illegal answer option " + san);
+    }
+  }
 });
 
 test("move hints describe observable chess facts without claiming Stockfish's private reasoning", () => {
