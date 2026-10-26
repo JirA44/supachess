@@ -224,7 +224,7 @@
     lesson.pitfall = lesson.pitfall || "Ne poursuis pas automatiquement ton plan après le coup adverse : recalcule les menaces et les réponses forcées.";
   }
 
-  // Add 43 original application lessons at new, legal positions from the studied lines.
+  // Add 53 original application lessons at new, legal positions from the studied lines.
   // Each module asks the learner to replay a decision from a fresh point in the line;
   // it carries the original move-by-move explanations and remains separate from recall drills.
   const reinforcementSources = LESSONS.slice();
@@ -309,7 +309,7 @@
       item.program = program;
       item.category = "Leçon de renforcement · " + program;
       item.id = "application-" + (reinforcementAdded.length + 1);
-      item.title = "Application · " + program.split(" · ")[0] + " · " + item.title.split(" · ").slice(1).join(" · ");
+      item.title = "Application · " + program.split(" · ")[0] + " · " + String(reinforcementAdded.length + 1).padStart(2, "0");
       reinforcementAdded.push(item);
       if (reinforcementAdded.length === reinforcementTargets.slice(0, reinforcementTargets.findIndex((entry) => entry[0] === program) + 1).reduce((sum, entry) => sum + entry[1], 0)) break;
     }
