@@ -669,6 +669,26 @@ if (reviewHistoryList) reviewHistoryList.addEventListener("click", (event) => {
   }
 });
 reviewHistoryRender();
+function resumeCorrectionExercisesFromUrl() {
+  const resumeId = new URLSearchParams(location.search).get("resume-exercises");
+  if (!resumeId) return;
+  const item = reviewHistoryLoad().find((saved) => saved.id === resumeId);
+  if (!item) return;
+  const resume = () => {
+    const exercises = Array.isArray(item.correctionExercises) ? item.correctionExercises : [];
+    if (exercises.length) {
+      reviewState.currentHeaders = { White: item.white, Black: item.black };
+      reviewStartCorrectionExercises(exercises, reviewState.currentHeaders);
+      document.getElementById("review-exercise-panel")?.scrollIntoView({ block: "start" });
+    } else {
+      reviewStart(item.pgn);
+      document.getElementById("review-history-status").textContent = "Cette partie n’a pas encore d’exercices enregistrés. Analyse-la pour les créer.";
+    }
+  };
+  if (document.body.dataset.engineReady === "1") resume();
+  else document.addEventListener("supachess:engine-ready", resume, { once: true });
+}
+resumeCorrectionExercisesFromUrl();
 document.getElementById("btn-replay-game").addEventListener("click", () => {
   reviewBeginReplay();
   document.getElementById("replay-bar").classList.remove("hidden");
