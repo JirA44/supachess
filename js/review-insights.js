@@ -89,7 +89,7 @@
   }
 
   function validatePgnCollection(text, ChessClass) {
-    const Game = ChessClass || root.Chess || (typeof require === "function" ? require("chess.js").Chess : null);
+    const Game = ChessClass || root.Chess || (typeof Chess === "function" ? Chess : null) || (typeof require === "function" ? require("chess.js").Chess : null);
     if (!Game) throw new Error("Le validateur PGN n'est pas disponible.");
     const valid = [];
     const invalid = [];
