@@ -15,6 +15,7 @@ class BoardUI {
     this.selected = null;
     this.lastMove = null;   // {from, to}
     this.dots = [];         // [{square, label, quality, title}]
+    this.showDots = true;
     this.previewDot = null;
     this.legalTargets = [];
   }
@@ -48,7 +49,7 @@ class BoardUI {
           hint.className = "legal-hint";
           cell.appendChild(hint);
         }
-        const dotsHere = this.dots.filter((d) => d.square === sq);
+        const dotsHere = this.showDots ? this.dots.filter((d) => d.square === sq) : [];
         if (dotsHere.length) {
           const stack = document.createElement("span");
           stack.className = "cdot-stack" + (dotsHere.length > 1 ? " multiple" : "");
