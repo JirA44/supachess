@@ -95,7 +95,7 @@ test("catalog filters and surprise exercise explicitly train opponent replies in
 });
 
 
-test("four methodology cards explain their routines and open matching lessons", async ({ page }) => {
+test("five methodology cards explain their routines and open matching lessons", async ({ page }) => {
   await page.goto("/book-lessons.html");
   await expect(page.locator("#method-paths-title")).toHaveText("Cinq parcours méthodologiques");
   await expect(page.locator("#lesson-catalog-count")).toContainText("leçons originales +");
@@ -130,5 +130,5 @@ test("four methodology cards explain their routines and open matching lessons", 
   await page.setViewportSize({ width: 390, height: 844 });
   const cardBox = await page.locator(".method-path-grid").boundingBox();
   expect(cardBox.x + cardBox.width).toBeLessThanOrEqual(390);
-  await expect(cards).toHaveCount(4);
+  await expect(cards).toHaveCount(5);
 });
