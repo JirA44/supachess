@@ -31,7 +31,7 @@ test('tracks finished Stockfish games separately from official FIDE-tagged PGNs'
       stockfishRatingSource: 'supachess-engine-setting-v1',
       stockfishRatingEstimate: 2400,
       userColor: index < 5 ? 'w' : 'b',
-      result: index < 5 ? '1-0' : '0-1',
+      result: index < 3 ? '1-0' : index < 5 ? '0-1' : index < 7 ? '0-1' : '1-0',
     }));
     samples.push(
       { id: 'legacy', result: '1-0', pgn: '[Event "Old game"]' },
