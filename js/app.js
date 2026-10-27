@@ -682,8 +682,15 @@ function moveAccuracyPct(beforeCp, afterCp) {
 }
 function recordAccuracy(color, beforeCp, afterCp) {
   const moveAccuracy = moveAccuracyPct(beforeCp, afterCp);
+  const previousAverage = avgAccuracy(state.accuracy[color]);
   state.accuracy[color].push(moveAccuracy);
-  state.accuracy.lastMove = { color, lostPct: Math.max(0, 100 - moveAccuracy) };
+  const average = avgAccuracy(state.accuracy[color]);
+  state.accuracy.lastMove = {
+    color,
+    moveAccuracy,
+    average,
+    delta: previousAverage === null ? null : average - previousAverage
+  };
   renderAccuracy();
 }
 function resetAccuracy() {
@@ -704,11 +711,12 @@ function accuracyHtml() {
     const v = avgAccuracy(state.accuracy[c]);
     if (v === null) return `${esc(label)}: <span style="color:var(--text-dim)">—</span>`;
     const last = state.accuracy.lastMove;
-    const moveLoss = last && last.color === c ? Math.round(last.lostPct) : null;
-    const moveNote = moveLoss === null ? "" : moveLoss === 0
-      ? ` · 0% de précision perdue sur ce demi-coup`
-      : ` · -${moveLoss}% de précision sur ce demi-coup`;
-    return `${esc(label)}: <span style="color:${accColor(v)};font-weight:600">${v.toFixed(1)}%</span>${moveNote}`;
+    const moveNote = last && last.color === c
+      ? last.delta === null
+        ? ` · première moyenne : ${last.average.toFixed(2)}%`
+        : ` · ${last.delta >= 0 ? "+" : "−"}${Math.abs(last.delta).toFixed(2)}% de précision moyenne sur ce demi-coup`
+      : "";
+    return `${esc(label)}: <span style="color:${accColor(v)};font-weight:600">${v.toFixed(2)}%</span>${moveNote}`;
   });
   return parts.join(" &nbsp;·&nbsp; ");
 }
