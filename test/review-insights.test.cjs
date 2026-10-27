@@ -89,3 +89,50 @@ test("personalized recommendations retain sample-size uncertainty and map phase 
   assert.ok(path.some((item) => item.program === "Stockfish · comparer et vérifier"));
   assert.ok(path.every((item) => /faible/.test(item.confidence)));
 });
+
+
+test("FIDE-like performance needs confirmed FIDE tags and at least ten rated opponent results", () => {
+  const base = ReviewInsights.buildGameSummary({
+    headers: { White: "Alice", Black: "Opponent" }, accuracyW: 99, accuracyB: 1,
+    fens: [openingFen], moves: [{ san: "e4" }],
+    rows: [{ color: "w", n: 1, san: "e4", lossCp: 0, classification: "best" }],
+  });
+  const games = Array.from({ length: 10 }, (_, index) => ({
+    analysis: base, white: "Alice", black: "Opponent", whiteElo: "2200", blackElo: "2000",
+    result: index < 6 ? "1-0" : "0-1", date: "2026.01." + String(index + 1).padStart(2, "0"),
+  }));
+  const profile = ReviewInsights.aggregate(games).profiles[0];
+  assert.equal(ReviewInsights.fideLikePerformance(profile, false).status, "confirm_rating_pool");
+  const estimate = ReviewInsights.fideLikePerformance(profile, true);
+  assert.equal(estimate.status, "indicative_performance_only");
+  assert.equal(estimate.games, 10);
+  assert.equal(estimate.averageOpponentElo, 2000);
+  assert.ok(estimate.estimate > 2000);
+  assert.equal(ReviewInsights.fideLikePerformance(
+    ReviewInsights.aggregate(games.slice(0, 9)).profiles[0], true
+  ).status, "insufficient_games");
+});
+
+test("progress compares error rates only across enough analyzed games at the same time control", () => {
+  const games = Array.from({ length: 6 }, (_, index) => {
+    const summary = ReviewInsights.buildGameSummary({
+      headers: { White: "Alice", Black: "Opponent" }, accuracyW: 80, accuracyB: 80,
+      fens: Array.from({ length: 20 }, () => openingFen),
+      moves: Array.from({ length: 20 }, () => ({ san: "e4" })),
+      rows: Array.from({ length: 20 }, (_, move) => ({
+        color: "w", n: move + 1, san: "e4",
+        lossCp: move < (index < 3 ? 4 : 1) ? 70 : 0,
+        classification: move < (index < 3 ? 4 : 1) ? "mistake" : "best",
+      })),
+    });
+    return { analysis: summary, white: "Alice", black: "Opponent", result: "1/2-1/2",
+      timeControl: "600+0", date: "2026.02." + String(index + 1).padStart(2, "0") };
+  });
+  const profile = ReviewInsights.aggregate(games).profiles[0];
+  const trend = ReviewInsights.compareProgress(profile);
+  assert.equal(trend.status, "measured_trend_not_causal_proof");
+  assert.equal(trend.before.mistake, 20);
+  assert.equal(trend.after.mistake, 5);
+  assert.equal(ReviewInsights.compareProgress(ReviewInsights.aggregate(games.slice(0, 5)).profiles[0]).status,
+    "need_comparable_games");
+});

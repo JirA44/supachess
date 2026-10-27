@@ -123,3 +123,40 @@ test('PGN halfmove link replays the exact resulting position and synchronizes th
   expect(restored.replayBarHidden).toBe(true);
 });
 
+
+
+test('selected PGNs show a cautious FIDE-like baseline and a comparable error trend', async ({ page }) => {
+  await page.goto('/index.html');
+  await page.evaluate(() => {
+    localStorage.clear();
+    const analysis = {
+      version: 1,
+      players: [
+        { name: 'Alice', color: 'w', moves: 10, ratedMoves: 10, accuracy: 82,
+          grades: { brilliant: 0, best: 1, 'very-good': 2, good: 2, ok: 3, inaccuracy: 1, mistake: 1, blunder: 0 },
+          phases: { opening: { moves: 4, issues: 1 }, middlegame: { moves: 4, issues: 1 }, endgame: { moves: 2, issues: 1 } },
+          diagnostics: {}, worstMoves: [] },
+        { name: 'Opponent', color: 'b', moves: 10, ratedMoves: 10, accuracy: 80,
+          grades: { brilliant: 0, best: 1, 'very-good': 2, good: 2, ok: 3, inaccuracy: 1, mistake: 1, blunder: 0 },
+          phases: { opening: { moves: 4, issues: 1 }, middlegame: { moves: 4, issues: 1 }, endgame: { moves: 2, issues: 1 } },
+          diagnostics: {}, worstMoves: [] }
+      ]
+    };
+    const games = Array.from({ length: 10 }, (_, index) => ({
+      id: 'rated-' + index, pgn: 'rated-game-' + index, white: 'Alice', black: 'Opponent',
+      whiteElo: '2100', blackElo: '1900', result: index < 6 ? '1-0' : '0-1',
+      date: '2026.03.' + String(index + 1).padStart(2, '0'), timeControl: '600+0', analysis
+    }));
+    localStorage.setItem('supachess_reviewed_pgns', JSON.stringify(games));
+  });
+  await page.reload();
+  const panel = page.locator('#review-insights-panel');
+  await panel.locator('[data-review-insights-select-all]').click();
+  await panel.locator('[data-review-fide-confirm]').check();
+  await panel.locator('[data-review-insights-run]').click();
+  await expect(panel).toContainText('Performance FIDE-like indicative');
+  await expect(panel).toContainText('sur 10 résultat(s)');
+  await expect(panel).toContainText('Évolution Stockfish (600+0)');
+  await expect(panel).toContainText('erreurs 10.0→10.0 par 100 demi-coups');
+  await expect(panel).toContainText('sans prouver à elle seule que la leçon en est la cause');
+});
