@@ -113,7 +113,7 @@
     return { name, games: 0, moves: 0, ratedMoves: 0, accuracyWeighted: 0, accuracyWeight: 0,
       grades: Object.fromEntries(GRADE_IDS.map((id) => [id, 0])),
       phases: Object.fromEntries(PHASES.map((id) => [id, { moves: 0, issues: 0 }])),
-      diagnostics: {}, worstMoves: [] };
+      diagnostics: {}, worstMoves: [], performanceGames: [], gameHistory: [] };
   }
 
   function aggregate(items) {
@@ -132,6 +132,18 @@
         if (!profiles.has(key)) profiles.set(key, blankAggregate(name));
         const profile = profiles.get(key);
         profile.games++;
+        const result = ["1-0", "0-1", "1/2-1/2"].includes(item.result) ? item.result : null;
+        const score = result === "1/2-1/2" ? 0.5 : result === "1-0" ? (player.color === "w" ? 1 : 0) : result === "0-1" ? (player.color === "b" ? 1 : 0) : null;
+        const opponentElo = Number(item[player.color === "w" ? "blackElo" : "whiteElo"]);
+        if (score !== null && Number.isFinite(opponentElo) && opponentElo >= 100 && opponentElo <= 4000) {
+          profile.performanceGames.push({ opponentElo, score, date: String(item.date || item.analyzedAt || ""), event: String(item.event || "") });
+        }
+        profile.gameHistory.push({
+          date: String(item.date || item.analyzedAt || ""),
+          timeControl: String(item.timeControl || ""),
+          ratedMoves: Number(player.ratedMoves) || 0,
+          grades: Object.fromEntries(GRADE_IDS.map((id) => [id, Number(player.grades && player.grades[id]) || 0])),
+        });
         profile.moves += Number(player.moves) || 0;
         profile.ratedMoves += Number(player.ratedMoves) || 0;
         if (Number.isFinite(player.accuracy) && Number(player.ratedMoves) > 0) {
@@ -163,6 +175,56 @@
       return profile;
     }).sort((a, b) => b.games - a.games || a.name.localeCompare(b.name, "fr"));
     return { profiles: result, analyzedGames, skippedGames, selectedGames: list.length };
+  }
+
+  function fideLikePerformance(profile, confirmedFideTags = false) {
+    const games = Array.isArray(profile && profile.performanceGames) ? profile.performanceGames : [];
+    if (!confirmedFideTags) return { status: "confirm_rating_pool", eligibleGames: games.length, minimumGames: 10, targetGames: 20 };
+    if (games.length < 10) return { status: "insufficient_games", games: games.length, minimumGames: 10, targetGames: 20 };
+    const averageOpponentElo = games.reduce((sum, game) => sum + game.opponentElo, 0) / games.length;
+    const score = games.reduce((sum, game) => sum + game.score, 0);
+    const smoothedScore = (score + 0.5) / (games.length + 1);
+    const scoreDifference = 400 * Math.log10(smoothedScore / (1 - smoothedScore));
+    return {
+      status: "indicative_performance_only",
+      estimate: Math.round(averageOpponentElo + scoreDifference),
+      games: games.length,
+      targetGames: 20,
+      averageOpponentElo: Math.round(averageOpponentElo),
+      score: score,
+      scoreRate: score / games.length,
+    };
+  }
+
+  function compareProgress(profile) {
+    const games = Array.isArray(profile && profile.gameHistory) ? profile.gameHistory.slice() : [];
+    const controls = new Map();
+    for (const game of games) {
+      if (!game.timeControl || !game.ratedMoves) continue;
+      controls.set(game.timeControl, (controls.get(game.timeControl) || 0) + 1);
+    }
+    const selectedControl = [...controls.entries()].sort((a, b) => b[1] - a[1])[0];
+    if (!selectedControl || selectedControl[1] < 6) return { status: "need_comparable_games", games: selectedControl ? selectedControl[1] : 0, targetGamesPerPeriod: 3 };
+    const comparable = games.filter((game) => game.timeControl === selectedControl[0])
+      .sort((a, b) => a.date.localeCompare(b.date));
+    const middle = Math.floor(comparable.length / 2);
+    const before = comparable.slice(0, middle);
+    const after = comparable.slice(middle);
+    const movesBefore = before.reduce((sum, game) => sum + game.ratedMoves, 0);
+    const movesAfter = after.reduce((sum, game) => sum + game.ratedMoves, 0);
+    if (before.length < 3 || after.length < 3 || movesBefore < 20 || movesAfter < 20)
+      return { status: "need_comparable_games", games: comparable.length, targetGamesPerPeriod: 3 };
+    const rates = (period, moves) => Object.fromEntries(["inaccuracy", "mistake", "blunder"].map((id) => [
+      id, 100 * period.reduce((sum, game) => sum + (Number(game.grades[id]) || 0), 0) / moves
+    ]));
+    return {
+      status: "measured_trend_not_causal_proof",
+      timeControl: selectedControl[0],
+      beforeGames: before.length, afterGames: after.length,
+      movesBefore, movesAfter,
+      before: rates(before, movesBefore),
+      after: rates(after, movesAfter),
+    };
   }
 
   function personalizedPath(profile) {
@@ -215,6 +277,8 @@
       "<div class=\"review-insights-controls\"><button class=\"btn secondary\" type=\"button\" data-review-insights-import-trigger>Importer des PGN</button><input type=\"file\" accept=\".pgn,.txt,application/x-chess-pgn\" multiple hidden data-review-insights-import> " +
       "<button class=\"btn mini\" type=\"button\" data-review-insights-select-all>Tout sélectionner</button> " +
       "<button class=\"btn\" type=\"button\" data-review-insights-run disabled>Sélectionne des PGN</button></div>" +
+      "<label class=\"review-rating-confirm\"><input type=\"checkbox\" data-review-fide-confirm> Je confirme que les balises Elo des adversaires sont des Elo FIDE à la date de la partie</label>" +
+      "<p class=\"review-insights-note\">L’indicateur de performance FIDE-like s’appuie seulement sur les résultats contre des adversaires dont le PGN contient un Elo confirmé FIDE; il ne vient pas des évaluations Stockfish. Le seuil de 10 parties est un minimum opérationnel d’affichage, pas une règle FIDE ni une garantie statistique; vise 20 parties pour un premier suivi.</p>" +
       "<p data-review-insights-status role=\"status\" aria-live=\"polite\"></p><div data-review-insights-report aria-live=\"polite\"></div>";
     list.insertAdjacentElement("afterend", panel);
 
@@ -222,6 +286,7 @@
     style.id = "review-insights-style";
     style.textContent = "#review-insights-panel{margin-top:12px;padding:10px;border:1px solid rgba(240,179,92,.45);border-radius:8px}" +
       "#review-insights-panel h3{margin:4px 0 8px}#review-insights-panel p{font-size:.86em}" +
+      ".review-rating-confirm{display:flex;align-items:flex-start;gap:8px;margin:8px 0;font-size:.86em}.review-rating-confirm input{flex:0 0 auto;margin-top:2px}" +
       ".review-insights-controls{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}" +
       ".review-insights-player{margin:10px 0;padding:10px;border:1px solid rgba(128,128,128,.35);border-radius:8px}" +
       ".review-insights-player h4{margin:0 0 6px}.review-insights-note{font-size:.78em;opacity:.8}" +
@@ -236,6 +301,7 @@
     const allButton = panel.querySelector("[data-review-insights-select-all]");
     const importButton = panel.querySelector("[data-review-insights-import-trigger]");
     const importInput = panel.querySelector("[data-review-insights-import]");
+    const fideConfirm = panel.querySelector("[data-review-fide-confirm]");
     const loadItems = () => root.reviewHistoryLoad();
 
     function decorateRows() {
@@ -295,6 +361,29 @@
         addText(section, "p", "Échantillon : " + profile.games + " partie(s), " + profile.ratedMoves +
           " demi-coup(s) noté(s). Précision moyenne mesurée : " +
           (Number.isFinite(profile.accuracy) ? profile.accuracy.toFixed(1) + "%" : "non disponible") + ".");
+        const performance = fideLikePerformance(profile, fideConfirm.checked);
+        if (performance.status === "confirm_rating_pool") {
+          addText(section, "p", performance.eligibleGames + " résultat(s) avec Elo adverse détecté(s). Coche la confirmation seulement si ces balises correspondent bien à des Elo FIDE.", "review-insights-note");
+        } else if (performance.status === "insufficient_games") {
+          addText(section, "p", "Performance FIDE-like non chiffrée : " + performance.games + "/10 parties exploitables contre des adversaires FIDE. Premier objectif de suivi : 20 parties; la fourchette restera indicative.", "review-insights-note");
+        } else {
+          addText(section, "p", "Performance FIDE-like indicative : environ " + performance.estimate + " sur " + performance.games +
+            " résultat(s), contre des adversaires d’environ " + performance.averageOpponentElo + " Elo en moyenne. Score " +
+            (100 * performance.scoreRate).toFixed(1) + "%. Ce calcul de performance ne remplace pas un classement officiel.", "review-insights-note");
+          if (performance.games < performance.targetGames) addText(section, "p", "À confirmer : objectif initial de " + performance.targetGames + " parties avec Elo FIDE adverse et résultat.", "review-insights-note");
+        }
+        const trend = compareProgress(profile);
+        if (trend.status === "need_comparable_games") {
+          addText(section, "p", "Évolution des erreurs : seuil de prudence choisi pour cette comparaison : 3 parties comparables et 20 demi-coups notés par période; " +
+            trend.games + " partie(s) de même cadence sont actuellement disponibles.", "review-insights-note");
+        } else {
+          const labels = { inaccuracy: "imprécisions", mistake: "erreurs", blunder: "gaffes" };
+          const comparisons = Object.keys(labels).map((id) => labels[id] + " " +
+            trend.before[id].toFixed(1) + "→" + trend.after[id].toFixed(1) + " par 100 demi-coups");
+          addText(section, "p", "Évolution Stockfish (" + trend.timeControl + ") : " +
+            trend.beforeGames + " partie(s) de départ contre " + trend.afterGames + " récente(s). " +
+            comparisons.join(" · ") + ". Une baisse est un progrès observé dans cet échantillon, sans prouver à elle seule que la leçon en est la cause.", "review-insights-note");
+        }
 
         const positive = ["brilliant", "best", "very-good", "good"]
           .reduce((sum, key) => sum + (Number(profile.grades[key]) || 0), 0);
@@ -379,6 +468,7 @@
       addText(report, "p", "Ces résultats résument l’échantillon sélectionné : les classements de coups, les phases repérées et les diagnostics disponibles ne suffisent pas, seuls, à conclure sur le niveau général.", "review-insights-note");
     }
 
+    fideConfirm.addEventListener("change", renderReport);
     const originalRender = root.reviewHistoryRender;
     root.reviewHistoryRender = function () {
       const value = originalRender.apply(this, arguments);
@@ -461,6 +551,6 @@
     root.reviewHistoryRender();
   }
 
-  return { buildGameSummary, aggregate, personalizedPath, splitPgnCollection, validatePgnCollection, phaseOf, attachUI, GRADE_IDS, ISSUE_IDS, PHASES };
+  return { buildGameSummary, aggregate, personalizedPath, splitPgnCollection, validatePgnCollection, phaseOf, attachUI, fideLikePerformance, compareProgress, GRADE_IDS, ISSUE_IDS, PHASES };
 });
 
