@@ -341,7 +341,7 @@
             id: source.id + "-anticipate-" + index,
             kind: "anticipation",
             level: source.level,
-            title: "Surprise · prévoir la réponse à " + source.title,
+            title: "Anticipation · prévoir la réponse à " + source.title,
             category: "Anticipation · " + source.category,
             program: "Anti-erreurs · anticiper l’adversaire",
             author: "SupaChess Académie",
@@ -626,7 +626,7 @@
     boardUI.selected = null;
     boardUI.legalTargets = [];
     boardUI.lastMove = null;
-    $("lesson-title").textContent = surpriseMode ? "Exercice surprise" : lesson.title;
+    $("lesson-title").textContent = surpriseMode ? "Exercice au hasard" : lesson.title;
     $("lesson-goal").textContent = surpriseMode
       ? "Analyse la position sans regarder le thème. Choisis un coup, puis vérifie la réponse adverse sur l’échiquier."
       : "Observe la position. Choisis d’abord le principe qui s’applique, puis joue les coups sur l’échiquier.";
@@ -642,7 +642,7 @@
     $("lesson-hint").disabled = false;
     $("lesson-flip").setAttribute("aria-pressed", String(flipped));
     renderSource(lesson);
-    if (surpriseMode) $("lesson-source").textContent = "Défi surprise · thème révélé après l’exercice";
+    if (surpriseMode) $("lesson-source").textContent = "Exercice au hasard · thème révélé après la résolution";
     renderChoices(lesson);
     renderCatalog();
     renderBoard();
