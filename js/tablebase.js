@@ -84,8 +84,9 @@
 
     const id = ++requestId;
     if (activeController) activeController.abort();
-    activeController = new AbortController();
-    const timeout = setTimeout(() => activeController.abort(), 12000);
+    const controller = new AbortController();
+    activeController = controller;
+    const timeout = setTimeout(() => controller.abort(), 12000);
     button.disabled = true;
     status.textContent = "Consultation de la tablebase exacte…";
     try {
@@ -93,7 +94,7 @@
       requestUrl.searchParams.set("fen", fen.replace(/ /g, "_"));
       const response = await fetch(requestUrl.toString(), {
         headers: { Accept: "application/json" },
-        signal: activeController.signal
+        signal: controller.signal
       });
       if (id !== requestId) return;
       if (state.chess.fen() !== fen) {
