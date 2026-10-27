@@ -189,7 +189,7 @@ function computeBreakdown(fenBefore, line) {
   } catch (_e) { return null; }
 }
 
-function fmtPts(v) { return (v > 0 ? "+" : "") + v.toFixed(2); }
+function fmtPts(v) { return (v > 0 ? "+" : "") + formatAccuracyPct(v); }
 
 function breakdownHtml(bd, cls) {
   if (!bd) return "";
@@ -701,6 +701,9 @@ function avgAccuracy(arr) {
   if (!arr.length) return null;
   return arr.reduce((s, x) => s + x, 0) / arr.length;
 }
+function formatAccuracyPct(value) {
+  return value.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 function accColor(v) {
   return v >= 90 ? "var(--green)" : v >= 80 ? "var(--yellow)" : v >= 60 ? "var(--orange)" : "var(--red)";
 }
@@ -713,8 +716,8 @@ function accuracyHtml() {
     const last = state.accuracy.lastMove;
     const moveNote = last && last.color === c
       ? last.delta === null
-        ? ` · première moyenne : ${last.average.toFixed(2)}%`
-        : ` · ${last.delta >= 0 ? "+" : "−"}${Math.abs(last.delta).toFixed(2)}% de précision moyenne sur ce demi-coup`
+        ? ` · première moyenne : ${formatAccuracyPct(last.average)}%`
+        : ` · ${last.delta >= 0 ? "+" : "−"}${formatAccuracyPct(Math.abs(last.delta))}% de précision moyenne sur ce demi-coup`
       : "";
     return `${esc(label)}: <span style="color:${accColor(v)};font-weight:600">${v.toFixed(2)}%</span>${moveNote}`;
   });
