@@ -122,6 +122,7 @@ function applyLevelDiagnosticLock() {
   if (typeof renderBoard === "function") renderBoard();
 }
 window.addEventListener("supachess:level-diagnostic-change", applyLevelDiagnosticLock);
+window.applyLevelDiagnosticLock = applyLevelDiagnosticLock;
 window.addEventListener("storage", (event) => {
   if (event.key !== LEVEL_DIAGNOSTIC_KEY) return;
   const active = isLevelDiagnosticActive();
