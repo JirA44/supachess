@@ -10,8 +10,8 @@ test("tablebase lookup shows exact outcomes and each legal alternative", async (
       body: JSON.stringify({
         category: "win",
         moves: [
-          { uci: "g7f7", san: "Kf7", category: "loss", dtz: -3 },
           { uci: "h7h8q", san: "h8=Q+", category: "loss", dtz: -4 },
+          { uci: "g7f6", san: "Kf6", category: "loss", dtz: -3 },
           { uci: "g7g8", san: "Kg8", category: "draw", dtz: 0 }
         ]
       })
@@ -24,7 +24,7 @@ test("tablebase lookup shows exact outcomes and each legal alternative", async (
 
   await expect(page.locator("#tablebase-summary")).toContainText("Blancs au trait : gain prouvé");
   await expect(page.locator("#tablebase-moves li")).toHaveCount(3);
-  await expect(page.locator("#tablebase-moves li").first()).toContainText("Kf7");
+  await expect(page.locator("#tablebase-moves li").first()).toContainText("h8=Q+");
   await expect(page.locator("#tablebase-moves li").first()).toContainText("défaite prouvée");
   expect(decodeURIComponent(requestedUrl)).toContain("4k3/6KP/8/8/8/8/7p/8_w_-_-_0_1");
 });
