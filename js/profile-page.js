@@ -50,7 +50,6 @@
       if (event.target === overlay) closeProfileDialog();
     });
     box.querySelector("[data-profile-close]").addEventListener("click", closeProfileDialog);
-    document.addEventListener("keydown", onEscape);
     document.body.appendChild(overlay);
     const focusTarget = overlay.querySelector("input,button");
     if (focusTarget) focusTarget.focus();
@@ -58,11 +57,9 @@
   }
 
   function onEscape(event) {
-    if (event.key === "Escape") {
-      closeProfileDialog();
-      document.removeEventListener("keydown", onEscape);
-    }
+    if (event.key === "Escape") closeProfileDialog();
   }
+  document.addEventListener("keydown", onEscape);
 
   function showNotice(message, isError) {
     const target = document.querySelector("#profile-modal [data-profile-error]");
