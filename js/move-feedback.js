@@ -1,16 +1,33 @@
 /* Notes communes aux coups joués, essais et relectures. */
 "use strict";
 
-function moveGrade(deltaCp, brilliant = false) {
-  if (!Number.isFinite(deltaCp)) return { rating: null, symbol: "…", label: "Analyse en cours", tone: "pending" };
-  const loss = Math.max(0, deltaCp);
-  if (brilliant && loss <= 10) return { rating: 10, symbol: "!!", label: "Brillant", tone: "best" };
-  if (loss <= 10) return { rating: 10, symbol: "!", label: "Excellent", tone: "best" };
-  if (brilliant && loss < 30) return { rating: 8, symbol: "!?", label: "Intéressant", tone: "good" };
-  if (loss < 30) return { rating: 8, symbol: "=", label: "Bon coup", tone: "good" };
-  if (loss < 60) return { rating: 6, symbol: "?!", label: "Imprécision", tone: "mid" };
-  if (loss < 200) return { rating: 3, symbol: "?", label: "Erreur", tone: "bad" };
-  return { rating: 1, symbol: "??", label: "Gaffe", tone: "bad" };
+function moveGrade(deltaCp, brilliant = false, best = false, categoryOverride = null) {
+  const loss = Number.isFinite(deltaCp) ? Math.max(0, deltaCp) : null;
+  let category = "unrated";
+  if (loss !== null) {
+    if (brilliant && loss < 30) category = "brilliant";
+    else if (loss >= 200) category = "blunder";
+    else if (loss >= 60) category = "error";
+    else if (loss >= 30) category = "inaccuracy";
+    else if (best) category = "best";
+    else if (loss <= 10) category = "very-good";
+    else if (loss < 20) category = "good";
+    else category = "ok";
+  }
+  category = categoryOverride || category;
+  const grades = {
+    brilliant: { rating: 10, symbol: "!!", label: "Brillant", tone: "best" },
+    best: { rating: 10, symbol: "★", label: "Meilleur coup", tone: "best" },
+    "very-good": { rating: 10, symbol: "!", label: "Très bon coup", tone: "best" },
+    good: { rating: 8, symbol: "✓", label: "Bon coup", tone: "good" },
+    ok: { rating: 7, symbol: "=", label: "Coup OK", tone: "good" },
+    inaccuracy: { rating: 6, symbol: "?!", label: "Imprécision", tone: "mid" },
+    error: { rating: 3, symbol: "?", label: "Erreur", tone: "bad" },
+    mistake: { rating: 3, symbol: "?", label: "Erreur", tone: "bad" },
+    blunder: { rating: 1, symbol: "??", label: "Gaffe", tone: "bad" },
+    unrated: { rating: null, symbol: "…", label: "Analyse en cours", tone: "pending" },
+  };
+  return { ...(grades[category] || grades.unrated), category };
 }
 
 // Un sacrifice doit conserver l'évaluation et céder au moins une pièce
