@@ -32,7 +32,54 @@ function isLevelDiagnosticActive() {
   const diagnostic = readLevelDiagnostic();
   return Boolean(diagnostic && diagnostic.active);
 }
+function ensureDefaultLevelDiagnostic() {
+  const existing = readLevelDiagnostic();
+  if (existing) return existing;
+  const initial = {
+    active: true,
+    defaultActivation: true,
+    startedAt: new Date().toISOString(),
+    restoreDots: localStorage.getItem(DOTS_STORAGE_KEY) !== "false",
+    restoreMoveDots: localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false",
+  };
+  try { localStorage.setItem(LEVEL_DIAGNOSTIC_KEY, JSON.stringify(initial)); } catch (_) {}
+  return initial;
+}
+ensureDefaultLevelDiagnostic();
 let levelDiagnosticLockWasActive = isLevelDiagnosticActive();
+function syncLevelDiagnosticBanner() {
+  const banner = $("level-diagnostic-banner");
+  if (!banner) return;
+  const diagnostic = readLevelDiagnostic();
+  if (!diagnostic) {
+    banner.hidden = false;
+    banner.textContent = "Le diagnostic de niveau est activé par défaut : analyse 10 parties avec Stockfish. Bulles candidates et points de coups sont désactivés pendant ce bilan.";
+    return;
+  }
+  if (diagnostic.active) {
+    let count = 0;
+    try {
+      const items = JSON.parse(localStorage.getItem("supachess_reviewed_pgns") || "[]");
+      const start = Date.parse(diagnostic.startedAt || "");
+      if (Array.isArray(items) && Number.isFinite(start)) count = items.filter((item) =>
+        item && item.analysis && item.analysis.version === 1 &&
+        Array.isArray(item.analysis.players) && item.analysis.players.some((player) => Number(player && player.ratedMoves) > 0) &&
+        Date.parse(item.analyzedAt || "") >= start
+      ).length;
+    } catch (_) {}
+    banner.hidden = false;
+    banner.textContent = "Diagnostic actif : " + count + "/10 parties analysées depuis son activation. Joue sans bulles candidates ni points de coups possibles; les aides reviennent après la dixième partie.";
+  } else if (diagnostic.completed) {
+    banner.hidden = false;
+    banner.textContent = "Diagnostic terminé : " + (diagnostic.analyzedGamesAtCompletion || 10) +
+      " parties analysées. Les bulles candidates et points de coups sont réactivés. Consulte le bilan et les exercices ciblés.";
+  } else if (diagnostic.endedEarly) {
+    banner.hidden = false;
+    banner.textContent = "Diagnostic interrompu avant 10 parties. Les aides sont réactivées; le bilan de niveau reste à confirmer.";
+  } else {
+    banner.hidden = true;
+  }
+}
 boardUI.showDots = levelDiagnosticLockWasActive ? false : localStorage.getItem(DOTS_STORAGE_KEY) !== "false";
 boardUI.showMoveDots = levelDiagnosticLockWasActive ? false : localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false";
 function syncDotsButton() {
@@ -43,6 +90,7 @@ function syncDotsButton() {
   button.title = locked ? "Bloqué pendant le diagnostic de niveau" : "Afficher ou masquer les bulles candidates";
   button.textContent = locked ? "Bulles candidates : bloquées" : "Bulles candidates : " + (boardUI.showDots ? "ON" : "OFF");
   button.setAttribute("aria-pressed", String(!locked && boardUI.showDots));
+  syncLevelDiagnosticBanner();
 }
 function syncMoveDotsButton() {
   const button = $("btn-move-dots");

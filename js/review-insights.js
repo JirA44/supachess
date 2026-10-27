@@ -297,7 +297,7 @@
       "<button class=\"btn\" type=\"button\" data-review-insights-run disabled>Sélectionne des PGN</button></div>" +
       "<label class=\"review-rating-confirm\"><input type=\"checkbox\" data-review-fide-confirm> Je confirme que les balises Elo des adversaires sont des Elo FIDE à la date de la partie</label>" +
       "<section class=\"level-diagnostic-control\" aria-labelledby=\"level-diagnostic-title\"><h4 id=\"level-diagnostic-title\">Diagnostic de ton niveau</h4>" +
-      "<p>Pour ce premier bilan, Stockfish doit analyser au moins 10 de tes parties. Pendant le diagnostic, les bulles candidates et les points de coups possibles restent coupés; tu joues sans ces aides.</p>" +
+      "<p>Pour ce premier bilan, Stockfish doit analyser au moins 10 de tes parties. Pendant le diagnostic, les bulles candidates et les points de coups possibles restent coupés; tu joues sans ces aides. Après, le bilan t’orientera vers des exercices de correction et des positions plus complexes à résoudre.</p>" +
       "<button class=\"btn\" type=\"button\" data-level-diagnostic-toggle>Activer le diagnostic de niveau</button>" +
       "<p data-level-diagnostic-status role=\"status\" aria-live=\"polite\"></p></section>" +
       "<p class=\"review-insights-note\">L’indicateur de performance FIDE-like s’appuie seulement sur les résultats contre des adversaires dont le PGN contient un Elo confirmé FIDE; il ne vient pas des évaluations Stockfish. Le seuil de 10 parties est un minimum opérationnel d’affichage, pas une règle FIDE ni une garantie statistique; vise 20 parties pour un premier suivi.</p>" +
@@ -352,7 +352,7 @@
         return;
       }
       diagnosticButton.textContent = diagnostic && diagnostic.active
-        ? "Arrêter le diagnostic"
+        ? "Diagnostic actif — arrêter"
         : diagnostic && diagnostic.completed ? "Recommencer le diagnostic" : "Activer le diagnostic de niveau";
       diagnosticStatus.textContent = diagnostic && diagnostic.active
         ? "Diagnostic en cours : " + progress.analyzedGames + "/" + progress.minimumGames + " parties analysées. Les bulles et points candidats sont bloqués jusqu’au seuil."

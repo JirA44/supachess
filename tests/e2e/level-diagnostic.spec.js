@@ -11,12 +11,12 @@ test('level diagnostic locks candidate and legal-move hints until ten new PGNs a
   await page.goto('/index.html');
   const panel = page.locator('#review-insights-panel');
   const toggle = panel.locator('[data-level-diagnostic-toggle]');
-  await expect(toggle).toHaveText('Activer le diagnostic de niveau');
+  await expect(toggle).toHaveText('Diagnostic actif — arrêter');
+  await expect(page.locator('#level-diagnostic-banner')).toContainText('activé par défaut');
+  await expect(page.locator('#level-diagnostic-banner')).toContainText('0/10');
   await expect(panel.locator('[data-level-diagnostic-status]')).toContainText('0/10');
-  await expect(page.locator('#btn-dots')).toBeEnabled();
-  await expect(page.locator('#btn-move-dots')).toBeEnabled();
-
-  await toggle.click();
+  await expect(page.locator('#btn-dots')).toBeDisabled();
+  await expect(page.locator('#btn-move-dots')).toBeDisabled();
   await expect(page.locator('#btn-dots')).toBeDisabled();
   await expect(page.locator('#btn-move-dots')).toBeDisabled();
   await expect(panel.locator('[data-level-diagnostic-status]')).toContainText('0/10');
@@ -55,4 +55,12 @@ test('level diagnostic locks candidate and legal-move hints until ten new PGNs a
   await expect(page.locator('#btn-move-dots')).toBeEnabled();
   await expect(page.locator('#btn-dots')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#btn-move-dots')).toHaveAttribute('aria-pressed', 'true');
+
+  await toggle.click();
+  await expect(page.locator('#btn-dots')).toBeDisabled();
+  await expect(toggle).toHaveText('Diagnostic actif — arrêter');
+  await toggle.click();
+  await expect(page.locator('#btn-dots')).toBeEnabled();
+  await expect(page.locator('#btn-move-dots')).toBeEnabled();
+  await expect(panel.locator('[data-level-diagnostic-status]')).toContainText('interrompu');
 });
