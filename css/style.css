@@ -238,6 +238,7 @@ body {
 .cl-dot.q-good { background: var(--candidate-good); }
 .cl-dot.q-mid { background: var(--candidate-mid); }
 .cl-dot.q-bad { background: var(--candidate-bad); }
+.cl-dot[class*="grade-"] { background: var(--grade-dot-color); opacity: 1; }
 
 /* History */
 .move-history { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: .92rem;
