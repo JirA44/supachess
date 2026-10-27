@@ -96,7 +96,7 @@
     <span id="supa-dot" class="status-dot loading"></span>
     <span id="supa-label">Supa : vérification…</span>
   </div>
-  <a class="topbar-profile-btn" href="https://jira44.github.io/supachess-web/?openProfile=1" aria-label="Ouvrir mon profil">👤 Profil</a>
+  <a id="topbar-profile-btn" class="topbar-profile-btn" href="#profile" aria-label="Ouvrir mon profil" aria-haspopup="dialog">👤 Profil</a>
 </header>
 
 <main class="layout">
@@ -287,8 +287,10 @@
 </footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="js/site-stats.js"></script>
+<script src="js/profile.js?v=in-page-profile-20261027"></script>
 <script src="vendor/chess.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/coach.js"></script>
@@ -303,5 +305,6 @@
   <script src="js/centipawn-explanations.js"></script>
   <script src="js/review.js?v=learning-baseline-20261027"></script>
 <script src="js/review-insights.js?v=learning-baseline-20261027-level-diagnostic-lock-20261027"></script>
+<script src="js/profile-page.js?v=in-page-profile-20261027"></script>
 </body>
 </html>
