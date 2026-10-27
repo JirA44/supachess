@@ -199,9 +199,9 @@
   <section class="side-zone">
     <div id="tablebase-panel" class="panel tablebase-panel">
       <h2>Finales résolues par tablebase</h2>
-      <p>Les tables Syzygy couvrent les positions légales de 7 pièces ou moins, sans droit au roque ni prise en passant disponible. Les catégories affichées signalent aussi les limites liées aux 50 coups et aux arrondis DTZ.</p>
+      <p>Syzygy couvre complètement les positions légales de 7 pièces ou moins, sans droit au roque ni prise en passant. Pour certaines finales à 8 pièces, l’API peut aussi fournir des données OP1 partielles; certaines positions à 9 pièces peuvent y accéder après un coup. Cette couverture ne garantit pas de résultat pour toutes ces positions. Les catégories tiennent compte des limites liées aux 50 coups et aux arrondis DTZ.</p>
       <button id="tablebase-check" class="btn" type="button">Vérifier cette position</button>
-      <p class="tablebase-source-note">La FEN est envoyée à la tablebase Lichess; l’historique de répétition n’y figure pas. Les finales à 8 pièces ne sont que partiellement couvertes. <a href="https://lichess.org/%40/lichess/blog/7-piece-syzygy-tablebases-are-complete/W3WeMyQA" target="_blank" rel="noopener">À propos des tables Syzygy</a>.</p>
+      <p class="tablebase-source-note">La FEN est envoyée à la tablebase Lichess; l’historique de répétition n’y figure pas. Les évaluations DTC d’OP1 sont partielles et ignorent la règle des 50 coups. <a href="https://lichess.org/%40/lichess/blog/7-piece-syzygy-tablebases-are-complete/W3WeMyQA" target="_blank" rel="noopener">À propos des tables Syzygy</a> · <a href="https://github.com/lichess-org/op1" target="_blank" rel="noopener">Couverture OP1</a>.</p>
       <p id="tablebase-status" class="tablebase-status" role="status" aria-live="polite">La tablebase complète couvre les finales jusqu’à 7 pièces.</p>
       <div id="tablebase-result" class="tablebase-result" hidden>
         <strong id="tablebase-summary"></strong>
@@ -297,7 +297,7 @@
 <script src="js/move-feedback.js"></script>
 <script src="js/app.js?v=fide-like-engine-time-20261027-level-diagnostic-lock-20261027"></script>
 <script src="js/games.js"></script>
-<script src="js/tablebase.js?v=proven-endgame-tablebase-20261027"></script>
+<script src="js/tablebase.js?v=op1-partial-tablebase-20261027"></script>
 <script src="js/blindspots.js"></script>
   <script src="js/learning-loop.js"></script>
   <script src="js/centipawn-explanations.js"></script>

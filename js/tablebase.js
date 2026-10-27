@@ -48,7 +48,7 @@
     if (pieces < 2) return "Position FEN invalide pour la tablebase.";
     if (fields[2] !== "-") return "La tablebase ne couvre pas les positions qui conservent un droit au roque.";
     if (fields[3] !== "-") return "Une prise en passant est encore possible; cette position n’est pas envoyée à la tablebase.";
-    if (pieces > 7) return "Hors couverture complète : " + pieces + " pièces. Les tables Syzygy couvrent jusqu’à 7 pièces; certaines finales à 8 pièces seulement sont couvertes par une table partielle séparée.";
+    if (pieces > 9) return "Hors couverture : " + pieces + " pièces. Syzygy couvre complètement jusqu’à 7 pièces; les requêtes partielles OP1 ne dépassent pas 9 pièces.";
     return "";
   }
 
@@ -67,7 +67,12 @@
   function render(data, fen) {
     const side = fen.split(" ")[1] === "b" ? "Noirs" : "Blancs";
     const category = data && data.category;
-    summary.textContent = side + " au trait : " + categoryLabel(category) + ".";
+    const pieces = pieceCount(fen);
+    const coverage = pieces > 7 ? " — recherche OP1 partielle (" + pieces + " pièces)" : "";
+    const dtcValue = data && data.dtc;
+    const dtc = dtcValue == null ? NaN : Number(dtcValue);
+    const dtcNote = pieces > 7 && Number.isFinite(dtc) ? " · DTC " + dtc : "";
+    summary.textContent = side + " au trait : " + categoryLabel(category) + coverage + dtcNote + ".";
     movesList.replaceChildren();
     (Array.isArray(data.moves) ? data.moves : []).forEach((move, index) => {
       const item = document.createElement("li");
@@ -76,6 +81,10 @@
       san.textContent = move.san || move.uci || "Coup";
       item.appendChild(san);
       item.appendChild(document.createTextNode(" — après ce demi-coup : " + categoryLabel(move.category)));
+      const dtc = move.dtc == null ? NaN : Number(move.dtc);
+      if (pieceCount(fen) > 7 && Number.isFinite(dtc)) {
+        item.appendChild(document.createTextNode(" · DTC " + dtc));
+      }
       movesList.appendChild(item);
     });
     resultBox.hidden = false;
@@ -104,10 +113,13 @@
     activeController = controller;
     const timeout = setTimeout(() => controller.abort(), 12000);
     button.disabled = true;
-    status.textContent = "Consultation de la tablebase exacte…";
+    status.textContent = pieceCount(fen) > 7
+      ? "Recherche partielle OP1 en cours. Elle ne couvre pas toutes les finales à 8 ou 9 pièces…"
+      : "Consultation de la tablebase exacte…";
     try {
       const requestUrl = new URL(endpoint);
       requestUrl.searchParams.set("fen", fen.replace(/ /g, "_"));
+      if (pieceCount(fen) > 7) requestUrl.searchParams.set("dtc", "auxiliary");
       const response = await fetch(requestUrl.toString(), {
         headers: { Accept: "application/json" },
         signal: controller.signal
@@ -118,7 +130,9 @@
         return;
       }
       if (response.status === 404) {
-        status.textContent = "Cette position n’est pas présente dans la tablebase complète consultée.";
+        status.textContent = pieceCount(fen) > 7
+          ? "Aucune donnée partielle OP1 disponible pour cette position; cela ne signifie ni gain ni nulle."
+          : "Cette position n’est pas présente dans la tablebase complète consultée.";
         return;
       }
       if (response.status === 429) {
