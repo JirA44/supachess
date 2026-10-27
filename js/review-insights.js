@@ -385,6 +385,7 @@
       try {
         root.localStorage.setItem(LEVEL_DIAGNOSTIC_KEY, JSON.stringify(value));
         root.dispatchEvent(new Event("supachess:level-diagnostic-change"));
+        if (typeof root.applyLevelDiagnosticLock === "function") root.applyLevelDiagnosticLock();
       } catch (_) {
         status.textContent = "Le diagnostic ne peut pas être enregistré dans ce navigateur.";
       }
