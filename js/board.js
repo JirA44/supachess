@@ -76,7 +76,7 @@ class BoardUI {
           stack.className = "cdot-stack" + (dotsHere.length > 1 ? " multiple" : "");
           for (const dot of dotsHere) {
             const bubble = document.createElement("span");
-            bubble.className = "cdot tone-" + dot.quality;
+            bubble.className = "cdot tone-" + dot.quality + (dot.category ? " grade-" + dot.category : "");
             appendBoardBubbleText(bubble, dot.label || dot.rank, dot.evaluation);
             const moveSan = dot.san || dot.moveSan || "";
             bubble.setAttribute("aria-label", moveSan
@@ -95,14 +95,14 @@ class BoardUI {
         }
         if (this.previewDot && this.previewDot.square === sq) {
           const preview = document.createElement("span");
-          preview.className = "cdot preview-move-bubble tone-" + this.previewDot.quality;
+          preview.className = "cdot preview-move-bubble tone-" + this.previewDot.quality + (this.previewDot.category ? " grade-" + this.previewDot.category : "");
           appendBoardBubbleText(preview, this.previewDot.label, this.previewDot.evaluation);
           preview.title = this.previewDot.title;
           cell.appendChild(preview);
         }
         if (this.lastMove && this.lastMove.to === sq && this.lastMove.grade) {
           const note = document.createElement("span");
-          note.className = "played-move-bubble tone-" + this.lastMove.grade.tone;
+          note.className = "played-move-bubble tone-" + this.lastMove.grade.tone + " grade-" + (this.lastMove.grade.category || "unrated");
           const rating = this.lastMove.grade.rating === null ? "…" : this.lastMove.grade.rating;
           appendBoardBubbleText(note, `${this.lastMove.grade.symbol}${rating}`, this.lastMove.evaluation);
           note.title = `${this.lastMove.san || "Coup joué"} · ${this.lastMove.grade.rating === null ? "analyse en cours" : this.lastMove.grade.label}`;
@@ -177,6 +177,7 @@ function candidateDotsFromGroups(dotsBySquare) {
     san: move.san,
     evaluation: move.evaluation,
     quality: move.grade.tone,
+    category: move.grade.category,
     title: `${move.san}: ${move.label} · ${move.evaluation}`,
   }))).flat();
 }
