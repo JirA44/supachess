@@ -259,7 +259,7 @@ function buildCandidates(lines, fen) {
   const dotsBySquare = new Map();
   for (const cand of state.candidates) {
     const square = cand.uci.slice(2, 4);
-    const grade = moveGrade(cand.deltaCp, isBrilliantCandidate(fen, cand));
+    const grade = moveGrade(cand.deltaCp, isBrilliantCandidate(fen, cand), cand.rank === 1);
     const evaluation = cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
       ? formatScore(cand.line, state.chess.turn() === "w") : "—";
     const moveBadge = { san: cand.san, label: `${grade.symbol}${grade.rating ?? "…"}`, evaluation, grade, rank: cand.rank };
@@ -346,7 +346,7 @@ async function playEngineMove() {
 
 function moveGradeCategory(lossCp, brilliant = false, best = false) {
   if (!Number.isFinite(lossCp)) return "unrated";
-  if (brilliant && lossCp <= 10) return "brilliant";
+  if (brilliant && lossCp < 30) return "brilliant";
   if (lossCp >= 200) return "blunder";
   if (lossCp >= 60) return "error";
   if (lossCp >= 30) return "inaccuracy";
@@ -385,7 +385,7 @@ function renderMoveGradeSummary() {
       const row = document.createElement("div");
       row.className = "move-grade-count-row";
       row.dataset.grade = key;
-      row.innerHTML = `<span class="move-grade-count-symbol" aria-hidden="true">${symbol}</span><span>${name}</span><strong data-grade-count>${count ? "+" + count : "0"}</strong>`;
+      row.innerHTML = `<span class="move-grade-count-dot" aria-hidden="true"></span><span class="move-grade-count-symbol" aria-hidden="true">${symbol}</span><span class="move-grade-count-name">${name}</span><strong data-grade-count>${count ? "+" + count : "0"}</strong>`;
       side.appendChild(row);
     }
     wrap.appendChild(side);
@@ -399,9 +399,9 @@ function finishEngineFeedback(pending, replyLine) {
   const cand = { deltaCp, line: { ...replyLine, pv: [pending.uci, ...replyLine.pv] } };
   const brilliant = isBrilliantCandidate(pending.fen, cand);
   recordMoveGrade(pending.ply, pending.color, moveGradeCategory(deltaCp, brilliant, pending.uci === pending.beforeBestUci));
-  const grade = moveGrade(deltaCp, brilliant);
+  const grade = moveGrade(deltaCp, brilliant, pending.uci === pending.beforeBestUci);
   moveFeedback.show({ san: pending.san, color: pending.color, moveNumber: pending.moveNumber, square: pending.square,
-    deltaCp, brilliant, token: pending.token });
+    deltaCp, brilliant, best: pending.uci === pending.beforeBestUci, token: pending.token });
   if (boardUI.lastMove && boardUI.lastMove.to === pending.square) {
     boardUI.lastMove.grade = grade;
     boardUI.lastMove.evaluation = replyLine && (replyLine.scoreCp !== null || replyLine.mate !== null)
@@ -599,11 +599,11 @@ function commitUserMove(moveObj, cand, forced) {
   if (!mv) return;
   moveFeedback.clearPreview();
   const brilliant = isBrilliantCandidate(fenBefore, cand);
-  const grade = moveGrade(cand ? cand.deltaCp : null, brilliant);
+  const grade = moveGrade(cand ? cand.deltaCp : null, brilliant, cand?.rank === 1);
   recordMoveGrade(state.chess.history().length, userMoveColor,
     moveGradeCategory(cand ? cand.deltaCp : null, brilliant, cand?.rank === 1));
   moveFeedback.show({ san: mv.san, color: mv.color, moveNumber: moveNumberFromFen(fenBefore), square: mv.to,
-    deltaCp: cand ? cand.deltaCp : null, brilliant });
+    deltaCp: cand ? cand.deltaCp : null, brilliant, best: cand?.rank === 1 });
   const evaluation = cand && cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
     ? formatScore(cand.line, userMoveColor === "w") : "—";
   boardUI.lastMove = { from: mv.from, to: mv.to, san: mv.san, grade, evaluation };
