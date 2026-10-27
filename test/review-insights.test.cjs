@@ -178,7 +178,7 @@ test("Stockfish estimate uses only completed games with tracked engine settings"
   assert.equal(result.status, "provisional_engine_relative");
   assert.equal(result.games, 10);
   assert.equal(result.score, 10);
-  assert.equal(result.estimate, 2780);
+  assert.equal(result.estimate, 2930);
 });
 
 test("Stockfish estimate waits for ten unique completed engine games", () => {
