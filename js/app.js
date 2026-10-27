@@ -668,10 +668,8 @@ function renderCandidatesList() {
   if (!state.candidates.length) { wrap.innerHTML = "<em>En attente d'analyse…</em>"; return; }
   const whiteSide = state.chess.turn() === "w";
   wrap.innerHTML = state.candidates.map((c, i) => {
-    const q = qualityClass(c.deltaCp, c.rank);
-    const colors = { "q-best": "var(--candidate-best)", "q-good": "var(--candidate-good)", "q-mid": "var(--candidate-mid)", "q-bad": "var(--candidate-bad)" };
     const open = clIsOpen(c, i);
-    const grade = moveGrade(c.deltaCp, isBrilliantCandidate(state.chess.fen(), c));
+    const grade = moveGrade(c.deltaCp, isBrilliantCandidate(state.chess.fen(), c), c.rank === 1);
     const sub = [];
     if (open) {
       const pros = c.args.pros.map((a) => `<div class="arg-pro">✚ ${esc(a)}</div>`).join("");
@@ -685,7 +683,7 @@ function renderCandidatesList() {
       <div class="cl-row" style="cursor:pointer" title="Cliquer pour ${open ? "replier" : "déplier"}">
         <div class="cl-move">
           <span class="cl-caret">${open ? "▾" : "▸"}</span>
-          <span class="cl-dot" style="background:${colors[q]}"></span>
+          <span class="cl-dot grade-${grade.category}" aria-label="${esc(grade.label)}"></span>
           <strong class="cl-san">${c.rank}. ${esc(c.san)}</strong>
         </div>
         <span class="move-grade-chip tone-${grade.tone}" title="Note ${grade.rating === null ? "en cours" : grade.rating + " sur 10"} — ${esc(grade.label)}">
