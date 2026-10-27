@@ -1,6 +1,15 @@
 const { test, expect } = require('@playwright/test');
 
+async function preparePracticeMode(page) {
+  await page.addInitScript(() => {
+    localStorage.setItem('supachess-level-diagnostic', JSON.stringify({
+      active: false, completed: true, analyzedGamesAtCompletion: 10
+    }));
+  });
+}
+
 test('several candidate moves on one square stay distinct and do not overlap', async ({ page }) => {
+  await preparePracticeMode(page);
   await page.goto('/index.html');
   for (const width of [1440, 375]) {
     await page.setViewportSize({ width, height: 900 });
@@ -41,6 +50,7 @@ test('several candidate moves on one square stay distinct and do not overlap', a
 
 
 test('candidate bubbles toggle off and on, and preference survives reload', async ({ page }) => {
+  await preparePracticeMode(page);
   await page.goto('/index.html');
   const toggle = page.getByRole('button', { name: 'Bulles candidates : ON' });
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
@@ -65,6 +75,7 @@ test('candidate bubbles toggle off and on, and preference survives reload', asyn
 
 
 test('board stylesheet cache key includes the full-size stacked bubble styles', async ({ page }) => {
+  await preparePracticeMode(page);
   await page.goto('/index.html');
   const stylesheet = page.locator('link[href*="css/style.css"]');
   await expect(stylesheet).toHaveAttribute('href', /live-move-grade-counts-20261026/);
@@ -72,6 +83,7 @@ test('board stylesheet cache key includes the full-size stacked bubble styles', 
 
 
 test("evaluation bar keeps centipawn precision", async ({ page }) => {
+  await preparePracticeMode(page);
   await page.goto("/index.html");
   await page.evaluate(() => updateEvalBar({ scoreCp: 10, mate: null }));
   await expect(page.locator("#evalbar-label")).toHaveText("+0.10");
@@ -81,6 +93,7 @@ test("evaluation bar keeps centipawn precision", async ({ page }) => {
 
 
 test("hovering a candidate bubble shows the move to play beside it", async ({ page }) => {
+  await preparePracticeMode(page);
   await page.goto("/index.html");
   await page.waitForFunction(() => document.body.dataset.engineReady === "1");
   await page.evaluate(() => {
@@ -106,6 +119,7 @@ test("hovering a candidate bubble shows the move to play beside it", async ({ pa
 
 
 test("each recorded half-move reports its precision loss", async ({ page }) => {
+  await preparePracticeMode(page);
   await page.goto("/index.html");
   await page.waitForFunction(() => document.body.dataset.engineReady === "1");
   await page.evaluate(() => {
@@ -124,6 +138,7 @@ test("each recorded half-move reports its precision loss", async ({ page }) => {
 
 
 test("selecting a piece shows independent hot and cold move points and a chosen move works", async ({ page }) => {
+  await preparePracticeMode(page);
   await page.goto('/index.html');
   await page.waitForFunction(() => document.body.dataset.engineReady === '1' && state.phase === 'userTurn');
   const move = await page.evaluate(() => ({ from: state.candidates[0].uci.slice(0, 2), to: state.candidates[0].uci.slice(2, 4) }));
