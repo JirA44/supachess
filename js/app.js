@@ -23,20 +23,115 @@ const state = {
 const boardUI = new BoardUI($("board"), onSquareClick);
 const DOTS_STORAGE_KEY = "supachess-show-candidate-dots";
 const MOVE_DOTS_STORAGE_KEY = "supachess-show-legal-move-dots";
-boardUI.showDots = localStorage.getItem(DOTS_STORAGE_KEY) !== "false";
-boardUI.showMoveDots = localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false";
+const LEVEL_DIAGNOSTIC_KEY = "supachess-level-diagnostic";
+function readLevelDiagnostic() {
+  try { return JSON.parse(localStorage.getItem(LEVEL_DIAGNOSTIC_KEY) || "null"); }
+  catch (_) { return null; }
+}
+function isLevelDiagnosticActive() {
+  const diagnostic = readLevelDiagnostic();
+  return Boolean(diagnostic && diagnostic.active);
+}
+function ensureDefaultLevelDiagnostic() {
+  const existing = readLevelDiagnostic();
+  if (existing) return existing;
+  const initial = {
+    active: true,
+    defaultActivation: true,
+    startedAt: new Date().toISOString(),
+    restoreDots: localStorage.getItem(DOTS_STORAGE_KEY) !== "false",
+    restoreMoveDots: localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false",
+  };
+  try { localStorage.setItem(LEVEL_DIAGNOSTIC_KEY, JSON.stringify(initial)); } catch (_) {}
+  return initial;
+}
+ensureDefaultLevelDiagnostic();
+let levelDiagnosticLockWasActive = isLevelDiagnosticActive();
+function syncLevelDiagnosticBanner() {
+  const banner = $("level-diagnostic-banner");
+  if (!banner) return;
+  const diagnostic = readLevelDiagnostic();
+  if (!diagnostic) {
+    banner.hidden = false;
+    banner.textContent = "Le diagnostic de niveau est activé par défaut : analyse 10 parties avec Stockfish. Bulles candidates et points de coups sont désactivés pendant ce bilan.";
+    return;
+  }
+  if (diagnostic.active) {
+    let count = 0;
+    try {
+      const items = JSON.parse(localStorage.getItem("supachess_reviewed_pgns") || "[]");
+      const start = Date.parse(diagnostic.startedAt || "");
+      if (Array.isArray(items) && Number.isFinite(start)) count = items.filter((item) =>
+        item && item.analysis && item.analysis.version === 1 &&
+        Array.isArray(item.analysis.players) && item.analysis.players.some((player) => Number(player && player.ratedMoves) > 0) &&
+        Date.parse(item.analyzedAt || "") >= start
+      ).length;
+    } catch (_) {}
+    banner.hidden = false;
+    const prefix = diagnostic.defaultActivation ? "Diagnostic de niveau activé par défaut : " : "Diagnostic actif : ";
+    banner.textContent = prefix + count + "/10 parties analysées depuis son activation. Joue sans bulles candidates ni points de coups possibles; les aides reviennent après la dixième partie.";
+  } else if (diagnostic.completed) {
+    banner.hidden = false;
+    banner.textContent = "Diagnostic terminé : " + (diagnostic.analyzedGamesAtCompletion || 10) +
+      " parties analysées. Les bulles candidates et points de coups sont réactivés. Consulte le bilan et les exercices ciblés.";
+  } else if (diagnostic.endedEarly) {
+    banner.hidden = false;
+    banner.textContent = "Diagnostic interrompu avant 10 parties. Les aides sont réactivées; le bilan de niveau reste à confirmer.";
+  } else {
+    banner.hidden = true;
+  }
+}
+boardUI.showDots = levelDiagnosticLockWasActive ? false : localStorage.getItem(DOTS_STORAGE_KEY) !== "false";
+boardUI.showMoveDots = levelDiagnosticLockWasActive ? false : localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false";
 function syncDotsButton() {
   const button = $("btn-dots");
   if (!button) return;
-  button.textContent = "Bulles candidates : " + (boardUI.showDots ? "ON" : "OFF");
-  button.setAttribute("aria-pressed", String(boardUI.showDots));
+  const locked = isLevelDiagnosticActive();
+  button.disabled = locked;
+  button.title = locked ? "Bloqué pendant le diagnostic de niveau" : "Afficher ou masquer les bulles candidates";
+  button.textContent = locked ? "Bulles candidates : bloquées" : "Bulles candidates : " + (boardUI.showDots ? "ON" : "OFF");
+  button.setAttribute("aria-pressed", String(!locked && boardUI.showDots));
+  syncLevelDiagnosticBanner();
 }
 function syncMoveDotsButton() {
   const button = $("btn-move-dots");
   if (!button) return;
-  button.textContent = "Points chauds/froids : " + (boardUI.showMoveDots ? "ON" : "OFF");
-  button.setAttribute("aria-pressed", String(boardUI.showMoveDots));
+  const locked = isLevelDiagnosticActive();
+  button.disabled = locked;
+  button.title = locked ? "Bloqué pendant le diagnostic de niveau" : "Afficher ou masquer les points de coups possibles";
+  button.textContent = locked ? "Points chauds/froids : bloqués" : "Points chauds/froids : " + (boardUI.showMoveDots ? "ON" : "OFF");
+  button.setAttribute("aria-pressed", String(!locked && boardUI.showMoveDots));
 }
+function applyLevelDiagnosticLock() {
+  const diagnostic = readLevelDiagnostic();
+  const active = Boolean(diagnostic && diagnostic.active);
+  if (active) {
+    boardUI.showDots = false;
+    boardUI.showMoveDots = false;
+  } else if (levelDiagnosticLockWasActive) {
+    boardUI.showDots = typeof diagnostic?.restoreDots === "boolean"
+      ? diagnostic.restoreDots : localStorage.getItem(DOTS_STORAGE_KEY) !== "false";
+    boardUI.showMoveDots = typeof diagnostic?.restoreMoveDots === "boolean"
+      ? diagnostic.restoreMoveDots : localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false";
+    localStorage.setItem(DOTS_STORAGE_KEY, String(boardUI.showDots));
+    localStorage.setItem(MOVE_DOTS_STORAGE_KEY, String(boardUI.showMoveDots));
+  }
+  levelDiagnosticLockWasActive = active;
+  syncDotsButton();
+  syncMoveDotsButton();
+  if (typeof renderBoard === "function") renderBoard();
+}
+window.addEventListener("supachess:level-diagnostic-change", applyLevelDiagnosticLock);
+window.addEventListener("storage", (event) => {
+  if (event.key !== LEVEL_DIAGNOSTIC_KEY) return;
+  const active = isLevelDiagnosticActive();
+  if (!active && levelDiagnosticLockWasActive) {
+    const diagnostic = readLevelDiagnostic();
+    boardUI.showDots = typeof diagnostic?.restoreDots === "boolean" ? diagnostic.restoreDots : localStorage.getItem(DOTS_STORAGE_KEY) !== "false";
+    boardUI.showMoveDots = typeof diagnostic?.restoreMoveDots === "boolean" ? diagnostic.restoreMoveDots : localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false";
+  }
+  applyLevelDiagnosticLock();
+});
 
 /* ── Réglages ── */
 function thresholdCp() { return Math.round(parseFloat($("sel-threshold").value) * 100); }
@@ -744,12 +839,14 @@ $("btn-new").addEventListener("click", newGame);
 syncDotsButton();
 syncMoveDotsButton();
 $("btn-dots").addEventListener("click", () => {
+  if (isLevelDiagnosticActive()) return;
   boardUI.showDots = !boardUI.showDots;
   localStorage.setItem(DOTS_STORAGE_KEY, String(boardUI.showDots));
   syncDotsButton();
   renderBoard();
 });
 $("btn-move-dots").addEventListener("click", () => {
+  if (isLevelDiagnosticActive()) return;
   boardUI.showMoveDots = !boardUI.showMoveDots;
   localStorage.setItem(MOVE_DOTS_STORAGE_KEY, String(boardUI.showMoveDots));
   syncMoveDotsButton();

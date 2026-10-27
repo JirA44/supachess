@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SupaChess Coach IA — Entraîneur d'échecs</title>
-<link rel="stylesheet" href="css/style.css?v=live-move-grade-counts-20261026-lessons-nav-20261026-move-hover-20261026-legal-move-dots-20261026-fide-like-engine-time-20261027">>
+<link rel="stylesheet" href="css/style.css?v=live-move-grade-counts-20261026-lessons-nav-20261026-move-hover-20261026-legal-move-dots-20261026-fide-like-engine-time-20261027-level-diagnostic-lock-20261027">>
 <style>
   .supa-section { margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(128,128,128,.4); }
   .supa-head { font-weight: 600; font-size: .85em; opacity: .9; }
@@ -115,6 +115,7 @@
         <button id="btn-undo" class="btn">Annuler le coup</button>
         <button id="btn-dots" class="btn" type="button" aria-pressed="true">Bulles candidates : ON</button>
         <button id="btn-move-dots" class="btn" type="button" aria-pressed="true">Points chauds/froids : ON</button>
+        <p id="level-diagnostic-banner" class="level-diagnostic-banner" role="status" aria-live="polite">Diagnostic de niveau activé par défaut : analyse 10 parties avec Stockfish. Bulles candidates et points de coups désactivés pendant le bilan.</p>
         <select id="sel-color" class="btn select">
           <option value="w">Je joue les Blancs</option>
           <option value="b">Je joue les Noirs</option>
@@ -267,12 +268,12 @@
 <script src="js/supa.js"></script>
 <script src="js/board.js"></script>
 <script src="js/move-feedback.js"></script>
-<script src="js/app.js?v=fide-like-engine-time-20261027"></script>
+<script src="js/app.js?v=fide-like-engine-time-20261027-level-diagnostic-lock-20261027"></script>
 <script src="js/games.js"></script>
 <script src="js/blindspots.js"></script>
   <script src="js/learning-loop.js"></script>
   <script src="js/centipawn-explanations.js"></script>
   <script src="js/review.js?v=learning-baseline-20261027"></script>
-<script src="js/review-insights.js?v=learning-baseline-20261027"></script>
+<script src="js/review-insights.js?v=learning-baseline-20261027-level-diagnostic-lock-20261027"></script>
 </body>
 </html>

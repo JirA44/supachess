@@ -136,3 +136,25 @@ test("progress compares error rates only across enough analyzed games at the sam
   assert.equal(ReviewInsights.compareProgress(ReviewInsights.aggregate(games.slice(0, 5)).profiles[0]).status,
     "need_comparable_games");
 });
+
+
+test("level diagnostic counts only completed PGN analyses started after activation", () => {
+  const startedAt = "2026-10-27T10:00:00.000Z";
+  const state = { active: true, startedAt };
+  const items = [
+    { analysis: { version: 1, players: [{ ratedMoves: 1 }] }, analyzedAt: "2026-10-27T10:00:01.000Z" },
+    { analysis: { version: 1, players: [{ ratedMoves: 1 }] }, analyzedAt: "2026-10-27T09:59:59.000Z" },
+    { analysis: null, analyzedAt: "2026-10-27T10:00:02.000Z" },
+    { analysis: { version: 2 }, analyzedAt: "2026-10-27T10:00:03.000Z" },
+  ];
+  const progress = ReviewInsights.levelDiagnosticProgress(state, items);
+  assert.equal(progress.active, true);
+  assert.equal(progress.analyzedGames, 1);
+  assert.equal(progress.remainingGames, 9);
+  assert.equal(progress.complete, false);
+  const complete = ReviewInsights.levelDiagnosticProgress(state, Array.from({ length: 10 }, () => ({
+    analysis: { version: 1, players: [{ ratedMoves: 1 }] }, analyzedAt: "2026-10-27T10:01:00.000Z"
+  })));
+  assert.equal(complete.complete, true);
+  assert.equal(complete.remainingGames, 0);
+});
