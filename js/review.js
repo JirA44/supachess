@@ -60,7 +60,7 @@ function reviewHistorySave(pgn, headers = {}, correctionExercises = [], analysis
     timeControl: headers.TimeControl || "",
     correctionExercises: Array.isArray(correctionExercises) ? correctionExercises : [],
     analysis: analysis && analysis.version === 1 ? analysis : (existing && existing.analysis) || null,
-    analyzedAt: new Date().toISOString(),
+    analyzedAt: analysis && analysis.version === 1 ? new Date().toISOString() : (existing && existing.analyzedAt) || null,
   };
   const next = [item, ...previous.filter((saved) => saved.id !== item.id &&
     saved.pgn.replace(/\r\n?/g, "\n").trim() !== normalizedPgn)].slice(0, REVIEW_HISTORY_LIMIT);
