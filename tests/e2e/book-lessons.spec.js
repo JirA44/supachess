@@ -94,7 +94,7 @@ test("home header has a prominent lessons button beside SupaChess Coach IA", asy
   const lessons = brand.getByRole("link", { name: "Leçons" });
   await expect(lessons).toHaveAttribute("href", "book-lessons.html");
   await lessons.click();
-  await expect(page).toHaveURL(/\/index\.html#profile$/);
+  await expect(page).toHaveURL(/book-lessons\.html/);
   await expect(page.locator("h1")).toHaveText("Leçons");
   await expect(page.locator(".lesson-subtitle")).toHaveText("La route vers l’excellence");
 });
@@ -214,7 +214,7 @@ test("profile opens inside the game page and remains available from lessons", as
   await expect(gameProfile).toBeVisible();
   await expect(gameProfile).toHaveAttribute("href", "#profile");
   await gameProfile.click();
-  await expect(page).toHaveURL(/\/index\.html#profile$/);
+  await expect(page).toHaveURL(/\/index\.html$/);
   await expect(page.locator("#profile-modal")).toBeVisible();
   await expect(page.locator("#profile-modal [data-profile-form]")).toBeVisible({ timeout: 15000 });
 
