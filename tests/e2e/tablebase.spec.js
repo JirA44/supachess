@@ -37,7 +37,7 @@ test("tablebase refuses positions outside complete seven-piece scope without que
   });
   await page.goto("/index.html");
   await page.waitForFunction(() => document.body.dataset.engineReady === "1");
-  await page.evaluate(() => state.chess.reset());
+  await page.evaluate(() => state.chess.load("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1"));
   await page.getByRole("button", { name: "Vérifier cette position" }).click();
   await expect(page.locator("#tablebase-status")).toContainText("Hors couverture complète : 32 pièces");
   expect(requestCount).toBe(0);
