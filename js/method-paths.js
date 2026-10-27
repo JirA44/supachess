@@ -34,8 +34,12 @@
     programFilter.dispatchEvent(new Event("change", { bubbles: true }));
 
     if (program === "Stockfish · comparer et vérifier") {
-      const firstLesson = catalog.querySelector(".lesson-catalog-button:not(.anticipation-exercise)");
-      if (firstLesson) firstLesson.click();
+      if (typeof window.startSupaChessStockfishCoach === "function") {
+        window.startSupaChessStockfishCoach();
+      } else {
+        const firstLesson = catalog.querySelector(".lesson-catalog-button:not(.anticipation-exercise)");
+        if (firstLesson) firstLesson.click();
+      }
     } else {
       const firstLesson = catalog.querySelector(".lesson-catalog-button");
       if (firstLesson) firstLesson.click();

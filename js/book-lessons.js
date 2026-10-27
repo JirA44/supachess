@@ -1147,6 +1147,16 @@
     if (location.hash === "#parcours-pgn") section.scrollIntoView({ block: "start" });
   }
 
+  root.startSupaChessStockfishCoach = function () {
+    const index = LESSONS.findIndex((lesson) => lesson.kind !== "anticipation");
+    if (index < 0) return false;
+    $("lesson-program-filter").value = "";
+    $("lesson-search").value = "";
+    renderCatalog();
+    loadLesson(index, { coach: true });
+    return true;
+  };
+
   renderCatalog();
   const requestedNext = new URLSearchParams(location.search).get("next") === "1";
   const firstIncomplete = LESSONS.findIndex((lesson) => !(progress[lesson.id] && progress[lesson.id].completed));
