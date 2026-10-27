@@ -290,3 +290,8 @@ body {
   cursor: not-allowed;
   border-color: #5f6b64;
 }
+
+.topbar-profile-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 9px 16px; border: 1px solid var(--accent); border-radius: 10px; background: rgba(240,179,92,.14); color: var(--text); font-weight: 800; text-decoration: none; white-space: nowrap; }
+.topbar-profile-btn:hover, .topbar-profile-btn:focus-visible { background: var(--accent); color: #191817; outline: 2px solid var(--text); outline-offset: 2px; }
+.lesson-topbar .topbar-profile-btn { margin-left: auto; }
+@media (max-width: 700px) { .topbar-profile-btn { min-height: 40px; padding: 8px 12px; } }
