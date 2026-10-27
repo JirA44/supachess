@@ -208,11 +208,14 @@ test("five methodology cards explain their routines and open matching lessons", 
 });
 
 
-test("profile shortcut stays available from both main SupaChess pages", async ({ page }) => {
+test("profile opens inside the game page and remains available from lessons", async ({ page }) => {
   await page.goto("/index.html");
   const gameProfile = page.getByRole("link", { name: "Ouvrir mon profil" });
   await expect(gameProfile).toBeVisible();
-  await expect(gameProfile).toHaveAttribute("href", "https://jira44.github.io/supachess-web/?openProfile=1");
+  await expect(gameProfile).toHaveAttribute("href", "#profile");
+  await gameProfile.click();
+  await expect(page).toHaveURL(/\\/index\\.html#profile$/);
+  await expect(page.getByRole("dialog", { name: "Mon profil SupaChess" })).toBeVisible();
 
   await page.goto("/book-lessons.html");
   const lessonProfile = page.getByRole("link", { name: "Ouvrir mon profil" });
