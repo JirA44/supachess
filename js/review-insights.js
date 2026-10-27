@@ -348,7 +348,7 @@
       if (diagnostic && diagnostic.active && progress.complete) {
         writeDiagnostic({ ...diagnostic, active: false, completed: true, analyzedGamesAtCompletion: progress.analyzedGames, completedAt: new Date().toISOString() });
         diagnosticButton.textContent = "Diagnostic terminé — recommencer";
-        diagnosticStatus.textContent = "10 parties analysées depuis le début du diagnostic. Les aides de coups sont réactivées.";
+        diagnosticStatus.textContent = "Diagnostic terminé sur 10 parties analysées depuis le début. Les aides de coups sont réactivées.";
         return;
       }
       diagnosticButton.textContent = diagnostic && diagnostic.active
