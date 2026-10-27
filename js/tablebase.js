@@ -53,6 +53,8 @@
   }
 
   function clearResults() {
+    if (displayedPositionTimer) clearInterval(displayedPositionTimer);
+    displayedPositionTimer = null;
     resultBox.hidden = true;
     summary.textContent = "";
     movesList.replaceChildren();
@@ -77,6 +79,7 @@
       movesList.appendChild(item);
     });
     resultBox.hidden = false;
+    watchDisplayedPosition(fen);
     status.textContent = data && data.moves && data.moves.length
       ? "Réponse reçue; les coups sont classés par la tablebase."
       : "La tablebase a répondu, mais n’a fourni aucune suite pour cette position.";
