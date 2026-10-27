@@ -146,9 +146,8 @@
       '<div style="display:flex;align-items:center;gap:8px;opacity:.7"><span style="height:1px;background:#777;flex:1"></span><span>ou</span><span style="height:1px;background:#777;flex:1"></span></div>' +
       '<button data-profile-google type="button" class="btn">Continuer avec Google</button>' +
       '<p data-profile-error role="status" aria-live="polite" style="min-height:1.3em;margin:0"></p></form>';
-    const overlay = makeOverlay("Connexion au profil SupaChess", wrapper.firstElementChild);
+    const overlay = makeOverlay("Connexion au profil SupaChess", wrapper);
     const content = overlay.querySelector("[data-profile-dialog-content]");
-    content.appendChild(wrapper.children[0]);
     const form = content.querySelector("[data-profile-form]");
     const submit = content.querySelector("[data-profile-submit]");
     const tabs = content.querySelectorAll("[data-profile-mode]");
