@@ -124,8 +124,8 @@ function gamesRenderStockfishEstimate() {
     output.textContent = "Parties terminées admissibles : " + count + "/10. Joue et termine au moins 10 parties contre un niveau Stockfish réglé; 20 donnent un premier suivi plus utile.";
     return;
   }
-  output.textContent = "Estimation provisoire : " + estimate.estimate + " FIDE-like · " +
-    estimate.games + " parties terminées · niveau Stockfish moyen " + estimate.averageOpponentLevel +
+  output.textContent = "Estimation provisoire : " + estimate.estimate.toLocaleString("fr-FR") + " FIDE-like · " +
+    estimate.games.toLocaleString("fr-FR") + " parties terminées · niveau Stockfish moyen " + estimate.averageOpponentLevel.toLocaleString("fr-FR") +
     ". Indicateur relatif aux réglages de SupaChess, non calibré officiellement FIDE.";
 }
 
