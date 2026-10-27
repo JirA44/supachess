@@ -50,7 +50,6 @@
     if (fields[3] !== "-") return "Une prise en passant est encore possible; cette position n’est pas envoyée à la tablebase.";
     if (pieces > 9) return "Hors couverture : " + pieces + " pièces. Syzygy couvre complètement jusqu’à 7 pièces; les requêtes partielles OP1 ne dépassent pas 9 pièces.";
     return "";
-    return "";
   }
 
   function clearResults() {
@@ -70,7 +69,8 @@
     const category = data && data.category;
     const pieces = pieceCount(fen);
     const coverage = pieces > 7 ? " — recherche OP1 partielle (" + pieces + " pièces)" : "";
-    const dtc = Number(data && data.dtc);
+    const dtcValue = data && data.dtc;
+    const dtc = dtcValue == null ? NaN : Number(dtcValue);
     const dtcNote = pieces > 7 && Number.isFinite(dtc) ? " · DTC " + dtc : "";
     summary.textContent = side + " au trait : " + categoryLabel(category) + coverage + dtcNote + ".";
     movesList.replaceChildren();
@@ -81,7 +81,7 @@
       san.textContent = move.san || move.uci || "Coup";
       item.appendChild(san);
       item.appendChild(document.createTextNode(" — après ce demi-coup : " + categoryLabel(move.category)));
-      const dtc = Number(move.dtc);
+      const dtc = move.dtc == null ? NaN : Number(move.dtc);
       if (pieceCount(fen) > 7 && Number.isFinite(dtc)) {
         item.appendChild(document.createTextNode(" · DTC " + dtc));
       }
