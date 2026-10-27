@@ -2,9 +2,11 @@ const { test, expect } = require('@playwright/test');
 
 test('level diagnostic locks candidate and legal-move hints until ten new PGNs are analyzed', async ({ page }) => {
   await page.addInitScript(() => {
+    if (sessionStorage.getItem('level-diagnostic-e2e-seeded')) return;
     localStorage.clear();
     localStorage.setItem('supachess-show-candidate-dots', 'true');
     localStorage.setItem('supachess-show-legal-move-dots', 'true');
+    sessionStorage.setItem('level-diagnostic-e2e-seeded', 'true');
   });
   await page.goto('/index.html');
   const panel = page.locator('#review-insights-panel');
