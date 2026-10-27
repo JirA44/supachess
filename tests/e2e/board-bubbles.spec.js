@@ -121,7 +121,7 @@ test("hovering a candidate bubble shows the move to play beside it", async ({ pa
 test("each recorded half-move reports its precision loss", async ({ page }) => {
   await preparePracticeMode(page);
   await page.goto("/index.html");
-  await page.waitForFunction(() => document.body.dataset.engineReady === "1");
+  await page.waitForFunction(() => document.body.dataset.engineReady === "1" && state.phase === "userTurn");
   await page.evaluate(() => {
     state.gen++;
     state.phase = "userTurn";
