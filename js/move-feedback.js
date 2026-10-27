@@ -108,5 +108,5 @@ function previewCandidate(cand) {
     square: cand.uci.slice(2, 4), deltaCp: cand.deltaCp,
     evaluation: cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
       ? formatScore(cand.line, state.chess.turn() === "w") : "—",
-    brilliant: isBrilliantCandidate(state.chess.fen(), cand), mode: "preview" });
+    brilliant: isBrilliantCandidate(state.chess.fen(), cand), best: cand.rank === 1, mode: "preview" });
 }
