@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SupaChess Coach IA — Entraîneur d'échecs</title>
-<link rel="stylesheet" href="css/style.css?v=live-move-grade-counts-20261026-lessons-nav-20261026-move-hover-20261026-legal-move-dots-20261026-fide-like-engine-time-20261027">>
+<link rel="stylesheet" href="css/style.css?v=live-move-grade-counts-20261026-lessons-nav-20261026-move-hover-20261026-legal-move-dots-20261026-fide-levels-profile-accuracy-20261027">>
 <style>
   .supa-section { margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(128,128,128,.4); }
   .supa-head { font-weight: 600; font-size: .85em; opacity: .9; }
@@ -96,6 +96,7 @@
     <span id="supa-dot" class="status-dot loading"></span>
     <span id="supa-label">Supa : vérification…</span>
   </div>
+  <a class="topbar-profile-btn" href="https://jira44.github.io/supachess-web/?openProfile=1" aria-label="Ouvrir mon profil">👤 Profil</a>
 </header>
 
 <main class="layout">
@@ -164,16 +165,31 @@
           <small class="setting-hint">Le temps choisi s’applique aussi à la réflexion de l’adversaire.</small>
         </label>
         <label>Adversaire
-          <select id="sel-elo" class="btn select">
-            <option value="1320">Elo moteur UCI 1320</option>
-            <option value="1600" selected>Elo moteur UCI 1600</option>
-            <option value="2000">Elo moteur UCI 2000</option>
-            <option value="2400">Elo moteur UCI 2400</option>
+                    <select id="sel-elo" class="btn select">
+            <option value="1320">Stockfish · Elo UCI 1320</option>
+            <option value="1600" selected>Stockfish · Elo UCI 1600</option>
+            <option value="2000">Stockfish · Elo UCI 2000</option>
+            <option value="2400">Stockfish · Elo UCI 2 400</option>
+            <option value="2450">Stockfish · Elo UCI 2 450</option>
+            <option value="2500">Stockfish · Elo UCI 2 500</option>
+            <option value="2550">Stockfish · Elo UCI 2 550</option>
+            <option value="2600">Stockfish · Elo UCI 2 600</option>
+            <option value="2650">Stockfish · Elo UCI 2 650</option>
+            <option value="2700">Stockfish · Elo UCI 2 700</option>
+            <option value="2750">Stockfish · Elo UCI 2 750</option>
+            <option value="2800">Stockfish · Elo UCI 2 800</option>
+            <option value="2850">Stockfish · Elo UCI 2 850</option>
+            <option value="2900">Stockfish · Elo UCI 2 900</option>
+            <option value="2950">Stockfish · Elo UCI 2 950</option>
+            <option value="3000">Stockfish · Elo UCI 3 000</option>
+            <option value="3050">Stockfish · Elo UCI 3 050</option>
+            <option value="3100">Stockfish · Elo UCI 3 100</option>
+            <option value="3150">Stockfish · Elo UCI 3 150</option>
             <option value="0">Pleine puissance — Stockfish 19</option>
             <option value="manual">Manuel (auto-entraînement)</option>
           </select>
           <small id="opponent-fide-estimate" class="opponent-fide-estimate" role="status" aria-live="polite"></small>
-          <small class="opponent-fide-note">Estimation indicative, pas un classement officiel. Repère : Stockfish 19 pleine puissance à 3 s = 3500 Elo FIDE-like.</small>
+          <small class="opponent-fide-note">Les niveaux UCI de 2 400 à 3 150 progressent par pas de 50. Estimation FIDE-like indicative, pas un classement officiel. Repère : Stockfish 19 pleine puissance à 3 s ≈ 3 500.</small>
       </div>
     </div>
   </section>
