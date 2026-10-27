@@ -214,6 +214,53 @@
     };
   }
 
+  const STOCKFISH_PERFORMANCE_MIN_GAMES = 10;
+  const STOCKFISH_PERFORMANCE_TARGET_GAMES = 20;
+  const STOCKFISH_RATING_SOURCE = "supachess-engine-setting-v1";
+
+  function stockfishPerformanceEstimate(games) {
+    const seen = new Set();
+    const eligible = (Array.isArray(games) ? games : []).filter((game) => {
+      if (!game || !game.id || seen.has(String(game.id))) return false;
+      seen.add(String(game.id));
+      return /stockfish/i.test(String(game.engineName || "")) &&
+        game.stockfishRatingSource === STOCKFISH_RATING_SOURCE &&
+        ["w", "b"].includes(game.userColor) &&
+        ["1-0", "0-1", "1/2-1/2"].includes(game.result) &&
+        Number.isFinite(Number(game.stockfishRatingEstimate)) &&
+        Number(game.stockfishRatingEstimate) >= 800 &&
+        Number(game.stockfishRatingEstimate) <= 3500;
+    }).map((game) => {
+      const score = game.result === "1/2-1/2" ? 0.5 :
+        game.result === "1-0" ? (game.userColor === "w" ? 1 : 0) :
+          (game.userColor === "b" ? 1 : 0);
+      return { rating: Number(game.stockfishRatingEstimate), score };
+    });
+    if (eligible.length < STOCKFISH_PERFORMANCE_MIN_GAMES) {
+      return {
+        status: "insufficient_games",
+        games: eligible.length,
+        minimumGames: STOCKFISH_PERFORMANCE_MIN_GAMES,
+        targetGames: STOCKFISH_PERFORMANCE_TARGET_GAMES,
+      };
+    }
+    const averageOpponentLevel = eligible.reduce((sum, game) => sum + game.rating, 0) / eligible.length;
+    const score = eligible.reduce((sum, game) => sum + game.score, 0);
+    const smoothedScore = (score + 0.5) / (eligible.length + 1);
+    const scoreDifference = 400 * Math.log10(smoothedScore / (1 - smoothedScore));
+    return {
+      status: "provisional_engine_relative",
+      estimate: Math.max(800, Math.min(3500, Math.round((averageOpponentLevel + scoreDifference) / 10) * 10)),
+      games: eligible.length,
+      minimumGames: STOCKFISH_PERFORMANCE_MIN_GAMES,
+      targetGames: STOCKFISH_PERFORMANCE_TARGET_GAMES,
+      averageOpponentLevel: Math.round(averageOpponentLevel),
+      score,
+      scoreRate: score / eligible.length,
+      ratingSource: STOCKFISH_RATING_SOURCE,
+    };
+  }
+
   function compareProgress(profile) {
     const games = Array.isArray(profile && profile.gameHistory) ? profile.gameHistory.slice() : [];
     const controls = new Map();
@@ -629,8 +676,9 @@
       }
     });
     root.reviewHistoryRender();
+    if (typeof root.gamesRenderPanel === "function") root.gamesRenderPanel();
   }
 
-  return { buildGameSummary, aggregate, personalizedPath, splitPgnCollection, validatePgnCollection, phaseOf, attachUI, fideLikePerformance, compareProgress, levelDiagnosticProgress, LEVEL_DIAGNOSTIC_KEY, LEVEL_DIAGNOSTIC_MIN_GAMES, GRADE_IDS, ISSUE_IDS, PHASES };
+  return { buildGameSummary, aggregate, personalizedPath, splitPgnCollection, validatePgnCollection, phaseOf, attachUI, fideLikePerformance, stockfishPerformanceEstimate, compareProgress, levelDiagnosticProgress, LEVEL_DIAGNOSTIC_KEY, LEVEL_DIAGNOSTIC_MIN_GAMES, STOCKFISH_PERFORMANCE_MIN_GAMES, STOCKFISH_PERFORMANCE_TARGET_GAMES, STOCKFISH_RATING_SOURCE, GRADE_IDS, ISSUE_IDS, PHASES };
 });
 
