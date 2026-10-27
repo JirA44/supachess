@@ -94,7 +94,7 @@ test("home header has a prominent lessons button beside SupaChess Coach IA", asy
   const lessons = brand.getByRole("link", { name: "Leçons" });
   await expect(lessons).toHaveAttribute("href", "book-lessons.html");
   await lessons.click();
-  await expect(page).toHaveURL(/book-lessons\.html/);
+  await expect(page).toHaveURL(/\/index\.html#profile$/);
   await expect(page.locator("h1")).toHaveText("Leçons");
   await expect(page.locator(".lesson-subtitle")).toHaveText("La route vers l’excellence");
 });
