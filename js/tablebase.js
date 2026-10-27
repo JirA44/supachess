@@ -24,6 +24,19 @@
     unknown: "résultat inconnu"
   };
 
+  let displayedPositionTimer = null;
+
+  function watchDisplayedPosition(fen) {
+    if (displayedPositionTimer) clearInterval(displayedPositionTimer);
+    displayedPositionTimer = setInterval(() => {
+      if (typeof state === "undefined" || !state.chess || state.chess.fen() === fen) return;
+      clearInterval(displayedPositionTimer);
+      displayedPositionTimer = null;
+      clearResults();
+      status.textContent = "La position a changé; relancez la vérification pour afficher son résultat.";
+    }, 250);
+  }
+
   function pieceCount(fen) {
     const board = String(fen || "").split(" ")[0] || "";
     return (board.match(/[pnbrqk]/gi) || []).length;
