@@ -215,7 +215,8 @@ test("profile opens inside the game page and remains available from lessons", as
   await expect(gameProfile).toHaveAttribute("href", "#profile");
   await gameProfile.click();
   await expect(page).toHaveURL(/\/index\.html#profile$/);
-  await expect(page.getByRole("dialog", { name: "Mon profil SupaChess" })).toBeVisible();
+  await expect(page.locator("#profile-modal")).toBeVisible();
+  await expect(page.locator("#profile-modal [data-profile-form]")).toBeVisible({ timeout: 15000 });
 
   await page.goto("/book-lessons.html");
   const lessonProfile = page.getByRole("link", { name: "Ouvrir mon profil" });
