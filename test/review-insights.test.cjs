@@ -158,3 +158,43 @@ test("level diagnostic counts only completed PGN analyses started after activati
   assert.equal(complete.complete, true);
   assert.equal(complete.remainingGames, 0);
 });
+
+test("Stockfish estimate uses only completed games with tracked engine settings", () => {
+  const result = ReviewInsights.stockfishPerformanceEstimate([
+    ...Array.from({ length: 10 }, (_, index) => ({
+      id: "sf-" + index,
+      engineName: "Stockfish 19 NNUE",
+      stockfishRatingSource: "supachess-engine-setting-v1",
+      stockfishRatingEstimate: 2400,
+      userColor: index < 5 ? "w" : "b",
+      result: index < 5 ? "1-0" : "0-1",
+    })),
+    { id: "unfinished", engineName: "Stockfish 19", stockfishRatingSource: "supachess-engine-setting-v1",
+      stockfishRatingEstimate: 2400, userColor: "w", result: "*" },
+    { id: "legacy", engineName: "Stockfish 19", userColor: "w", result: "1-0" },
+    { id: "human", engineName: "Opponent", stockfishRatingSource: "supachess-engine-setting-v1",
+      stockfishRatingEstimate: 2400, userColor: "w", result: "1-0" },
+  ]);
+  assert.equal(result.status, "provisional_engine_relative");
+  assert.equal(result.games, 10);
+  assert.equal(result.score, 10);
+  assert.equal(result.estimate, 2930);
+});
+
+test("Stockfish estimate waits for ten unique completed engine games", () => {
+  const base = {
+    engineName: "Stockfish 19",
+    stockfishRatingSource: "supachess-engine-setting-v1",
+    stockfishRatingEstimate: 2500,
+    userColor: "w",
+    result: "1/2-1/2",
+  };
+  const result = ReviewInsights.stockfishPerformanceEstimate([
+    ...Array.from({ length: 9 }, (_, index) => ({ ...base, id: "same" + index })),
+    { ...base, id: "same0" },
+    { ...base, id: "full-power", stockfishRatingSource: null },
+  ]);
+  assert.equal(result.status, "insufficient_games");
+  assert.equal(result.games, 9);
+  assert.equal(result.minimumGames, 10);
+});
