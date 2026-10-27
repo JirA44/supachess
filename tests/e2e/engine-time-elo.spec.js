@@ -73,5 +73,6 @@ test('offers distinct 50-point Stockfish UCI levels and reports the running-accu
   });
   expect(result.delta).toBeCloseTo(result.average - result.previousAverage, 10);
   expect(result.badge).toContain('précision moyenne sur ce demi-coup');
-  expect(result.badge).toContain('−' + Math.abs(result.delta).toFixed(2) + '%');
+  const deltaText = Math.abs(result.delta).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  expect(result.badge).toContain('−' + deltaText + '%');
 });
