@@ -286,7 +286,8 @@ body {
 .move-grade-side { min-width: 0; }
 .move-grade-side h3 { color: var(--accent); font-size: .95rem; margin-bottom: 4px; }
 .move-grade-count-row { display: grid; grid-template-columns: 10px 24px minmax(0,1fr) auto; align-items: center; gap: 6px; min-height: 27px; font-size: .82rem; }
-.move-grade-count-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--grade-dot-color, var(--text-dim)); }\n.move-grade-count-symbol { text-align: center; font-weight: 900; color: var(--grade-dot-color, var(--text-dim)); }
+.move-grade-count-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--grade-dot-color, var(--text-dim)); }
+.move-grade-count-symbol { text-align: center; font-weight: 900; color: var(--grade-dot-color, var(--text-dim)); }
 .move-grade-count-row strong { min-width: 22px; text-align: right; font-variant-numeric: tabular-nums; }
 @media (max-width: 420px) { .move-grade-summary { gap: 8px; } .move-grade-count-row { font-size: .75rem; grid-template-columns: 8px 18px minmax(0,1fr) auto; gap: 4px; } }
 
