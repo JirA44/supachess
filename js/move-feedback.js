@@ -46,9 +46,9 @@ function moveNumberFromFen(fen) {
 
 const moveFeedback = {
   cards: new Map(),
-  show({ san, color, moveNumber, square = null, deltaCp = null, brilliant = false, mode = "played", token = null }) {
+  show({ san, color, moveNumber, square = null, deltaCp = null, brilliant = false, best = false, categoryOverride = null, mode = "played", token = null }) {
     const key = mode === "preview" ? "preview" : color;
-    const grade = moveGrade(deltaCp, brilliant);
+    const grade = moveGrade(deltaCp, brilliant, best, categoryOverride);
     this.cards.delete(key);
     this.cards.set(key, { san, color, moveNumber, square, deltaCp, mode, token, ...grade });
     if (mode === "preview") this.syncBoardPreview();
@@ -64,6 +64,7 @@ const moveFeedback = {
       label: `${preview.symbol}${preview.rating === null ? "…" : preview.rating}`,
       evaluation: preview.evaluation,
       quality: preview.tone,
+      category: preview.category,
       title: `${preview.san} — coup testé`,
     } : null;
     boardUI.render(state.chess);
@@ -74,7 +75,7 @@ const moveFeedback = {
     wrap.replaceChildren();
     for (const [key, card] of this.cards) {
       const bubble = document.createElement("article");
-      bubble.className = "move-bubble tone-" + card.tone;
+      bubble.className = "move-bubble tone-" + card.tone + " grade-" + card.category;
       const modeLabel = card.mode === "preview" ? "Coup testé" : card.mode === "replay" ? "Relecture" : "Coup joué";
       const side = card.color === "w" ? "Blancs" : "Noirs";
       const heading = document.createElement("div");
