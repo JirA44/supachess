@@ -122,6 +122,16 @@ function applyLevelDiagnosticLock() {
   if (typeof renderBoard === "function") renderBoard();
 }
 window.addEventListener("supachess:level-diagnostic-change", applyLevelDiagnosticLock);
+window.addEventListener("storage", (event) => {
+  if (event.key !== LEVEL_DIAGNOSTIC_KEY) return;
+  const active = isLevelDiagnosticActive();
+  if (!active && levelDiagnosticLockWasActive) {
+    const diagnostic = readLevelDiagnostic();
+    boardUI.showDots = typeof diagnostic?.restoreDots === "boolean" ? diagnostic.restoreDots : localStorage.getItem(DOTS_STORAGE_KEY) !== "false";
+    boardUI.showMoveDots = typeof diagnostic?.restoreMoveDots === "boolean" ? diagnostic.restoreMoveDots : localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false";
+  }
+  applyLevelDiagnosticLock();
+});
 
 /* ── Réglages ── */
 function thresholdCp() { return Math.round(parseFloat($("sel-threshold").value) * 100); }
