@@ -131,3 +131,40 @@ test("a bad candidate preview marks its destination red before it is played", ()
   assert.equal(marker.textContent, "!");
   assert.match(marker.title, /erreur/);
 });
+
+
+test("all engine move grades have distinct category-colored board dots", () => {
+  const feedback = fs.readFileSync(path.join(__dirname, "../js/move-feedback.js"), "utf8");
+  const context = vm.createContext({});
+  vm.runInContext(`${feedback}\\nglobalThis.moveGrade = moveGrade;`, context);
+  const grades = [
+    ["brilliant", context.moveGrade(5, true)],
+    ["best", context.moveGrade(0, false, true)],
+    ["very-good", context.moveGrade(5)],
+    ["good", context.moveGrade(15)],
+    ["ok", context.moveGrade(25)],
+    ["inaccuracy", context.moveGrade(30)],
+    ["error", context.moveGrade(60)],
+    ["blunder", context.moveGrade(200)],
+  ];
+  assert.deepEqual(grades.map(([expected, grade]) => grade.category), grades.map(([expected]) => expected));
+
+  const categories = grades.map(([category]) => category);
+  const square = renderBubble({ dots: categories.map((category) => ({
+    square: "e4", label: category, evaluation: "0.00", quality: "best", category,
+  })) });
+  const bubbles = square.children.find((child) => child.className.includes("cdot-stack")).children;
+  assert.deepEqual(bubbles.map((bubble) => categories.find((category) => bubble.className.includes("grade-" + category))), categories);
+
+  const style = fs.readFileSync(path.join(__dirname, "../css/style.css"), "utf8");
+  const colors = categories.map((category) => {
+    const rule = category === "error"
+      ? /\\.grade-error, \\.grade-mistake \\{[^}]*--grade-dot-color:\\s*(#[0-9a-f]{6})/i
+      : new RegExp(\\`\\\\.grade-\\\\${category}\\\\s*\\\\{[^}]*--grade-dot-color:\\\\s*(#[0-9a-f]{6})\\`, "i");
+    const match = style.match(rule);
+    assert.ok(match, `missing color for ${category}`);
+    return match[1].toLowerCase();
+  });
+  assert.equal(colors[0], "#38bdf8", "brilliant should be sky blue");
+  assert.equal(new Set(colors).size, categories.length, "every grade should have its own color");
+});
