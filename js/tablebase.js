@@ -52,7 +52,7 @@
   function render(data, fen) {
     const side = fen.split(" ")[1] === "b" ? "Noirs" : "Blancs";
     const category = data && data.category;
-    summary.textContent = side + " au trait : " + categoryLabel(category) + ". Résultat exact de la tablebase pour cette position.";
+    summary.textContent = side + " au trait : " + categoryLabel(category) + ".";
     movesList.replaceChildren();
     (Array.isArray(data.moves) ? data.moves : []).forEach((move, index) => {
       const item = document.createElement("li");
@@ -65,7 +65,7 @@
     });
     resultBox.hidden = false;
     status.textContent = data && data.moves && data.moves.length
-      ? "Résultats exacts disponibles; les coups sont classés par la tablebase."
+      ? "Réponse reçue; les coups sont classés par la tablebase."
       : "La tablebase a répondu, mais n’a fourni aucune suite pour cette position.";
   }
 
