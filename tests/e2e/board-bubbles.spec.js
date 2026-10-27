@@ -174,3 +174,42 @@ test("selecting a piece shows independent hot and cold move points and a chosen 
   }, move);
   await expect(page.locator(`[data-square="${move.to}"].bad-move .bad-move-marker`)).toHaveText('!');
 });
+
+
+test('move grade dots use eight distinct colors and brilliant is sky blue', async ({ page }) => {
+  await preparePracticeMode(page);
+  await page.goto('/index.html');
+  const result = await page.evaluate(() => {
+    const categories = ['brilliant', 'best', 'very-good', 'good', 'ok', 'inaccuracy', 'error', 'blunder'];
+    boardUI.dots = categories.map((category) => ({
+      square: 'e4', label: category, evaluation: '+0.00', quality: 'best', category
+    }));
+    boardUI.lastMove = {
+      from: 'e2', to: 'e4', san: 'e4', evaluation: '+0.00',
+      grade: moveGrade(5, true)
+    };
+    boardUI.render(state.chess);
+    state.moveGradeHistory = categories.map((category, index) => ({
+      ply: index + 1, color: 'w', category
+    }));
+    renderMoveGradeSummary();
+
+    const square = document.querySelector(".sq[data-square='e4']");
+    return {
+      categories,
+      candidateColors: [...square.querySelectorAll('.cdot-stack .cdot')].map((dot) => getComputedStyle(dot).backgroundColor),
+      playedColor: getComputedStyle(square.querySelector('.played-move-bubble')).backgroundColor,
+      summaryColors: categories.map((category) => getComputedStyle(
+        document.querySelector('.move-grade-count-row.grade-' + category + ' .move-grade-count-dot')
+      ).backgroundColor),
+      brilliantCategory: moveGradeCategory(20, true, false)
+    };
+  });
+
+  expect(result.candidateColors).toHaveLength(8);
+  expect(new Set(result.candidateColors).size).toBe(8);
+  expect(result.candidateColors[0]).toBe('rgb(56, 189, 248)');
+  expect(result.playedColor).toBe('rgb(56, 189, 248)');
+  expect(result.summaryColors).toEqual(result.candidateColors);
+  expect(result.brilliantCategory).toBe('brilliant');
+});
