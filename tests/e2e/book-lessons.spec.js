@@ -206,3 +206,16 @@ test("five methodology cards explain their routines and open matching lessons", 
   expect(cardBox.x + cardBox.width).toBeLessThanOrEqual(390);
   await expect(cards).toHaveCount(5);
 });
+
+
+test("profile shortcut stays available from both main SupaChess pages", async ({ page }) => {
+  await page.goto("/index.html");
+  const gameProfile = page.getByRole("link", { name: "Ouvrir mon profil" });
+  await expect(gameProfile).toBeVisible();
+  await expect(gameProfile).toHaveAttribute("href", "https://jira44.github.io/supachess-web/?openProfile=1");
+
+  await page.goto("/book-lessons.html");
+  const lessonProfile = page.getByRole("link", { name: "Ouvrir mon profil" });
+  await expect(lessonProfile).toBeVisible();
+  await expect(lessonProfile).toHaveAttribute("href", "https://jira44.github.io/supachess-web/?openProfile=1");
+});
