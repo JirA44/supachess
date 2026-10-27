@@ -50,3 +50,29 @@ test('shows a time-sensitive FIDE-like estimate and gives the opponent the selec
   expect(engineTimes).toContain(3000); // Selected deep think time used for the opponent move.
   expect(errors).toEqual([]);
 });
+
+
+test('offers distinct 50-point Stockfish levels and reports the running-accuracy change', async ({ page }) => {
+  await page.goto('/index.html');
+  const levels = await page.locator('#sel-elo option').evaluateAll(options =>
+    options.map(option => Number(option.value)).filter(value => value >= 2400 && value <= 3150)
+  );
+  expect(levels).toEqual(Array.from({ length: 16 }, (_, index) => 2400 + index * 50));
+
+  const result = await page.evaluate(() => {
+    state.accuracy = { w: [], b: [], pendingEngine: null, lastMove: null };
+    recordAccuracy('w', 0, -100);
+    const previousAverage = avgAccuracy(state.accuracy.w);
+    recordAccuracy('w', 0, -300);
+    return {
+      previousAverage,
+      average: avgAccuracy(state.accuracy.w),
+      delta: state.accuracy.lastMove.delta,
+      badge: document.getElementById('accuracy-badge').textContent
+    };
+  });
+  expect(result.delta).toBeCloseTo(result.average - result.previousAverage, 10);
+  expect(result.badge).toContain('précision moyenne sur ce demi-coup');
+  const deltaText = Math.abs(result.delta).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  expect(result.badge).toContain('−' + deltaText + '%');
+});
