@@ -220,22 +220,22 @@
 
   function stockfishPerformanceEstimate(games) {
     const seen = new Set();
-    const eligible = (Array.isArray(games) ? games : []).filter((game) => {
-      if (!game || !game.id || seen.has(String(game.id))) return false;
-      seen.add(String(game.id));
-      return /stockfish/i.test(String(game.engineName || "")) &&
+    const eligible = [];
+    for (const game of Array.isArray(games) ? games : []) {
+      if (!game || !game.id || seen.has(String(game.id))) continue;
+      const rating = Number(game.stockfishRatingEstimate);
+      const valid = /stockfish/i.test(String(game.engineName || "")) &&
         game.stockfishRatingSource === STOCKFISH_RATING_SOURCE &&
         ["w", "b"].includes(game.userColor) &&
         ["1-0", "0-1", "1/2-1/2"].includes(game.result) &&
-        Number.isFinite(Number(game.stockfishRatingEstimate)) &&
-        Number(game.stockfishRatingEstimate) >= 800 &&
-        Number(game.stockfishRatingEstimate) <= 3500;
-    }).map((game) => {
+        Number.isFinite(rating) && rating >= 800 && rating <= 3500;
+      if (!valid) continue;
+      seen.add(String(game.id));
       const score = game.result === "1/2-1/2" ? 0.5 :
         game.result === "1-0" ? (game.userColor === "w" ? 1 : 0) :
           (game.userColor === "b" ? 1 : 0);
-      return { rating: Number(game.stockfishRatingEstimate), score };
-    });
+      eligible.push({ rating, score });
+    }
     if (eligible.length < STOCKFISH_PERFORMANCE_MIN_GAMES) {
       return {
         status: "insufficient_games",
