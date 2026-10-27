@@ -128,7 +128,7 @@ function reviewClassOf(row, grade = {}) {
   if (row.lossCp >= 200) return "blunder";
   if (row.lossCp >= 60) return "mistake";
   if (row.lossCp >= 30) return "inaccuracy";
-  if (grade.brilliant && row.lossCp <= 10) return "brilliant";
+  if (grade.brilliant && row.lossCp < 30) return "brilliant";
   if (row.bestMove && row.lossCp <= 10) return "best";
   if (row.lossCp <= 10) return "very-good";
   if (row.lossCp <= 20) return "good";
@@ -250,7 +250,9 @@ async function reviewRun(options = {}) {
     const eligible = Number.isFinite(cand.deltaCp);
     const evaluation = reply && (reply.scoreCp !== null || reply.mate !== null)
       ? formatScore(reply, move.color === "b") : "—";
-    return { deltaCp: eligible ? cand.deltaCp : null, brilliant: eligible ? isBrilliantCandidate(fens[i], cand) : false, evaluation };
+    const brilliant = eligible ? isBrilliantCandidate(fens[i], cand) : false;
+    const category = reviewClassOf(row, { brilliant });
+    return { deltaCp: eligible ? cand.deltaCp : null, brilliant, category, evaluation };
   });
   rows.forEach((row, i) => { row.classification = reviewClassOf(row, reviewState.grades[i]); });
   reviewState.correctionExercises = reviewBuildCorrectionExercises(rows, fens, moves, positionLines);
@@ -320,7 +322,7 @@ function reviewRenderLocal(rows, accW, accB, headers) {
       const moveList = moves.length
         ? `<details class="review-grade-moves"><summary>${moves.length} coup${moves.length === 1 ? "" : "s"}</summary><ol>${moves.map(moveButton).join("")}</ol></details>`
         : "";
-      return `<div class="review-grade-row review-grade-${category.id}" title="${category.label}"><span class="review-grade-symbol" aria-hidden="true">${category.symbol}</span><span class="review-grade-label">${category.label}</span><span class="review-grade-count">${count}</span>${moveList}</div>`;
+      return `<div class="review-grade-row review-grade-${category.id}" title="${category.label}"><span class="review-grade-dot" aria-hidden="true"></span><span class="review-grade-symbol" aria-hidden="true">${category.symbol}</span><span class="review-grade-label">${category.label}</span><span class="review-grade-count">${count}</span>${moveList}</div>`;
     }).join("")}</div>
   </section>`;
   const halfmoveExplanations = rows.map((r, idx) => {
@@ -634,8 +636,9 @@ async function replayGoto(i) {
     const move = reviewState.moves[idx - 1];
     const grade = reviewState.grades[idx - 1];
     moveFeedback.show({ san: move.san, color: move.color, moveNumber: moveNumberFromFen(reviewState.fens[idx - 1]),
-      square: move.to, deltaCp: grade ? grade.deltaCp : null, brilliant: grade ? grade.brilliant : false, mode: "replay" });
-    const replayGrade = moveGrade(grade ? grade.deltaCp : null, grade ? grade.brilliant : false);
+      square: move.to, deltaCp: grade ? grade.deltaCp : null, brilliant: grade ? grade.brilliant : false,
+      best: grade?.category === "best", categoryOverride: grade?.category, mode: "replay" });
+    const replayGrade = moveGrade(grade ? grade.deltaCp : null, grade ? grade.brilliant : false, grade?.category === "best", grade?.category);
     boardUI.lastMove = { from: move.from, to: move.to, san: move.san, grade: replayGrade,
       evaluation: reviewState.grades[idx - 1]?.evaluation || "—" };
   }
@@ -647,7 +650,7 @@ async function replayGoto(i) {
   state.accuracy.pendingEngine = null;
   state.pendingMove = null;
   boardUI.lastMove = idx > 0 ? { from: reviewState.moves[idx - 1].from, to: reviewState.moves[idx - 1].to, san: reviewState.moves[idx - 1].san,
-    grade: moveGrade(reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].deltaCp : null, reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].brilliant : false),
+    grade: moveGrade(reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].deltaCp : null, reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].brilliant : false, reviewState.grades[idx - 1]?.category === "best", reviewState.grades[idx - 1]?.category),
     evaluation: reviewState.grades[idx - 1]?.evaluation || "—" } : null;
   boardUI.dots = [];
   boardUI.selected = null;

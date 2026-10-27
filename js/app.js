@@ -259,7 +259,7 @@ function buildCandidates(lines, fen) {
   const dotsBySquare = new Map();
   for (const cand of state.candidates) {
     const square = cand.uci.slice(2, 4);
-    const grade = moveGrade(cand.deltaCp, isBrilliantCandidate(fen, cand));
+    const grade = moveGrade(cand.deltaCp, isBrilliantCandidate(fen, cand), cand.rank === 1);
     const evaluation = cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
       ? formatScore(cand.line, state.chess.turn() === "w") : "—";
     const moveBadge = { san: cand.san, label: `${grade.symbol}${grade.rating ?? "…"}`, evaluation, grade, rank: cand.rank };
@@ -346,7 +346,7 @@ async function playEngineMove() {
 
 function moveGradeCategory(lossCp, brilliant = false, best = false) {
   if (!Number.isFinite(lossCp)) return "unrated";
-  if (brilliant && lossCp <= 10) return "brilliant";
+  if (brilliant && lossCp < 30) return "brilliant";
   if (lossCp >= 200) return "blunder";
   if (lossCp >= 60) return "error";
   if (lossCp >= 30) return "inaccuracy";
@@ -383,9 +383,9 @@ function renderMoveGradeSummary() {
     for (const [key, symbol, name] of categories) {
       const count = state.moveGradeHistory.filter((entry) => entry.color === color && entry.category === key).length;
       const row = document.createElement("div");
-      row.className = "move-grade-count-row";
+      row.className = "move-grade-count-row grade-" + key;
       row.dataset.grade = key;
-      row.innerHTML = `<span class="move-grade-count-symbol" aria-hidden="true">${symbol}</span><span>${name}</span><strong data-grade-count>${count ? "+" + count : "0"}</strong>`;
+      row.innerHTML = `<span class="move-grade-count-dot" aria-hidden="true"></span><span class="move-grade-count-symbol" aria-hidden="true">${symbol}</span><span class="move-grade-count-name">${name}</span><strong data-grade-count>${count ? "+" + count : "0"}</strong>`;
       side.appendChild(row);
     }
     wrap.appendChild(side);
@@ -399,9 +399,9 @@ function finishEngineFeedback(pending, replyLine) {
   const cand = { deltaCp, line: { ...replyLine, pv: [pending.uci, ...replyLine.pv] } };
   const brilliant = isBrilliantCandidate(pending.fen, cand);
   recordMoveGrade(pending.ply, pending.color, moveGradeCategory(deltaCp, brilliant, pending.uci === pending.beforeBestUci));
-  const grade = moveGrade(deltaCp, brilliant);
+  const grade = moveGrade(deltaCp, brilliant, pending.uci === pending.beforeBestUci);
   moveFeedback.show({ san: pending.san, color: pending.color, moveNumber: pending.moveNumber, square: pending.square,
-    deltaCp, brilliant, token: pending.token });
+    deltaCp, brilliant, best: pending.uci === pending.beforeBestUci, token: pending.token });
   if (boardUI.lastMove && boardUI.lastMove.to === pending.square) {
     boardUI.lastMove.grade = grade;
     boardUI.lastMove.evaluation = replyLine && (replyLine.scoreCp !== null || replyLine.mate !== null)
@@ -599,11 +599,11 @@ function commitUserMove(moveObj, cand, forced) {
   if (!mv) return;
   moveFeedback.clearPreview();
   const brilliant = isBrilliantCandidate(fenBefore, cand);
-  const grade = moveGrade(cand ? cand.deltaCp : null, brilliant);
+  const grade = moveGrade(cand ? cand.deltaCp : null, brilliant, cand?.rank === 1);
   recordMoveGrade(state.chess.history().length, userMoveColor,
     moveGradeCategory(cand ? cand.deltaCp : null, brilliant, cand?.rank === 1));
   moveFeedback.show({ san: mv.san, color: mv.color, moveNumber: moveNumberFromFen(fenBefore), square: mv.to,
-    deltaCp: cand ? cand.deltaCp : null, brilliant });
+    deltaCp: cand ? cand.deltaCp : null, brilliant, best: cand?.rank === 1 });
   const evaluation = cand && cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
     ? formatScore(cand.line, userMoveColor === "w") : "—";
   boardUI.lastMove = { from: mv.from, to: mv.to, san: mv.san, grade, evaluation };
@@ -668,10 +668,8 @@ function renderCandidatesList() {
   if (!state.candidates.length) { wrap.innerHTML = "<em>En attente d'analyse…</em>"; return; }
   const whiteSide = state.chess.turn() === "w";
   wrap.innerHTML = state.candidates.map((c, i) => {
-    const q = qualityClass(c.deltaCp, c.rank);
-    const colors = { "q-best": "var(--candidate-best)", "q-good": "var(--candidate-good)", "q-mid": "var(--candidate-mid)", "q-bad": "var(--candidate-bad)" };
     const open = clIsOpen(c, i);
-    const grade = moveGrade(c.deltaCp, isBrilliantCandidate(state.chess.fen(), c));
+    const grade = moveGrade(c.deltaCp, isBrilliantCandidate(state.chess.fen(), c), c.rank === 1);
     const sub = [];
     if (open) {
       const pros = c.args.pros.map((a) => `<div class="arg-pro">✚ ${esc(a)}</div>`).join("");
@@ -685,7 +683,7 @@ function renderCandidatesList() {
       <div class="cl-row" style="cursor:pointer" title="Cliquer pour ${open ? "replier" : "déplier"}">
         <div class="cl-move">
           <span class="cl-caret">${open ? "▾" : "▸"}</span>
-          <span class="cl-dot" style="background:${colors[q]}"></span>
+          <span class="cl-dot grade-${grade.category}" aria-label="${esc(grade.label)}"></span>
           <strong class="cl-san">${c.rank}. ${esc(c.san)}</strong>
         </div>
         <span class="move-grade-chip tone-${grade.tone}" title="Note ${grade.rating === null ? "en cours" : grade.rating + " sur 10"} — ${esc(grade.label)}">

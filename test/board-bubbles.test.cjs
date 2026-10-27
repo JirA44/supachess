@@ -131,3 +131,42 @@ test("a bad candidate preview marks its destination red before it is played", ()
   assert.equal(marker.textContent, "!");
   assert.match(marker.title, /erreur/);
 });
+
+
+test("all engine move grades have distinct category-colored board dots", () => {
+  const feedback = fs.readFileSync(path.join(__dirname, "../js/move-feedback.js"), "utf8");
+  const context = vm.createContext({});
+  vm.runInContext(feedback + String.fromCharCode(10) + "globalThis.moveGrade = moveGrade;", context);
+  const grades = [
+    ["brilliant", context.moveGrade(5, true)],
+    ["best", context.moveGrade(0, false, true)],
+    ["very-good", context.moveGrade(5)],
+    ["good", context.moveGrade(15)],
+    ["ok", context.moveGrade(25)],
+    ["inaccuracy", context.moveGrade(30)],
+    ["error", context.moveGrade(60)],
+    ["blunder", context.moveGrade(200)],
+  ];
+  assert.deepEqual(grades.map(([, grade]) => grade.category), grades.map(([category]) => category));
+
+  const categories = grades.map(([category]) => category);
+  const square = renderBubble({ dots: categories.map((category) => ({
+    square: "e4", label: category, evaluation: "0.00", quality: "best", category,
+  })) });
+  const bubbles = square.children.find((child) => child.className.includes("cdot-stack")).children;
+  assert.deepEqual(bubbles.map((bubble) => categories.find((category) => bubble.className.includes("grade-" + category))), categories);
+
+  const style = fs.readFileSync(path.join(__dirname, "../css/style.css"), "utf8");
+  const colors = categories.map((category) => {
+    const selector = category === "error" ? ".grade-error, .grade-mistake" : ".grade-" + category;
+    const start = style.indexOf(selector + " {");
+    assert.notEqual(start, -1, `missing color rule for ${category}`);
+    const end = style.indexOf("}", start);
+    const rule = style.slice(start, end);
+    const match = rule.match(/--grade-dot-color:[ ]*(#[0-9a-f]{6})/i);
+    assert.ok(match, `missing color for ${category}`);
+    return match[1].toLowerCase();
+  });
+  assert.equal(colors[0], "#38bdf8", "brilliant should be sky blue");
+  assert.equal(new Set(colors).size, categories.length, "every grade should have its own color");
+});
