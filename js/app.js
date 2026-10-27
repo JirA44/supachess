@@ -383,7 +383,7 @@ function renderMoveGradeSummary() {
     for (const [key, symbol, name] of categories) {
       const count = state.moveGradeHistory.filter((entry) => entry.color === color && entry.category === key).length;
       const row = document.createElement("div");
-      row.className = "move-grade-count-row";
+      row.className = "move-grade-count-row grade-" + key;
       row.dataset.grade = key;
       row.innerHTML = `<span class="move-grade-count-dot" aria-hidden="true"></span><span class="move-grade-count-symbol" aria-hidden="true">${symbol}</span><span class="move-grade-count-name">${name}</span><strong data-grade-count>${count ? "+" + count : "0"}</strong>`;
       side.appendChild(row);
