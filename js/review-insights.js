@@ -181,8 +181,9 @@
 
   function levelDiagnosticProgress(state, items) {
     const start = state && Date.parse(state.startedAt);
+    const baselineIds = new Set(Array.isArray(state && state.baselineGameIds) ? state.baselineGameIds.map(String) : []);
     const analyzed = Array.isArray(items) ? items.filter((item) =>
-      item && item.analysis && item.analysis.version === 1 &&
+      item && !baselineIds.has(String(item.id)) && item.analysis && item.analysis.version === 1 &&
       Array.isArray(item.analysis.players) && item.analysis.players.some((player) => Number(player && player.ratedMoves) > 0) &&
       Number.isFinite(start) && Date.parse(item.analyzedAt || "") >= start
     ).length : 0;
@@ -418,9 +419,14 @@
         syncDiagnostic();
         return;
       }
+      const existingAnalyzedIds = loadItems().filter((item) =>
+        item && item.analysis && item.analysis.version === 1 &&
+        Array.isArray(item.analysis.players) && item.analysis.players.some((player) => Number(player && player.ratedMoves) > 0)
+      ).map((item) => String(item.id));
       writeDiagnostic({
         active: true,
         startedAt: new Date().toISOString(),
+        baselineGameIds: existingAnalyzedIds,
         analyzedGamesAtCompletion: 0,
         restoreDots: root.localStorage.getItem("supachess-show-candidate-dots") !== "false",
         restoreMoveDots: root.localStorage.getItem("supachess-show-legal-move-dots") !== "false",
