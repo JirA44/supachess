@@ -9,6 +9,8 @@
   const GRADE_IDS = ["brilliant", "best", "very-good", "good", "ok", "inaccuracy", "mistake", "blunder"];
   const ISSUE_IDS = new Set(["inaccuracy", "mistake", "blunder"]);
   const PHASES = ["opening", "middlegame", "endgame"];
+  const LEVEL_DIAGNOSTIC_KEY = "supachess-level-diagnostic";
+  const LEVEL_DIAGNOSTIC_MIN_GAMES = 10;
 
   function phaseOf(fen, moveNumber) {
     if (Number(moveNumber) <= 10) return "opening";
@@ -177,6 +179,22 @@
     return { profiles: result, analyzedGames, skippedGames, selectedGames: list.length };
   }
 
+  function levelDiagnosticProgress(state, items) {
+    const start = state && Date.parse(state.startedAt);
+    const analyzed = Array.isArray(items) ? items.filter((item) =>
+      item && item.analysis && item.analysis.version === 1 &&
+      Array.isArray(item.analysis.players) && item.analysis.players.some((player) => Number(player && player.ratedMoves) > 0) &&
+      Number.isFinite(start) && Date.parse(item.analyzedAt || "") >= start
+    ).length : 0;
+    return {
+      active: Boolean(state && state.active),
+      analyzedGames: analyzed,
+      minimumGames: LEVEL_DIAGNOSTIC_MIN_GAMES,
+      complete: analyzed >= LEVEL_DIAGNOSTIC_MIN_GAMES,
+      remainingGames: Math.max(0, LEVEL_DIAGNOSTIC_MIN_GAMES - analyzed),
+    };
+  }
+
   function fideLikePerformance(profile, confirmedFideTags = false) {
     const games = Array.isArray(profile && profile.performanceGames) ? profile.performanceGames : [];
     if (!confirmedFideTags) return { status: "confirm_rating_pool", eligibleGames: games.length, minimumGames: 10, targetGames: 20 };
@@ -278,6 +296,10 @@
       "<button class=\"btn mini\" type=\"button\" data-review-insights-select-all>Tout sélectionner</button> " +
       "<button class=\"btn\" type=\"button\" data-review-insights-run disabled>Sélectionne des PGN</button></div>" +
       "<label class=\"review-rating-confirm\"><input type=\"checkbox\" data-review-fide-confirm> Je confirme que les balises Elo des adversaires sont des Elo FIDE à la date de la partie</label>" +
+      "<section class=\"level-diagnostic-control\" aria-labelledby=\"level-diagnostic-title\"><h4 id=\"level-diagnostic-title\">Diagnostic de ton niveau</h4>" +
+      "<p>Pour ce premier bilan, Stockfish doit analyser au moins 10 de tes parties. Pendant le diagnostic, les bulles candidates et les points de coups possibles restent coupés; tu joues sans ces aides.</p>" +
+      "<button class=\"btn\" type=\"button\" data-level-diagnostic-toggle>Activer le diagnostic de niveau</button>" +
+      "<p data-level-diagnostic-status role=\"status\" aria-live=\"polite\"></p></section>" +
       "<p class=\"review-insights-note\">L’indicateur de performance FIDE-like s’appuie seulement sur les résultats contre des adversaires dont le PGN contient un Elo confirmé FIDE; il ne vient pas des évaluations Stockfish. Le seuil de 10 parties est un minimum opérationnel d’affichage, pas une règle FIDE ni une garantie statistique; vise 20 parties pour un premier suivi.</p>" +
       "<p data-review-insights-status role=\"status\" aria-live=\"polite\"></p><div data-review-insights-report aria-live=\"polite\"></div>";
     list.insertAdjacentElement("afterend", panel);
@@ -287,6 +309,7 @@
     style.textContent = "#review-insights-panel{margin-top:12px;padding:10px;border:1px solid rgba(240,179,92,.45);border-radius:8px}" +
       "#review-insights-panel h3{margin:4px 0 8px}#review-insights-panel p{font-size:.86em}" +
       ".review-rating-confirm{display:flex;align-items:flex-start;gap:8px;margin:8px 0;font-size:.86em}.review-rating-confirm input{flex:0 0 auto;margin-top:2px}" +
+      ".level-diagnostic-control{margin:12px 0;padding:12px;border:1px solid #4b9a67;border-radius:8px;background:rgba(60,155,99,.1)}.level-diagnostic-control h4{margin:0 0 6px;color:#7bd394}.level-diagnostic-control [data-level-diagnostic-status]{font-weight:700}" +
       ".review-insights-controls{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}" +
       ".review-insights-player{margin:10px 0;padding:10px;border:1px solid rgba(128,128,128,.35);border-radius:8px}" +
       ".review-insights-player h4{margin:0 0 6px}.review-insights-note{font-size:.78em;opacity:.8}" +
@@ -302,7 +325,60 @@
     const importButton = panel.querySelector("[data-review-insights-import-trigger]");
     const importInput = panel.querySelector("[data-review-insights-import]");
     const fideConfirm = panel.querySelector("[data-review-fide-confirm]");
+    const diagnosticButton = panel.querySelector("[data-level-diagnostic-toggle]");
+    const diagnosticStatus = panel.querySelector("[data-level-diagnostic-status]");
     const loadItems = () => root.reviewHistoryLoad();
+    function readDiagnostic() {
+      try {
+        const value = JSON.parse(root.localStorage.getItem(LEVEL_DIAGNOSTIC_KEY) || "null");
+        return value && typeof value === "object" ? value : null;
+      } catch (_) { return null; }
+    }
+    function writeDiagnostic(value) {
+      try {
+        root.localStorage.setItem(LEVEL_DIAGNOSTIC_KEY, JSON.stringify(value));
+        root.dispatchEvent(new Event("supachess:level-diagnostic-change"));
+      } catch (_) {
+        status.textContent = "Le diagnostic ne peut pas être enregistré dans ce navigateur.";
+      }
+    }
+    function syncDiagnostic() {
+      const diagnostic = readDiagnostic();
+      const progress = levelDiagnosticProgress(diagnostic, loadItems());
+      if (diagnostic && diagnostic.active && progress.complete) {
+        writeDiagnostic({ ...diagnostic, active: false, completed: true, analyzedGamesAtCompletion: progress.analyzedGames, completedAt: new Date().toISOString() });
+        diagnosticButton.textContent = "Diagnostic terminé — recommencer";
+        diagnosticStatus.textContent = "10 parties analysées depuis le début du diagnostic. Les aides de coups sont réactivées.";
+        return;
+      }
+      diagnosticButton.textContent = diagnostic && diagnostic.active
+        ? "Arrêter le diagnostic"
+        : diagnostic && diagnostic.completed ? "Recommencer le diagnostic" : "Activer le diagnostic de niveau";
+      diagnosticStatus.textContent = diagnostic && diagnostic.active
+        ? "Diagnostic en cours : " + progress.analyzedGames + "/" + progress.minimumGames + " parties analysées. Les bulles et points candidats sont bloqués jusqu’au seuil."
+        : diagnostic && diagnostic.completed
+          ? "Diagnostic terminé sur " + (diagnostic.analyzedGamesAtCompletion || LEVEL_DIAGNOSTIC_MIN_GAMES) + " parties. Tu peux maintenant réactiver les aides ou lancer un nouveau bilan."
+          : diagnostic && diagnostic.endedEarly
+            ? "Diagnostic interrompu à " + progress.analyzedGames + "/" + LEVEL_DIAGNOSTIC_MIN_GAMES + " parties; aucun niveau de départ n’est encore établi."
+            : "Seules les parties analysées après l’activation comptent : " + progress.analyzedGames + "/" + LEVEL_DIAGNOSTIC_MIN_GAMES + ".";
+    }
+    diagnosticButton.addEventListener("click", () => {
+      const current = readDiagnostic();
+      if (current && current.active) {
+        const progress = levelDiagnosticProgress(current, loadItems());
+        writeDiagnostic({ ...current, active: false, completed: false, endedEarly: true, analyzedGamesAtEnd: progress.analyzedGames });
+        syncDiagnostic();
+        return;
+      }
+      writeDiagnostic({
+        active: true,
+        startedAt: new Date().toISOString(),
+        analyzedGamesAtCompletion: 0,
+        restoreDots: root.localStorage.getItem("supachess-show-candidate-dots") !== "false",
+        restoreMoveDots: root.localStorage.getItem("supachess-show-legal-move-dots") !== "false",
+      });
+      syncDiagnostic();
+    });
 
     function decorateRows() {
       for (const row of list.querySelectorAll(".review-history-row")) {
@@ -474,6 +550,7 @@
       const value = originalRender.apply(this, arguments);
       decorateRows();
       syncControls();
+      syncDiagnostic();
       return value;
     };
     list.addEventListener("change", (event) => {
@@ -551,6 +628,6 @@
     root.reviewHistoryRender();
   }
 
-  return { buildGameSummary, aggregate, personalizedPath, splitPgnCollection, validatePgnCollection, phaseOf, attachUI, fideLikePerformance, compareProgress, GRADE_IDS, ISSUE_IDS, PHASES };
+  return { buildGameSummary, aggregate, personalizedPath, splitPgnCollection, validatePgnCollection, phaseOf, attachUI, fideLikePerformance, compareProgress, levelDiagnosticProgress, LEVEL_DIAGNOSTIC_KEY, LEVEL_DIAGNOSTIC_MIN_GAMES, GRADE_IDS, ISSUE_IDS, PHASES };
 });
 

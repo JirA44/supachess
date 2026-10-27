@@ -23,20 +23,56 @@ const state = {
 const boardUI = new BoardUI($("board"), onSquareClick);
 const DOTS_STORAGE_KEY = "supachess-show-candidate-dots";
 const MOVE_DOTS_STORAGE_KEY = "supachess-show-legal-move-dots";
-boardUI.showDots = localStorage.getItem(DOTS_STORAGE_KEY) !== "false";
-boardUI.showMoveDots = localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false";
+const LEVEL_DIAGNOSTIC_KEY = "supachess-level-diagnostic";
+function readLevelDiagnostic() {
+  try { return JSON.parse(localStorage.getItem(LEVEL_DIAGNOSTIC_KEY) || "null"); }
+  catch (_) { return null; }
+}
+function isLevelDiagnosticActive() {
+  const diagnostic = readLevelDiagnostic();
+  return Boolean(diagnostic && diagnostic.active);
+}
+let levelDiagnosticLockWasActive = isLevelDiagnosticActive();
+boardUI.showDots = levelDiagnosticLockWasActive ? false : localStorage.getItem(DOTS_STORAGE_KEY) !== "false";
+boardUI.showMoveDots = levelDiagnosticLockWasActive ? false : localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false";
 function syncDotsButton() {
   const button = $("btn-dots");
   if (!button) return;
-  button.textContent = "Bulles candidates : " + (boardUI.showDots ? "ON" : "OFF");
-  button.setAttribute("aria-pressed", String(boardUI.showDots));
+  const locked = isLevelDiagnosticActive();
+  button.disabled = locked;
+  button.title = locked ? "Bloqué pendant le diagnostic de niveau" : "Afficher ou masquer les bulles candidates";
+  button.textContent = locked ? "Bulles candidates : bloquées" : "Bulles candidates : " + (boardUI.showDots ? "ON" : "OFF");
+  button.setAttribute("aria-pressed", String(!locked && boardUI.showDots));
 }
 function syncMoveDotsButton() {
   const button = $("btn-move-dots");
   if (!button) return;
-  button.textContent = "Points chauds/froids : " + (boardUI.showMoveDots ? "ON" : "OFF");
-  button.setAttribute("aria-pressed", String(boardUI.showMoveDots));
+  const locked = isLevelDiagnosticActive();
+  button.disabled = locked;
+  button.title = locked ? "Bloqué pendant le diagnostic de niveau" : "Afficher ou masquer les points de coups possibles";
+  button.textContent = locked ? "Points chauds/froids : bloqués" : "Points chauds/froids : " + (boardUI.showMoveDots ? "ON" : "OFF");
+  button.setAttribute("aria-pressed", String(!locked && boardUI.showMoveDots));
 }
+function applyLevelDiagnosticLock() {
+  const diagnostic = readLevelDiagnostic();
+  const active = Boolean(diagnostic && diagnostic.active);
+  if (active) {
+    boardUI.showDots = false;
+    boardUI.showMoveDots = false;
+  } else if (levelDiagnosticLockWasActive) {
+    boardUI.showDots = typeof diagnostic?.restoreDots === "boolean"
+      ? diagnostic.restoreDots : localStorage.getItem(DOTS_STORAGE_KEY) !== "false";
+    boardUI.showMoveDots = typeof diagnostic?.restoreMoveDots === "boolean"
+      ? diagnostic.restoreMoveDots : localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false";
+    localStorage.setItem(DOTS_STORAGE_KEY, String(boardUI.showDots));
+    localStorage.setItem(MOVE_DOTS_STORAGE_KEY, String(boardUI.showMoveDots));
+  }
+  levelDiagnosticLockWasActive = active;
+  syncDotsButton();
+  syncMoveDotsButton();
+  if (typeof renderBoard === "function") renderBoard();
+}
+window.addEventListener("supachess:level-diagnostic-change", applyLevelDiagnosticLock);
 
 /* ── Réglages ── */
 function thresholdCp() { return Math.round(parseFloat($("sel-threshold").value) * 100); }
@@ -744,12 +780,14 @@ $("btn-new").addEventListener("click", newGame);
 syncDotsButton();
 syncMoveDotsButton();
 $("btn-dots").addEventListener("click", () => {
+  if (isLevelDiagnosticActive()) return;
   boardUI.showDots = !boardUI.showDots;
   localStorage.setItem(DOTS_STORAGE_KEY, String(boardUI.showDots));
   syncDotsButton();
   renderBoard();
 });
 $("btn-move-dots").addEventListener("click", () => {
+  if (isLevelDiagnosticActive()) return;
   boardUI.showMoveDots = !boardUI.showMoveDots;
   localStorage.setItem(MOVE_DOTS_STORAGE_KEY, String(boardUI.showMoveDots));
   syncMoveDotsButton();
