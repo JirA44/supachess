@@ -68,7 +68,8 @@ function syncLevelDiagnosticBanner() {
       ).length;
     } catch (_) {}
     banner.hidden = false;
-    banner.textContent = "Diagnostic actif : " + count + "/10 parties analysées depuis son activation. Joue sans bulles candidates ni points de coups possibles; les aides reviennent après la dixième partie.";
+    const prefix = diagnostic.defaultActivation ? "Diagnostic de niveau activé par défaut : " : "Diagnostic actif : ";
+    banner.textContent = prefix + count + "/10 parties analysées depuis son activation. Joue sans bulles candidates ni points de coups possibles; les aides reviennent après la dixième partie.";
   } else if (diagnostic.completed) {
     banner.hidden = false;
     banner.textContent = "Diagnostic terminé : " + (diagnostic.analyzedGamesAtCompletion || 10) +
