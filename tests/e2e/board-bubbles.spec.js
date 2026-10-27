@@ -118,22 +118,27 @@ test("hovering a candidate bubble shows the move to play beside it", async ({ pa
 });
 
 
-test("each recorded half-move reports its precision loss", async ({ page }) => {
+test("each recorded half-move reports its change to the running precision average", async ({ page }) => {
   await preparePracticeMode(page);
   await page.goto("/index.html");
   await page.waitForFunction(() => document.body.dataset.engineReady === "1" && state.phase === "userTurn");
-  await page.evaluate(() => {
+  const deltas = await page.evaluate(() => {
     state.gen++;
     state.phase = "userTurn";
     recordAccuracy("w", 0, -2);
+    recordAccuracy("w", 0, -100);
+    const white = state.accuracy.lastMove.delta;
+    recordAccuracy("b", 0, -2);
+    recordAccuracy("b", 0, -100);
+    return { white, black: state.accuracy.lastMove.delta };
   });
+  const formatDelta = value => Math.abs(value).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   await expect(page.locator("#stat-accuracy")).toContainText("Blancs (toi)");
-  await expect(page.locator("#stat-accuracy")).toContainText("-1% de précision sur ce demi-coup");
-  await page.evaluate(() => recordAccuracy("b", 0, -2));
+  await expect(page.locator("#stat-accuracy")).toContainText("−" + formatDelta(deltas.white) + "% de précision moyenne sur ce demi-coup");
   await expect(page.locator("#stat-accuracy")).toContainText("Noirs (SF)");
-  await expect(page.locator("#stat-accuracy")).toContainText("-1% de précision sur ce demi-coup");
+  await expect(page.locator("#stat-accuracy")).toContainText("−" + formatDelta(deltas.black) + "% de précision moyenne sur ce demi-coup");
   await page.evaluate(() => resetAccuracy());
-  await expect(page.locator("#stat-accuracy")).not.toContainText("de précision sur ce demi-coup");
+  await expect(page.locator("#stat-accuracy")).not.toContainText("de précision moyenne sur ce demi-coup");
 });
 
 
