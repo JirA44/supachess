@@ -184,8 +184,22 @@ test("five methodology cards explain their routines and open matching lessons", 
   await stockfish.getByRole("button", { name: "Commencer sur une position" }).click();
   await expect(page.locator("#lesson-program-filter")).toHaveValue("");
   await expect(page.locator("#lesson-catalog .lesson-catalog-button:not(.anticipation-exercise)").first()).toBeVisible();
+  await expect(page.locator("#lesson-reflection")).toBeVisible();
+  await expect(page.locator("#lesson-engine-analyze")).toBeHidden();
+  await page.locator("#lesson-reflection-submit").click();
+  await expect(page.locator("#lesson-reflection-status")).toContainText("Note ton coup candidat");
+  await page.locator("#lesson-reflection-candidate").fill("Je développe avec tempo");
+  await page.locator("#lesson-reflection-reply").fill("Je vérifie la menace adverse et une riposte");
+  await page.locator("#lesson-reflection-submit").click();
   await expect(page.locator("#lesson-engine-analyze")).toBeVisible();
   await expect(stockfish).toHaveAttribute("aria-current", "true");
+
+  await page.locator("#lesson-engine-analyze").click();
+  await expect(page.locator("#lesson-engine-lines .lesson-engine-line").first()).toBeVisible({ timeout: 30000 });
+  await expect(page.locator("#lesson-reflection-review")).toBeVisible();
+  await page.locator("#lesson-review-save").click();
+  await expect(page.locator("#lesson-review-status")).toContainText("Position ajoutée");
+  await expect(page.locator("#lesson-review-queue")).toContainText("Positions à revoir : 1");
 
   await page.setViewportSize({ width: 390, height: 844 });
   const cardBox = await page.locator(".method-path-grid").boundingBox();
