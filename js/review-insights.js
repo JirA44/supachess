@@ -553,6 +553,9 @@
       syncDiagnostic();
       return value;
     };
+    root.addEventListener("storage", (event) => {
+      if (event.key === LEVEL_DIAGNOSTIC_KEY) syncDiagnostic();
+    });
     list.addEventListener("change", (event) => {
       const checkbox = event.target.closest("input[data-review-insights-id]");
       if (!checkbox) return;
