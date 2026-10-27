@@ -163,7 +163,7 @@ test("all engine move grades have distinct category-colored board dots", () => {
     assert.notEqual(start, -1, `missing color rule for ${category}`);
     const end = style.indexOf("}", start);
     const rule = style.slice(start, end);
-    const match = rule.match(/--grade-dot-color:\\s*(#[0-9a-f]{6})/i);
+    const match = rule.match(/--grade-dot-color:[ ]*(#[0-9a-f]{6})/i);
     assert.ok(match, `missing color for ${category}`);
     return match[1].toLowerCase();
   });
