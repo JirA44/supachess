@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#17211a">
   <title>SupaChess Académie — La route vers l’excellence</title>
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/book-lessons.css?v=academy-green-20261026">
+  <link rel="stylesheet" href="css/book-lessons.css?v=stockfish-coach-20261027">
   <link rel="stylesheet" href="css/method-paths.css?v=methods-fischer-20261026">
 </head>
 <body class="lesson-mode">
@@ -20,7 +20,7 @@
       <p class="lesson-eyebrow">SupaChess Académie · mode apprentissage</p>
       <h1>Leçons</h1>
       <p class="lesson-subtitle">La route vers l’excellence</p>
-      <p>Progresse du débutant à l’expert avec des leçons originales, des coups adverses à anticiper, des exercices surprise et des retours sur les erreurs à éviter. Compare les coups candidats avec Stockfish 19.</p><p class="lesson-method-note">Parcours thématiques inspirés de principes publics associés aux parties de Fischer, Carlsen, Tal et Kasparov. Ce ne sont ni des méthodes officielles attribuées à ces joueurs ni des textes copiés. Stockfish vérifie des variantes selon sa recherche; aucune leçon ne garantit un classement donné.</p>
+      <p>Progresse du débutant à l’expert avec des leçons originales, des coups adverses à anticiper, des exercices surprise et des retours sur les erreurs à éviter. Compare les coups candidats avec Stockfish 19.</p><p class="lesson-method-note">Parcours thématiques inspirés de principes publics associés aux parties de Fischer, Carlsen, Tal et Kasparov. Ce ne sont ni des méthodes officielles attribuées à ces joueurs ni des textes copiés. Stockfish vérifie des variantes selon sa recherche; son Elo moteur, même annoncé autour de 3 500, n’est pas un classement FIDE humain et ne se convertit pas directement en Elo FIDE. Aucune leçon ne garantit un classement donné.</p>
     </section>
 
     <section class="method-paths" aria-labelledby="method-paths-title">
@@ -103,6 +103,23 @@
           <legend id="lesson-question">Quel principe faut-il appliquer ?</legend>
           <div class="lesson-choices" id="lesson-choices"></div>
         </fieldset>
+        <section class="lesson-reflection" id="lesson-reflection" aria-labelledby="lesson-reflection-title" hidden>
+          <h3 id="lesson-reflection-title">Avant Stockfish : calcule ta propre variante</h3>
+          <p>Écris ton candidat, puis le meilleur demi-coup adverse que tu crains et ta réponse prévue. Stockfish vérifiera ensuite les lignes ; il ne devinera pas ton raisonnement. Rien n’est enregistré avant que tu ajoutes la position à ta révision locale.</p>
+          <label for="lesson-reflection-candidate">Mon coup candidat et son idée</label>
+          <textarea id="lesson-reflection-candidate" rows="2" maxlength="400" placeholder="Ex. je joue … pour créer telle menace."></textarea>
+          <label for="lesson-reflection-reply">La réponse adverse la plus gênante, puis ma suite</label>
+          <textarea id="lesson-reflection-reply" rows="2" maxlength="400" placeholder="Ex. l’adversaire répond … ; je prévois …"></textarea>
+          <button class="btn" id="lesson-reflection-submit" type="button">Valider mon calcul et afficher Stockfish</button>
+          <p id="lesson-reflection-status" role="status" aria-live="polite"></p>
+        </section>
+        <div class="lesson-reflection-review" id="lesson-reflection-review" hidden>
+          <h3>Comparer puis réviser</h3>
+          <p id="lesson-reflection-summary"></p>
+          <button class="btn" id="lesson-review-save" type="button">Ajouter cette position à mon entraînement</button>
+          <p id="lesson-review-status" role="status" aria-live="polite"></p>
+          <div id="lesson-review-queue" aria-live="polite"></div>
+        </div>
         <div class="lesson-engine-actions">
           <button class="btn" id="lesson-engine-analyze" type="button">Comparer tous les coups avec Stockfish</button>
           <button class="btn" id="lesson-engine-return" type="button" hidden>Revenir à la position de l’exercice</button>
@@ -110,7 +127,7 @@
         <section class="lesson-engine-analysis" id="lesson-engine-analysis" aria-labelledby="lesson-engine-title" hidden>
           <h3 id="lesson-engine-title">Comparer les coups légaux</h3>
           <p class="lesson-engine-status" id="lesson-engine-status" role="status" aria-live="polite"></p>
-          <p class="lesson-engine-note">Stockfish classe les coups et donne une suite calculée. Il n’explique pas lui-même les principes : les indices ci-dessous sont des questions à vérifier sur l’échiquier, pas la pensée interne du moteur.</p>
+          <p class="lesson-engine-note">Stockfish classe les coups et donne une suite calculée. Sa force moteur n’est pas un Elo FIDE humain. Il n’explique pas lui-même les principes : les indices ci-dessous sont des questions à vérifier sur l’échiquier, pas la pensée interne du moteur.</p>
           <ol class="lesson-engine-lines" id="lesson-engine-lines"></ol>
         </section>
         <p class="lesson-feedback" id="lesson-feedback" role="status" aria-live="polite"></p>
@@ -129,7 +146,7 @@
   <script src="js/engine.js"></script>
   <script src="js/board.js"></script>
   <script src="js/curriculum.js?v=academy-100-methods-20261026"></script>
-  <script src="js/book-lessons.js?v=method-path-sequence-20261027"></script>
-  <script src="js/method-paths.js?v=method-path-sequence-20261027"></script>
+  <script src="js/book-lessons.js?v=stockfish-coach-20261027"></script>
+  <script src="js/method-paths.js?v=stockfish-coach-20261027"></script>
 </body>
 </html>

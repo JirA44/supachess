@@ -103,3 +103,25 @@
   .lesson-mode .lesson-filter-row { grid-template-columns: 1fr; }
   .lesson-mode .lesson-surprise { width: 100%; }
 }
+
+.lesson-reflection {
+  margin: 14px 0;
+  padding: 16px;
+  border: 1px solid var(--green);
+  border-radius: 10px;
+  background: #142119;
+}
+.lesson-reflection[hidden], .lesson-reflection-review[hidden] { display: none; }
+.lesson-reflection h3, .lesson-reflection-review h3 { margin: 0 0 8px; color: var(--green); }
+.lesson-reflection p, .lesson-reflection-review p { line-height: 1.5; }
+.lesson-reflection label { display: block; margin: 12px 0 5px; font-weight: 800; }
+.lesson-reflection textarea {
+  display: block; width: 100%; min-height: 64px; resize: vertical; padding: 10px;
+  color: var(--text); background: #0d1310; border: 1px solid var(--panel-edge); border-radius: 7px;
+  font: inherit;
+}
+.lesson-reflection textarea:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.lesson-reflection-review { margin: 14px 0; padding: 16px; background: #121a15; border: 1px solid var(--green); border-radius: 10px; }
+#lesson-review-queue ol { margin: 8px 0; padding-left: 22px; }
+#lesson-review-queue li { margin: 6px 0; line-height: 1.45; }
+#lesson-reflection-status, #lesson-review-status { font-weight: 700; }

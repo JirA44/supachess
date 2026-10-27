@@ -493,6 +493,8 @@
   let anticipationPractice = false;
   let anticipatingBook = false;
   let surpriseMode = false;
+  let stockfishCoachMode = false;
+  let stockfishReflection = null;
   let flipped = false;
   let bookReplyTimer = null;
   let progress = readProgress();
@@ -590,6 +592,17 @@
     enginePreview = null;
     $("lesson-engine-analysis").hidden = true;
     $("lesson-engine-return").hidden = true;
+    stockfishCoachMode = Boolean(options.coach);
+    stockfishReflection = null;
+    $("lesson-reflection").hidden = !stockfishCoachMode;
+    $("lesson-reflection-candidate").value = "";
+    $("lesson-reflection-reply").value = "";
+    $("lesson-reflection-submit").disabled = false;
+    $("lesson-reflection-submit").textContent = "Valider mon calcul et afficher Stockfish";
+    $("lesson-reflection-status").textContent = "";
+    $("lesson-reflection-review").hidden = true;
+    $("lesson-review-status").textContent = "";
+    $("lesson-engine-analyze").hidden = stockfishCoachMode;
     $("lesson-engine-analyze").disabled = false;
     $("lesson-engine-analyze").textContent = "Comparer tous les coups avec Stockfish";
     $("lesson-engine-status").textContent = "";
@@ -952,6 +965,13 @@
       if (token !== analysisToken || !game || game.fen() !== fen) return;
       renderEngineChoices(result, fen);
       $("lesson-engine-status").setAttribute("data-source", "stockfish-19");
+      if (stockfishCoachMode && stockfishReflection) {
+        const bestLine = result.choices[0] ? result.choices[0].sanLine.join(" ") : "aucune variante disponible";
+        $("lesson-reflection-review").hidden = false;
+        $("lesson-reflection-summary").textContent = "Ton candidat : " + stockfishReflection.candidate + " | Réponse adverse prévue : " + stockfishReflection.reply + " | Première ligne Stockfish : " + bestLine + ". Compare les menaces et chaque demi-coup avant de décider quoi revoir.";
+        $("lesson-review-save").disabled = false;
+        renderStockfishReviewQueue();
+      }
     } catch (error) {
       if (token === analysisToken) $("lesson-engine-status").textContent = "Analyse indisponible : " + (error && error.message ? error.message : "le moteur n’a pas répondu.");
     } finally {
@@ -988,7 +1008,46 @@
     loadLesson(selected.index, { surprise: true, anticipate: false });
     document.querySelector(".lesson-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
+  $("lesson-reflection-submit").addEventListener("click", () => {
+    const candidate = $("lesson-reflection-candidate").value.trim();
+    const reply = $("lesson-reflection-reply").value.trim();
+    if (!candidate || !reply) {
+      $("lesson-reflection-status").textContent = "Note ton coup candidat et au moins une réponse adverse avant de regarder Stockfish.";
+      return;
+    }
+    stockfishReflection = { candidate: candidate, reply: reply };
+    $("lesson-reflection-submit").disabled = true;
+    $("lesson-reflection-submit").textContent = "Calcul enregistré";
+    $("lesson-reflection-status").textContent = "Ta prévision est gardée dans cette page. Lance maintenant la comparaison Stockfish.";
+    $("lesson-engine-analyze").hidden = false;
+    $("lesson-engine-analyze").focus();
+  });
   $("lesson-engine-analyze").addEventListener("click", () => runEngineComparison(false));
+  $("lesson-review-save").addEventListener("click", () => {
+    if (!stockfishCoachMode || !stockfishReflection || !game) return;
+    const result = engineCache.get(game.fen());
+    const record = {
+      id: game.fen() + "|" + Date.now(),
+      title: LESSONS[lessonIndex].title,
+      fen: game.fen(),
+      candidate: stockfishReflection.candidate,
+      reply: stockfishReflection.reply,
+      engineMove: result && result.choices[0] ? result.choices[0].sanLine.join(" ") : "",
+      savedAt: new Date().toISOString(),
+    };
+    let queue = [];
+    try { queue = JSON.parse(localStorage.getItem("supachess_stockfish_review") || "[]"); } catch (_) {}
+    if (!Array.isArray(queue)) queue = [];
+    queue.unshift(record);
+    try {
+      localStorage.setItem("supachess_stockfish_review", JSON.stringify(queue.slice(0, 100)));
+      $("lesson-review-save").disabled = true;
+      $("lesson-review-status").textContent = "Position ajoutée à ta liste locale de révision.";
+      renderStockfishReviewQueue();
+    } catch (_) {
+      $("lesson-review-status").textContent = "Impossible d’enregistrer dans ce navigateur.";
+    }
+  });
   $("lesson-engine-return").addEventListener("click", () => {
     enginePreview = null;
     boardUI.lastMove = null;
@@ -1006,6 +1065,26 @@
   $("lesson-hint").addEventListener("click", showHint);
   $("lesson-restart").addEventListener("click", () => loadLesson(lessonIndex));
   $("lesson-next").addEventListener("click", () => loadLesson(nextLessonIndex(lessonIndex)));
+  function renderStockfishReviewQueue() {
+    const target = $("lesson-review-queue");
+    if (!target) return;
+    let queue = [];
+    try { queue = JSON.parse(localStorage.getItem("supachess_stockfish_review") || "[]"); } catch (_) {}
+    if (!Array.isArray(queue) || !queue.length) {
+      target.textContent = "Aucune position enregistrée pour le moment.";
+      return;
+    }
+    const heading = document.createElement("p");
+    heading.textContent = "Positions à revoir : " + queue.length;
+    const list = document.createElement("ol");
+    queue.slice(0, 5).forEach((item) => {
+      const row = document.createElement("li");
+      row.textContent = item.title + " · ton candidat : " + item.candidate + " · première ligne Stockfish : " + (item.engineMove || "indisponible");
+      list.appendChild(row);
+    });
+    target.replaceChildren(heading, list);
+  }
+
   function renderPersonalizedPgnPath() {
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem("supachess_personalized_path") || "null"); } catch (_) {}
@@ -1057,8 +1136,7 @@
         $("lesson-program-filter").value = program;
         $("lesson-search").value = "";
         renderCatalog();
-        loadLesson(index);
-        if (program === "Stockfish · comparer et vérifier") runEngineComparison(false);
+        loadLesson(index, { coach: program === "Stockfish · comparer et vérifier" });
         document.querySelector(".lesson-workspace").scrollIntoView({ behavior: "smooth", block: "start" });
       });
       item.append(label, skill, evidence, practice, button);
@@ -1068,6 +1146,16 @@
     tools.parentNode.insertBefore(section, tools);
     if (location.hash === "#parcours-pgn") section.scrollIntoView({ block: "start" });
   }
+
+  root.startSupaChessStockfishCoach = function () {
+    const index = LESSONS.findIndex((lesson) => lesson.kind !== "anticipation");
+    if (index < 0) return false;
+    $("lesson-program-filter").value = "";
+    $("lesson-search").value = "";
+    renderCatalog();
+    loadLesson(index, { coach: true });
+    return true;
+  };
 
   renderCatalog();
   const requestedNext = new URLSearchParams(location.search).get("next") === "1";
