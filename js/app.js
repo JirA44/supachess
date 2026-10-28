@@ -16,7 +16,7 @@ const state = {
   gen: 0,                // génération de tour : invalide les analyses en vol au changement de mode
 
   stats: { moves: 0, top1: 0, top3: 0, intercepts: 0, forced: 0 },
-  accuracy: { w: [], b: [], pendingEngine: null }, // moveAccuracy [0..100] par couleur
+  accuracy: { w: [], b: [], pendingEngine: null, lastMove: null, byPly: {} }, // moveAccuracy [0..100] par couleur
   moveGradeHistory: [], // demi-coups joués avec catégorie, révisée après analyse moteur
 };
 
@@ -226,7 +226,7 @@ async function analyzeForUser() {
   if (state.accuracy.pendingEngine && res.lines.length) {
     const p = state.accuracy.pendingEngine;
     state.accuracy.pendingEngine = null;
-    recordAccuracy(p.color, p.beforeCp, -clampCpFromLine(res.lines[0]));
+    recordAccuracy(p.color, p.beforeCp, -clampCpFromLine(res.lines[0]), p.ply);
     finishEngineFeedback(p, res.lines[0]);
   }
   state.phase = "userTurn";
@@ -331,7 +331,7 @@ async function playEngineMove() {
       if (state.chess.game_over()) {
         const terminal = { scoreCp: 0, mate: state.chess.in_checkmate() ? 0 : null, pv: [], depth: baseline.lines[0].depth };
         finishEngineFeedback(pending, terminal);
-        recordAccuracy(engineColor, pending.beforeCp, state.chess.in_checkmate() ? 1000 : 0);
+        recordAccuracy(engineColor, pending.beforeCp, state.chess.in_checkmate() ? 1000 : 0, pending.ply);
       } else {
         state.accuracy.pendingEngine = pending;
       }
@@ -611,7 +611,7 @@ function commitUserMove(moveObj, cand, forced) {
   if (cand && state.candidates.length) {
     recordAccuracy(userMoveColor,
       clampCpFromLine(state.candidates[0].line),
-      clampCpFromLine(cand.line));
+      clampCpFromLine(cand.line), state.chess.history().length);
   }
   state.evalHistory.push(cand && cand.line ? whitePovEval(cand.line, userMoveColor === "w") : null);
   boardUI.dots = [];
@@ -722,17 +722,30 @@ function renderCandidatesList() {
   }
 }
 
+function accuracyHistoryTag(ply) {
+  const entry = state.accuracy.byPly && state.accuracy.byPly[ply];
+  if (!entry) return "";
+  const mean = formatAccuracyPct(entry.average);
+  const change = entry.delta === null ? "(départ)" :
+    "(" + (entry.delta >= 0 ? "+" : "−") + formatAccuracyPct(Math.abs(entry.delta)) + " pp)";
+  const tone = entry.delta === null ? "first" : entry.delta >= 0 ? "up" : "down";
+  const player = entry.color === state.userColor ? "toi" : "Stockfish";
+  const description = entry.delta === null
+    ? "Moyenne de précision initiale de " + player + " après ce demi-coup : " + mean + "%."
+    : "Moyenne de précision de " + player + " après ce demi-coup : " + mean + "%; variation " + (entry.delta >= 0 ? "plus " : "moins ") + formatAccuracyPct(Math.abs(entry.delta)) + " points de pourcentage.";
+  return "<span class=\"move-accuracy-note " + tone + "\" data-ply=\"" + ply + "\" title=\"" + esc(description) + "\">Moy. " + mean + "% " + change + "</span>";
+}
+
 function renderHistory() {
   const hist = state.chess.history();
   const evals = state.evalHistory || [];
   let html = "";
   for (let i = 0; i < hist.length; i += 2) {
-    html += `<span class="mvnum">${i / 2 + 1}.</span><span class="mv">${esc(hist[i])}</span>${evalTag(evals[i])}`;
-    if (hist[i + 1]) html += `<span class="mv">${esc(hist[i + 1])}</span>${evalTag(evals[i + 1])}`;
+    html += "<span class=\"mvnum\">" + (i / 2 + 1) + ".</span><span class=\"mv\">" + esc(hist[i]) + "</span>" + evalTag(evals[i]) + accuracyHistoryTag(i + 1);
+    if (hist[i + 1]) html += "<span class=\"mv\">" + esc(hist[i + 1]) + "</span>" + evalTag(evals[i + 1]) + accuracyHistoryTag(i + 2);
   }
   $("move-history").innerHTML = html || "<em>Aucun coup joué.</em>";
 }
-
 /* Éval d'un coup joué en valeur côté Blancs : {cp} ou {mate} (positif = avantage Blancs). */
 function whitePovEval(line, moverIsWhite) {
   if (!line) return null;
@@ -774,21 +787,23 @@ function moveAccuracyPct(beforeCp, afterCp) {
   const acc = 103.1668 * Math.exp(-0.04354 * drop) - 3.1668;
   return Math.max(0, Math.min(100, acc));
 }
-function recordAccuracy(color, beforeCp, afterCp) {
+function recordAccuracy(color, beforeCp, afterCp, ply = null) {
   const moveAccuracy = moveAccuracyPct(beforeCp, afterCp);
   const previousAverage = avgAccuracy(state.accuracy[color]);
   state.accuracy[color].push(moveAccuracy);
   const average = avgAccuracy(state.accuracy[color]);
   state.accuracy.lastMove = {
-    color,
-    moveAccuracy,
-    average,
+    color, ply, moveAccuracy, average,
     delta: previousAverage === null ? null : average - previousAverage
   };
+  if (Number.isInteger(ply) && ply > 0) {
+    state.accuracy.byPly[ply] = state.accuracy.lastMove;
+    renderHistory();
+  }
   renderAccuracy();
 }
 function resetAccuracy() {
-  state.accuracy = { w: [], b: [], pendingEngine: null, lastMove: null };
+  state.accuracy = { w: [], b: [], pendingEngine: null, lastMove: null, byPly: {} };
   renderAccuracy();
 }
 function avgAccuracy(arr) {
