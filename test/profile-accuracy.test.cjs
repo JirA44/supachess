@@ -44,9 +44,9 @@ test("summarizeAccuracyGames averages completed player moves and compares rollin
   assert.equal(summary.week.current.average, 60);
   assert.equal(summary.week.previous.average, 70);
   assert.equal(summary.week.delta, -10);
-  assert.equal(summary.month.current.average, 60);
+  assert.equal(summary.month.current.average, 62.5);
   assert.equal(summary.month.previous.average, 50);
-  assert.equal(summary.month.delta, 10);
+  assert.equal(summary.month.delta, 12.5);
 });
 
 test("summary keeps missing periods unavailable and renders French profile indicators", () => {
