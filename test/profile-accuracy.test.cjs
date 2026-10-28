@@ -95,6 +95,7 @@ test("summary keeps missing periods unavailable and renders French profile indic
 
 test("renderProfileModal replaces the loading dialog before filling profile content", () => {
   const loadingOverlay = currentOverlay;
+  window.SupaProfiles.init({ currentUser: { uid: "player-1" } }, null);
   window.SupaProfiles.renderProfileModal({
     uid: "player-1",
     displayName: "Joueur test",
