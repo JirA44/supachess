@@ -254,7 +254,7 @@ async function reviewRun(options = {}) {
     const category = reviewClassOf(row, { brilliant });
     return { deltaCp: eligible ? cand.deltaCp : null, brilliant, category, evaluation };
   });
-  rows.forEach((row, i) => { row.classification = reviewClassOf(row, reviewState.grades[i]); });
+  rows.forEach((row, i) => { row.evaluation = reviewState.grades[i].evaluation; row.classification = reviewClassOf(row, reviewState.grades[i]); });
   reviewState.correctionExercises = reviewBuildCorrectionExercises(rows, fens, moves, positionLines);
   reviewSetProgress("Analyse Stockfish terminée — bilan en cours…");
   reviewRenderLocal(rows, accW, accB, headers);
@@ -329,14 +329,17 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     const cp = r.centipawns;
     const heading = `${r.n}${r.color === "w" ? "." : "..."} ${sanFr(r.san)}`;
     const moveLink = `<button type="button" class="review-ply-link" data-review-ply="${idx + 1}" aria-label="Aller à la position après ${esc(heading)}">${esc(heading)}</button>`;
-    if (!cp) return `<li class="review-ply" data-review-ply="${idx + 1}">${moveLink} : analyse en centipions indisponible.</li>`;
+    const evaluation = r.evaluation && r.evaluation !== "—"
+      ? ` · évaluation après ce demi-coup : <strong>${esc(r.evaluation)}</strong>`
+      : " · évaluation après ce demi-coup indisponible";
+    if (!cp) return `<li class="review-ply" data-review-ply="${idx + 1}">${moveLink}${evaluation} — analyse en centipions indisponible.</li>`;
     const loss = cp.lossCp === null ? "non chiffrable (mat ou analyse incomplète)"
       : `${(Math.round(cp.lossCp*10)/10).toLocaleString("fr-FR")} cp`;
     const evalChange = Number.isFinite(cp.swingWhiteCp)
       ? ` · variation côté Blancs : ${cp.swingWhiteCp>=0?"+":""}${cp.swingWhiteCp.toFixed(0)} cp` : "";
     const facts = (cp.observations||[]).map(o=>o.text).join(" ");
     const principles = (cp.principles||[]).map(p=>`<strong>Principe à vérifier : ${esc(p.label)}.</strong> ${esc(p.text)} <small>${esc(p.caveat)}</small>`).join(" ");
-    return `<li class="review-ply" data-review-ply="${idx + 1}">${moveLink} — perte / meilleur coup : ${esc(loss)}${esc(evalChange)}. ${esc(cp.explanation)} ${esc(facts)} ${principles || "<small>Aucun principe précis ne peut être confirmé à partir des preuves disponibles pour ce demi-coup.</small>"}</li>`;
+    return `<li class="review-ply" data-review-ply="${idx + 1}">${moveLink}${evaluation} — perte / meilleur coup : ${esc(loss)}${esc(evalChange)}. ${esc(cp.explanation)} ${esc(facts)} ${principles || "<small>Aucun principe précis ne peut être confirmé à partir des preuves disponibles pour ce demi-coup.</small>"}</li>`;
   }).join("");
   const blindspots = rows.flatMap((r) => (r.diagnostics || []).map((d) => ({ ...d, n: r.n, color: r.color })));
   const examples = blindspots.slice(0, 8).map((d) => `<li><strong>${d.n}${d.color === "w" ? "." : "..."} :</strong> ${esc(d.text)} <small>${esc(d.caveat)}</small></li>`).join("");
