@@ -246,6 +246,10 @@ body {
 .move-history .mvnum { color: var(--text-dim); }
 .move-history .mv { font-weight: 600; }
 .move-history .mv-eval { color: var(--accent); font-size: .72rem; font-variant-numeric: tabular-nums; margin-left: 1px; margin-right: 2px; }
+.move-history .move-accuracy-note { display: inline-block; padding: 1px 5px; border: 1px solid currentColor; border-radius: 999px; font-size: .66rem; line-height: 1.2; white-space: nowrap; }
+.move-history .move-accuracy-note.first { color: var(--text-dim); }
+.move-history .move-accuracy-note.up { color: var(--green); }
+.move-history .move-accuracy-note.down { color: var(--red); }
 
 /* Stats */
 .move-feedback { display: grid; gap: 10px; width: 100%; max-width: 640px; }
