@@ -62,7 +62,8 @@ function startLevelDiagnostic() {
 window.startLevelDiagnostic = startLevelDiagnostic;
 ensureDefaultLevelDiagnostic();
 if (new URLSearchParams(window.location.search).get("start-diagnostic") === "1") {
-  startLevelDiagnostic();
+  const currentDiagnostic = readLevelDiagnostic();
+  if (!currentDiagnostic || !currentDiagnostic.active) startLevelDiagnostic();
   const launchUrl = new URL(window.location.href);
   launchUrl.searchParams.delete("start-diagnostic");
   window.history.replaceState(window.history.state, "", launchUrl);
