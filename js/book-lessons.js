@@ -809,9 +809,15 @@
     const principle = document.createElement("p");
     principle.textContent = lesson.principle;
     explanation.append(heading, principle);
+    const pitfallHeading = document.createElement("h4");
+    pitfallHeading.textContent = "Ce qu’il ne fallait pas faire — et pourquoi";
+    const avoidedChoices = lesson.choices.filter((choice) => !choice.correct).map((choice) => choice.text);
     const pitfall = document.createElement("p");
-    pitfall.textContent = "À ne pas faire : " + (lesson.pitfall || "ne pas poursuivre son plan sans recalculer les réponses adverses.");
-    explanation.appendChild(pitfall);
+    pitfall.textContent = "À éviter : " + (lesson.pitfall || avoidedChoices.join(" · ") || "jouer sans vérifier la position.");
+    const pitfallReason = document.createElement("p");
+    pitfallReason.textContent = "Pourquoi : " + (lesson.pitfallReason ||
+      "ces choix ne répondent pas au but de la position. " + (lesson.transfer || lesson.principle));
+    explanation.append(pitfallHeading, pitfall, pitfallReason);
 
     const moveHeading = document.createElement("h4");
     moveHeading.textContent = "Explication de chaque demi-coup";
