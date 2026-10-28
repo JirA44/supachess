@@ -260,6 +260,7 @@ function renderLocalLearningPanel(data){
 }
 function renderProfileModal(data){
   var overlay=document.getElementById('profile-modal');
+  if(overlay&&!overlay.querySelector('#profile-content')){overlay.remove();overlay=null;}
   if(!overlay){
     overlay=document.createElement('div');
     overlay.id='profile-modal';

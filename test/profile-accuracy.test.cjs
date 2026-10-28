@@ -5,9 +5,37 @@ const vm = require("node:vm");
 const test = require("node:test");
 
 const values = new Map();
+let currentOverlay = {
+  querySelector() { return null; },
+  remove() { this.removed = true; currentOverlay = null; },
+};
+const profileContent = { innerHTML: "" };
+const document = {
+  getElementById(id) {
+    if (id === "profile-modal") return currentOverlay;
+    if (id === "profile-content" && currentOverlay && currentOverlay.hasProfileContent) return profileContent;
+    return null;
+  },
+  createElement() {
+    const element = {
+      style: {},
+      listeners: {},
+      addEventListener(name, callback) { this.listeners[name] = callback; },
+      querySelector() { return { addEventListener() {} }; },
+    };
+    Object.defineProperty(element, "innerHTML", {
+      set(value) { this.html = value; this.hasProfileContent = value.includes('id="profile-content"'); },
+      get() { return this.html; },
+    });
+    element.remove = function () { currentOverlay = null; };
+    return element;
+  },
+  body: { appendChild(element) { currentOverlay = element; } },
+};
 const window = {};
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, "../js/profile.js"), "utf8"), {
   window,
+  document,
   localStorage: {
     getItem(key) { return values.has(key) ? values.get(key) : null; },
     setItem(key, value) { values.set(key, String(value)); },
@@ -63,4 +91,20 @@ test("summary keeps missing periods unavailable and renders French profile indic
   assert.match(html, /30 derniers jours/);
   assert.match(html, /Évolution indisponible/);
   assert.match(html, /87,5/);
+});
+
+test("renderProfileModal replaces the loading dialog before filling profile content", () => {
+  const loadingOverlay = currentOverlay;
+  window.SupaProfiles.init({ currentUser: { uid: "player-1" } }, null);
+  window.SupaProfiles.renderProfileModal({
+    uid: "player-1",
+    displayName: "Joueur test",
+    email: "joueur@example.test",
+    stats: {},
+  });
+
+  assert.equal(loadingOverlay.removed, true);
+  assert.ok(currentOverlay.hasProfileContent);
+  assert.match(profileContent.innerHTML, /Joueur test/);
+  assert.match(profileContent.innerHTML, /Précision moyenne du joueur/);
 });
