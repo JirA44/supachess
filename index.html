@@ -130,11 +130,11 @@
         <button id="btn-pgn" class="btn">⬇ PGN</button>
         <button id="btn-analyze-pgn" class="btn">Analyser un PGN (Supa)</button>
       </div>
-      <div id="replay-bar" class="board-controls hidden">
-        <button id="btn-replay-prev" class="btn" type="button" aria-label="Coup précédent">◀</button>
-        <span id="replay-label">Coup 0/0</span>
-        <button id="btn-replay-next" class="btn" type="button" aria-label="Coup suivant">▶</button>
-        <button id="btn-replay-quit" class="btn">Quitter la relecture</button>
+      <div id="replay-bar" class="board-controls" aria-label="Navigation dans la partie">
+        <button id="btn-replay-prev" class="btn" type="button" aria-label="Coup précédent" disabled>◀</button>
+        <span id="replay-label" aria-live="polite">Importez ou analysez une partie pour la parcourir</span>
+        <button id="btn-replay-next" class="btn" type="button" aria-label="Coup suivant" disabled>▶</button>
+        <button id="btn-replay-quit" class="btn hidden" type="button">Quitter la relecture</button>
       </div>
       <div id="review-exercise-panel" class="review-exercise-panel hidden" aria-live="polite">
         <strong id="review-exercise-heading"></strong>

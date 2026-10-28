@@ -190,6 +190,7 @@ async function reviewRun(options = {}) {
   const headers = typeof game.header === "function" ? game.header() : {};
 
   reviewState.running = true;
+  reviewSetReplayControls(false);
   reviewHideModal();
   const panel = document.getElementById("review-panel");
   panel.classList.remove("hidden");
@@ -288,7 +289,13 @@ async function reviewRun(options = {}) {
   document.getElementById("btn-replay-game").classList.remove("hidden");
 
   // Le lot reste local : le bilan transversal est calculé après les analyses.
-  if (!options.batch) await reviewAskSupa(rows, accW, accB, headers);
+  if (!options.batch) {
+    await reviewAskSupa(rows, accW, accB, headers);
+    reviewBeginReplay();
+    document.getElementById("replay-bar").classList.remove("hidden");
+    reviewSetReplayControls(true);
+    await replayGoto(0);
+  }
   reviewState.running = false;
   return true;
 }
@@ -569,8 +576,19 @@ function reviewExitCorrectionExercises(){
   reviewRestoreAfterReplay();
 }
 
+function reviewSetReplayControls(active) {
+  const enabled = Boolean(active && reviewState.fens.length);
+  document.getElementById("btn-replay-prev").disabled = !enabled;
+  document.getElementById("btn-replay-next").disabled = !enabled;
+  document.getElementById("btn-replay-quit").classList.toggle("hidden", !enabled);
+  if (!enabled) document.getElementById("replay-label").textContent =
+    reviewState.fens.length ? "Relecture en pause" : "Importez ou analysez une partie pour la parcourir";
+}
+
 function reviewBeginReplay() {
   if (reviewState.returnState) return;
+  document.getElementById("replay-bar").classList.remove("hidden");
+  reviewSetReplayControls(true);
   const feedback = document.getElementById("move-feedback");
   reviewState.returnState = {
     state: { ...state, accuracy: { ...state.accuracy, w: [...state.accuracy.w], b: [...state.accuracy.b] } },
@@ -603,7 +621,8 @@ function reviewRestoreAfterReplay() {
   feedback.innerHTML = saved.feedbackHtml;
   document.getElementById("coach-panel").className = saved.coachClass;
   reviewState.returnState = null;
-  document.getElementById("replay-bar").classList.add("hidden");
+  document.getElementById("replay-bar").classList.remove("hidden");
+  reviewSetReplayControls(false);
   renderAll();
   if (["engineThinking", "analyzing"].includes(state.phase)) startTurn();
 }

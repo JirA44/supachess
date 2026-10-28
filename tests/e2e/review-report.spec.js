@@ -115,12 +115,16 @@ test('PGN halfmove link replays the exact resulting position and synchronizes th
     return {
       fen:state.chess.fen(),
       reportVisible:!document.getElementById('review-panel').classList.contains('hidden'),
-      replayBarHidden:document.getElementById('replay-bar').classList.contains('hidden')
+      replayBarVisible:!document.getElementById('replay-bar').classList.contains('hidden'),
+      previousDisabled:document.getElementById('btn-replay-prev').disabled,
+      nextDisabled:document.getElementById('btn-replay-next').disabled
     };
   });
   expect(restored.fen).toBe(result.savedFen);
   expect(restored.reportVisible).toBe(true);
-  expect(restored.replayBarHidden).toBe(true);
+  expect(restored.replayBarVisible).toBe(true);
+  expect(restored.previousDisabled).toBe(true);
+  expect(restored.nextDisabled).toBe(true);
 });
 
 
@@ -159,4 +163,31 @@ test('selected PGNs show a cautious FIDE-like baseline and a comparable error tr
   await expect(panel).toContainText('Évolution Stockfish (600+0)');
   await expect(panel).toContainText('erreurs 10.0→10.0 par 100 demi-coups');
   await expect(panel).toContainText('sans prouver à elle seule que la leçon en est la cause');
+});
+
+test('PGN analysis automatically opens replay and keeps previous/next controls visible',async({page})=>{
+  await page.goto('/index.html');
+  await page.waitForFunction(()=>document.body.dataset.engineReady==='1');
+  await expect(page.locator('#replay-bar')).toBeVisible();
+  await expect(page.locator('#btn-replay-prev')).toBeDisabled();
+  await expect(page.locator('#btn-replay-next')).toBeDisabled();
+  const result=await page.evaluate(async()=>{
+    state.engine.analyze=async({fen})=>{
+      const position=new Chess(fen);
+      return {lines:[{scoreCp:0,mate:null,pv:[position.turn()==='w'?'e2e4':'e7e5'],depth:1}]};
+    };
+    window.analyzeForUser=async()=>{};
+    window.fetch=async()=>({ok:false,status:503,json:async()=>({})});
+    document.getElementById('pgn-input').value='[Event "Automatic replay"]\\n[White "Alice"]\\n[Black "Bob"]\\n[Result "*"]\\n\\n1. e4 *';
+    return reviewRun();
+  });
+  expect(result).toBe(true);
+  await expect(page.locator('#replay-bar')).toBeVisible();
+  await expect(page.locator('#replay-label')).toHaveText('Coup 0/1');
+  await expect(page.locator('#btn-replay-prev')).toBeEnabled();
+  await expect(page.locator('#btn-replay-next')).toBeEnabled();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(()=>page.evaluate(()=>state.replayIdx)).toBe(1);
+  await page.keyboard.press('ArrowLeft');
+  await expect.poll(()=>page.evaluate(()=>state.replayIdx)).toBe(0);
 });
