@@ -125,18 +125,30 @@ test("each recorded half-move reports its change to the running precision averag
   const deltas = await page.evaluate(() => {
     state.gen++;
     state.phase = "userTurn";
-    recordAccuracy("w", 0, -2);
-    recordAccuracy("w", 0, -100);
+    state.chess = new Chess();
+    state.chess.loadPgn("1. e4 e5 2. Nf3 Nc6");
+    state.evalHistory = [];
+    recordAccuracy("w", 0, -2, 1);
+    recordAccuracy("w", 0, -100, 3);
     const white = state.accuracy.lastMove.delta;
-    recordAccuracy("b", 0, -2);
-    recordAccuracy("b", 0, -100);
-    return { white, black: state.accuracy.lastMove.delta };
+    recordAccuracy("b", 0, -2, 2);
+    recordAccuracy("b", 0, -100, 4);
+    const history = [...document.querySelectorAll(".move-accuracy-note")].map(note => ({
+      ply: note.dataset.ply, text: note.textContent
+    }));
+    return { white, black: state.accuracy.lastMove.delta, history };
   });
   const formatDelta = value => Math.abs(value).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   await expect(page.locator("#stat-accuracy")).toContainText("Blancs (toi)");
   await expect(page.locator("#stat-accuracy")).toContainText("−" + formatDelta(deltas.white) + "% de précision moyenne sur ce demi-coup");
   await expect(page.locator("#stat-accuracy")).toContainText("Noirs (SF)");
   await expect(page.locator("#stat-accuracy")).toContainText("−" + formatDelta(deltas.black) + "% de précision moyenne sur ce demi-coup");
+  expect(deltas.history).toHaveLength(4);
+  expect(deltas.history.map(note => note.ply)).toEqual(["1", "2", "3", "4"]);
+  expect(deltas.history[0].text).toContain("(départ)");
+  expect(deltas.history[1].text).toContain("(départ)");
+  expect(deltas.history[2].text).toContain("−" + formatDelta(deltas.white) + " pp");
+  expect(deltas.history[3].text).toContain("−" + formatDelta(deltas.black) + " pp");
   await page.evaluate(() => resetAccuracy());
   await expect(page.locator("#stat-accuracy")).not.toContainText("de précision moyenne sur ce demi-coup");
 });
