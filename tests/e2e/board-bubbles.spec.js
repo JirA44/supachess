@@ -126,7 +126,7 @@ test("each recorded half-move reports its change to the running precision averag
     state.gen++;
     state.phase = "userTurn";
     state.chess = new Chess();
-    state.chess.loadPgn("1. e4 e5 2. Nf3 Nc6");
+    state.chess.load_pgn("1. e4 e5 2. Nf3 Nc6");
     state.evalHistory = [];
     recordAccuracy("w", 0, -2, 1);
     recordAccuracy("w", 0, -100, 3);
