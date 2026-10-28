@@ -716,7 +716,7 @@
         { side: "book", uci: "f8e7", explanation: "Le roi quitte l’échec et reste exposé aux pièces blanches." },
         { side: "user", uci: "h6g7", explanation: "Dg7+ continue la séquence forcing." },
         { side: "book", uci: "e7d8", explanation: "Le roi se replie vers d8." },
-        { side: "user", uci: "c1h4", explanation: "Fh4+ ajoute une pièce à l’attaque et oblige le roi à bouger de nouveau." },
+        { side: "user", uci: "g3h4", explanation: "Fh4+ ajoute une pièce à l’attaque et oblige le roi à bouger de nouveau." },
         { side: "book", uci: "d8c8", explanation: "Le roi va en c8; la ligne continue dans la partie historique." },
       ],
     },
