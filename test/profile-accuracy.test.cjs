@@ -112,3 +112,10 @@ test("renderProfileModal replaces the loading dialog before filling profile cont
   assert.match(profileContent.innerHTML, /problèmes résolus/);
   assert.doesNotMatch(profileContent.innerHTML, /My learning|Puzzles solved|Resume my exercises/);
 });
+
+test("profile shows XP remaining before the next level", () => {
+  values.set("chessnova_progress", JSON.stringify({ xp: 70, level: 1 }));
+  const html = window.SupaProfiles.renderLocalLearningPanel({});
+  assert.match(html, /XP restantes pour atteindre le niveau suivant : 30 XP/);
+  assert.match(html, /prochain niveau à 100 XP/);
+});

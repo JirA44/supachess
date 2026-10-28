@@ -218,6 +218,15 @@ function renderPlayerAccuracyPanel(summary){
     '</div><p class="profile-accuracy-note">Moyenne pondérée par le nombre de demi-coups analysés. Les évolutions comparent chaque période à la période précédente de même durée.</p>':
     '<p class="profile-accuracy-note">Aucune partie terminée avec précision disponible.</p>')+'</section>';
 }
+function profileNextLevelXP(xp,level){
+  var api=window.ChessNovaProgress;
+  if(api&&typeof api.getPrestigeXP==='function'){
+    var apiTarget=api.getPrestigeXP(level+1);
+    if(apiTarget!==null&&apiTarget!==undefined&&Number.isFinite(Number(apiTarget)))return Number(apiTarget);
+  }
+  var thresholds=[0,100,250,500,800,1200,1800,2500,3500,5000];
+  return level>0&&level<thresholds.length-1?thresholds[level]:null;
+}
 function renderLocalLearningPanel(data){
   var local=readLocalLearningProgress(data);
   var labels={brilliant:profileText('profile_category_brilliant','Brillant'),best:profileText('profile_category_best','Meilleurs coups'),'very-good':profileText('profile_category_very_good','Très bons coups'),good:profileText('profile_category_good','Bons coups'),ok:profileText('profile_category_ok','Coups corrects'),inaccuracy:profileText('profile_category_inaccuracy','Imprécisions'),mistake:profileText('profile_category_mistake','Erreurs'),blunder:profileText('profile_category_blunder','Gaffes'),unrated:profileText('profile_category_unrated','Non évalués')};
@@ -226,8 +235,8 @@ function renderLocalLearningPanel(data){
     ? 'https://jira44.github.io/supachess/index.html?resume-exercises='+encodeURIComponent(local.latest.id)
     : 'https://jira44.github.io/supachess/index.html?open-review=1';
   var mastered=local.completed.length;
-  var xpApi=window.ChessNovaProgress;
-  var nextXP=xpApi&&typeof xpApi.getPrestigeXP==='function'?xpApi.getPrestigeXP(local.level+1):null;
+  var nextXP=profileNextLevelXP(local.xp,local.level);
+  var xpRemaining=nextXP===null?null:Math.max(0,Math.ceil(nextXP-local.xp));
   var xpPercent=profileXPProgress(local.xp,local.level);
   var training=[
     {label:profileText('profile_mastered_lessons','Leçons maîtrisées'),value:mastered},
@@ -239,7 +248,7 @@ function renderLocalLearningPanel(data){
   var html='<section class="profile-learning" aria-labelledby="profile-learning-title"><h3 id="profile-learning-title">'+profileText('profile_learning_title','Mon apprentissage')+'</h3>'+
     '<div class="profile-xp-card"><div class="profile-xp-heading"><div><strong>'+profileText('profile_level','Niveau')+' '+local.level+'</strong><span>'+escapeProfileText(profileRankName(local.level))+'</span></div><strong>'+local.xp+' '+profileText('profile_xp','XP')+'</strong></div>'+
     '<div class="profile-xp-track" role="progressbar" aria-label="'+profileText('profile_xp_progress','Progression des XP')+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(xpPercent)+'"><span style="width:'+xpPercent.toFixed(1)+'%"></span></div>'+
-    '<small>'+escapeProfileText(profileText('profile_xp_to_next','Progression vers le niveau suivant'))+': '+Math.round(xpPercent)+'%'+(nextXP!==null?' · '+profileText('profile_next_level_at','prochain niveau à')+' '+nextXP+' XP':'')+'</small></div>'+
+    '<small>'+escapeProfileText(profileText('profile_xp_to_next','Progression vers le niveau suivant'))+': '+Math.round(xpPercent)+'%'+(nextXP!==null?' · '+profileText('profile_next_level_at','prochain niveau à')+' '+Number(nextXP).toLocaleString('fr-FR')+' XP · '+profileText('profile_xp_remaining','XP restantes pour atteindre le niveau suivant')+' : '+xpRemaining+' XP':'')+'</small></div>'+
     '<div class="profile-learning-stats"><div><strong>'+local.completed.length+' / '+local.attempted.length+'</strong><span>'+profileText('profile_lessons_mastered_attempted','leçons maîtrisées / commencées')+'</span></div><div><strong>'+local.moveExercises+'</strong><span>'+profileText('profile_correction_moves','demi-coups à revoir')+'</span></div><div><strong>'+local.puzzlesSolved+'</strong><span>'+profileText('profile_puzzles_solved','problèmes résolus')+'</span></div><div><strong>'+local.practiceSessions+'</strong><span>'+profileText('profile_practice_sessions','séances d’entraînement')+'</span></div></div>'+
     renderPlayerAccuracyPanel(local.accuracySummary)+
     '<h4>'+profileText('profile_mastery_title','Maîtrise et progression')+'</h4><ul class="profile-mastery-list">'+training.map(function(item){return '<li>'+(item.href?'<a href="'+item.href+'">':'<span>')+escapeProfileText(item.label)+(item.href?'</a>':'</span>')+'<strong>'+item.value+'</strong></li>';}).join('')+'</ul>'+
