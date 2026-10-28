@@ -615,6 +615,113 @@
     },
   );
 
+  // Original teaching exercises derived from TCEC Season 18 Superfinal game 6.1.
+  // The move score/engine intent is not inferred; explanations describe observable board facts.
+  LESSONS.push(
+    {
+      id: "tcec18-stockfish-question-bishop",
+      kind: "method",
+      level: "Intermédiaire",
+      title: "Partie TCEC · Mettre le fou b4 à l’épreuve",
+      category: "Parties ordinateurs · TCEC 18 · Développement et structure",
+      program: "Stockfish · comparer et vérifier",
+      author: "SupaChess Académie",
+      book: "Partie TCEC S18 Superfinal · Stockfish contre LCZero · PGN CC BY-SA 3.0",
+      reference: "Partie 6.1 · 20 juin 2020 · Stockfish (Blancs) gagne 1-0 · explications SupaChess",
+      sourceUrl: "https://github.com/TCEC-Chess/tcecgames",
+      sourceLabel: "Source du PGN et licence TCEC",
+      setup: ["e4", "e6", "d4", "d5", "Nc3", "Bb4", "e5", "c5"],
+      color: "w",
+      question: "Après 4…c5, que faut-il calculer avant de jouer a3 ?",
+      choices: [
+        { text: "Le fou peut échanger en c3 avec échec; après bxc3, comparer structure de pions et paire de fous", correct: true },
+        { text: "Le fou b4 ne peut pas être échangé et sera gagné immédiatement", correct: false },
+        { text: "a3 donne mat en un coup grâce au pion e5", correct: false },
+      ],
+      principle: "Dans cette partie TCEC, Stockfish a joué a3, mais le fou pouvait prendre le cavalier c3 avec échec. Après bxc3, les Blancs ont la paire de fous contre des pions doublés en c3.",
+      transfer: "Quand tu attaques un fou, calcule ses prises avec échec avant de décider si l’échange améliore ta structure.",
+      hints: ["Le fou b4 peut capturer le cavalier c3.", "Après Bxc3+, le pion b2 peut reprendre en c3."],
+      pitfall: "Ne considère pas un coup qui attaque une pièce comme un gain forcé; vérifie les captures et les échecs intermédiaires.",
+      sequence: [
+        { side: "user", uci: "a2a3", explanation: "a3 questionne le fou b4; les Noirs peuvent toutefois choisir l’échange Bxc3+." },
+        { side: "book", uci: "b4c3", explanation: "Le fou prend le cavalier avec échec sur la diagonale vers le roi e1." },
+        { side: "user", uci: "b2c3", explanation: "Le pion reprend en c3, créant une structure modifiée mais conservant la paire de fous." },
+        { side: "book", uci: "d8c7", explanation: "La dame se développe en c7 et met une pression sur le centre blanc." },
+      ],
+    },
+    {
+      id: "tcec18-stockfish-anticipate-f5",
+      kind: "method",
+      level: "Avancé",
+      title: "Partie TCEC · Anticiper …f5 contre la dame",
+      category: "Parties ordinateurs · TCEC 18 · Réponse adverse et tempo",
+      program: "Stockfish · comparer et vérifier",
+      author: "SupaChess Académie",
+      book: "Partie TCEC S18 Superfinal · Stockfish contre LCZero · PGN CC BY-SA 3.0",
+      reference: "Partie 6.1 · 20 juin 2020 · ligne jouée 7.Dg4 f5 8.Dg3 Cc6",
+      sourceUrl: "https://github.com/TCEC-Chess/tcecgames",
+      sourceLabel: "Source du PGN et licence TCEC",
+      setup: ["e4", "e6", "d4", "d5", "Nc3", "Bb4", "e5", "c5", "a3", "Bxc3+", "bxc3", "Qc7"],
+      color: "w",
+      question: "Après 7.Dg4, quelle réponse réelle des Noirs faut-il anticiper ?",
+      choices: [
+        { text: "…f5 attaque la dame g4 et gagne un tempo; il faut déjà calculer sa retraite", correct: true },
+        { text: "…f5 attaque directement le roi blanc et donne mat", correct: false },
+        { text: "Les Noirs peuvent ignorer la dame car elle est protégée par le roi blanc", correct: false },
+      ],
+      principle: "Dans la partie, …f5 attaque la dame en g4 depuis f5. Stockfish a ensuite reculé en g3, puis développé le cavalier c6.",
+      transfer: "Avant d’avancer une pièce vers le camp adverse, vérifie les coups avec tempo que cette pièce peut subir.",
+      hints: ["Le pion noir f7 avance en f5 et attaque les cases g4 et e4.", "La partie poursuit par Dg3 puis …Cc6."],
+      pitfall: "Ne calcule pas seulement ton attaque; après chaque coup, cherche les menaces adverses qui gagnent un tempo.",
+      sequence: [
+        { side: "user", uci: "d1g4", explanation: "Dg4 met une pression sur le flanc roi; la dame est exposée à une poussée de pion avec tempo." },
+        { side: "book", uci: "f7f5", explanation: "…f5 attaque la dame g4, qui doit répondre à la menace." },
+        { side: "user", uci: "g4g3", explanation: "La dame se replie en g3 et garde la pression sur la colonne g." },
+        { side: "book", uci: "b8c6", explanation: "Le cavalier se développe vers le centre pendant que la position reste tendue." },
+        { side: "user", uci: "g1f3", explanation: "Le cavalier se développe; après …cxd4, les Blancs devront décider comment reprendre au centre." },
+        { side: "book", uci: "c5d4", explanation: "Le pion c5 prend en d4 et ouvre le centre." },
+        { side: "user", uci: "c3d4", explanation: "Le pion reprend en d4 et rétablit un pion central." },
+      ],
+    },
+    {
+      id: "tcec18-stockfish-rook-sacrifice",
+      kind: "method",
+      level: "Expert",
+      title: "Partie TCEC · Calculer le sacrifice de tour",
+      category: "Parties ordinateurs · TCEC 18 · Échecs forcing et calcul",
+      program: "Stockfish · comparer et vérifier",
+      author: "SupaChess Académie",
+      book: "Partie TCEC S18 Superfinal · Stockfish contre LCZero · PGN CC BY-SA 3.0",
+      reference: "Partie 6.1 · position après 40…Ce3 · Stockfish 202006170741, pas Stockfish 19",
+      sourceUrl: "https://github.com/TCEC-Chess/tcecgames",
+      sourceLabel: "Source du PGN et licence TCEC",
+      fen: "q3r2k/1R4p1/2n1p2p/3pP2P/5PP1/p1P1n1B1/R7/1Q4K1 w - - 1 41",
+      color: "w",
+      question: "Après 40…Ce3, comment évaluer 41.Txg7 ?",
+      choices: [
+        { text: "Calculer la prise Kxg7 puis la suite d’échecs avant de juger le sacrifice", correct: true },
+        { text: "Jouer Txg7 parce qu’une prise de pion gagne automatiquement la partie", correct: false },
+        { text: "Rejeter Txg7 sans examiner les échecs disponibles", correct: false },
+      ],
+      principle: "Dans cette partie, Stockfish a donné sa tour contre le pion g7; après Kxg7, il a enchaîné les échecs Dg6+, Dxh6+ et Dg7+. Le thème pédagogique est de calculer toute la séquence avant d’évaluer le sacrifice.",
+      transfer: "Quand tu envisages un sacrifice, calcule la reprise adverse et poursuis les échecs, prises et menaces jusqu’à une position où tu peux évaluer le résultat.",
+      hints: ["La tour blanche peut prendre le pion g7.", "Après …Kxg7, cherche les échecs de la dame blanche."],
+      pitfall: "Ne copie pas le sacrifice historique sans recalculer: l’analyse dépend de la position, du moteur et de sa recherche.",
+      sequence: [
+        { side: "user", uci: "b7g7", explanation: "La tour prend le pion g7; la prise est un sacrifice candidat, pas une conclusion de gain." },
+        { side: "book", uci: "h8g7", explanation: "Le roi reprend la tour; il faut poursuivre le calcul plutôt que s’arrêter au matériel sacrifié." },
+        { side: "user", uci: "b1g6", explanation: "Dg6+ force une réponse du roi et ouvre une suite d’échecs." },
+        { side: "book", uci: "g7f8", explanation: "Le roi se déplace en f8 pour répondre à l’échec." },
+        { side: "user", uci: "g6h6", explanation: "Dxh6+ poursuit l’attaque avec échec." },
+        { side: "book", uci: "f8e7", explanation: "Le roi quitte l’échec et reste exposé aux pièces blanches." },
+        { side: "user", uci: "h6g7", explanation: "Dg7+ continue la séquence forcing." },
+        { side: "book", uci: "e7d8", explanation: "Le roi se replie vers d8." },
+        { side: "user", uci: "c1h4", explanation: "Fh4+ ajoute une pièce à l’attaque et oblige le roi à bouger de nouveau." },
+        { side: "book", uci: "d8c8", explanation: "Le roi va en c8; la ligne continue dans la partie historique." },
+      ],
+    },
+  );
+
   const LEVEL_ORDER = { "Débutant": 0, "Intermédiaire": 1, "Avancé": 2, "Expert": 3 };
   LESSONS.sort((a, b) => (LEVEL_ORDER[a.level] ?? 99) - (LEVEL_ORDER[b.level] ?? 99));
 
@@ -810,6 +917,14 @@
       link.target = "_blank";
       link.rel = "noopener noreferrer";
       link.textContent = " Ouvrir le livre";
+      source.appendChild(link);
+    }
+    if (lesson.sourceUrl) {
+      const link = document.createElement("a");
+      link.href = lesson.sourceUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = " · " + (lesson.sourceLabel || "Consulter la source");
       source.appendChild(link);
     }
   }

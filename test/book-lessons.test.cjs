@@ -35,10 +35,10 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 119, "the academy contains 119 guided lessons");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 122, "the academy contains 122 guided lessons");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "reinforcement").length, 53, "53 legal application lessons reinforce the four methods");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 79, "opponent-reply drills remain counted separately");
-  assert.equal(LESSONS.length, 198, "guided lessons and anticipation drills are separate catalog entries");
+  assert.equal(LESSONS.length, 201, "guided lessons and anticipation drills are separate catalog entries");
   assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
 });
 
@@ -105,6 +105,22 @@ test("Stockfish process exercises teach mate search, principal variations, and s
     assert.ok(move, "the forced-mate exercise must remain legal");
   }
   assert.equal(game.in_checkmate(), true, "the forced-mate exercise must end in checkmate");
+});
+
+test("TCEC computer-game examples are source-linked and use documented Stockfish decisions", () => {
+  const examples = [
+    "tcec18-stockfish-question-bishop",
+    "tcec18-stockfish-anticipate-f5",
+    "tcec18-stockfish-rook-sacrifice",
+  ];
+  for (const id of examples) {
+    const lesson = LESSONS.find((entry) => entry.id === id);
+    assert.ok(lesson, id + " should be playable");
+    assert.equal(lesson.program, "Stockfish · comparer et vérifier");
+    assert.equal(lesson.author, "SupaChess Académie");
+    assert.equal(lesson.sourceUrl, "https://github.com/TCEC-Chess/tcecgames");
+    assert.ok(lesson.reference.includes("TCEC") || lesson.reference.includes("partie"));
+  }
 });
 
 test("Stockfish alternatives are ranked, compared, and shown as legal SAN lines", () => {

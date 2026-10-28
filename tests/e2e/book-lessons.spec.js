@@ -181,6 +181,14 @@ test("five methodology cards explain their routines and open matching lessons", 
   const stockfish = page.locator('[data-method-path="Stockfish · comparer et vérifier"]');
   await expect(stockfish).toContainText("Stockfish explore des variantes");
   await expect(stockfish.locator("[data-method-count]")).toContainText("positions de leçons analysables");
+  await page.locator("#lesson-program-filter").selectOption("Stockfish · comparer et vérifier");
+  const historicGameLesson = page.locator("#lesson-catalog .lesson-catalog-button")
+    .filter({ hasText: "Partie TCEC · Mettre le fou b4 à l’épreuve" });
+  await expect(historicGameLesson).toBeVisible();
+  await historicGameLesson.click();
+  await expect(page.locator("#lesson-title")).toHaveText("Partie TCEC · Mettre le fou b4 à l’épreuve");
+  await expect(page.locator("#lesson-source a")).toHaveAttribute("href", "https://github.com/TCEC-Chess/tcecgames");
+
   await stockfish.getByRole("button", { name: "Commencer sur une position" }).click();
   await expect(page.locator("#lesson-program-filter")).toHaveValue("");
   await expect(page.locator("#lesson-title")).toHaveText("Stockfish · Repérer le mat forcé");
