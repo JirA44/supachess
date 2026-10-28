@@ -35,10 +35,10 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 111, "the academy contains 111 guided lessons");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 116, "the academy contains 116 guided lessons");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "reinforcement").length, 53, "53 legal application lessons reinforce the four methods");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 79, "opponent-reply drills remain counted separately");
-  assert.equal(LESSONS.length, 190, "guided lessons and anticipation drills are separate catalog entries");
+  assert.equal(LESSONS.length, 195, "guided lessons and anticipation drills are separate catalog entries");
   assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
 });
 
@@ -64,6 +64,24 @@ test("method paths include all their lessons in progressive level order", () => 
       assert.equal(nextMethodPathLessonIndex(indices[i], program), indices[(i + 1) % indices.length],
         program + " should continue to its next lesson");
     }
+  }
+});
+
+test("each player and Stockfish path has a clearly attributed original starter lesson", () => {
+  const starters = [
+    ["method-fischer-preparer-d4", "Fischer · préparation et précision", "Fischer"],
+    ["method-carlsen-roi-actif", "Carlsen · amélioration et conversion", "Carlsen"],
+    ["method-tal-calcul-sacrifice", "Tal · tactique et sacrifices à calculer", "Tal"],
+    ["method-kasparov-coups-candidats", "Kasparov · coups candidats et calcul", "Kasparov"],
+    ["method-stockfish-comparer-lignes", "Stockfish · comparer et vérifier", "Stockfish 19"],
+  ];
+  for (const [id, program, sourceLabel] of starters) {
+    const lesson = LESSONS.find((entry) => entry.id === id);
+    assert.ok(lesson, program + " needs a dedicated starter lesson");
+    assert.equal(lesson.program, program);
+    assert.equal(lesson.author, "SupaChess Académie");
+    assert.ok(lesson.book.includes(sourceLabel));
+    assert.ok(methodPathLessonIndices(program).includes(LESSONS.indexOf(lesson)));
   }
 });
 
