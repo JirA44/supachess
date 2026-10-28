@@ -1146,7 +1146,7 @@
       reference: "Part I, chapter IV, The Opening · Pawn Skeleton and the Centre · exercice original SupaChess",
       sourceUrl: "https://www.gutenberg.org/files/5614/5614-h/5614-h.htm",
       sourceLabel: "Texte intégral gratuit · Project Gutenberg",
-      setup: ["d4", "d5", "c4", "e6", "Nc3", "Nf6", "Nf3", "Be7", "Bg5", "O-O", "h6", "Bh4", "e3", "b6"],
+      setup: ["d4", "d5", "c4", "e6", "Nc3", "Nf6", "Nf3", "Be7", "Bg5", "O-O", "e3", "h6", "Bh4", "b6"],
       color: "w",
       question: "Avant une rupture au centre, que faut-il comparer ?",
       choices: [
