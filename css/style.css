@@ -222,9 +222,9 @@ body {
 
 /* Stable color for every engine grade; brilliant is sky blue. */
 .grade-brilliant { --grade-dot-color: #c084fc; --grade-dot-text: #3b0764; }
-.grade-best { --grade-dot-color: #22c55e; --grade-dot-text: #052e16; }
-.grade-very-good { --grade-dot-color: #a3e635; --grade-dot-text: #1a2e05; }
-.grade-good { --grade-dot-color: #2dd4bf; --grade-dot-text: #042f2e; }
+.grade-best { --grade-dot-color: #38bdf8; --grade-dot-text: #082f49; }
+.grade-very-good { --grade-dot-color: #22c55e; --grade-dot-text: #052e16; }
+.grade-good { --grade-dot-color: #86efac; --grade-dot-text: #052e16; }
 .grade-ok { --grade-dot-color: #facc15; --grade-dot-text: #422006; }
 .grade-inaccuracy { --grade-dot-color: #fb923c; --grade-dot-text: #431407; }
 .grade-error, .grade-mistake { --grade-dot-color: #fb7185; --grade-dot-text: #4c0519; }
