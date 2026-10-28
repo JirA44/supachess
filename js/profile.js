@@ -194,6 +194,30 @@ function profileXPProgress(xp,level){
   var next=thresholds[Math.min(9,level)]||current;
   return next>current?Math.max(0,Math.min(100,(xp-current)/(next-current)*100)):0;
 }
+function formatAccuracyPercent(value){
+  return value===null||value===undefined||!Number.isFinite(Number(value))?'—':Number(value).toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1})+' %';
+}
+function renderPlayerAccuracyPanel(summary){
+  summary=summary||{};
+  function changeText(period){
+    if(period.delta===null||period.delta===undefined)return 'Évolution indisponible : pas encore assez de parties dans les deux périodes.';
+    var sign=period.delta>0?'+':period.delta<0?'−':'±';
+    return sign+' '+Math.abs(period.delta).toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1})+' points par rapport à la période précédente';
+  }
+  function card(title,record,change){
+    var count=record&&Number(record.games)||0;
+    var detail=count+' partie'+(count>1?'s':'')+' analysée'+(count>1?'s':'');
+    return '<article class="profile-accuracy-card"><h4>'+title+'</h4><strong class="profile-accuracy-value">'+formatAccuracyPercent(record&&record.average)+'</strong><span class="profile-accuracy-count">'+detail+'</span>'+(change?'<span class="profile-accuracy-change">'+change+'</span>':'')+'</article>';
+  }
+  var hasAny=summary.all&&summary.all.average!==null;
+  return '<section class="profile-accuracy-panel" aria-labelledby="profile-accuracy-title"><h4 id="profile-accuracy-title">Précision moyenne du joueur</h4>'+
+    (hasAny?'<div class="profile-accuracy-grid">'+
+      card('Toutes les parties',summary.all,'')+
+      card('7 derniers jours',summary.week&&summary.week.current,changeText(summary.week||{}))+
+      card('30 derniers jours',summary.month&&summary.month.current,changeText(summary.month||{}))+
+    '</div><p class="profile-accuracy-note">Moyenne pondérée par le nombre de demi-coups analysés. Les évolutions comparent chaque période à la période précédente de même durée.</p>':
+    '<p class="profile-accuracy-note">Aucune partie terminée avec précision disponible.</p>')+'</section>';
+}
 function renderLocalLearningPanel(data){
   var local=readLocalLearningProgress(data);
   var labels={brilliant:profileText('profile_category_brilliant','Brilliant'),best:profileText('profile_category_best','Best moves'),'very-good':profileText('profile_category_very_good','Very good'),good:profileText('profile_category_good','Good moves'),ok:profileText('profile_category_ok','OK moves'),inaccuracy:profileText('profile_category_inaccuracy','Inaccuracies'),mistake:profileText('profile_category_mistake','Mistakes'),blunder:profileText('profile_category_blunder','Blunders'),unrated:profileText('profile_category_unrated','Unrated')};
@@ -217,6 +241,7 @@ function renderLocalLearningPanel(data){
     '<div class="profile-xp-track" role="progressbar" aria-label="'+profileText('profile_xp_progress','XP progress')+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(xpPercent)+'"><span style="width:'+xpPercent.toFixed(1)+'%"></span></div>'+
     '<small>'+escapeProfileText(profileText('profile_xp_to_next','Progress to next level'))+': '+Math.round(xpPercent)+'%'+(nextXP!==null?' · '+profileText('profile_next_level_at','next level at')+' '+nextXP+' XP':'')+'</small></div>'+
     '<div class="profile-learning-stats"><div><strong>'+local.completed.length+' / '+local.attempted.length+'</strong><span>'+profileText('profile_lessons_mastered_attempted','lessons mastered / attempted')+'</span></div><div><strong>'+local.moveExercises+'</strong><span>'+profileText('profile_correction_moves','half-moves to review')+'</span></div><div><strong>'+local.puzzlesSolved+'</strong><span>'+profileText('profile_puzzles_solved','puzzles solved')+'</span></div><div><strong>'+local.practiceSessions+'</strong><span>'+profileText('profile_practice_sessions','practice sessions')+'</span></div></div>'+
+    renderPlayerAccuracyPanel(local.accuracySummary)+
     '<h4>'+profileText('profile_mastery_title','Mastery and progress')+'</h4><ul class="profile-mastery-list">'+training.map(function(item){return '<li>'+(item.href?'<a href="'+item.href+'">':'<span>')+escapeProfileText(item.label)+(item.href?'</a>':'</span>')+'<strong>'+item.value+'</strong></li>';}).join('')+'</ul>'+
     '<div class="profile-learning-actions"><a href="'+exercisesUrl+'">'+profileText('profile_resume_exercises','Resume my exercises')+'</a><a href="https://jira44.github.io/supachess/book-lessons.html?next=1">'+profileText('profile_resume_lessons','Resume my lessons')+'</a><a href="https://jira44.github.io/supachess-web/TRAINING_OPENINGS.html">'+profileText('profile_resume_mastery','Resume mastery training')+'</a></div>';
   if(weaknesses.length){
