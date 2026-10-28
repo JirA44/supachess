@@ -119,3 +119,12 @@ test("profile shows XP remaining before the next level", () => {
   assert.match(html, /XP restantes pour atteindre le niveau suivant : 30 XP/);
   assert.match(html, /prochain niveau à 100 XP/);
 });
+
+
+test("mastery summary renders five spaced, labelled rows with clickable lesson and puzzle counts", () => {
+  const html = window.SupaProfiles.renderLocalLearningPanel({});
+  assert.equal((html.match(/class="profile-mastery-(?:entry|link)"/g) || []).length, 5);
+  assert.match(html, /class="profile-mastery-link" href="https:\/\/jira44\.github\.io\/supachess\/book-lessons\.html\?next=1" aria-label="Leçons maîtrisées : 0"/);
+  assert.match(html, /class="profile-mastery-link" href="https:\/\/jira44\.github\.io\/supachess-web\/TRAINING_TACTICS\.html" aria-label="Problèmes résolus : 0"/);
+  assert.match(html, /class="profile-mastery-entry">Fondamentaux des finales<strong>0<\/strong>/);
+});
