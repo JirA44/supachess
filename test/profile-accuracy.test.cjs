@@ -94,6 +94,7 @@ test("summary keeps missing periods unavailable and renders French profile indic
 });
 
 test("renderProfileModal replaces the loading dialog before filling profile content", () => {
+  values.set("supachess_games", JSON.stringify([game(1, 87.5, 10)]));
   const loadingOverlay = currentOverlay;
   window.SupaProfiles.init({ currentUser: { uid: "player-1" } }, null);
   window.SupaProfiles.renderProfileModal({
@@ -107,4 +108,7 @@ test("renderProfileModal replaces the loading dialog before filling profile cont
   assert.ok(currentOverlay.hasProfileContent);
   assert.match(profileContent.innerHTML, /Joueur test/);
   assert.match(profileContent.innerHTML, /Précision moyenne du joueur/);
+  assert.match(profileContent.innerHTML, /Mon apprentissage/);
+  assert.match(profileContent.innerHTML, /problèmes résolus/);
+  assert.doesNotMatch(profileContent.innerHTML, /My learning|Puzzles solved|Resume my exercises/);
 });
