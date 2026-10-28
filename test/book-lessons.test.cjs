@@ -35,10 +35,10 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 129, "the academy contains 129 guided lessons");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 133, "the academy contains 133 guided lessons");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "reinforcement").length, 53, "53 legal application lessons reinforce the four methods");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 79, "opponent-reply drills remain counted separately");
-  assert.equal(LESSONS.length, 208, "guided lessons and anticipation drills are separate catalog entries");
+  assert.equal(LESSONS.length, 212, "guided lessons and anticipation drills are separate catalog entries");
   assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
 });
 
@@ -47,6 +47,7 @@ test("method paths include all their lessons in progressive level order", () => 
     "Carlsen · amélioration et conversion",
     "Fischer · préparation et précision",
     "Capablanca · fondamentaux et principes",
+    "Lasker · mobilisation et principes",
     "Tal · tactique et sacrifices à calculer",
     "Kasparov · coups candidats et calcul",
   ];
@@ -89,6 +90,12 @@ test("each player and Stockfish path has a clearly attributed original starter l
   assert.equal(capablanca.program, "Capablanca · fondamentaux et principes");
   assert.equal(capablanca.author, "J. R. Capablanca");
   assert.ok(methodPathLessonIndices(capablanca.program).includes(LESSONS.indexOf(capablanca)));
+  const lasker = LESSONS.find((entry) => entry.id === "lasker-mobilize-knight");
+  assert.ok(lasker, "the Lasker book path needs a sourced entry lesson");
+  assert.equal(lasker.program, "Lasker · mobilisation et principes");
+  assert.equal(lasker.author, "Emanuel Lasker");
+  assert.ok(lasker.book.includes("Common Sense in Chess"));
+  assert.ok(methodPathLessonIndices(lasker.program).includes(LESSONS.indexOf(lasker)));
 });
 
 test("Stockfish process exercises teach mate search, principal variations, and score interpretation", () => {

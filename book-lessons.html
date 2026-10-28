@@ -27,8 +27,8 @@
     <section class="method-paths" aria-labelledby="method-paths-title">
       <div class="method-paths-heading">
         <p class="lesson-eyebrow">SupaChess Académie · méthodes de travail</p>
-        <h2 id="method-paths-title">Six parcours d’apprentissage</h2>
-        <p>Chaque parcours commence par les notions les plus accessibles et monte progressivement en difficulté. Les leçons Capablanca s’appuient sur des chapitres cités de Chess Fundamentals; les explications et exercices sont reformulés et originaux. Stockfish calcule les variantes et évaluations, il n’est pas présenté comme l’auteur des explications.</p>
+        <h2 id="method-paths-title">Sept parcours d’apprentissage</h2>
+        <p>Chaque parcours commence par les notions les plus accessibles et monte progressivement en difficulté. Les parcours Capablanca et Lasker s’appuient sur des thèmes référencés dans leurs ouvrages; les explications et exercices sont reformulés et originaux. Stockfish calcule les variantes et évaluations, il n’est pas présenté comme l’auteur des explications.</p>
       </div>
       <div class="method-path-grid">
         <article class="method-path" data-method-path="Carlsen · amélioration et conversion">
@@ -63,7 +63,16 @@
           <p class="method-path-count" data-method-count>Leçons du parcours en cours de comptage…</p>
           <button class="btn method-path-action" type="button" data-method-action="Kasparov · coups candidats et calcul">Explorer les leçons Kasparov</button>
         </article>
-                <article class="method-path" data-method-path="Capablanca · fondamentaux et principes">
+                <article class="method-path method-path-engine" data-method-path="Stockfish · comparer et vérifier">
+          <div class="method-path-kicker">5 · Analyse assistée par moteur</div>
+          <h3>Méthode Stockfish</h3>
+          <p>Stockfish explore des variantes et classe des coups selon sa recherche; il ne fournit pas directement une intention formulée en langage humain. Tu étudieras aussi des positions d’une partie historique Stockfish–LCZero du TCEC, avec PGN attribué et explications originales SupaChess.</p>
+          <ol><li>Repère ce que signifie un score de mat et vérifie la ligne sur l’échiquier.</li><li>Lis la variante principale jusqu’aux meilleures réponses adverses.</li><li>Compare plusieurs candidats, leur évaluation, le point de vue et la recherche utilisée.</li><li>Explique les faits visibles sur l’échiquier qui distinguent les variantes.</li></ol>
+          <p class="method-path-count" data-method-count>Positions analysables en cours de comptage…</p>
+          <button class="btn method-path-action" type="button" data-method-action="Stockfish · comparer et vérifier">Commencer sur une position</button>
+        </article>
+
+<article class="method-path" data-method-path="Capablanca · fondamentaux et principes">
           <div class="method-path-kicker">6 · Fondamentaux d’un livre de référence</div>
           <h3>Parcours Capablanca</h3>
           <p>Travaille progressivement le développement, le contrôle du centre, la coordination des pièces et les finales à partir de thèmes référencés dans <em>Chess Fundamentals</em>.</p>
@@ -71,13 +80,13 @@
           <p class="method-path-count" data-method-count>Leçons du parcours en cours de comptage…</p>
           <button class="btn method-path-action" type="button" data-method-action="Capablanca · fondamentaux et principes">Explorer le parcours Capablanca</button>
         </article>
-<article class="method-path method-path-engine" data-method-path="Stockfish · comparer et vérifier">
-          <div class="method-path-kicker">5 · Analyse assistée par moteur</div>
-          <h3>Méthode Stockfish</h3>
-          <p>Stockfish explore des variantes et classe des coups selon sa recherche; il ne fournit pas directement une intention formulée en langage humain. Tu étudieras aussi des positions d’une partie historique Stockfish–LCZero du TCEC, avec PGN attribué et explications originales SupaChess.</p>
-          <ol><li>Repère ce que signifie un score de mat et vérifie la ligne sur l’échiquier.</li><li>Lis la variante principale jusqu’aux meilleures réponses adverses.</li><li>Compare plusieurs candidats, leur évaluation, le point de vue et la recherche utilisée.</li><li>Explique les faits visibles sur l’échiquier qui distinguent les variantes.</li></ol>
-          <p class="method-path-count" data-method-count>Positions analysables en cours de comptage…</p>
-          <button class="btn method-path-action" type="button" data-method-action="Stockfish · comparer et vérifier">Commencer sur une position</button>
+        <article class="method-path" data-method-path="Lasker · mobilisation et principes">
+          <div class="method-path-kicker">7 · Mobilisation et principes d’ouverture</div>
+          <h3>Parcours Lasker</h3>
+          <p>Apprends à mobiliser tes pièces, défendre le centre avec tempo, puis sécuriser ton roi avant de lancer une attaque.</p>
+          <ol><li>Développe une pièce en créant une menace utile.</li><li>Défends les pions centraux avec une pièce active.</li><li>Mobilise les nouvelles pièces au lieu de répéter un coup sans raison.</li><li>Termine le développement et prépare le roque avant l’attaque.</li></ol>
+          <p class="method-path-count" data-method-count>Leçons du parcours en cours de comptage…</p>
+          <button class="btn method-path-action" type="button" data-method-action="Lasker · mobilisation et principes">Explorer le parcours Lasker</button>
         </article>
       </div>
     </section>
@@ -87,7 +96,7 @@
       <div class="lesson-filter-row">
         <label>Rechercher<input id="lesson-search" type="search" placeholder="thème, coup ou méthode"></label>
         <label>Niveau<select id="lesson-level-filter"><option value="">Tous les niveaux</option><option>Débutant</option><option>Intermédiaire</option><option>Avancé</option><option>Expert</option></select></label>
-        <label>Parcours<select id="lesson-program-filter"><option value="">Tous les parcours</option><option>Fischer · préparation et précision</option><option>Carlsen · amélioration et conversion</option><option>Capablanca · fondamentaux et principes</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Anti-erreurs · anticiper l’adversaire</option></select></label>
+        <label>Parcours<select id="lesson-program-filter"><option value="">Tous les parcours</option><option>Fischer · préparation et précision</option><option>Carlsen · amélioration et conversion</option><option>Capablanca · fondamentaux et principes</option><option>Lasker · mobilisation et principes</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Anti-erreurs · anticiper l’adversaire</option></select></label>
         <button class="btn lesson-surprise" id="lesson-surprise" type="button">Exercice au hasard</button>
       </div>
     </section>
