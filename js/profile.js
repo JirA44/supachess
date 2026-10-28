@@ -83,6 +83,48 @@ function getProfile(uid){
 function escapeProfileText(value){
   return String(value==null?'':value).replace(/[&<>\"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch];});
 }
+function summarizeAccuracyGames(games, now){
+  var currentTime=Number.isFinite(Number(now))?Number(now):Date.now();
+  var day=24*60*60*1000;
+  var records=(Array.isArray(games)?games:[]).map(function(game){
+    if(!game||!['1-0','0-1','1/2-1/2'].includes(String(game.result||'')))return null;
+    var color=game.userColor;
+    if(color!=='w'&&color!=='b'){
+      var pgn=String(game.pgn||'');
+      var colorHeader=pgn.match(/^\\[SupaChessUserColor\\s+\"([wb])\"\\]/m);
+      if(colorHeader)color=colorHeader[1];
+      else if(/^\\[White\\s+\"Joueur\"\\]/mi.test(pgn))color='w';
+      else if(/^\\[Black\\s+\"Joueur\"\\]/mi.test(pgn))color='b';
+    }
+    if(color!=='w'&&color!=='b')return null;
+    var raw=game[color==='w'?'accuracyW':'accuracyB'];
+    if(raw===null||raw===undefined||raw==='')return null;
+    var accuracy=Number(raw);
+    if(!Number.isFinite(accuracy))return null;
+    if(accuracy>=0&&accuracy<=1)accuracy*=100;
+    accuracy=Math.max(0,Math.min(100,accuracy));
+    var timestamp=game.date?new Date(game.date).getTime():NaN;
+    var moves=Math.max(1,Number(game.stats&&game.stats.moves)||1);
+    return {accuracy:accuracy,timestamp:Number.isFinite(timestamp)?timestamp:null,moves:moves};
+  }).filter(function(record){return !!record;});
+  function average(items){
+    var total=0,weight=0;
+    items.forEach(function(record){total+=record.accuracy*record.moves;weight+=record.moves;});
+    return {average:weight?total/weight:null,games:items.length,moves:weight};
+  }
+  function inWindow(start,end){
+    return records.filter(function(record){return record.timestamp!==null&&record.timestamp>start&&record.timestamp<=end;});
+  }
+  var weekCurrent=average(inWindow(currentTime-7*day,currentTime));
+  var weekPrevious=average(inWindow(currentTime-14*day,currentTime-7*day));
+  var monthCurrent=average(inWindow(currentTime-30*day,currentTime));
+  var monthPrevious=average(inWindow(currentTime-60*day,currentTime-30*day));
+  return {
+    all:average(records),
+    week:{current:weekCurrent,previous:weekPrevious,delta:weekCurrent.average!==null&&weekPrevious.average!==null?weekCurrent.average-weekPrevious.average:null},
+    month:{current:monthCurrent,previous:monthPrevious,delta:monthCurrent.average!==null&&monthPrevious.average!==null?monthCurrent.average-monthPrevious.average:null}
+  };
+}
 function readLocalLearningProgress(data){
   function read(key,fallback){try{return JSON.parse(localStorage.getItem(key)||'');}catch(_e){return fallback;}}
   function completedCount(record,key){
@@ -93,10 +135,12 @@ function readLocalLearningProgress(data){
   }
   var lessons=read('supachess-book-lessons-v1',{});
   var games=read('supachess_reviewed_pgns',[]);
+  var playedGames=read('supachess_games',[]);
   var localProgress=read('chessnova_progress',{});
   var cloudProgress=data&&data.progress&&typeof data.progress==='object'?data.progress:{};
   if(!lessons||typeof lessons!=='object'||Array.isArray(lessons))lessons={};
   if(!Array.isArray(games))games=[];
+  if(!Array.isArray(playedGames))playedGames=[];
   var records=Object.keys(lessons).map(function(id){return {id:id,progress:lessons[id]};}).filter(function(item){return item.progress&&typeof item.progress==='object';});
   var completed=records.filter(function(item){return item.progress.completed;});
   var attempted=records.filter(function(item){return Number(item.progress.attempts)>0||item.progress.completed;});
@@ -129,7 +173,8 @@ function readLocalLearningProgress(data){
     openingMastered:completedCount(openings,'completed'),
     endgameMastered:completedCount(endgames,'completed'),
     tacticMastered:completedCount(tactics,'completedCategories'),
-    accuracyGames:accuracyGames
+    accuracyGames:accuracyGames,
+    accuracySummary:summarizeAccuracyGames(playedGames)
   };
 }
 function profileText(key,fallback){
@@ -277,5 +322,5 @@ function initRankingSection(){
   sec.querySelectorAll('.rank-tab').forEach(function(b){ b.addEventListener('click', function(){ load(b.getAttribute('data-type')); }); });
   load('puzzle');
 }
-window.SupaProfiles={init:init, ensureUserProfile:ensureUserProfile, updateStats:updateStats, searchUsers:searchUsers, getTopRanking:getTopRanking, getProfile:getProfile, renderProfileModal:renderProfileModal, readLocalLearningProgress:readLocalLearningProgress, renderLocalLearningPanel:renderLocalLearningPanel, renderOwnProfileFallback:renderOwnProfileFallback, initSearchBar:initSearchBar, initRankingSection:initRankingSection, GAME_TYPES:GAME_TYPES};
+window.SupaProfiles={init:init, ensureUserProfile:ensureUserProfile, updateStats:updateStats, searchUsers:searchUsers, getTopRanking:getTopRanking, getProfile:getProfile, renderProfileModal:renderProfileModal, readLocalLearningProgress:readLocalLearningProgress, summarizeAccuracyGames:summarizeAccuracyGames, renderLocalLearningPanel:renderLocalLearningPanel, renderOwnProfileFallback:renderOwnProfileFallback, initSearchBar:initSearchBar, initRankingSection:initRankingSection, GAME_TYPES:GAME_TYPES};
 })();
