@@ -91,10 +91,10 @@ function summarizeAccuracyGames(games, now){
     var color=game.userColor;
     if(color!=='w'&&color!=='b'){
       var pgn=String(game.pgn||'');
-      var colorHeader=pgn.match(/^\\[SupaChessUserColor\\s+\"([wb])\"\\]/m);
+      var colorHeader=pgn.match(/^\[SupaChessUserColor\s+"([wb])"\]/m);
       if(colorHeader)color=colorHeader[1];
-      else if(/^\\[White\\s+\"Joueur\"\\]/mi.test(pgn))color='w';
-      else if(/^\\[Black\\s+\"Joueur\"\\]/mi.test(pgn))color='b';
+      else if(/^\[White\s+"Joueur"\]/mi.test(pgn))color='w';
+      else if(/^\[Black\s+"Joueur"\]/mi.test(pgn))color='b';
     }
     if(color!=='w'&&color!=='b')return null;
     var raw=game[color==='w'?'accuracyW':'accuracyB'];
