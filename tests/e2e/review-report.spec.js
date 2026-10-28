@@ -178,7 +178,7 @@ test('PGN analysis automatically opens replay and keeps previous/next controls v
     };
     window.analyzeForUser=async()=>{};
     window.fetch=async()=>({ok:false,status:503,json:async()=>({})});
-    document.getElementById('pgn-input').value='[Event "Automatic replay"]\\n[White "Alice"]\\n[Black "Bob"]\\n[Result "*"]\\n\\n1. e4 *';
+    document.getElementById('pgn-input').value='[Event "Automatic replay"]\n[White "Alice"]\n[Black "Bob"]\n[Result "*"]\n\n1. e4 *';
     return reviewRun();
   });
   expect(result).toBe(true);
