@@ -749,6 +749,7 @@
       ],
       principle: "Un bon coup d’ouverture peut servir deux buts : développer une pièce et créer une pression utile.",
       transfer: "Avant un coup d’ouverture, vérifie s’il développe une pièce, contrôle le centre ou crée une menace concrète sans retarder la sécurité du roi.",
+      pitfall: "Évite de sortir la dame ou de pousser un pion d’aile avant de développer, sauf raison tactique concrète.",
       hints: ["Le cavalier du roi peut sortir avec une attaque sur e5.", "Le coup illustré par Capablanca est Cf3."],
       sequence: [
         { side: "user", uci: "g1f3", explanation: "Le cavalier se développe et attaque le pion e5." },
@@ -781,6 +782,7 @@
       ],
       principle: "Une avance centrale peut gagner de l’espace et faciliter le développement, mais il faut calculer la réponse adverse.",
       transfer: "Quand l’adversaire adopte une posture passive, cherche si une poussée centrale est sûre; vérifie les prises, les clouages et les pièces qui restent derrière.",
+      pitfall: "Ne pousse pas au centre sans calculer les prises et les pièces qui pourraient rester en prise.",
       hints: ["Le coup central attaque e5 et ouvre une ligne pour les pièces.", "Dans l’exemple du livre, les Blancs jouent d4."],
       sequence: [
         { side: "user", uci: "d2d4", explanation: "Le pion d conteste le centre et soutient la présence blanche en e4." },
@@ -811,6 +813,7 @@
       ],
       principle: "Un coup de développement doit aider les pièces à coopérer; une case apparemment solide peut gêner une autre pièce.",
       transfer: "Avant de choisir une case pour un cavalier, regarde les diagonales et colonnes qu’il bloque, puis compare avec les cases actives disponibles.",
+      pitfall: "Évite de placer une pièce devant une diagonale utile sans avoir vérifié le coût pour le fou.",
       hints: ["Le cavalier g8 peut sortir en attaquant e4.", "Le livre critique Cd7 parce qu’il gêne le fou c8."],
       sequence: [
         { side: "user", uci: "g8f6", explanation: "Le cavalier se développe et met une pression sur e4." },

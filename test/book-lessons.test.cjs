@@ -71,7 +71,6 @@ test("method paths include all their lessons in progressive level order", () => 
 test("each player and Stockfish path has a clearly attributed original starter lesson", () => {
   const starters = [
     ["method-fischer-preparer-d4", "Fischer · préparation et précision", "Fischer"],
-    ["capablanca-development-tempo", "Capablanca · fondamentaux et principes", "Capablanca"],
     ["method-carlsen-roi-actif", "Carlsen · amélioration et conversion", "Carlsen"],
     ["method-tal-calcul-sacrifice", "Tal · tactique et sacrifices à calculer", "Tal"],
     ["method-kasparov-coups-candidats", "Kasparov · coups candidats et calcul", "Kasparov"],
@@ -85,6 +84,11 @@ test("each player and Stockfish path has a clearly attributed original starter l
     assert.ok(lesson.book.includes(sourceLabel));
     assert.ok(methodPathLessonIndices(program).includes(LESSONS.indexOf(lesson)));
   }
+  const capablanca = LESSONS.find((entry) => entry.id === "capablanca-development-tempo");
+  assert.ok(capablanca, "the Capablanca book path needs a sourced entry lesson");
+  assert.equal(capablanca.program, "Capablanca · fondamentaux et principes");
+  assert.equal(capablanca.author, "J. R. Capablanca");
+  assert.ok(methodPathLessonIndices(capablanca.program).includes(LESSONS.indexOf(capablanca)));
 });
 
 test("Stockfish process exercises teach mate search, principal variations, and score interpretation", () => {
