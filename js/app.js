@@ -45,7 +45,28 @@ function ensureDefaultLevelDiagnostic() {
   try { localStorage.setItem(LEVEL_DIAGNOSTIC_KEY, JSON.stringify(initial)); } catch (_) {}
   return initial;
 }
+function startLevelDiagnostic() {
+  const existing = readLevelDiagnostic();
+  const diagnostic = {
+    active: true,
+    defaultActivation: false,
+    startedAt: new Date().toISOString(),
+    restoreDots: existing && typeof existing.restoreDots === "boolean"
+      ? existing.restoreDots : localStorage.getItem(DOTS_STORAGE_KEY) !== "false",
+    restoreMoveDots: existing && typeof existing.restoreMoveDots === "boolean"
+      ? existing.restoreMoveDots : localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false",
+  };
+  try { localStorage.setItem(LEVEL_DIAGNOSTIC_KEY, JSON.stringify(diagnostic)); } catch (_) {}
+  return diagnostic;
+}
+window.startLevelDiagnostic = startLevelDiagnostic;
 ensureDefaultLevelDiagnostic();
+if (new URLSearchParams(window.location.search).get("start-diagnostic") === "1") {
+  startLevelDiagnostic();
+  const launchUrl = new URL(window.location.href);
+  launchUrl.searchParams.delete("start-diagnostic");
+  window.history.replaceState(window.history.state, "", launchUrl);
+}
 let levelDiagnosticLockWasActive = isLevelDiagnosticActive();
 function syncLevelDiagnosticBanner() {
   const banner = $("level-diagnostic-banner");
