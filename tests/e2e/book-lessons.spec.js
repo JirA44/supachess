@@ -179,10 +179,11 @@ test("five methodology cards explain their routines and open matching lessons", 
   }
 
   const stockfish = page.locator('[data-method-path="Stockfish · comparer et vérifier"]');
-  await expect(stockfish).toContainText("Forme d’abord ta propre analyse");
+  await expect(stockfish).toContainText("Stockfish explore des variantes");
   await expect(stockfish.locator("[data-method-count]")).toContainText("positions de leçons analysables");
   await stockfish.getByRole("button", { name: "Commencer sur une position" }).click();
   await expect(page.locator("#lesson-program-filter")).toHaveValue("");
+  await expect(page.locator("#lesson-title")).toHaveText("Stockfish · Repérer le mat forcé");
   await expect(page.locator("#lesson-catalog .lesson-catalog-button:not(.anticipation-exercise)").first()).toBeVisible();
   await expect(page.locator("#lesson-reflection")).toBeVisible();
   await expect(page.locator("#lesson-engine-analyze")).toBeHidden();
