@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SupaChess Coach IA — Entraîneur d'échecs</title>
-<link rel="stylesheet" href="css/style.css?v=live-move-grade-counts-20261026-lessons-nav-20261026-move-hover-20261026-legal-move-dots-20261026-fide-levels-profile-accuracy-20261027-level-diagnostic-lock-20261027-move-grade-colors-20261028-grade-gradient-20261028-profile-accuracy-20261028-profile-contrast-20261028-profile-diagnostic-20261028">>
+<link rel="stylesheet" href="css/style.css?v=live-move-grade-counts-20261026-lessons-nav-20261026-move-hover-20261026-legal-move-dots-20261026-fide-levels-profile-accuracy-20261027-level-diagnostic-lock-20261027-move-grade-colors-20261028-grade-gradient-20261028-profile-accuracy-20261028-profile-contrast-20261028-profile-diagnostic-20261028">
 <style>
   .supa-section { margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(128,128,128,.4); }
   .supa-head { font-weight: 600; font-size: .85em; opacity: .9; }
@@ -87,11 +87,12 @@
   .hub-link { text-decoration: none; color: inherit; }
   .hub-link:hover { color: #7fc97f; }
   .brand-tag { font-size: .6em; font-weight: 400; opacity: .8; vertical-align: super; }
+  h1.brand { margin: 0; line-height: 1.2; }
 </style>
 </head>
 <body>
 <header class="topbar">
-  <div class="brand-navigation"><div class="brand">♞ Supa<span>Chess</span> <span class="brand-tag">Coach IA</span></div><a class="topbar-lessons-btn" href="book-lessons.html">Leçons</a></div>
+  <div class="brand-navigation"><h1 class="brand">♞ Supa<span>Chess</span> <span class="brand-tag">Coach IA</span></h1><a class="topbar-lessons-btn" href="book-lessons.html">Leçons</a></div>
   <div class="engine-status">
     <span id="engine-dot" class="status-dot loading"></span>
     <span id="engine-label">Stockfish NNUE — chargement…</span>
@@ -130,9 +131,9 @@
         <button id="btn-analyze-pgn" class="btn">Analyser un PGN (Supa)</button>
       </div>
       <div id="replay-bar" class="board-controls hidden">
-        <button id="btn-replay-prev" class="btn">◀</button>
+        <button id="btn-replay-prev" class="btn" type="button" aria-label="Coup précédent">◀</button>
         <span id="replay-label">Coup 0/0</span>
-        <button id="btn-replay-next" class="btn">▶</button>
+        <button id="btn-replay-next" class="btn" type="button" aria-label="Coup suivant">▶</button>
         <button id="btn-replay-quit" class="btn">Quitter la relecture</button>
       </div>
       <div id="review-exercise-panel" class="review-exercise-panel hidden" aria-live="polite">
@@ -271,10 +272,11 @@
   </section>
 </main>
 
-<div id="pgn-modal" class="pgn-modal hidden">
+<div id="pgn-modal" class="pgn-modal hidden" role="dialog" aria-modal="true" aria-labelledby="pgn-modal-title">
   <div class="pgn-modal-box">
-    <h2>Analyser un PGN avec Supa</h2>
+    <h2 id="pgn-modal-title">Analyser un PGN avec Supa</h2>
     <p style="font-size:.85em;opacity:.85">Collez un PGN (le vôtre ou d'ailleurs) : chaque position est analysée par Stockfish, puis Supa génère un bilan pédagogique.</p>
+    <label for="pgn-input">Colle la partie au format PGN</label>
     <textarea id="pgn-input" rows="10" placeholder="[Event &quot;...&quot;]&#10;&#10;1. e4 e5 2. Nf3 ..."></textarea>
     <div class="coach-actions">
       <button id="btn-run-review" class="btn">Analyser</button>
@@ -307,7 +309,7 @@
 <script src="js/blindspots.js"></script>
   <script src="js/learning-loop.js"></script>
   <script src="js/centipawn-explanations.js"></script>
-  <script src="js/review.js?v=learning-baseline-20261027"></script>
+  <script src="js/review.js?v=accessibility-dialog-20261028"></script>
 <script src="js/review-insights.js?v=learning-baseline-20261027-level-diagnostic-lock-20261027"></script>
 <script src="js/profile-page.js?v=in-page-profile-20261027"></script>
 </body>

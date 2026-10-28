@@ -20,14 +20,38 @@ const REVIEW_MOVE_CLASSES = [
   { id: "unrated", symbol: "…", label: "Non évalué" },
 ];
 
-const reviewState = { fens: [], moves: [], grades: [], correctionExercises: [], currentHeaders: {}, exercise: null, running: false, returnState: null };
+const reviewState = { fens: [], moves: [], grades: [], correctionExercises: [], currentHeaders: {}, exercise: null, running: false, returnState: null, modalReturnFocus: null };
+
+function trapModalKeys(modal, close) {
+  modal.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      close();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const items = Array.from(modal.querySelectorAll('a[href],button:not([disabled]):not([hidden]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'))
+      .filter((item) => item.getClientRects().length > 0);
+    if (!items.length) { event.preventDefault(); return; }
+    const first = items[0], last = items[items.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  });
+}
 
 function reviewShowModal(pgn) {
-  document.getElementById("pgn-modal").classList.remove("hidden");
+  const modal = document.getElementById("pgn-modal");
+  reviewState.modalReturnFocus = document.activeElement;
+  modal.classList.remove("hidden");
   if (pgn) document.getElementById("pgn-input").value = pgn;
+  document.getElementById("pgn-input").focus();
 }
 function reviewHideModal() {
   document.getElementById("pgn-modal").classList.add("hidden");
+  const target = reviewState.modalReturnFocus;
+  reviewState.modalReturnFocus = null;
+  if (target && target.isConnected && typeof target.focus === "function") target.focus();
+  else document.getElementById("btn-analyze-pgn").focus();
 }
 
 /* Point d'entrée (bouton "Analyser PGN (Supa)" ou panneau Parties). */
@@ -670,6 +694,7 @@ async function replayGoto(i) {
 document.getElementById("btn-analyze-pgn").addEventListener("click", () => reviewStart(""));
 document.getElementById("btn-run-review").addEventListener("click", () => { reviewRun().catch(console.error); });
 document.getElementById("btn-close-pgn").addEventListener("click", reviewHideModal);
+trapModalKeys(document.getElementById("pgn-modal"), reviewHideModal);
 document.getElementById("btn-review-exercise-flip").addEventListener("click", () => {
   if (!reviewState.exercise) return;
   boardUI.setFlipped(!boardUI.flipped);
