@@ -124,20 +124,21 @@ test("catalog filters and random exercise explicitly train opponent replies in g
 });
 
 
-test("six learning paths explain their progression and open matching lessons", async ({ page }) => {
+test("eight learning paths explain their progression and open matching lessons", async ({ page }) => {
   await page.goto("/book-lessons.html");
-  await expect(page.locator("#method-paths-title")).toHaveText("Sept parcours d’apprentissage");
+  await expect(page.locator("#method-paths-title")).toHaveText("Huit parcours d’apprentissage");
   await expect(page.locator("#lesson-catalog-count")).toContainText("leçons originales +");
   await expect(page.locator("#lesson-catalog-count")).toContainText("exercices d’anticipation");
   await expect(page.locator("#lesson-catalog-count")).toContainText("entrées au total");
   const cards = page.locator(".method-path");
-  await expect(cards).toHaveCount(7);
+  await expect(cards).toHaveCount(8);
 
   const paths = [
     ["Carlsen · amélioration et conversion", "Explorer les leçons Carlsen"],
     ["Fischer · préparation et précision", "Explorer les leçons Fischer"],
     ["Capablanca · fondamentaux et principes", "Explorer le parcours Capablanca"],
     ["Lasker · mobilisation et principes", "Explorer le parcours Lasker"],
+    ["Edward Lasker · calcul et stratégie", "Explorer le parcours Edward Lasker"],
     ["Tal · tactique et sacrifices à calculer", "Explorer les leçons Tal"],
     ["Kasparov · coups candidats et calcul", "Explorer les leçons Kasparov"],
   ];
@@ -215,7 +216,7 @@ test("six learning paths explain their progression and open matching lessons", a
   await page.setViewportSize({ width: 390, height: 844 });
   const cardBox = await page.locator(".method-path-grid").boundingBox();
   expect(cardBox.x + cardBox.width).toBeLessThanOrEqual(390);
-  await expect(cards).toHaveCount(7);
+  await expect(cards).toHaveCount(8);
 });
 
 

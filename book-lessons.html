@@ -27,8 +27,8 @@
     <section class="method-paths" aria-labelledby="method-paths-title">
       <div class="method-paths-heading">
         <p class="lesson-eyebrow">SupaChess Académie · méthodes de travail</p>
-        <h2 id="method-paths-title">Sept parcours d’apprentissage</h2>
-        <p>Chaque parcours commence par les notions les plus accessibles et monte progressivement en difficulté. Les parcours Capablanca et Lasker s’appuient sur des thèmes référencés dans leurs ouvrages; les explications et exercices sont reformulés et originaux. Stockfish calcule les variantes et évaluations, il n’est pas présenté comme l’auteur des explications.</p>
+        <h2 id="method-paths-title">Huit parcours d’apprentissage</h2>
+        <p>Chaque parcours commence par les notions les plus accessibles et monte progressivement en difficulté. Les parcours Capablanca et Lasker s’appuient sur des thèmes référencés dans leurs ouvrages; les explications et exercices sont reformulés et originaux. Le parcours Edward Lasker est distinct de celui d’Emanuel Lasker et s’inspire de <em>Chess Strategy</em> (calcul, mobilité, centre). Stockfish calcule les variantes et évaluations, il n’est pas présenté comme l’auteur des explications.</p>
       </div>
       <div class="method-path-grid">
         <article class="method-path" data-method-path="Carlsen · amélioration et conversion">
@@ -88,6 +88,15 @@
           <p class="method-path-count" data-method-count>Leçons du parcours en cours de comptage…</p>
           <button class="btn method-path-action" type="button" data-method-action="Lasker · mobilisation et principes">Explorer le parcours Lasker</button>
         </article>
+        <article class="method-path" data-method-path="Edward Lasker · calcul et stratégie">
+          <div class="method-path-kicker">8 · Calcul et stratégie</div>
+          <h3>Parcours Edward Lasker</h3>
+          <p>Entraîne le calcul des reprises, la mobilité des pièces et la lecture de la structure centrale à partir de <em>Chess Strategy</em>.</p>
+          <ol><li>Vérifie les reprises avant chaque capture.</li><li>Compare les cases et l’activité de tes pièces.</li><li>Relie la structure de pions aux lignes ouvertes et aux plans.</li><li>Calcule les réponses adverses avant une rupture.</li></ol>
+          <p class="method-path-count" data-method-count>Leçons du parcours en cours de comptage…</p>
+          <button class="btn method-path-action" type="button" data-method-action="Edward Lasker · calcul et stratégie">Explorer le parcours Edward Lasker</button>
+          <p class="method-path-source"><a href="https://www.gutenberg.org/ebooks/5614" target="_blank" rel="noopener noreferrer">Chess Strategy · Project Gutenberg</a></p>
+        </article>
       </div>
     </section>
 
@@ -96,7 +105,7 @@
       <div class="lesson-filter-row">
         <label>Rechercher<input id="lesson-search" type="search" placeholder="thème, coup ou méthode"></label>
         <label>Niveau<select id="lesson-level-filter"><option value="">Tous les niveaux</option><option>Débutant</option><option>Intermédiaire</option><option>Avancé</option><option>Expert</option></select></label>
-        <label>Parcours<select id="lesson-program-filter"><option value="">Tous les parcours</option><option>Fischer · préparation et précision</option><option>Carlsen · amélioration et conversion</option><option>Capablanca · fondamentaux et principes</option><option>Lasker · mobilisation et principes</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Anti-erreurs · anticiper l’adversaire</option></select></label>
+        <label>Parcours<select id="lesson-program-filter"><option value="">Tous les parcours</option><option>Fischer · préparation et précision</option><option>Carlsen · amélioration et conversion</option><option>Capablanca · fondamentaux et principes</option><option>Lasker · mobilisation et principes</option><option>Edward Lasker · calcul et stratégie</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Anti-erreurs · anticiper l’adversaire</option></select></label>
         <button class="btn lesson-surprise" id="lesson-surprise" type="button">Exercice au hasard</button>
       </div>
     </section>
@@ -164,7 +173,7 @@
   <script src="js/engine.js"></script>
   <script src="js/board.js"></script>
   <script src="js/curriculum.js?v=academy-100-methods-20261026"></script>
-  <script src="js/book-lessons.js?v=capablanca-corpus-batch2-20261028"></script>
+  <script src="js/book-lessons.js?v=edward-lasker-chess-strategy-20261029"></script>
   <script src="js/method-paths.js?v=stockfish-coach-20261027"></script>
 </body>
 </html>

@@ -35,10 +35,10 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 133, "the academy contains 133 guided lessons");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 136, "the academy contains 136 guided lessons");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "reinforcement").length, 53, "53 legal application lessons reinforce the four methods");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 79, "opponent-reply drills remain counted separately");
-  assert.equal(LESSONS.length, 212, "guided lessons and anticipation drills are separate catalog entries");
+  assert.equal(LESSONS.length, 215, "guided lessons and anticipation drills are separate catalog entries");
   assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
 });
 
@@ -48,6 +48,7 @@ test("method paths include all their lessons in progressive level order", () => 
     "Fischer · préparation et précision",
     "Capablanca · fondamentaux et principes",
     "Lasker · mobilisation et principes",
+    "Edward Lasker · calcul et stratégie",
     "Tal · tactique et sacrifices à calculer",
     "Kasparov · coups candidats et calcul",
   ];
@@ -96,6 +97,11 @@ test("each player and Stockfish path has a clearly attributed original starter l
   assert.equal(lasker.author, "Emanuel Lasker");
   assert.ok(lasker.book.includes("Common Sense in Chess"));
   assert.ok(methodPathLessonIndices(lasker.program).includes(LESSONS.indexOf(lasker)));
+  const edwardLessons = LESSONS.filter((entry) => entry.program === "Edward Lasker · calcul et stratégie");
+  assert.equal(edwardLessons.length, 3);
+  assert.deepEqual(edwardLessons.map((entry) => entry.level), ["Débutant", "Intermédiaire", "Avancé"]);
+  assert.ok(edwardLessons.every((entry) => entry.author === "Edward Lasker" && entry.book === "Chess Strategy"));
+  assert.ok(edwardLessons.every((entry) => entry.url === "https://www.gutenberg.org/ebooks/5614"));
 });
 
 test("Stockfish process exercises teach mate search, principal variations, and score interpretation", () => {
