@@ -415,7 +415,7 @@
       id: "method-carlsen-roi-actif",
       kind: "method",
       level: "Intermédiaire",
-      title: "Méthode Carlsen · Activer le roi avant le pion",
+      title: "Méthode Carlsen · Gagner l’opposition avant la poussée",
       category: "Parcours joueur · Carlsen · Amélioration et conversion",
       program: "Carlsen · amélioration et conversion",
       author: "SupaChess Académie",
