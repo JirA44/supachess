@@ -167,6 +167,6 @@ test("all engine move grades have distinct category-colored board dots", () => {
     assert.ok(match, `missing color for ${category}`);
     return match[1].toLowerCase();
   });
-  assert.equal(colors[0], "#38bdf8", "brilliant should be sky blue");
+  assert.equal(colors[0], "#c084fc", "brilliant should be violet");
   assert.equal(new Set(colors).size, categories.length, "every grade should have its own color");
 });

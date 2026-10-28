@@ -221,7 +221,7 @@ body {
 .played-move-bubble.tone-pending { background: #a6adbf; }
 
 /* Stable color for every engine grade; brilliant is sky blue. */
-.grade-brilliant { --grade-dot-color: #38bdf8; --grade-dot-text: #082f49; }
+.grade-brilliant { --grade-dot-color: #c084fc; --grade-dot-text: #3b0764; }
 .grade-best { --grade-dot-color: #22c55e; --grade-dot-text: #052e16; }
 .grade-very-good { --grade-dot-color: #a3e635; --grade-dot-text: #1a2e05; }
 .grade-good { --grade-dot-color: #2dd4bf; --grade-dot-text: #042f2e; }

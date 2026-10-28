@@ -220,11 +220,11 @@ test('move grade dots use eight distinct colors and brilliant is sky blue', asyn
 
   expect(result.candidateColors).toHaveLength(8);
   expect(new Set(result.candidateColors).size).toBe(8);
-  expect(result.candidateColors[0]).toBe('rgb(56, 189, 248)');
+  expect(result.candidateColors[0]).toBe('rgb(192, 132, 252)');
   expect(result.candidateColors[2]).toBe('rgb(163, 230, 53)');
   expect(result.candidateColors[3]).toBe('rgb(45, 212, 191)');
   expect(result.candidateColors[4]).toBe('rgb(250, 204, 21)');
-  expect(result.playedColor).toBe('rgb(56, 189, 248)');
+  expect(result.playedColor).toBe('rgb(192, 132, 252)');
   expect(result.summaryColors).toEqual(result.candidateColors);
   expect(result.listColors).toHaveLength(8);
   expect(new Set(result.listColors).size).toBe(8);
