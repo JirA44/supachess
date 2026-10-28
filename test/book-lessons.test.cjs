@@ -35,10 +35,10 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 116, "the academy contains 116 guided lessons");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 119, "the academy contains 119 guided lessons");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "reinforcement").length, 53, "53 legal application lessons reinforce the four methods");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 79, "opponent-reply drills remain counted separately");
-  assert.equal(LESSONS.length, 195, "guided lessons and anticipation drills are separate catalog entries");
+  assert.equal(LESSONS.length, 198, "guided lessons and anticipation drills are separate catalog entries");
   assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
 });
 
@@ -83,6 +83,28 @@ test("each player and Stockfish path has a clearly attributed original starter l
     assert.ok(lesson.book.includes(sourceLabel));
     assert.ok(methodPathLessonIndices(program).includes(LESSONS.indexOf(lesson)));
   }
+});
+
+test("Stockfish process exercises teach mate search, principal variations, and score interpretation", () => {
+  const ids = [
+    "stockfish-forced-mate",
+    "stockfish-read-principal-variation",
+    "stockfish-interpret-evaluation",
+  ];
+  for (const id of ids) {
+    const lesson = LESSONS.find((entry) => entry.id === id);
+    assert.ok(lesson, id + " should be present as a playable exercise");
+    assert.equal(lesson.program, "Stockfish · comparer et vérifier");
+    assert.equal(lesson.author, "SupaChess Académie");
+    assert.ok(methodPathLessonIndices(lesson.program).includes(LESSONS.indexOf(lesson)));
+  }
+  const mate = LESSONS.find((entry) => entry.id === "stockfish-forced-mate");
+  const game = setupGame(mate, Chess);
+  for (const action of mate.sequence) {
+    const move = game.move({ from: action.uci.slice(0, 2), to: action.uci.slice(2, 4) });
+    assert.ok(move, "the forced-mate exercise must remain legal");
+  }
+  assert.equal(game.in_checkmate(), true, "the forced-mate exercise must end in checkmate");
 });
 
 test("Stockfish alternatives are ranked, compared, and shown as legal SAN lines", () => {

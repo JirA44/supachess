@@ -528,6 +528,93 @@
     },
   );
 
+  // Stockfish interpretation exercises: teach search outputs, not an invented inner monologue.
+  LESSONS.push(
+    {
+      id: "stockfish-forced-mate",
+      kind: "method",
+      level: "Débutant",
+      title: "Stockfish · Repérer le mat forcé",
+      category: "Parcours moteur · Stockfish · Recherche de mat",
+      program: "Stockfish · comparer et vérifier",
+      author: "SupaChess Académie",
+      book: "Exercice original d’interprétation d’une recherche Stockfish 19",
+      reference: "Position pédagogique mate en un · la recherche du moteur doit être lancée depuis l’exercice",
+      fen: "7k/8/5KQ1/8/8/8/8/8 w - - 0 1",
+      color: "w",
+      question: "Si Stockfish affiche #1 pour les Blancs dans cette position, que signifie ce résultat ?",
+      choices: [
+        { text: "Il a trouvé un mat forcé au prochain coup; la ligne montre le coup qui le réalise", correct: true },
+        { text: "Les Blancs ont un avantage matériel d’un pion", correct: false },
+        { text: "Le moteur affirme que tous les autres coups perdent immédiatement leur dame", correct: false },
+      ],
+      principle: "Un score de mat indique une ligne de mat trouvée par la recherche. Ici, Dg7 mate: le roi blanc protège la dame et la dame contrôle les cases de fuite.",
+      transfer: "Quand le moteur signale un mat, rejoue la variante, vérifie les réponses légales et distingue une ligne de mat forcé d’un simple avantage matériel.",
+      hints: ["Cherche les échecs qui limitent toutes les réponses noires.", "La dame peut aller en g7, protégée par le roi f6."],
+      pitfall: "Ne confonds pas une évaluation en pions avec une annonce de mat, et vérifie toujours la ligne affichée.",
+      sequence: [
+        { side: "user", uci: "g6g7", explanation: "Dg7 est échec et mat: le roi noir n’a aucune case sûre et ne peut pas capturer la dame protégée par le roi blanc." },
+      ],
+    },
+    {
+      id: "stockfish-read-principal-variation",
+      kind: "method",
+      level: "Intermédiaire",
+      title: "Stockfish · Lire la variante principale",
+      category: "Parcours moteur · Stockfish · Variante principale",
+      program: "Stockfish · comparer et vérifier",
+      author: "SupaChess Académie",
+      book: "Exercice original d’interprétation d’une variante Stockfish 19",
+      reference: "Ligne pédagogique légale; les candidats affichés dépendent de la recherche lancée",
+      setup: ["e4", "e5", "Nf3", "Nc6"],
+      color: "w",
+      question: "Pour comprendre pourquoi le moteur classe un coup en premier, que faut-il examiner ?",
+      choices: [
+        { text: "La variante complète et les meilleures réponses adverses, pas seulement le premier coup", correct: true },
+        { text: "Le nom de l’ouverture sans regarder les coups suivants", correct: false },
+        { text: "Le premier coup seul, car il donne toujours sa justification", correct: false },
+      ],
+      principle: "Le coup affiché est le premier d’une variante principale calculée. Les demi-coups suivants montrent les réponses que la recherche considère importantes; ils aident à vérifier les menaces et les défenses.",
+      transfer: "Rejoue la ligne jusqu’à une position stable, puis compare la position finale et les autres coups candidats proposés.",
+      hints: ["Un premier coup ne révèle pas à lui seul la tactique ou la défense trouvée.", "Lis la suite calculée et arrête-toi après chaque réponse adverse."],
+      pitfall: "Ne présente pas la variante principale comme une explication en langage humain ni comme une vérité indépendante de la profondeur de recherche.",
+      sequence: [
+        { side: "user", uci: "f1b5", explanation: "Le fou vise la diagonale vers le roi et met une pression sur le cavalier c6; compare ce candidat à la ligne principale affichée par Stockfish." },
+        { side: "book", uci: "a7a6", explanation: "Le pion demande au fou de choisir une case; cette réponse adverse fait partie du calcul à examiner." },
+        { side: "user", uci: "b5a4", explanation: "Le fou conserve sa pression en reculant; poursuis la variante du moteur avant de conclure sur le premier coup." },
+        { side: "book", uci: "g8f6", explanation: "Le cavalier se développe et attaque e4; la ligne doit être réévaluée après cette nouvelle position." },
+      ],
+    },
+    {
+      id: "stockfish-interpret-evaluation",
+      kind: "method",
+      level: "Avancé",
+      title: "Stockfish · Interpréter l’évaluation et les candidats",
+      category: "Parcours moteur · Stockfish · Évaluation et MultiPV",
+      program: "Stockfish · comparer et vérifier",
+      author: "SupaChess Académie",
+      book: "Exercice original pour apprendre à lire les évaluations Stockfish 19",
+      reference: "Exercice de comparaison des coups candidats; scores dépendants de la recherche et du point de vue affiché",
+      setup: ["e4", "e5", "Nf3", "Nc6"],
+      color: "w",
+      question: "Quand tu compares deux évaluations Stockfish, quelle vérification évite une conclusion trompeuse ?",
+      choices: [
+        { text: "Comparer le même point de vue, la profondeur et la variante, puis examiner l’écart entre candidats", correct: true },
+        { text: "Comparer uniquement les signes + et − sans vérifier quel camp a le trait", correct: false },
+        { text: "Choisir systématiquement la ligne dont le nombre semble le plus grand", correct: false },
+      ],
+      principle: "Une évaluation dépend de la position, du point de vue indiqué, de la recherche et de la variante. MultiPV compare plusieurs candidats; l’écart aide à prioriser l’analyse mais ne remplace pas la vérification des lignes.",
+      transfer: "Note le coup que tu aurais joué, lis le point de vue et la profondeur, puis rejoue les premières réponses des deux candidats pour trouver la différence concrète.",
+      hints: ["Vérifie si l’évaluation est côté au trait ou côté blanc.", "Compare des scores produits dans des conditions et des points de vue cohérents."],
+      pitfall: "Ne traite pas quelques centipions, une profondeur donnée ou un changement de signe isolé comme une mesure absolue de la qualité humaine du coup.",
+      sequence: [
+        { side: "user", uci: "d2d4", explanation: "d4 est un candidat central légal; demande à Stockfish de comparer plusieurs candidats plutôt que de supposer que ce coup est le meilleur." },
+        { side: "book", uci: "e5d4", explanation: "Les Noirs prennent en d4; cette réponse modifie la position et le score doit être recalculé depuis le nouveau trait." },
+        { side: "user", uci: "f3d4", explanation: "Le cavalier reprend; compare les évaluations dans le point de vue explicitement affiché et lis la variante principale." },
+      ],
+    },
+  );
+
   const LEVEL_ORDER = { "Débutant": 0, "Intermédiaire": 1, "Avancé": 2, "Expert": 3 };
   LESSONS.sort((a, b) => (LEVEL_ORDER[a.level] ?? 99) - (LEVEL_ORDER[b.level] ?? 99));
 
@@ -1304,7 +1391,7 @@
   }
 
   root.startSupaChessStockfishCoach = function () {
-    const index = LESSONS.findIndex((lesson) => lesson.kind !== "anticipation");
+    const index = LESSONS.findIndex((lesson) => lesson.program === "Stockfish · comparer et vérifier" && lesson.kind !== "anticipation");
     if (index < 0) return false;
     $("lesson-program-filter").value = "";
     $("lesson-search").value = "";
