@@ -124,18 +124,19 @@ test("catalog filters and random exercise explicitly train opponent replies in g
 });
 
 
-test("five methodology cards explain their routines and open matching lessons", async ({ page }) => {
+test("six learning paths explain their progression and open matching lessons", async ({ page }) => {
   await page.goto("/book-lessons.html");
-  await expect(page.locator("#method-paths-title")).toHaveText("Cinq parcours méthodologiques");
+  await expect(page.locator("#method-paths-title")).toHaveText("Six parcours d’apprentissage");
   await expect(page.locator("#lesson-catalog-count")).toContainText("leçons originales +");
   await expect(page.locator("#lesson-catalog-count")).toContainText("exercices d’anticipation");
   await expect(page.locator("#lesson-catalog-count")).toContainText("entrées au total");
   const cards = page.locator(".method-path");
-  await expect(cards).toHaveCount(5);
+  await expect(cards).toHaveCount(6);
 
   const paths = [
     ["Carlsen · amélioration et conversion", "Explorer les leçons Carlsen"],
     ["Fischer · préparation et précision", "Explorer les leçons Fischer"],
+    ["Capablanca · fondamentaux et principes", "Explorer le parcours Capablanca"],
     ["Tal · tactique et sacrifices à calculer", "Explorer les leçons Tal"],
     ["Kasparov · coups candidats et calcul", "Explorer les leçons Kasparov"],
   ];

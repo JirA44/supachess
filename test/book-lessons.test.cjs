@@ -35,10 +35,10 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 122, "the academy contains 122 guided lessons");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 125, "the academy contains 125 guided lessons");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "reinforcement").length, 53, "53 legal application lessons reinforce the four methods");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 79, "opponent-reply drills remain counted separately");
-  assert.equal(LESSONS.length, 201, "guided lessons and anticipation drills are separate catalog entries");
+  assert.equal(LESSONS.length, 204, "guided lessons and anticipation drills are separate catalog entries");
   assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
 });
 
@@ -46,6 +46,7 @@ test("method paths include all their lessons in progressive level order", () => 
   const programs = [
     "Carlsen · amélioration et conversion",
     "Fischer · préparation et précision",
+    "Capablanca · fondamentaux et principes",
     "Tal · tactique et sacrifices à calculer",
     "Kasparov · coups candidats et calcul",
   ];
@@ -70,6 +71,7 @@ test("method paths include all their lessons in progressive level order", () => 
 test("each player and Stockfish path has a clearly attributed original starter lesson", () => {
   const starters = [
     ["method-fischer-preparer-d4", "Fischer · préparation et précision", "Fischer"],
+    ["capablanca-development-tempo", "Capablanca · fondamentaux et principes", "Capablanca"],
     ["method-carlsen-roi-actif", "Carlsen · amélioration et conversion", "Carlsen"],
     ["method-tal-calcul-sacrifice", "Tal · tactique et sacrifices à calculer", "Tal"],
     ["method-kasparov-coups-candidats", "Kasparov · coups candidats et calcul", "Kasparov"],

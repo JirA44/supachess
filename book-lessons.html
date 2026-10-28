@@ -27,8 +27,8 @@
     <section class="method-paths" aria-labelledby="method-paths-title">
       <div class="method-paths-heading">
         <p class="lesson-eyebrow">SupaChess Académie · méthodes de travail</p>
-        <h2 id="method-paths-title">Cinq parcours méthodologiques</h2>
-        <p>Chaque méthode possède une leçon d’entrée interactive, suivie des exercices classés par difficulté. Les explications sont originales SupaChess et s’inspirent de thèmes publics associés aux joueurs; Stockfish calcule les variantes et évaluations, il n’est pas présenté comme l’auteur des explications.</p>
+        <h2 id="method-paths-title">Six parcours d’apprentissage</h2>
+        <p>Chaque parcours commence par les notions les plus accessibles et monte progressivement en difficulté. Les leçons Capablanca s’appuient sur des chapitres cités de Chess Fundamentals; les explications et exercices sont reformulés et originaux. Stockfish calcule les variantes et évaluations, il n’est pas présenté comme l’auteur des explications.</p>
       </div>
       <div class="method-path-grid">
         <article class="method-path" data-method-path="Carlsen · amélioration et conversion">
@@ -63,7 +63,15 @@
           <p class="method-path-count" data-method-count>Leçons du parcours en cours de comptage…</p>
           <button class="btn method-path-action" type="button" data-method-action="Kasparov · coups candidats et calcul">Explorer les leçons Kasparov</button>
         </article>
-        <article class="method-path method-path-engine" data-method-path="Stockfish · comparer et vérifier">
+                <article class="method-path" data-method-path="Capablanca · fondamentaux et principes">
+          <div class="method-path-kicker">6 · Fondamentaux d’un livre de référence</div>
+          <h3>Parcours Capablanca</h3>
+          <p>Travaille progressivement le développement, le contrôle du centre, la coordination des pièces et les finales à partir de thèmes référencés dans <em>Chess Fundamentals</em>.</p>
+          <ol><li>Commence par une décision simple de développement.</li><li>Apprends à contester le centre.</li><li>Repère comment une pièce peut gêner la coordination d’une autre.</li><li>Continue vers les finales et les plans plus exigeants.</li></ol>
+          <p class="method-path-count" data-method-count>Leçons du parcours en cours de comptage…</p>
+          <button class="btn method-path-action" type="button" data-method-action="Capablanca · fondamentaux et principes">Explorer le parcours Capablanca</button>
+        </article>
+<article class="method-path method-path-engine" data-method-path="Stockfish · comparer et vérifier">
           <div class="method-path-kicker">5 · Analyse assistée par moteur</div>
           <h3>Méthode Stockfish</h3>
           <p>Stockfish explore des variantes et classe des coups selon sa recherche; il ne fournit pas directement une intention formulée en langage humain. Tu étudieras aussi des positions d’une partie historique Stockfish–LCZero du TCEC, avec PGN attribué et explications originales SupaChess.</p>
@@ -79,7 +87,7 @@
       <div class="lesson-filter-row">
         <label>Rechercher<input id="lesson-search" type="search" placeholder="thème, coup ou méthode"></label>
         <label>Niveau<select id="lesson-level-filter"><option value="">Tous les niveaux</option><option>Débutant</option><option>Intermédiaire</option><option>Avancé</option><option>Expert</option></select></label>
-        <label>Parcours<select id="lesson-program-filter"><option value="">Tous les parcours</option><option>Fischer · préparation et précision</option><option>Carlsen · amélioration et conversion</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Anti-erreurs · anticiper l’adversaire</option></select></label>
+        <label>Parcours<select id="lesson-program-filter"><option value="">Tous les parcours</option><option>Fischer · préparation et précision</option><option>Carlsen · amélioration et conversion</option><option>Capablanca · fondamentaux et principes</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Anti-erreurs · anticiper l’adversaire</option></select></label>
         <button class="btn lesson-surprise" id="lesson-surprise" type="button">Exercice au hasard</button>
       </div>
     </section>
