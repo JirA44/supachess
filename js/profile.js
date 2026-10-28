@@ -3,8 +3,8 @@
 var db=null, auth=null;
 var GAME_TYPES = {
   puzzle: {label:'Puzzle', icon:'🧩', defaultRating:1200},
-  classic3s: {label:'Classic 3s/coup', icon:'⚡', defaultRating:1200},
-  classic5s: {label:'Classic 5s/coup', icon:'⏱️', defaultRating:1200}
+  classic3s: {label:'Classique 3 s/coup', icon:'⚡', defaultRating:1200},
+  classic5s: {label:'Classique 5 s/coup', icon:'⏱️', defaultRating:1200}
 };
 function init(a,d){ auth=a; db=d; }
 function ensureUserProfile(user){
@@ -15,7 +15,7 @@ function ensureUserProfile(user){
     var data={
       uid:user.uid,
       email:user.email||'',
-      displayName:user.displayName|| (user.email? user.email.split('@')[0] : profileText('profile_guest','Player')),
+      displayName:user.displayName|| (user.email? user.email.split('@')[0] : profileText('profile_guest','Joueur')),
       photoURL:user.photoURL||'',
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       stats:{
@@ -183,8 +183,8 @@ function profileText(key,fallback){
 }
 function profileRankName(level){
   var ranks=['profile_rank_beginner','profile_rank_apprentice','profile_rank_player','profile_rank_competitor','profile_rank_challenger','profile_rank_expert','profile_rank_master','profile_rank_grand_master','profile_rank_champion','profile_rank_legend'];
-  if(level>10)return profileText('profile_rank_legend','Legend')+' ★'+(level-10);
-  return profileText(ranks[Math.max(0,Math.min(9,level-1))],'Level '+level);
+  if(level>10)return profileText('profile_rank_legend','Légende')+' ★'+(level-10);
+  return profileText(ranks[Math.max(0,Math.min(9,level-1))],'Niveau '+level);
 }
 function profileXPProgress(xp,level){
   var api=window.ChessNovaProgress;
@@ -220,7 +220,7 @@ function renderPlayerAccuracyPanel(summary){
 }
 function renderLocalLearningPanel(data){
   var local=readLocalLearningProgress(data);
-  var labels={brilliant:profileText('profile_category_brilliant','Brilliant'),best:profileText('profile_category_best','Best moves'),'very-good':profileText('profile_category_very_good','Very good'),good:profileText('profile_category_good','Good moves'),ok:profileText('profile_category_ok','OK moves'),inaccuracy:profileText('profile_category_inaccuracy','Inaccuracies'),mistake:profileText('profile_category_mistake','Mistakes'),blunder:profileText('profile_category_blunder','Blunders'),unrated:profileText('profile_category_unrated','Unrated')};
+  var labels={brilliant:profileText('profile_category_brilliant','Brillant'),best:profileText('profile_category_best','Meilleurs coups'),'very-good':profileText('profile_category_very_good','Très bons coups'),good:profileText('profile_category_good','Bons coups'),ok:profileText('profile_category_ok','Coups corrects'),inaccuracy:profileText('profile_category_inaccuracy','Imprécisions'),mistake:profileText('profile_category_mistake','Erreurs'),blunder:profileText('profile_category_blunder','Gaffes'),unrated:profileText('profile_category_unrated','Non évalués')};
   var weaknesses=Object.keys(local.categoryCounts).filter(function(key){return key==='inaccuracy'||key==='mistake'||key==='blunder';}).sort(function(a,b){return local.categoryCounts[b]-local.categoryCounts[a];});
   var exercisesUrl=local.latest
     ? 'https://jira44.github.io/supachess/index.html?resume-exercises='+encodeURIComponent(local.latest.id)
@@ -230,32 +230,32 @@ function renderLocalLearningPanel(data){
   var nextXP=xpApi&&typeof xpApi.getPrestigeXP==='function'?xpApi.getPrestigeXP(local.level+1):null;
   var xpPercent=profileXPProgress(local.xp,local.level);
   var training=[
-    {label:profileText('profile_mastered_lessons','Lessons mastered'),value:mastered},
-    {label:profileText('profile_openings_mastered','Opening fundamentals'),value:local.openingMastered,href:'https://jira44.github.io/supachess-web/TRAINING_OPENINGS.html'},
-    {label:profileText('profile_endgames_mastered','Endgame fundamentals'),value:local.endgameMastered,href:'https://jira44.github.io/supachess-web/TRAINING_ENDGAMES.html'},
-    {label:profileText('profile_tactics_mastered','Tactical themes mastered'),value:local.tacticMastered,href:'https://jira44.github.io/supachess-web/TRAINING_TACTICS.html'},
-    {label:profileText('profile_puzzles_solved','Puzzles solved'),value:local.puzzlesSolved}
+    {label:profileText('profile_mastered_lessons','Leçons maîtrisées'),value:mastered},
+    {label:profileText('profile_openings_mastered','Fondamentaux des ouvertures'),value:local.openingMastered,href:'https://jira44.github.io/supachess-web/TRAINING_OPENINGS.html'},
+    {label:profileText('profile_endgames_mastered','Fondamentaux des finales'),value:local.endgameMastered,href:'https://jira44.github.io/supachess-web/TRAINING_ENDGAMES.html'},
+    {label:profileText('profile_tactics_mastered','Thèmes tactiques maîtrisés'),value:local.tacticMastered,href:'https://jira44.github.io/supachess-web/TRAINING_TACTICS.html'},
+    {label:profileText('profile_puzzles_solved','Problèmes résolus'),value:local.puzzlesSolved}
   ];
-  var html='<section class="profile-learning" aria-labelledby="profile-learning-title"><h3 id="profile-learning-title">'+profileText('profile_learning_title','My learning')+'</h3>'+
-    '<div class="profile-xp-card"><div class="profile-xp-heading"><div><strong>'+profileText('profile_level','Level')+' '+local.level+'</strong><span>'+escapeProfileText(profileRankName(local.level))+'</span></div><strong>'+local.xp+' '+profileText('profile_xp','XP')+'</strong></div>'+
-    '<div class="profile-xp-track" role="progressbar" aria-label="'+profileText('profile_xp_progress','XP progress')+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(xpPercent)+'"><span style="width:'+xpPercent.toFixed(1)+'%"></span></div>'+
-    '<small>'+escapeProfileText(profileText('profile_xp_to_next','Progress to next level'))+': '+Math.round(xpPercent)+'%'+(nextXP!==null?' · '+profileText('profile_next_level_at','next level at')+' '+nextXP+' XP':'')+'</small></div>'+
-    '<div class="profile-learning-stats"><div><strong>'+local.completed.length+' / '+local.attempted.length+'</strong><span>'+profileText('profile_lessons_mastered_attempted','lessons mastered / attempted')+'</span></div><div><strong>'+local.moveExercises+'</strong><span>'+profileText('profile_correction_moves','half-moves to review')+'</span></div><div><strong>'+local.puzzlesSolved+'</strong><span>'+profileText('profile_puzzles_solved','puzzles solved')+'</span></div><div><strong>'+local.practiceSessions+'</strong><span>'+profileText('profile_practice_sessions','practice sessions')+'</span></div></div>'+
+  var html='<section class="profile-learning" aria-labelledby="profile-learning-title"><h3 id="profile-learning-title">'+profileText('profile_learning_title','Mon apprentissage')+'</h3>'+
+    '<div class="profile-xp-card"><div class="profile-xp-heading"><div><strong>'+profileText('profile_level','Niveau')+' '+local.level+'</strong><span>'+escapeProfileText(profileRankName(local.level))+'</span></div><strong>'+local.xp+' '+profileText('profile_xp','XP')+'</strong></div>'+
+    '<div class="profile-xp-track" role="progressbar" aria-label="'+profileText('profile_xp_progress','Progression des XP')+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(xpPercent)+'"><span style="width:'+xpPercent.toFixed(1)+'%"></span></div>'+
+    '<small>'+escapeProfileText(profileText('profile_xp_to_next','Progression vers le niveau suivant'))+': '+Math.round(xpPercent)+'%'+(nextXP!==null?' · '+profileText('profile_next_level_at','prochain niveau à')+' '+nextXP+' XP':'')+'</small></div>'+
+    '<div class="profile-learning-stats"><div><strong>'+local.completed.length+' / '+local.attempted.length+'</strong><span>'+profileText('profile_lessons_mastered_attempted','leçons maîtrisées / commencées')+'</span></div><div><strong>'+local.moveExercises+'</strong><span>'+profileText('profile_correction_moves','demi-coups à revoir')+'</span></div><div><strong>'+local.puzzlesSolved+'</strong><span>'+profileText('profile_puzzles_solved','puzzles solved')+'</span></div><div><strong>'+local.practiceSessions+'</strong><span>'+profileText('profile_practice_sessions','séances d’entraînement')+'</span></div></div>'+
     renderPlayerAccuracyPanel(local.accuracySummary)+
-    '<h4>'+profileText('profile_mastery_title','Mastery and progress')+'</h4><ul class="profile-mastery-list">'+training.map(function(item){return '<li>'+(item.href?'<a href="'+item.href+'">':'<span>')+escapeProfileText(item.label)+(item.href?'</a>':'</span>')+'<strong>'+item.value+'</strong></li>';}).join('')+'</ul>'+
-    '<div class="profile-learning-actions"><a href="'+exercisesUrl+'">'+profileText('profile_resume_exercises','Resume my exercises')+'</a><a href="https://jira44.github.io/supachess/book-lessons.html?next=1">'+profileText('profile_resume_lessons','Resume my lessons')+'</a><a href="https://jira44.github.io/supachess-web/TRAINING_OPENINGS.html">'+profileText('profile_resume_mastery','Resume mastery training')+'</a></div>';
+    '<h4>'+profileText('profile_mastery_title','Maîtrise et progression')+'</h4><ul class="profile-mastery-list">'+training.map(function(item){return '<li>'+(item.href?'<a href="'+item.href+'">':'<span>')+escapeProfileText(item.label)+(item.href?'</a>':'</span>')+'<strong>'+item.value+'</strong></li>';}).join('')+'</ul>'+
+    '<div class="profile-learning-actions"><a href="'+exercisesUrl+'">'+profileText('profile_resume_exercises','Reprendre mes exercices')+'</a><a href="https://jira44.github.io/supachess/book-lessons.html?next=1">'+profileText('profile_resume_lessons','Reprendre mes leçons')+'</a><a href="https://jira44.github.io/supachess-web/TRAINING_OPENINGS.html">'+profileText('profile_resume_mastery','Reprendre l’entraînement de maîtrise')+'</a></div>';
   if(weaknesses.length){
-    html+='<h4>'+profileText('profile_work_on','Work on in your games')+'</h4><ul class="profile-learning-list">'+weaknesses.slice(0,3).map(function(key){return '<li>'+escapeProfileText(labels[key]||key)+' : '+local.categoryCounts[key]+'</li>';}).join('')+'</ul>';
-  }else if(local.moveExercises){html+='<p class="profile-learning-note">'+profileText('profile_no_recorded_errors','No inaccuracies, mistakes, or blunders recorded in the available exercises.')+'</p>';}
+    html+='<h4>'+profileText('profile_work_on','À travailler dans vos parties')+'</h4><ul class="profile-learning-list">'+weaknesses.slice(0,3).map(function(key){return '<li>'+escapeProfileText(labels[key]||key)+' : '+local.categoryCounts[key]+'</li>';}).join('')+'</ul>';
+  }else if(local.moveExercises){html+='<p class="profile-learning-note">'+profileText('profile_no_recorded_errors','Aucune imprécision, erreur ou gaffe enregistrée dans les exercices disponibles.')+'</p>';}
   var points=local.completed.map(function(item){return item.progress.completedAt?new Date(item.progress.completedAt).getTime():null;}).filter(function(time){return Number.isFinite(time);}).sort(function(a,b){return a-b;});
   if(points.length>1){
     var coords=points.map(function(_time,index){var x=8+index*164/(points.length-1);var y=54-(index+1)*44/points.length;return x.toFixed(1)+','+y.toFixed(1);}).join(' ');
-    html+='<h4>'+profileText('profile_lesson_progress','Lesson progress')+'</h4><svg class="profile-learning-chart" viewBox="0 0 180 64" role="img" aria-label="'+profileText('profile_lesson_chart_alt','Cumulative lessons mastered')+'"><polyline points="8,56 '+coords+'" fill="none" stroke="#65d6a6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>';
-  }else{html+='<p class="profile-learning-note">'+profileText('profile_chart_empty','Complete several lessons to see your progress chart.')+'</p>';}
+    html+='<h4>'+profileText('profile_lesson_progress','Progression des leçons')+'</h4><svg class="profile-learning-chart" viewBox="0 0 180 64" role="img" aria-label="'+profileText('profile_lesson_chart_alt','Cumul des leçons maîtrisées')+'"><polyline points="8,56 '+coords+'" fill="none" stroke="#65d6a6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>';
+  }else{html+='<p class="profile-learning-note">'+profileText('profile_chart_empty','Terminez plusieurs leçons pour afficher votre courbe de progression.')+'</p>';}
   if(local.accuracyGames.length>1){
     var accuracyCoords=local.accuracyGames.map(function(value,index){var x=8+index*164/(local.accuracyGames.length-1);var y=56-value*.48;return x.toFixed(1)+','+y.toFixed(1);}).join(' ');
-    html+='<h4>'+profileText('profile_accuracy_progress','Recent game accuracy')+'</h4><svg class="profile-learning-chart" viewBox="0 0 180 64" role="img" aria-label="'+profileText('profile_accuracy_chart_alt','Accuracy by recent game')+'"><polyline points="'+accuracyCoords+'" fill="none" stroke="#68b5ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>';
-  }else{html+='<p class="profile-learning-note">'+profileText('profile_accuracy_empty','Save two or more analyzed games to see your accuracy chart.')+'</p>';}
+    html+='<h4>'+profileText('profile_accuracy_progress','Précision des parties récentes')+'</h4><svg class="profile-learning-chart" viewBox="0 0 180 64" role="img" aria-label="'+profileText('profile_accuracy_chart_alt','Précision par partie récente')+'"><polyline points="'+accuracyCoords+'" fill="none" stroke="#68b5ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>';
+  }else{html+='<p class="profile-learning-note">'+profileText('profile_accuracy_empty','Enregistrez au moins deux parties analysées pour afficher votre courbe de précision.')+'</p>';}
   return html+'</section>';
 }
 function renderProfileModal(data){
@@ -265,14 +265,14 @@ function renderProfileModal(data){
     overlay=document.createElement('div');
     overlay.id='profile-modal';
     overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;overflow:auto;';
-    overlay.innerHTML='<div id="profile-box" style="background:#1a1f2e;border:1px solid #4facfe;border-radius:16px;padding:24px;width:min(680px,100%);max-height:90vh;overflow:auto;position:relative;"><button id="profile-close" type="button" style="position:absolute;top:8px;right:12px;background:none;border:none;color:#aaa;font-size:22px;cursor:pointer;" aria-label="'+profileText('profile_close','Close profile')+'">×</button><div id="profile-content"></div></div>';
+    overlay.innerHTML='<div id="profile-box" style="background:#1a1f2e;border:1px solid #4facfe;border-radius:16px;padding:24px;width:min(680px,100%);max-height:90vh;overflow:auto;position:relative;"><button id="profile-close" type="button" style="position:absolute;top:8px;right:12px;background:none;border:none;color:#aaa;font-size:22px;cursor:pointer;" aria-label="'+profileText('profile_close','Fermer le profil')+'">×</button><div id="profile-content"></div></div>';
     overlay.querySelector("#profile-close").addEventListener('click', function(){ overlay.remove(); });
     overlay.addEventListener('click', function(e){ if(e.target===overlay) overlay.remove(); });
     document.body.appendChild(overlay);
   }
   var box=document.getElementById('profile-content');
-  if(!data){ box.innerHTML='<p style="color:#f66">'+profileText('profile_not_found','Profile not found')+'</p>'; return; }
-  var name=escapeProfileText(data.displayName||profileText('profile_guest','Player')), email=escapeProfileText(data.email||'');
+  if(!data){ box.innerHTML='<p style="color:#f66">'+profileText('profile_not_found','Profil introuvable')+'</p>'; return; }
+  var name=escapeProfileText(data.displayName||profileText('profile_guest','Joueur')), email=escapeProfileText(data.email||'');
   var photo=escapeProfileText(data.photoURL||'https://ui-avatars.com/api/?name='+encodeURIComponent(data.displayName||'?'));
   var html='<div style="text-align:center"><img src="'+photo+'" alt="" style="width:64px;height:64px;border-radius:50%"><h3 style="margin:8px 0 4px">'+name+'</h3><p style="opacity:.6;font-size:.85em">'+email+'</p></div>';
   html+='<div style="margin-top:16px;display:grid;gap:10px">';
@@ -280,7 +280,7 @@ function renderProfileModal(data){
     var st=data.stats&&data.stats[k]||null;
     var label=profileText('profile_game_'+k,GAME_TYPES[k].label);
     var games=Number(st&&st.played)||0;
-    var summary=games?'<b>'+Number(st.rating||1200)+'</b> ELO · '+games+' '+profileText('profile_games','games')+' ('+Number(st.wins||0)+' '+profileText('profile_wins','wins')+' / '+Number(st.losses||0)+' '+profileText('profile_losses','losses')+' / '+Number(st.draws||0)+' '+profileText('profile_draws','draws')+')':profileText('profile_no_game_data','No game data yet');
+    var summary=games?'<b>'+Number(st.rating||1200)+'</b> ELO · '+games+' '+profileText('profile_games','parties')+' ('+Number(st.wins||0)+' '+profileText('profile_wins','victoires')+' / '+Number(st.losses||0)+' '+profileText('profile_losses','défaites')+' / '+Number(st.draws||0)+' '+profileText('profile_draws','nulles')+')':profileText('profile_no_game_data','Aucune donnée de partie pour le moment');
     html+='<div style="background:rgba(255,255,255,.06);padding:10px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><span>'+GAME_TYPES[k].icon+' '+escapeProfileText(label)+'</span><span>'+summary+'</span></div>';
   });
   html+='</div>';
@@ -289,7 +289,7 @@ function renderProfileModal(data){
 }
 function renderOwnProfileFallback(user){
   if(!user||!user.uid)return;
-  renderProfileModal({uid:user.uid,displayName:user.displayName||user.email&&user.email.split('@')[0]||profileText('profile_guest','Player'),email:user.email||'',photoURL:user.photoURL||'',stats:{}});
+  renderProfileModal({uid:user.uid,displayName:user.displayName||user.email&&user.email.split('@')[0]||profileText('profile_guest','Joueur'),email:user.email||'',photoURL:user.photoURL||'',stats:{}});
 }
 function initSearchBar(){
   var header=document.querySelector('.header');
