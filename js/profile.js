@@ -83,6 +83,48 @@ function getProfile(uid){
 function escapeProfileText(value){
   return String(value==null?'':value).replace(/[&<>\"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch];});
 }
+function summarizeAccuracyGames(games, now){
+  var currentTime=Number.isFinite(Number(now))?Number(now):Date.now();
+  var day=24*60*60*1000;
+  var records=(Array.isArray(games)?games:[]).map(function(game){
+    if(!game||!['1-0','0-1','1/2-1/2'].includes(String(game.result||'')))return null;
+    var color=game.userColor;
+    if(color!=='w'&&color!=='b'){
+      var pgn=String(game.pgn||'');
+      var colorHeader=pgn.match(/^\[SupaChessUserColor\s+"([wb])"\]/m);
+      if(colorHeader)color=colorHeader[1];
+      else if(/^\[White\s+"Joueur"\]/mi.test(pgn))color='w';
+      else if(/^\[Black\s+"Joueur"\]/mi.test(pgn))color='b';
+    }
+    if(color!=='w'&&color!=='b')return null;
+    var raw=game[color==='w'?'accuracyW':'accuracyB'];
+    if(raw===null||raw===undefined||raw==='')return null;
+    var accuracy=Number(raw);
+    if(!Number.isFinite(accuracy))return null;
+    if(accuracy>=0&&accuracy<=1)accuracy*=100;
+    accuracy=Math.max(0,Math.min(100,accuracy));
+    var timestamp=game.date?new Date(game.date).getTime():NaN;
+    var moves=Math.max(1,Number(game.stats&&game.stats.moves)||1);
+    return {accuracy:accuracy,timestamp:Number.isFinite(timestamp)?timestamp:null,moves:moves};
+  }).filter(function(record){return !!record;});
+  function average(items){
+    var total=0,weight=0;
+    items.forEach(function(record){total+=record.accuracy*record.moves;weight+=record.moves;});
+    return {average:weight?total/weight:null,games:items.length,moves:weight};
+  }
+  function inWindow(start,end){
+    return records.filter(function(record){return record.timestamp!==null&&record.timestamp>start&&record.timestamp<=end;});
+  }
+  var weekCurrent=average(inWindow(currentTime-7*day,currentTime));
+  var weekPrevious=average(inWindow(currentTime-14*day,currentTime-7*day));
+  var monthCurrent=average(inWindow(currentTime-30*day,currentTime));
+  var monthPrevious=average(inWindow(currentTime-60*day,currentTime-30*day));
+  return {
+    all:average(records),
+    week:{current:weekCurrent,previous:weekPrevious,delta:weekCurrent.average!==null&&weekPrevious.average!==null?weekCurrent.average-weekPrevious.average:null},
+    month:{current:monthCurrent,previous:monthPrevious,delta:monthCurrent.average!==null&&monthPrevious.average!==null?monthCurrent.average-monthPrevious.average:null}
+  };
+}
 function readLocalLearningProgress(data){
   function read(key,fallback){try{return JSON.parse(localStorage.getItem(key)||'');}catch(_e){return fallback;}}
   function completedCount(record,key){
@@ -93,10 +135,12 @@ function readLocalLearningProgress(data){
   }
   var lessons=read('supachess-book-lessons-v1',{});
   var games=read('supachess_reviewed_pgns',[]);
+  var playedGames=read('supachess_games',[]);
   var localProgress=read('chessnova_progress',{});
   var cloudProgress=data&&data.progress&&typeof data.progress==='object'?data.progress:{};
   if(!lessons||typeof lessons!=='object'||Array.isArray(lessons))lessons={};
   if(!Array.isArray(games))games=[];
+  if(!Array.isArray(playedGames))playedGames=[];
   var records=Object.keys(lessons).map(function(id){return {id:id,progress:lessons[id]};}).filter(function(item){return item.progress&&typeof item.progress==='object';});
   var completed=records.filter(function(item){return item.progress.completed;});
   var attempted=records.filter(function(item){return Number(item.progress.attempts)>0||item.progress.completed;});
@@ -129,7 +173,8 @@ function readLocalLearningProgress(data){
     openingMastered:completedCount(openings,'completed'),
     endgameMastered:completedCount(endgames,'completed'),
     tacticMastered:completedCount(tactics,'completedCategories'),
-    accuracyGames:accuracyGames
+    accuracyGames:accuracyGames,
+    accuracySummary:summarizeAccuracyGames(playedGames)
   };
 }
 function profileText(key,fallback){
@@ -148,6 +193,30 @@ function profileXPProgress(xp,level){
   var current=thresholds[Math.max(0,Math.min(9,level-1))]||0;
   var next=thresholds[Math.min(9,level)]||current;
   return next>current?Math.max(0,Math.min(100,(xp-current)/(next-current)*100)):0;
+}
+function formatAccuracyPercent(value){
+  return value===null||value===undefined||!Number.isFinite(Number(value))?'—':Number(value).toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1})+' %';
+}
+function renderPlayerAccuracyPanel(summary){
+  summary=summary||{};
+  function changeText(period){
+    if(period.delta===null||period.delta===undefined)return 'Évolution indisponible : pas encore assez de parties dans les deux périodes.';
+    var sign=period.delta>0?'+':period.delta<0?'−':'±';
+    return sign+' '+Math.abs(period.delta).toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1})+' points par rapport à la période précédente';
+  }
+  function card(title,record,change){
+    var count=record&&Number(record.games)||0;
+    var detail=count+' partie'+(count>1?'s':'')+' analysée'+(count>1?'s':'');
+    return '<article class="profile-accuracy-card"><h4>'+title+'</h4><strong class="profile-accuracy-value">'+formatAccuracyPercent(record&&record.average)+'</strong><span class="profile-accuracy-count">'+detail+'</span>'+(change?'<span class="profile-accuracy-change">'+change+'</span>':'')+'</article>';
+  }
+  var hasAny=summary.all&&summary.all.average!==null;
+  return '<section class="profile-accuracy-panel" aria-labelledby="profile-accuracy-title"><h4 id="profile-accuracy-title">Précision moyenne du joueur</h4>'+
+    (hasAny?'<div class="profile-accuracy-grid">'+
+      card('Toutes les parties',summary.all,'')+
+      card('7 derniers jours',summary.week&&summary.week.current,changeText(summary.week||{}))+
+      card('30 derniers jours',summary.month&&summary.month.current,changeText(summary.month||{}))+
+    '</div><p class="profile-accuracy-note">Moyenne pondérée par le nombre de demi-coups analysés. Les évolutions comparent chaque période à la période précédente de même durée.</p>':
+    '<p class="profile-accuracy-note">Aucune partie terminée avec précision disponible.</p>')+'</section>';
 }
 function renderLocalLearningPanel(data){
   var local=readLocalLearningProgress(data);
@@ -172,6 +241,7 @@ function renderLocalLearningPanel(data){
     '<div class="profile-xp-track" role="progressbar" aria-label="'+profileText('profile_xp_progress','XP progress')+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(xpPercent)+'"><span style="width:'+xpPercent.toFixed(1)+'%"></span></div>'+
     '<small>'+escapeProfileText(profileText('profile_xp_to_next','Progress to next level'))+': '+Math.round(xpPercent)+'%'+(nextXP!==null?' · '+profileText('profile_next_level_at','next level at')+' '+nextXP+' XP':'')+'</small></div>'+
     '<div class="profile-learning-stats"><div><strong>'+local.completed.length+' / '+local.attempted.length+'</strong><span>'+profileText('profile_lessons_mastered_attempted','lessons mastered / attempted')+'</span></div><div><strong>'+local.moveExercises+'</strong><span>'+profileText('profile_correction_moves','half-moves to review')+'</span></div><div><strong>'+local.puzzlesSolved+'</strong><span>'+profileText('profile_puzzles_solved','puzzles solved')+'</span></div><div><strong>'+local.practiceSessions+'</strong><span>'+profileText('profile_practice_sessions','practice sessions')+'</span></div></div>'+
+    renderPlayerAccuracyPanel(local.accuracySummary)+
     '<h4>'+profileText('profile_mastery_title','Mastery and progress')+'</h4><ul class="profile-mastery-list">'+training.map(function(item){return '<li>'+(item.href?'<a href="'+item.href+'">':'<span>')+escapeProfileText(item.label)+(item.href?'</a>':'</span>')+'<strong>'+item.value+'</strong></li>';}).join('')+'</ul>'+
     '<div class="profile-learning-actions"><a href="'+exercisesUrl+'">'+profileText('profile_resume_exercises','Resume my exercises')+'</a><a href="https://jira44.github.io/supachess/book-lessons.html?next=1">'+profileText('profile_resume_lessons','Resume my lessons')+'</a><a href="https://jira44.github.io/supachess-web/TRAINING_OPENINGS.html">'+profileText('profile_resume_mastery','Resume mastery training')+'</a></div>';
   if(weaknesses.length){
@@ -277,5 +347,5 @@ function initRankingSection(){
   sec.querySelectorAll('.rank-tab').forEach(function(b){ b.addEventListener('click', function(){ load(b.getAttribute('data-type')); }); });
   load('puzzle');
 }
-window.SupaProfiles={init:init, ensureUserProfile:ensureUserProfile, updateStats:updateStats, searchUsers:searchUsers, getTopRanking:getTopRanking, getProfile:getProfile, renderProfileModal:renderProfileModal, readLocalLearningProgress:readLocalLearningProgress, renderLocalLearningPanel:renderLocalLearningPanel, renderOwnProfileFallback:renderOwnProfileFallback, initSearchBar:initSearchBar, initRankingSection:initRankingSection, GAME_TYPES:GAME_TYPES};
+window.SupaProfiles={init:init, ensureUserProfile:ensureUserProfile, updateStats:updateStats, searchUsers:searchUsers, getTopRanking:getTopRanking, getProfile:getProfile, renderProfileModal:renderProfileModal, readLocalLearningProgress:readLocalLearningProgress, summarizeAccuracyGames:summarizeAccuracyGames, renderLocalLearningPanel:renderLocalLearningPanel, renderOwnProfileFallback:renderOwnProfileFallback, initSearchBar:initSearchBar, initRankingSection:initRankingSection, GAME_TYPES:GAME_TYPES};
 })();
