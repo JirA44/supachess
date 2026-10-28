@@ -627,7 +627,7 @@
       program: "Stockfish · comparer et vérifier",
       author: "SupaChess Académie",
       book: "Partie TCEC S18 Superfinal · Stockfish contre LCZero · PGN CC BY-SA 3.0",
-      reference: "Partie 6.1 · 20 juin 2020 · Stockfish (Blancs) gagne 1-0 · explications SupaChess",
+      reference: "Partie TCEC 6.1 · 20 juin 2020 · Stockfish (Blancs) gagne 1-0 · explications SupaChess",
       sourceUrl: "https://github.com/TCEC-Chess/tcecgames",
       sourceLabel: "Source du PGN et licence TCEC",
       setup: ["e4", "e6", "d4", "d5", "Nc3", "Bb4", "e5", "c5"],
