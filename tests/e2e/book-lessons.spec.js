@@ -235,7 +235,7 @@ test("profile opens inside the game page and remains available from lessons", as
   await expect(lessonProfile).toBeVisible();
   await expect(lessonProfile).toHaveAttribute("href", "#profile");
   await lessonProfile.click();
-  await expect(page).toHaveURL(/\\/book-lessons\\.html$/);
+  await expect(page).toHaveURL(/book-lessons\.html$/);
   await expect(page.locator("#profile-modal")).toBeVisible();
   await expect(page.locator("#profile-modal [data-profile-form]")).toBeVisible({ timeout: 15000 });
 });
