@@ -620,7 +620,7 @@ function reviewShowCorrectionExercise(index){
   exercise.awaitingRetry=false;
   document.getElementById("btn-review-exercise-retry")?.classList.add("hidden");
   const item=exercise.items[index];
-  reviewSetMoveGradeHistory(reviewState.moveGrades, Number(item.ply) || 0);
+  reviewSetMoveGradeHistory(reviewState.moveGrades, Math.max(0, (Number(item.ply) || 1) - 1));
   state.gen++;
   state.chess=new Chess(item.fen);
   state.fenHistory=[fenKey(state.chess.fen())];
