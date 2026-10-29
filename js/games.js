@@ -153,6 +153,7 @@ function gamesRenderPanel() {
         <button class="btn mini danger" data-act="del" title="Supprimer">✕</button>
       </span></div>`;
   }).join("");
+  if (typeof reviewRefreshCorrectionHotkeys === "function") reviewRefreshCorrectionHotkeys();
   gamesRenderStockfishEstimate();
 }
 
