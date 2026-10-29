@@ -49,6 +49,9 @@ test('plays correction exercises from a saved analyzed game',async({page})=>{
   await page.locator('#board [data-square="e3"]').click();
   await expect(page.locator('#review-exercise-feedback')).toContainText('ne corrige pas l’erreur');
   await expect(page.locator('#btn-review-exercise-next')).toBeDisabled();
+  await expect(page.locator('#btn-review-exercise-retry')).toBeVisible();
+  await page.click('#btn-review-exercise-retry');
+  await expect(page.locator('#review-exercise-feedback')).toContainText('À toi de jouer');
 
   await page.locator('#board [data-square="e2"]').click();
   await page.locator('#board [data-square="e4"]').click();
