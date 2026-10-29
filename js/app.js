@@ -839,6 +839,18 @@ function accColor(v) {
   return v >= 90 ? "var(--green)" : v >= 80 ? "var(--yellow)" : v >= 60 ? "var(--orange)" : "var(--red)";
 }
 function accuracyHtml() {
+  const exercise = typeof reviewState !== "undefined" && reviewState.exercise;
+  if (exercise) {
+    const headers = exercise.headers || reviewState.currentHeaders || {};
+    const players = Array.isArray(exercise.analysis?.players) ? exercise.analysis.players : [];
+    return [["w", headers.White || "Blancs"], ["b", headers.Black || "Noirs"]].map(([color, name]) => {
+      const player = players.find((item) => item && item.color === color);
+      const value = player && Number.isFinite(player.accuracy) ? player.accuracy : null;
+      return value === null
+        ? `${esc(name)}: <span style="color:var(--text-dim)">—</span>`
+        : `${esc(name)}: <span style="color:${accColor(value)};font-weight:600">${formatAccuracyPct(value)}%</span>`;
+    }).join(" &nbsp;·&nbsp; ");
+  }
   const youAreWhite = state.userColor === "w";
   const parts = [["w", youAreWhite ? "Blancs (toi)" : "Blancs (SF)"],
                  ["b", youAreWhite ? "Noirs (SF)" : "Noirs (toi)"]].map(([c, label]) => {
