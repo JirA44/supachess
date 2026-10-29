@@ -20,7 +20,7 @@ const REVIEW_MOVE_CLASSES = [
   { id: "unrated", symbol: "…", label: "Non évalué" },
 ];
 
-const reviewState = { fens: [], moves: [], grades: [], correctionExercises: [], currentHeaders: {}, exercise: null, running: false, returnState: null, modalReturnFocus: null };
+const reviewState = { fens: [], moves: [], grades: [], moveGrades: [], correctionExercises: [], currentHeaders: {}, exercise: null, running: false, returnState: null, modalReturnFocus: null };
 
 function trapModalKeys(modal, close) {
   modal.addEventListener("keydown", (event) => {
@@ -66,7 +66,7 @@ function reviewHistoryLoad() {
   } catch (_e) { return []; }
 }
 
-function reviewHistorySave(pgn, headers = {}, correctionExercises = [], analysis = null) {
+function reviewHistorySave(pgn, headers = {}, correctionExercises = [], analysis = null, moveGrades = []) {
   const normalizedPgn = String(pgn || "").replace(/\r\n?/g, "\n").trim();
   if (!normalizedPgn) return false;
   const previous = reviewHistoryLoad();
@@ -83,6 +83,7 @@ function reviewHistorySave(pgn, headers = {}, correctionExercises = [], analysis
     date: /^\d{4}\.\d{2}\.\d{2}$/.test(String(headers.Date || "")) ? headers.Date : "",
     timeControl: headers.TimeControl || "",
     correctionExercises: Array.isArray(correctionExercises) ? correctionExercises : [],
+    moveGrades: Array.isArray(moveGrades) ? moveGrades : (existing && Array.isArray(existing.moveGrades) ? existing.moveGrades : []),
     analysis: analysis && analysis.version === 1 ? analysis : (existing && existing.analysis) || null,
     analyzedAt: analysis && analysis.version === 1 ? new Date().toISOString() : (existing && existing.analyzedAt) || null,
   };
@@ -203,7 +204,7 @@ function reviewBuildCorrectionExercises(rows,fens,moves,positionLines){
     const playedUci=move.from+move.to+(move.promotion||"");
     if(bestUci===playedUci)return [];
     return [{fen:fens[index],bestUci,bestScoreCp:bestLine.scoreCp,bestMate:bestLine.mate,
-      moveNumber:row.n,color:row.color,playedSan:row.san,classification:row.classification,lossCp:row.lossCp}];
+      ply:index+1,moveNumber:row.n,color:row.color,playedSan:row.san,classification:row.classification,lossCp:row.lossCp}];
   });
 }
 
@@ -333,12 +334,13 @@ async function reviewRun(options = {}) {
     return { deltaCp: eligible ? cand.deltaCp : null, brilliant, category, evaluation };
   });
   rows.forEach((row, i) => { row.evaluation = reviewState.grades[i].evaluation; row.classification = reviewClassOf(row, reviewState.grades[i]); });
+  reviewState.moveGrades = reviewState.grades.map((grade, index) => ({ ply: index + 1, color: moves[index].color, category: grade.category || "unrated" }));
   reviewState.correctionExercises = reviewBuildCorrectionExercises(rows, fens, moves, positionLines);
   reviewSetProgress("Analyse Stockfish terminée — bilan en cours…");
   reviewRenderLocal(rows, accW, accB, headers);
   const analysisSummary = typeof ReviewInsights !== "undefined"
     ? ReviewInsights.buildGameSummary({ rows, moves, fens, accuracyW: accW, accuracyB: accB, headers }) : null;
-  reviewHistorySave(pgnText, headers, reviewState.correctionExercises, analysisSummary);
+  reviewHistorySave(pgnText, headers, reviewState.correctionExercises, analysisSummary, reviewState.moveGrades);
   document.getElementById("btn-replay-game").classList.remove("hidden");
 
   // Le lot reste local : le bilan transversal est calculé après les analyses.
@@ -547,9 +549,9 @@ async function reviewCorrectPgn(pgn,headers={}){
   if(saved){
     const exercises=reviewValidCorrectionExercises(saved.correctionExercises)
       .sort(reviewCompareCorrectionExercises);
-    if(exercises.length){
+    if(exercises.length&&Array.isArray(saved.moveGrades)&&saved.moveGrades.length){
       reviewState.currentHeaders={White:saved.white||headers.White||"Blancs",Black:saved.black||headers.Black||"Noirs"};
-      reviewStartCorrectionExercises(exercises,reviewState.currentHeaders,saved.analysis||null);
+      reviewStartCorrectionExercises(exercises,reviewState.currentHeaders,saved.analysis||null,saved.moveGrades);
       return true;
     }
     if(saved.analysis&&saved.analysis.version===1&&
@@ -574,7 +576,7 @@ async function reviewCorrectPgn(pgn,headers={}){
   return completed;
 }
 
-function reviewStartCorrectionExercises(items,headers={},analysis=null){
+function reviewStartCorrectionExercises(items,headers={},analysis=null,moveGrades=reviewState.moveGrades){
   const valid=reviewValidCorrectionExercises(items).sort(reviewCompareCorrectionExercises);
   if(!valid.length){
     const status=document.getElementById("review-history-status");
@@ -583,6 +585,7 @@ function reviewStartCorrectionExercises(items,headers={},analysis=null){
   }
   reviewBeginReplay();
   reviewState.currentHeaders={...reviewState.currentHeaders,...headers};
+  reviewState.moveGrades=Array.isArray(moveGrades)?moveGrades:[];
   reviewState.exercise={allItems:valid,items:valid,index:0,solved:false,phase:"all",headers:{...reviewState.currentHeaders},analysis};
   const phaseSelect=document.getElementById("review-exercise-phase");
   if(phaseSelect)phaseSelect.value="all";
@@ -617,6 +620,7 @@ function reviewShowCorrectionExercise(index){
   exercise.awaitingRetry=false;
   document.getElementById("btn-review-exercise-retry")?.classList.add("hidden");
   const item=exercise.items[index];
+  reviewSetMoveGradeHistory(reviewState.moveGrades, Number(item.ply) || 0);
   state.gen++;
   state.chess=new Chess(item.fen);
   state.fenHistory=[fenKey(state.chess.fen())];
@@ -815,6 +819,14 @@ async function reviewAskSupa(rows, accW, accB, headers) {
   reviewSetProgress("Analyse terminée.");
 }
 
+/* Les compteurs ne comprennent que les demi-coups joués jusqu'à la position affichée. */
+function reviewSetMoveGradeHistory(grades, ply) {
+  state.moveGradeHistory = (Array.isArray(grades) ? grades : []).filter((grade) => Number(grade.ply) <= ply)
+    .map((grade) => ({ ply: Number(grade.ply), color: grade.color,
+      category: grade.category === "mistake" ? "error" : (grade.category || "unrated") }));
+  if (typeof renderMoveGradeSummary === "function") renderMoveGradeSummary();
+}
+
 /* ── Relecture de la partie analysée ── */
 async function replayGoto(i) {
   if (!reviewState.fens.length) return;
@@ -832,6 +844,7 @@ async function replayGoto(i) {
       evaluation: reviewState.grades[idx - 1]?.evaluation || "—" };
   }
   state.replayIdx = idx;
+  reviewSetMoveGradeHistory(reviewState.moveGrades, idx);
   state.chess = new Chess(reviewState.fens[idx]);
   state.fenHistory = [fenKey(state.chess.fen())];
   state.evalHistory = [];
@@ -903,7 +916,7 @@ function resumeCorrectionExercisesFromUrl() {
     const exercises = reviewValidCorrectionExercises(item.correctionExercises);
     if (exercises.length) {
       reviewState.currentHeaders = { White: item.white, Black: item.black };
-      reviewStartCorrectionExercises(exercises, reviewState.currentHeaders, item.analysis||null);
+      reviewCorrectPgn(item.pgn,{White:item.white,Black:item.black});
       document.getElementById("review-exercise-panel")?.scrollIntoView({ block: "start" });
     } else {
       reviewStart(item.pgn);

@@ -39,8 +39,12 @@ function gameFixture() {
     result: "*",
     event: "Browser simulator fixture",
     correctionExercises: [
-      { fen: initialFen, bestUci: "e2e4", bestScoreCp: 24, bestMate: null, moveNumber: 1, color: "w", playedSan: "e3", classification: "mistake", lossCp: 60 },
-      { fen: afterE4Fen, bestUci: "e7e5", bestScoreCp: 18, bestMate: null, moveNumber: 1, color: "b", playedSan: "c5", classification: "inaccuracy", lossCp: 35 },
+      { fen: initialFen, bestUci: "e2e4", bestScoreCp: 24, bestMate: null, ply: 1, moveNumber: 1, color: "w", playedSan: "e3", classification: "mistake", lossCp: 60 },
+      { fen: afterE4Fen, bestUci: "e7e5", bestScoreCp: 18, bestMate: null, ply: 2, moveNumber: 1, color: "b", playedSan: "c5", classification: "inaccuracy", lossCp: 35 },
+    ],
+    moveGrades: [
+      { ply: 1, color: "w", category: "mistake" },
+      { ply: 2, color: "b", category: "inaccuracy" },
     ],
     analysis: { version: 1 },
     analyzedAt: new Date(0).toISOString(),
@@ -110,6 +114,8 @@ export async function runBrowserSimulation({ chromium, executablePath, url } = {
       .catch((error) => { throw new Error(`${error.message}\nPage errors: ${report.consoleErrors.join(" | ") || "none"}`); });
 
     assert.equal(await page.locator("#board .sq").count(), 64, "La page doit rendre les 64 cases.");
+    assert.equal(await page.locator('#board .sq[data-square="a2"] .piece').evaluate((piece) => getComputedStyle(piece).webkitTextFillColor), "rgb(255, 255, 255)", "Les pièces blanches doivent garder leur remplissage blanc.");
+    assert.equal(await page.locator('#board .sq[data-square="a7"] .piece').evaluate((piece) => getComputedStyle(piece).webkitTextFillColor), "rgb(22, 24, 31)", "Les pièces noires doivent garder leur remplissage sombre.");
     assert.equal(await page.locator("#review-history-list .review-history-row").count(), 1,
       "Seule la partie fictive de cette session doit apparaître.");
     report.checks.push("Chargement de la page et échiquier 8×8");
@@ -128,6 +134,7 @@ export async function runBrowserSimulation({ chromium, executablePath, url } = {
     const exercisePanel = page.locator("#review-exercise-panel");
     await exercisePanel.waitFor({ state: "visible" });
     assert.match(await page.locator("#review-exercise-heading").innerText(), /Exercice 1\/2/);
+    assert.equal(await page.locator('#move-grade-summary [data-color="w"] .grade-error [data-grade-count]').innerText(), "0", "À la position initiale, aucun demi-coup ne doit être compté.");
     const flip = page.locator("#btn-review-exercise-flip");
     await flip.click();
     assert.equal(await flip.getAttribute("aria-pressed"), "true", "Le bouton retourner doit refléter son état.");
@@ -149,6 +156,8 @@ export async function runBrowserSimulation({ chromium, executablePath, url } = {
     await next.click();
     assert.match(await page.locator("#review-exercise-heading").innerText(), /Exercice 2\/2/,
       "La suite doit passer au deuxième exercice.");
+    assert.equal(await page.locator('#move-grade-summary [data-color="w"] .grade-error [data-grade-count]').innerText(), "+1", "La première erreur doit être cumulée à la deuxième position.");
+    assert.equal(await page.locator('#move-grade-summary [data-color="b"] .grade-inaccuracy [data-grade-count]').innerText(), "0", "Le demi-coup courant ne doit pas être compté avant d’être joué.");
     await clickMove(page, "e7", "e5");
     assert.match(await page.locator("#review-exercise-feedback").innerText(), /est le meilleur coup/i);
     assert.equal(await next.isEnabled(), true);

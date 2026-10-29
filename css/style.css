@@ -81,11 +81,11 @@ body {
   line-height: 1; z-index: 2; paint-order: stroke fill;
 }
 .sq .piece.w {
-  color: #fff; -webkit-text-stroke: 1px #333a50;
+  color: #fff; -webkit-text-fill-color: #fff; -webkit-text-stroke: 1px #333a50;
   text-shadow: 0 1px 2px rgba(0,0,0,.6);
 }
 .sq .piece.b {
-  color: #16181f; -webkit-text-stroke: .65px rgba(255,255,255,.75);
+  color: #16181f; -webkit-text-fill-color: #16181f; -webkit-text-stroke: .65px rgba(255,255,255,.75);
   text-shadow: 0 1px 1px rgba(0,0,0,.55);
 }
 .sq.selected { outline: 3px solid var(--accent); outline-offset: -3px; }
@@ -289,6 +289,7 @@ body {
 
 /* Live per-ply quality counters */
 .move-grade-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.move-grade-context { margin: -4px 0 8px; color: var(--text-dim); font-size: .78rem; line-height: 1.35; }
 .move-grade-side { min-width: 0; }
 .move-grade-side h3 { color: var(--accent); font-size: .95rem; margin-bottom: 4px; }
 .move-grade-count-row { display: grid; grid-template-columns: 10px 24px minmax(0,1fr) auto; align-items: center; gap: 6px; min-height: 27px; font-size: .82rem; }
