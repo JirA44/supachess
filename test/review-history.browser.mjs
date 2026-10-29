@@ -25,7 +25,7 @@ await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage();
-  await page.route("**/js/engine.js", (route) => route.fulfill({
+  await page.route("**/js/engine.js**", (route) => route.fulfill({
     status: 200,
     contentType: "text/javascript",
     body: `class StockfishEngine { constructor() { this.engineName = "Test Engine"; this.ready = Promise.resolve(); }
