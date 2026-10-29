@@ -203,11 +203,6 @@
           <small id="opponent-fide-estimate" class="opponent-fide-estimate" role="status" aria-live="polite"></small>
           <small class="opponent-fide-note">Les niveaux proposés de 2 400 à 3 450 progressent par pas de 50. Estimation FIDE-like indicative, pas un classement officiel. Le réglage Elo UCI de Stockfish est plafonné à 3 190; au-dessus, l’estimation ne correspond pas à un réglage UCI distinct. Pleine puissance : Stockfish 19, estimé ≈ 3 500 à 3 s.</small>
       </div>
-    </div>
-  </section>
-
-  <!-- Colonne droite : coach + historique + stats -->
-  <section class="side-zone">
     <div id="tablebase-panel" class="panel tablebase-panel">
       <h2>Finales résolues par tablebase</h2>
       <p>Syzygy couvre complètement les positions légales de 7 pièces ou moins, sans droit au roque ni prise en passant. Pour certaines finales à 8 pièces, l’API peut aussi fournir des données OP1 partielles; certaines positions à 9 pièces peuvent y accéder après un coup. Cette couverture ne garantit pas de résultat pour toutes ces positions. Les catégories tiennent compte des limites liées aux 50 coups et aux arrondis DTZ.</p>
@@ -219,6 +214,16 @@
         <ul id="tablebase-moves" class="tablebase-moves"></ul>
       </div>
     </div>
+    </div>
+  </section>
+
+  <!-- Colonne droite : coach + historique + stats -->
+  <section class="side-zone">
+    <div id="move-grade-panel" class="panel">
+      <h2>Coups joués · qualité en direct</h2>
+      <div id="move-grade-summary" class="move-grade-summary" aria-live="polite"></div>
+    </div>
+
     <div id="coach-panel" class="panel coach-panel hidden">
       <h2 id="coach-title">Coach</h2>
       <p id="coach-message" class="coach-message"></p>
@@ -227,11 +232,6 @@
         <button id="btn-force" class="btn danger">Jouer quand même</button>
         <button id="btn-cancel" class="btn">Annuler</button>
       </div>
-    </div>
-
-    <div id="move-grade-panel" class="panel">
-      <h2>Coups joués · qualité en direct</h2>
-      <div id="move-grade-summary" class="move-grade-summary" aria-live="polite"></div>
     </div>
 
     <div class="panel">
