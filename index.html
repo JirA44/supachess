@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SupaChess Coach IA — Entraîneur d'échecs</title>
-<link rel="stylesheet" href="css/style.css?v=live-move-grade-counts-20261026-lessons-nav-20261026-move-hover-20261026-legal-move-dots-20261026-fide-levels-profile-accuracy-20261027-level-diagnostic-lock-20261027-move-grade-colors-20261028-grade-gradient-20261028-profile-accuracy-20261028-profile-contrast-20261028-profile-diagnostic-20261028-profile-mastery-20261028-profile-resume-links-20261028-resume-match-mastery-20261028-resume-strong-frames-20261028-site-counters-20261029-ok-bubble-equal-20261029">
+<link rel="stylesheet" href="css/style.css?v=live-move-grade-counts-20261026-lessons-nav-20261026-move-hover-20261026-legal-move-dots-20261026-fide-levels-profile-accuracy-20261027-level-diagnostic-lock-20261027-move-grade-colors-20261028-grade-gradient-20261028-profile-accuracy-20261028-profile-contrast-20261028-profile-diagnostic-20261028-profile-mastery-20261028-profile-resume-links-20261028-resume-match-mastery-20261028-resume-strong-frames-20261028-site-counters-20261029-ok-bubble-equal-20261029-opponent-accuracy-layout-20261029">
 <style>
   .supa-section { margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(128,128,128,.4); }
   .supa-head { font-weight: 600; font-size: .85em; opacity: .9; }
@@ -175,7 +175,7 @@
           </select>
           <small class="setting-hint">Le temps choisi s’applique aussi à la réflexion de l’adversaire.</small>
         </label>
-        <label>Adversaire
+        <label id="opponent-setting">Adversaire
                     <select id="sel-elo" class="btn select">
             <option value="1320">Elo moteur UCI 1320</option>
             <option value="1600" selected>Elo moteur UCI 1600</option>
@@ -208,6 +208,7 @@
           <small id="opponent-fide-estimate" class="opponent-fide-estimate" role="status" aria-live="polite"></small>
           <small id="opponent-accuracy-estimate" class="opponent-fide-estimate" role="status" aria-live="polite"></small>
           <small class="opponent-fide-note">La fourchette de précision est un repère heuristique ancré sur 1 500 Elo ≈ 50–60 %; elle n’est pas mesurée sur des parties Stockfish. La précision réelle varie selon les positions, les coups joués et le temps de réflexion. Les niveaux proposés de 2 400 à 3 450 progressent par pas de 50. Estimation FIDE-like indicative, pas un classement officiel. Le réglage Elo UCI de Stockfish est plafonné à 3 190; au-dessus, l’estimation ne correspond pas à un réglage UCI distinct. Pleine puissance : Stockfish 19, estimé ≈ 3 500 à 3 s.</small>
+        </label>
       </div>
     <div id="tablebase-panel" class="panel tablebase-panel">
       <h2>Finales résolues par tablebase</h2>
@@ -307,7 +308,7 @@
   <span id="registered-members-count" class="registered-members-count">Comptes inscrits : chargement…</span>
   <span id="unique-visitors-count" class="unique-visitors-count">Visiteurs uniques estimés : chargement…</span>
 </div>
-  <span class="site-version" aria-label="Version de SupaChess">Version SupaChess : 1.13.12447</span>
+  <span class="site-version" aria-label="Version de SupaChess">Version SupaChess : 1.13.12448</span>
 </footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
