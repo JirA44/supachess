@@ -63,16 +63,28 @@ test("Larsen lesson starts from the cited position, can flip, and accepts the ce
   expect(boardBox.width).toBeLessThanOrEqual(375);
 });
 
-test("Stockfish compares legal alternatives and previews a continuation on the board", async ({ page }) => {
+test("Stockfish evaluation bar can be toggled and follows a real engine analysis", async ({ page }) => {
   await page.goto("/book-lessons.html");
+  const toggle = page.locator("#lesson-eval-toggle");
+  const evalWidget = page.locator("#lesson-eval-widget");
+  await expect(toggle).toHaveText("Barre d’évaluation : Off");
+  await expect(evalWidget).toBeHidden();
+  await toggle.click();
+  await expect(toggle).toHaveText("Barre d’évaluation : On");
+  await expect(evalWidget).toBeVisible();
   await page.getByRole("button", { name: "Comparer tous les coups avec Stockfish" }).click();
   await expect(page.locator("#lesson-engine-status")).toContainText("Stockfish a évalué", { timeout: 30000 });
   await expect(page.locator("#lesson-engine-lines .lesson-engine-line").first()).toContainText("meilleur de cette recherche");
   await expect(page.locator("#lesson-engine-lines .lesson-engine-line").first()).toContainText("Suite calculée");
+  await expect(page.locator("#lesson-eval-label")).not.toHaveText("À analyser");
+  await expect(page.locator("#lesson-evalbar")).toHaveAttribute("aria-valuetext", /Évaluation Stockfish|Stockfish annonce/);
   await page.locator("#lesson-engine-lines .lesson-engine-preview").first().click();
   await expect(page.locator("#lesson-engine-return")).toBeVisible();
   await page.locator("#lesson-engine-return").click();
   await expect(page.locator("#lesson-engine-return")).toBeHidden();
+  await toggle.click();
+  await expect(toggle).toHaveText("Barre d’évaluation : Off");
+  await expect(evalWidget).toBeHidden();
 });
 
 
