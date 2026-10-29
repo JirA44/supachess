@@ -2039,8 +2039,11 @@
   }
 
   root.startSupaChessStockfishCoach = function () {
-    const index = methodPathLessonIndices("Stockfish · comparer et vérifier")
-      .find((lessonIndex) => LESSONS[lessonIndex].kind === "method");
+    const path = methodPathLessonIndices("Stockfish · comparer et vérifier");
+    const evaluationBasics = LESSONS.findIndex((lesson) => lesson.id === "stockfish-evaluation-context");
+    const index = path.includes(evaluationBasics)
+      ? evaluationBasics
+      : path.find((lessonIndex) => LESSONS[lessonIndex].kind === "method");
     if (index === undefined) return false;
     $("lesson-program-filter").value = "";
     $("lesson-search").value = "";
