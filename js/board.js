@@ -20,6 +20,35 @@ class BoardUI {
     this.legalTargets = [];
     this.legalTargetHints = {}; // destination -> {quality, capture, san, evaluation}
     this.showMoveDots = true;
+    this.dragFrom = null;
+    this.el.addEventListener("dragstart", (event) => {
+      const piece = event.target.closest(".piece");
+      const square = event.target.closest(".sq");
+      if (!piece || !square) { event.preventDefault(); return; }
+      this.dragFrom = square.dataset.square;
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", this.dragFrom);
+      }
+    });
+    this.el.addEventListener("dragover", (event) => {
+      if (this.dragFrom && event.target.closest(".sq")) {
+        event.preventDefault();
+        if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+      }
+    });
+    this.el.addEventListener("drop", (event) => {
+      const target = event.target.closest(".sq");
+      const from = this.dragFrom || event.dataTransfer?.getData("text/plain");
+      const to = target && target.dataset.square;
+      this.dragFrom = null;
+      if (!from || !to || from === to) return;
+      event.preventDefault();
+      event.stopPropagation();
+      this.onSquareClick(from);
+      this.onSquareClick(to);
+    });
+    this.el.addEventListener("dragend", () => { this.dragFrom = null; });
   }
 
   setFlipped(f) { this.flipped = f; }
@@ -40,6 +69,7 @@ class BoardUI {
         if (piece) {
           const span = document.createElement("span");
           span.className = "piece " + piece.color;
+          span.draggable = piece.color === chess.turn();
           span.textContent = UNICODE_PIECES[piece.color][piece.type];
           cell.appendChild(span);
         }
