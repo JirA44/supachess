@@ -52,10 +52,10 @@ test('shows a time-sensitive FIDE-like estimate and gives the opponent the selec
 });
 
 
-test('offers distinct 50-point Stockfish levels and reports the running-accuracy change', async ({ page }) => {
+test('offers 50-point FIDE-like levels through 3450 and reports the running-accuracy change', async ({ page }) => {
   await page.goto('/index.html');
   const levels = await page.locator('#sel-elo option').evaluateAll(options =>
-    options.map(option => Number(option.value)).filter(value => value >= 2400 && value <= 3150)
+    options.map(option => Number(option.value)).filter(value => value >= 2400 && value <= 3450)
   );
   expect(levels).toEqual(Array.from({ length: 22 }, (_, index) => 2400 + index * 50));
   await expect(page.locator("#sel-elo option[value=\"3200\"]")).toContainText("3 200");
