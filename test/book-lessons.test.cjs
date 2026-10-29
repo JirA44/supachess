@@ -35,11 +35,27 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 136, "the academy contains 136 guided lessons");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 139, "the academy contains 139 guided lessons");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "reinforcement").length, 53, "53 legal application lessons reinforce the four methods");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 79, "opponent-reply drills remain counted separately");
-  assert.equal(LESSONS.length, 215, "guided lessons and anticipation drills are separate catalog entries");
+  assert.equal(LESSONS.length, 218, "guided lessons and anticipation drills are separate catalog entries");
   assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
+});
+
+test("Stockfish curriculum adds progressive original lessons about its observable analysis", () => {
+  const expected = [
+    ["stockfish-evaluation-context", "Débutant"],
+    ["stockfish-best-reply", "Intermédiaire"],
+    ["stockfish-depth-stability", "Expert"],
+  ];
+  for (const [id, level] of expected) {
+    const lesson = LESSONS.find((entry) => entry.id === id);
+    assert.ok(lesson, id + " should be available");
+    assert.equal(lesson.level, level);
+    assert.equal(lesson.program, "Stockfish · comparer et vérifier");
+    assert.equal(lesson.author, "SupaChess Académie");
+    assert.ok(methodPathLessonIndices(lesson.program).includes(LESSONS.indexOf(lesson)));
+  }
 });
 
 test("method paths include all their lessons in progressive level order", () => {
@@ -51,6 +67,7 @@ test("method paths include all their lessons in progressive level order", () => 
     "Edward Lasker · calcul et stratégie",
     "Tal · tactique et sacrifices à calculer",
     "Kasparov · coups candidats et calcul",
+    "Stockfish · comparer et vérifier",
   ];
   const ranks = { Débutant: 0, Intermédiaire: 1, Avancé: 2, Expert: 3 };
   for (const program of programs) {
