@@ -239,3 +239,15 @@ test("profile opens inside the game page and remains available from lessons", as
   await expect(page.locator("#profile-modal")).toBeVisible();
   await expect(page.locator("#profile-modal [data-profile-form]")).toBeVisible({ timeout: 15000 });
 });
+
+
+test("Stockfish path opens its beginner lesson and accepts a legal board move", async ({ page }) => {
+  await page.goto("/book-lessons.html");
+  await page.getByRole("button", { name: "Commencer sur une position" }).click();
+  await expect(page.locator("#lesson-title")).toHaveText("Stockfish · Lire une évaluation avec le bon repère");
+  await page.locator("#lesson-choices .lesson-choice").filter({ hasText: "La position exacte" }).click();
+  await page.locator('.sq[data-square="f1"]').click();
+  await page.locator('.sq[data-square="c4"]').click();
+  await expect(page.locator("#lesson-move-list")).toContainText("Toi : Fc4");
+  await expect(page.locator("#lesson-explanation")).toContainText("Ce que tu viens d’apprendre");
+});
