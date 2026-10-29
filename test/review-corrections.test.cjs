@@ -68,14 +68,12 @@ test("does not create exercises for the best played move or a missing engine PV"
 
 
 test("hides live engine candidates and board dots while solving a correction", () => {
-  context.reviewState.exercise = {};
   context.state.candidates = [{ uci: "d7d5" }];
   context.boardUI = { dots: [{ square: "d5" }] };
 
-  vm.runInContext("reviewHideCorrectionCandidates()", context);
+  vm.runInContext("reviewState.exercise = {}; reviewHideCorrectionCandidates(); reviewState.exercise = null;", context);
 
   assert.equal(context.state.candidates.length, 0);
   assert.equal(context.boardUI.dots.length, 0);
   assert.match(candidateList.innerHTML, /masqués pendant la correction/);
-  context.reviewState.exercise = null;
 });
