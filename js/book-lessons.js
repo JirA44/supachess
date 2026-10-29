@@ -1448,7 +1448,7 @@
     const anticipationCount = LESSONS.length - originalLessonCount;
     $("lesson-catalog-count").textContent = visibleLessons.length + " affiché(s) · " + originalLessonCount +
       " leçons originales + " + anticipationCount + " exercices d’anticipation · " + LESSONS.length +
-      " entrées au total · " + Object.values(progress).filter((item) => item && item.completed).length + " terminés.";
+      " entrées au total · " + LESSONS.filter((lesson) => progress[lesson.id] && progress[lesson.id].completed).length + " terminés.";
     if (!visibleLessons.length) {
       const empty = document.createElement("p");
       empty.className = "lesson-catalog-empty";

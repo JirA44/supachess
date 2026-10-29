@@ -47,6 +47,23 @@ test("filtered lesson numbers are consecutive and completed lessons open in view
   await expect(page.locator("#lesson-status")).toContainText("À toi de jouer");
 });
 
+
+test("catalog completion count ignores stale lesson IDs from an older catalog", async ({ page }) => {
+  const { LESSONS } = require("../../js/book-lessons.js");
+  const currentLesson = LESSONS[0];
+  await page.addInitScript((id) => {
+    localStorage.setItem("supachess-book-lessons-v1", JSON.stringify({
+      [id]: { completed: true },
+      "removed-lesson-from-old-catalog": { completed: true },
+    }));
+  }, currentLesson.id);
+
+  await page.goto("/book-lessons.html");
+  await expect(page.locator("#lesson-catalog-count")).toContainText("1 terminés.");
+  await expect(page.locator("#lesson-catalog-count")).toContainText("218 entrées au total");
+});
+
+
 test("Larsen lesson starts from the cited position, can flip, and accepts the central break", async ({ page }) => {
   await page.goto("/book-lessons.html");
   await page.locator(".lesson-catalog-button:not(.anticipation-exercise)").filter({ hasText: "Trouver le moment de jouer …d5" }).filter({ hasText: "Bent Larsen" }).click();
