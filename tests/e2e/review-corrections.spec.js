@@ -21,7 +21,10 @@ test('plays correction exercises from a saved analyzed game',async({page})=>{
   });
   await expect(page.locator('#review-history-list')).toContainText('Corriger (2)');
   await page.click('#review-history-list [data-review-history-act="exercise"]');
-  await expect(page.locator('#review-exercise-panel')).toBeVisible();
+  const exercisePanel=page.locator('#review-exercise-panel');
+  await expect(exercisePanel).toBeVisible();
+  await expect.poll(()=>exercisePanel.evaluate(el=>Math.abs(el.getBoundingClientRect().top))).toBeLessThan(5);
+  expect(await page.evaluate(()=>state.chess.fen())).toBe('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
   const phase=page.locator('#review-exercise-phase');
   await phase.selectOption('endgame');
   await expect(page.locator('#review-exercise-heading')).toHaveText('Aucun exercice dans cette phase.');
@@ -64,15 +67,17 @@ test('plays correction exercises from a saved analyzed game',async({page})=>{
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('supachess_reviewed_pgns')).length)).toBe(1);
 });
 
-test('offers reanalysis for a saved game without correction data',async({page})=>{
+test('offers PGN reanalysis instead of a dead correction button when saved positions are invalid',async({page})=>{
   await page.goto('/index.html');
   await page.evaluate(()=>{
     localStorage.clear();
     localStorage.setItem('supachess_reviewed_pgns',JSON.stringify([{
-      id:'legacy-game',pgn:'1. e4 e5',white:'Carol',black:'Dan',result:'*'
+      id:'legacy-game',pgn:'1. e4 e5',white:'Carol',black:'Dan',result:'*',
+      correctionExercises:[{fen:'',bestUci:''}]
     }]));
     reviewHistoryRender();
   });
+  await expect(page.locator('#review-history-list [data-review-history-act="exercise"]')).toHaveCount(0);
   await page.click('#review-history-list [data-review-history-act="reanalyze-corrections"]');
   await expect(page.locator('#pgn-modal')).toBeVisible();
   await expect(page.locator('#pgn-input')).toHaveValue('1. e4 e5');
