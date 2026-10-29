@@ -112,7 +112,25 @@
   <section class="board-zone">
     <div class="board-col">
       <div id="status-line" class="status-line">Initialisation…</div>
-      <div class="board-row">
+<div id="review-exercise-panel" class="review-exercise-panel hidden" aria-live="polite">
+        <strong id="review-exercise-heading"></strong>
+        <label class="review-exercise-phase-label" for="review-exercise-phase">Phase
+          <select id="review-exercise-phase" class="btn select">
+            <option value="all">Toutes les phases</option>
+            <option value="opening">Ouverture</option>
+            <option value="middlegame">Milieu de jeu</option>
+            <option value="endgame">Finale</option>
+          </select>
+        </label>
+        <p id="review-exercise-prompt"></p>
+        <p id="review-exercise-feedback" class="review-exercise-feedback" role="status"></p>
+        <div class="coach-actions">
+          <button id="btn-review-exercise-flip" class="btn" type="button" aria-pressed="false">Retourner l’échiquier</button>
+          <button id="btn-review-exercise-next" class="btn" type="button" disabled>Exercice suivant</button>
+          <button id="btn-review-exercise-quit" class="btn" type="button">Quitter les exercices</button>
+        </div>
+      </div>
+            <div class="board-row">
         <div id="board" class="board"></div>
         <div class="evalbar"><div id="evalbar-white" class="evalbar-white"></div></div>
         <div id="evalbar-label" class="evalbar-label">+0.00</div>
@@ -139,24 +157,7 @@
         <button id="btn-replay-next" class="btn" type="button" aria-label="Coup suivant" disabled>▶</button>
         <button id="btn-replay-quit" class="btn hidden" type="button">Quitter la relecture</button>
       </div>
-      <div id="review-exercise-panel" class="review-exercise-panel hidden" aria-live="polite">
-        <strong id="review-exercise-heading"></strong>
-        <label class="review-exercise-phase-label" for="review-exercise-phase">Phase
-          <select id="review-exercise-phase" class="btn select">
-            <option value="all">Toutes les phases</option>
-            <option value="opening">Ouverture</option>
-            <option value="middlegame">Milieu de jeu</option>
-            <option value="endgame">Finale</option>
-          </select>
-        </label>
-        <p id="review-exercise-prompt"></p>
-        <p id="review-exercise-feedback" class="review-exercise-feedback" role="status"></p>
-        <div class="coach-actions">
-          <button id="btn-review-exercise-flip" class="btn" type="button" aria-pressed="false">Retourner l’échiquier</button>
-          <button id="btn-review-exercise-next" class="btn" type="button" disabled>Exercice suivant</button>
-          <button id="btn-review-exercise-quit" class="btn" type="button">Quitter les exercices</button>
-        </div>
-      </div>
+      
       <div class="board-controls settings">
         <label>Tolérance
           <select id="sel-threshold" class="btn select">

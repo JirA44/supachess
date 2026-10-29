@@ -120,6 +120,11 @@ test('adds a correction button to saved games and starts at their first reviewed
   await expect(page.locator('#review-exercise-panel')).toBeVisible();
   await expect(page.locator('#review-exercise-heading')).toContainText('Exercice 1/2');
   await expect(page.locator('#review-exercise-prompt')).toContainText('1. f3');
+  const boardInView=await page.locator('#board').evaluate(el=>{
+    const box=el.getBoundingClientRect();
+    return box.bottom>0&&box.top<window.innerHeight;
+  });
+  expect(boardInView).toBe(true);
   expect(await page.evaluate(()=>state.chess.fen())).toBe('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
 });
 
