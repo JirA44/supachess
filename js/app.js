@@ -170,17 +170,32 @@ function estimateOpponentFideLikeElo(elo, thinkTimeMs) {
   const timeAdjustment = 35 * Math.log2(thinkTimeMs / 3000);
   return Math.max(800, Math.min(3500, Math.round((base + timeAdjustment) / 10) * 10));
 }
+function estimateOpponentAccuracyRange(fideLikeElo) {
+  // Indicative heuristic anchored to the requested 1,500 Elo => 50–60% range.
+  const center = 55 + (fideLikeElo - 1500) * 0.02;
+  return {
+    min: Math.max(0, Math.floor(center - 5)),
+    max: Math.min(100, Math.ceil(center + 5)),
+  };
+}
 function updateOpponentFideEstimate() {
   const output = $("opponent-fide-estimate");
+  const accuracyOutput = $("opponent-accuracy-estimate");
   if (!output) return;
   if (isManualMode()) {
     output.textContent = "Mode manuel — aucun adversaire moteur";
+    if (accuracyOutput) accuracyOutput.textContent = "Mode manuel — précision à mesurer dans tes parties.";
     return;
   }
   const thinkTime = opponentThinkTime();
   const seconds = (thinkTime / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 });
-  const rating = estimateOpponentFideLikeElo(opponentElo(), thinkTime).toLocaleString("fr-FR");
+  const estimatedElo = estimateOpponentFideLikeElo(opponentElo(), thinkTime);
+  const rating = estimatedElo.toLocaleString("fr-FR");
   output.textContent = `≈ ${rating} Elo FIDE-like estimés · Stockfish 19, ${seconds} s`;
+  if (accuracyOutput) {
+    const range = estimateOpponentAccuracyRange(estimatedElo);
+    accuracyOutput.textContent = `Repère indicatif de précision moyenne par partie : ${range.min}–${range.max} %`;
+  }
 }
 
 /* ── Init moteur ── */
