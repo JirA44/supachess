@@ -30,6 +30,10 @@ function moveGrade(deltaCp, brilliant = false, best = false, categoryOverride = 
   return { ...(grades[category] || grades.unrated), category };
 }
 
+function moveGradeBadgeLabel(grade) {
+  return `${grade.symbol}${grade.rating ?? "…"}`;
+}
+
 // Un sacrifice doit conserver l'évaluation et céder au moins une pièce
 // sur la réponse calculée. Le premier coup du classement ne suffit pas.
 function isBrilliantCandidate(fen, cand) {

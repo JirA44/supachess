@@ -170,3 +170,14 @@ test("all engine move grades have distinct category-colored board dots", () => {
   assert.equal(colors[0], "#c084fc", "brilliant should be violet");
   assert.equal(new Set(colors).size, categories.length, "every grade should have its own color");
 });
+test("Coup OK candidate bubble retains its 7/10 note", () => {
+  const feedback = fs.readFileSync(path.join(__dirname, "../js/move-feedback.js"), "utf8");
+  const context = vm.createContext({});
+  vm.runInContext(feedback + String.fromCharCode(10) + "globalThis.moveGrade = moveGrade; globalThis.moveGradeBadgeLabel = moveGradeBadgeLabel;", context);
+  const grade = context.moveGrade(25, false, false);
+  assert.equal(grade.category, "ok");
+  assert.equal(context.moveGradeBadgeLabel(grade), "=7");
+  const square = renderBubble({ dots: [{ square: "e4", label: context.moveGradeBadgeLabel(grade), evaluation: "0.00", quality: grade.tone, category: grade.category }] });
+  const stack = square.children.find((child) => child.className.includes("cdot-stack"));
+  assert.equal(stack.children[0].children[0].textContent, "=7");
+});
