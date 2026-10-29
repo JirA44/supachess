@@ -46,3 +46,31 @@ test('tracks finished Stockfish games separately from official FIDE-tagged PGNs'
   await expect(page.locator('#stockfish-performance-estimate')).toContainText('non calibré officiellement FIDE');
   expect(errors).toEqual([]);
 });
+
+
+test("places the Syzygy panel below the board and keeps live move quality first at right", async ({ page }) => {
+  await page.goto("/index.html");
+  await expect.poll(() => page.locator("body").getAttribute("data-engine-ready"), { timeout: 30000 }).toBe("1");
+  const placement = await page.evaluate(() => {
+    const boardZone = document.querySelector(".board-zone");
+    const boardCol = document.querySelector(".board-col");
+    const tablebase = document.getElementById("tablebase-panel");
+    const board = document.getElementById("board");
+    const sideZone = document.querySelector(".side-zone");
+    return {
+      tablebaseInsideBoardColumn: tablebase.parentElement === boardCol && boardZone.contains(tablebase),
+      tablebaseBelowBoard: tablebase.getBoundingClientRect().top > board.getBoundingClientRect().top,
+      rightColumnStartsWithLiveQuality: sideZone.firstElementChild.id === "move-grade-panel",
+    };
+  });
+  expect(placement).toEqual({
+    tablebaseInsideBoardColumn: true,
+    tablebaseBelowBoard: true,
+    rightColumnStartsWithLiveQuality: true,
+  });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator("#tablebase-panel")).toBeVisible();
+  await expect(page.locator("#move-grade-panel")).toBeVisible();
+  await expect(page.locator(".side-zone").locator(":scope > :first-child")).toHaveAttribute("id", "move-grade-panel");
+});
