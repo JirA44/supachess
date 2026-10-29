@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SupaChess Coach IA — Entraîneur d'échecs</title>
-<link rel="stylesheet" href="css/style.css?v=live-move-grade-counts-20261026-lessons-nav-20261026-move-hover-20261026-legal-move-dots-20261026-fide-levels-profile-accuracy-20261027-level-diagnostic-lock-20261027-move-grade-colors-20261028-grade-gradient-20261028-profile-accuracy-20261028-profile-contrast-20261028-profile-diagnostic-20261028-profile-mastery-20261028-profile-resume-links-20261028-resume-match-mastery-20261028-resume-strong-frames-20261028-site-counters-20261029-ok-bubble-equal-20261029-opponent-accuracy-layout-20261029-accuracy-block-20261029">
+<link rel="stylesheet" href="css/style.css?v=live-move-grade-counts-20261026-lessons-nav-20261026-move-hover-20261026-legal-move-dots-20261026-fide-levels-profile-accuracy-20261027-level-diagnostic-lock-20261027-move-grade-colors-20261028-grade-gradient-20261028-profile-accuracy-20261028-profile-contrast-20261028-profile-diagnostic-20261028-profile-mastery-20261028-profile-resume-links-20261028-resume-match-mastery-20261028-resume-strong-frames-20261028-site-counters-20261029-ok-bubble-equal-20261029-opponent-accuracy-layout-20261029-accuracy-block-20261029-engine-choice-accuracy-20261029">
 <style>
   .supa-section { margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(128,128,128,.4); }
   .supa-head { font-weight: 600; font-size: .85em; opacity: .9; }
@@ -177,38 +177,39 @@
         </label>
         <label for="sel-elo">Adversaire</label>
         <select id="sel-elo" class="btn select">
-            <option value="1320">Elo moteur UCI 1320</option>
-            <option value="1600" selected>Elo moteur UCI 1600</option>
-            <option value="2000">Elo moteur UCI 2000</option>
-            <option value="2400">Niveau ≈ 2 400 Elo FIDE-like</option>
-            <option value="2450">Niveau ≈ 2 450 Elo FIDE-like</option>
-            <option value="2500">Niveau ≈ 2 500 Elo FIDE-like</option>
-            <option value="2550">Niveau ≈ 2 550 Elo FIDE-like</option>
-            <option value="2600">Niveau ≈ 2 600 Elo FIDE-like</option>
-            <option value="2650">Niveau ≈ 2 650 Elo FIDE-like</option>
-            <option value="2700">Niveau ≈ 2 700 Elo FIDE-like</option>
-            <option value="2750">Niveau ≈ 2 750 Elo FIDE-like</option>
-            <option value="2800">Niveau ≈ 2 800 Elo FIDE-like</option>
-            <option value="2850">Niveau ≈ 2 850 Elo FIDE-like</option>
-            <option value="2900">Niveau ≈ 2 900 Elo FIDE-like</option>
-            <option value="2950">Niveau ≈ 2 950 Elo FIDE-like</option>
-            <option value="3000">Niveau ≈ 3 000 Elo FIDE-like</option>
-            <option value="3050">Niveau ≈ 3 050 Elo FIDE-like</option>
-            <option value="3100">Niveau ≈ 3 100 Elo FIDE-like</option>
-            <option value="3150">Niveau ≈ 3 150 Elo FIDE-like</option>
-            <option value="3200">Niveau ≈ 3 200 Elo FIDE-like</option>
-            <option value="3250">Niveau ≈ 3 250 Elo FIDE-like</option>
-            <option value="3300">Niveau ≈ 3 300 Elo FIDE-like</option>
-            <option value="3350">Niveau ≈ 3 350 Elo FIDE-like</option>
-            <option value="3400">Niveau ≈ 3 400 Elo FIDE-like</option>
-            <option value="3450">Niveau ≈ 3 450 Elo FIDE-like</option>
-            <option value="0">Pleine puissance — Stockfish 19</option>
+            <option value="1320">Elo moteur UCI 1320 · 46–56 %</option>
+            <option value="1500">Elo moteur UCI 1500 · 50–60 %</option>
+            <option value="1600" selected>Elo moteur UCI 1600 · 52–62 %</option>
+            <option value="2000">Elo moteur UCI 2000 · 60–70 %</option>
+            <option value="2400">Niveau ≈ 2 400 Elo FIDE-like · 68–78 %</option>
+            <option value="2450">Niveau ≈ 2 450 Elo FIDE-like · 69–79 %</option>
+            <option value="2500">Niveau ≈ 2 500 Elo FIDE-like · 70–80 %</option>
+            <option value="2550">Niveau ≈ 2 550 Elo FIDE-like · 71–81 %</option>
+            <option value="2600">Niveau ≈ 2 600 Elo FIDE-like · 72–82 %</option>
+            <option value="2650">Niveau ≈ 2 650 Elo FIDE-like · 73–83 %</option>
+            <option value="2700">Niveau ≈ 2 700 Elo FIDE-like · 74–84 %</option>
+            <option value="2750">Niveau ≈ 2 750 Elo FIDE-like · 75–85 %</option>
+            <option value="2800">Niveau ≈ 2 800 Elo FIDE-like · 76–86 %</option>
+            <option value="2850">Niveau ≈ 2 850 Elo FIDE-like · 77–87 %</option>
+            <option value="2900">Niveau ≈ 2 900 Elo FIDE-like · 78–88 %</option>
+            <option value="2950">Niveau ≈ 2 950 Elo FIDE-like · 79–89 %</option>
+            <option value="3000">Niveau ≈ 3 000 Elo FIDE-like · 80–90 %</option>
+            <option value="3050">Niveau ≈ 3 050 Elo FIDE-like · 81–91 %</option>
+            <option value="3100">Niveau ≈ 3 100 Elo FIDE-like · 82–92 %</option>
+            <option value="3150">Niveau ≈ 3 150 Elo FIDE-like · 83–93 %</option>
+            <option value="3200">Niveau ≈ 3 200 Elo FIDE-like · 84–94 %</option>
+            <option value="3250">Niveau ≈ 3 250 Elo FIDE-like · 85–95 %</option>
+            <option value="3300">Niveau ≈ 3 300 Elo FIDE-like · 86–96 %</option>
+            <option value="3350">Niveau ≈ 3 350 Elo FIDE-like · 87–97 %</option>
+            <option value="3400">Niveau ≈ 3 400 Elo FIDE-like · 88–98 %</option>
+            <option value="3450">Niveau ≈ 3 450 Elo FIDE-like · 89–99 %</option>
+            <option value="0">Pleine puissance — Stockfish 19 · 90–100 %</option>
             <option value="manual">Manuel (auto-entraînement)</option>
           </select>
         <div class="opponent-estimate-details">
           <small id="opponent-fide-estimate" class="opponent-fide-estimate" role="status" aria-live="polite"></small>
           <small id="opponent-accuracy-estimate" class="opponent-fide-estimate" role="status" aria-live="polite"></small>
-          <small class="opponent-fide-note">La fourchette de précision est un repère heuristique ancré sur 1 500 Elo ≈ 50–60 %; elle n’est pas mesurée sur des parties Stockfish. La précision réelle varie selon les positions, les coups joués et le temps de réflexion. Les niveaux proposés de 2 400 à 3 450 progressent par pas de 50. Estimation FIDE-like indicative, pas un classement officiel. Le réglage Elo UCI de Stockfish est plafonné à 3 190; au-dessus, l’estimation ne correspond pas à un réglage UCI distinct. Pleine puissance : Stockfish 19, estimé ≈ 3 500 à 3 s.</small>
+          <small class="opponent-fide-note">Les fourchettes affichées dans le menu sont des repères heuristiques à 3 s, ancrés sur 1 500 Elo ≈ 50–60 %; elles ne sont pas mesurées sur des parties Stockfish. Le calcul sous le menu s’ajuste au temps de réflexion choisi; la précision réelle varie selon les positions et les coups joués. Les niveaux proposés de 2 400 à 3 450 progressent par pas de 50. Estimation FIDE-like indicative, pas un classement officiel. Le réglage Elo UCI de Stockfish est plafonné à 3 190; au-dessus, l’estimation ne correspond pas à un réglage UCI distinct. Pleine puissance : Stockfish 19, estimé ≈ 3 500 à 3 s.</small>
         </div>
       </div>
     <div id="tablebase-panel" class="panel tablebase-panel">
@@ -309,7 +310,7 @@
   <span id="registered-members-count" class="registered-members-count">Comptes inscrits : chargement…</span>
   <span id="unique-visitors-count" class="unique-visitors-count">Visiteurs uniques estimés : chargement…</span>
 </div>
-  <span class="site-version" aria-label="Version de SupaChess">Version SupaChess : 1.13.12450</span>
+  <span class="site-version" aria-label="Version de SupaChess">Version SupaChess : 1.13.12451</span>
 </footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
