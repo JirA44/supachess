@@ -609,6 +609,8 @@ function reviewShowCorrectionExercise(index){
   if(index>=exercise.items.length){reviewExitCorrectionExercises();return;}
   exercise.index=index;
   exercise.solved=false;
+  exercise.awaitingRetry=false;
+  document.getElementById("btn-review-exercise-retry")?.classList.add("hidden");
   const item=exercise.items[index];
   state.gen++;
   state.chess=new Chess(item.fen);
@@ -652,7 +654,7 @@ function reviewShowCorrectionExercise(index){
 function reviewHandleExerciseSquareClick(square){
   const exercise=reviewState.exercise;
   if(!exercise)return false;
-  if(exercise.solved)return true;
+  if(exercise.solved||exercise.awaitingRetry)return true;
   const item=exercise.items[exercise.index];
   const piece=state.chess.get(square);
   const selected=boardUI.selected;
@@ -668,9 +670,20 @@ function reviewHandleExerciseSquareClick(square){
         : undefined;
       const uci=selected+square+(promotion||"");
       if(uci!==item.bestUci){
+        const played=state.chess.move({from:selected,to:square,promotion});
+        if(!played){
+          document.getElementById("review-exercise-feedback").textContent="Ce déplacement est illégal dans cette position.";
+          boardUI.selected=null;boardUI.legalTargets=[];renderBoard();return true;
+        }
+        exercise.awaitingRetry=true;
+        boardUI.selected=null;boardUI.legalTargets=[];boardUI.legalTargetHints={};
+        boardUI.lastMove={from:selected,to:square,san:played.san};
         document.getElementById("review-exercise-feedback").textContent=
-          "Ce coup ne corrige pas encore l’erreur. Essaie une autre idée.";
-        boardUI.selected=null;boardUI.legalTargets=[];renderBoard();return true;
+          `${played.san} est légal, mais ne corrige pas l’erreur. Observe la position puis recommence pour chercher un meilleur coup.`;
+        document.getElementById("btn-review-exercise-retry")?.classList.remove("hidden");
+        setStatus("Coup légal joué — recommence pour trouver la correction.");
+        renderAll();
+        return true;
       }
       const played=state.chess.move({from:selected,to:square,promotion});
       exercise.solved=true;
@@ -849,6 +862,10 @@ document.getElementById("btn-review-exercise-next").addEventListener("click", ()
   if (!exercise || !exercise.solved) return;
   if (exercise.index + 1 < exercise.items.length) reviewShowCorrectionExercise(exercise.index + 1);
   else reviewExitCorrectionExercises();
+});
+document.getElementById("btn-review-exercise-retry").addEventListener("click", () => {
+  const exercise=reviewState.exercise;
+  if(exercise&&!exercise.solved)reviewShowCorrectionExercise(exercise.index);
 });
 document.getElementById("btn-review-exercise-quit").addEventListener("click", reviewExitCorrectionExercises);
 document.getElementById("review-exercise-phase").addEventListener("change",(event)=>reviewSetCorrectionPhase(event.target.value));
