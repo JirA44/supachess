@@ -617,6 +617,94 @@
     },
   );
 
+  // Original lessons about interpreting observable Stockfish search output.
+  LESSONS.push(
+    {
+      id: "stockfish-evaluation-context",
+      kind: "method",
+      level: "Débutant",
+      title: "Stockfish · Lire une évaluation avec le bon repère",
+      category: "Parcours moteur · Stockfish · Lire une évaluation",
+      program: "Stockfish · comparer et vérifier",
+      author: "SupaChess Académie",
+      book: "Leçon originale d’interprétation de Stockfish 19",
+      reference: "Le score dépend de la position, du camp au trait et des paramètres de recherche",
+      setup: ["e4", "e5", "Nf3", "Nc6"],
+      color: "w",
+      question: "Avant de tirer une conclusion d’un score Stockfish, que dois-tu vérifier ?",
+      choices: [
+        { text: "La position exacte, le camp au trait, le point de vue du score et s’il s’agit d’un mat ou de centipions", correct: true },
+        { text: "Seulement si le nombre est positif, car cela signifie toujours que le camp au trait gagne", correct: false },
+        { text: "Le niveau Elo FIDE humain que ce score attribuerait au joueur", correct: false },
+      ],
+      principle: "Une évaluation n’est pas un Elo FIDE. Elle décrit l’estimation du moteur pour une position et une recherche données; son signe dépend de la convention d’affichage, et un score de mat n’est pas un score en pions.",
+      transfer: "Avant de comparer deux analyses, vérifie que tu regardes la même position, le même camp au trait, le même point de vue et des réglages de recherche comparables.",
+      hints: ["Lis l’indication de perspective et regarde qui doit jouer.", "Distingue un score en centipions d’une annonce de mat."],
+      pitfall: "Ne convertis pas un score de position en Elo FIDE et ne compare pas des nombres sans vérifier leur point de vue.",
+      sequence: [
+        { side: "user", uci: "f1c4", explanation: "Le fou se développe; note la position et le camp au trait avant de relever une évaluation." },
+        { side: "book", uci: "g8f6", explanation: "Les Noirs attaquent e4. Recalcule depuis cette nouvelle position plutôt que de reporter le score précédent." },
+        { side: "user", uci: "d2d3", explanation: "Les Blancs soutiennent le centre. Une évaluation reste un repère de recherche, à confronter aux variantes." },
+      ],
+    },
+    {
+      id: "stockfish-best-reply",
+      kind: "method",
+      level: "Intermédiaire",
+      title: "Stockfish · Vérifier la meilleure réponse adverse",
+      category: "Parcours moteur · Stockfish · Réponse la plus forte",
+      program: "Stockfish · comparer et vérifier",
+      author: "SupaChess Académie",
+      book: "Exercice original sur les variantes principales de Stockfish 19",
+      reference: "La meilleure défense affichée dépend de la position et de la recherche",
+      setup: ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4"],
+      color: "b",
+      question: "Tu as trouvé un coup candidat. Quelle étape permet de voir s’il résiste à la défense adverse ?",
+      choices: [
+        { text: "Calculer la réponse adverse la plus gênante, puis comparer la position après cette réponse", correct: true },
+        { text: "S’arrêter dès que le moteur affiche une première ligne", correct: false },
+        { text: "Supposer que l’adversaire jouera la réponse qui arrange ton plan", correct: false },
+      ],
+      principle: "Une variante n’est utile que si elle tient compte des réponses adverses fortes. Stockfish fournit une ligne de recherche; le joueur doit rejouer chaque demi-coup et vérifier les menaces sur l’échiquier.",
+      transfer: "Annonce ta réponse adverse probable avant l’analyse, puis compare-la à la première ligne et vérifie ce qui change après la meilleure défense.",
+      hints: ["Après ton coup, donne le trait à l’adversaire et cherche ses échecs, prises et menaces.", "Compare ensuite cette réponse à celle affichée dans la variante principale."],
+      pitfall: "Ne valide pas un plan en ne calculant que les réponses faibles ou naturelles de l’adversaire.",
+      sequence: [
+        { side: "user", uci: "g8f6", explanation: "Le cavalier attaque e4; il faut déjà examiner les réponses blanches les plus actives." },
+        { side: "book", uci: "e1g1", explanation: "Le roque est une réponse légale qui sécurise le roi; compare-la aux autres réponses possibles." },
+        { side: "user", uci: "f8e7", explanation: "Les Noirs développent le fou. Reprends l’analyse depuis cette position, avec le trait aux Blancs." },
+      ],
+    },
+    {
+      id: "stockfish-depth-stability",
+      kind: "method",
+      level: "Expert",
+      title: "Stockfish · Tester la stabilité d’une variante",
+      category: "Parcours moteur · Stockfish · Profondeur et stabilité",
+      program: "Stockfish · comparer et vérifier",
+      author: "SupaChess Académie",
+      book: "Leçon originale sur les limites d’une recherche de moteur",
+      reference: "Une recherche plus longue peut modifier les candidats et leur ordre",
+      setup: ["e4", "e5", "Nf3", "Nc6"],
+      color: "w",
+      question: "Un candidat change de rang quand la recherche s’approfondit. Comment étudier ce résultat ?",
+      choices: [
+        { text: "Relancer depuis la même position, comparer les variantes et réponses adverses, puis noter si le choix reste stable", correct: true },
+        { text: "Conclure que la première analyse était fausse et retenir le nouveau score sans lire la ligne", correct: false },
+        { text: "Additionner les scores des recherches de profondeurs différentes", correct: false },
+      ],
+      principle: "La profondeur indique jusqu’où la recherche a exploré, pas une garantie d’exhaustivité. Des candidats proches peuvent changer d’ordre; les variantes, les réponses adverses et la stabilité du résultat comptent davantage qu’un nombre isolé.",
+      transfer: "Conserve la même position, lance une comparaison MultiPV, augmente le temps de recherche puis confronte les lignes et les évaluations avec la même perspective.",
+      hints: ["Assure-toi que les comparaisons partent de la même position et du même trait.", "Lis ce qui change dans les lignes avant de comparer leur rang."],
+      pitfall: "Ne traite ni une profondeur ni un classement provisoire des coups comme une preuve absolue.",
+      sequence: [
+        { side: "user", uci: "f1b5", explanation: "Le fou développe et met une pression sur le cavalier c6; compare ce candidat aux autres avec les mêmes conditions de recherche." },
+        { side: "book", uci: "a7a6", explanation: "Le pion attaque le fou et impose une nouvelle décision. La position après cette réponse doit être analysée séparément." },
+        { side: "user", uci: "b5a4", explanation: "Le fou recule. Compare les lignes complètes et leur stabilité, pas seulement leur premier coup." },
+      ],
+    },
+  );
+
   // Original teaching exercises derived from TCEC Season 18 Superfinal game 6.1.
   // The move score/engine intent is not inferred; explanations describe observable board facts.
   LESSONS.push(
