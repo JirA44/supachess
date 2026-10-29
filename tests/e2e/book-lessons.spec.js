@@ -249,5 +249,5 @@ test("Stockfish path opens its beginner lesson and accepts a legal board move", 
   await page.locator('.sq[data-square="f1"]').click();
   await page.locator('.sq[data-square="c4"]').click();
   await expect(page.locator("#lesson-move-list")).toContainText("Toi : Bc4");
-  await expect(page.locator("#lesson-explanation")).toContainText("Ce que tu viens d’apprendre");
+  await expect(page.locator("#lesson-move-list")).toContainText("Ligne du livre : Nf6");
 });
