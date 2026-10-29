@@ -74,8 +74,8 @@ test("hides live engine candidates and board dots while solving a correction", (
 
   vm.runInContext("reviewHideCorrectionCandidates()", context);
 
-  assert.deepEqual(context.state.candidates, []);
-  assert.deepEqual(context.boardUI.dots, []);
+  assert.equal(context.state.candidates.length, 0);
+  assert.equal(context.boardUI.dots.length, 0);
   assert.match(candidateList.innerHTML, /masqués pendant la correction/);
   context.reviewState.exercise = null;
 });
