@@ -30,7 +30,7 @@ test('restarts Stockfish after a missing bestmove and analyzes the next request'
     terminate(){this.terminated=true;}
   }
   const context={Worker:FakeWorker,setTimeout,clearTimeout,console};
-  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'..','js','engine.js'),'utf8')+'\\nglobalThis.StockfishEngine=StockfishEngine;',context);
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'..','js','engine.js'),'utf8')+'\nglobalThis.StockfishEngine=StockfishEngine;',context);
   const engine=new context.StockfishEngine('fake-worker.js');
   await engine.ready;
   await assert.rejects(
