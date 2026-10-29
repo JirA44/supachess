@@ -39,6 +39,8 @@ test('PGN report: two player columns show move symbols and stack on narrow scree
     reviewRenderLocal(moves,89.7,94.1,{White:'th7mas',Black:'HeyoAP',Result:'0-1'});
   });
   await expect(page.locator('.review-player-card')).toHaveCount(2);
+  await expect(page.locator('.review-player-w .review-player-side-label')).toHaveText('Joueur 1 · Blancs');
+  await expect(page.locator('.review-player-b .review-player-side-label')).toHaveText('Joueur 2 · Noirs');
   await expect(page.locator('.review-player-w .review-grade-best')).toContainText('★');
   await expect(page.locator('.review-player-b .review-grade-mistake')).toContainText('1');
   await expect(page.locator('#review-report')).toContainText('89.7%');

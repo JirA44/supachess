@@ -64,7 +64,15 @@
   .review-player-card { min-width: 0; padding: 8px; border: 1px solid rgba(128,128,128,.35); border-radius: 8px; background: rgba(128,128,128,.06); }
   .review-player-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
   .review-player-head h4 { min-width: 0; overflow-wrap: anywhere; }
-  .review-player-accuracy { color: var(--accent, #7fc97f); white-space: nowrap; }
+  .review-player-identity { min-width: 0; display: grid; justify-items: start; gap: 2px; }
+  .review-player-side-label { display: inline-flex; padding: 2px 7px; border-radius: 999px; font-size: .68em; font-weight: 800; line-height: 1.2; white-space: nowrap; }
+  .review-player-w { border-color: rgba(241,245,249,.72); background: rgba(241,245,249,.09); }
+  .review-player-w .review-player-side-label { color: #172033; background: #f1f5f9; }
+  .review-player-w .review-player-accuracy { color: #f8fafc; }
+  .review-player-b { border-color: rgba(148,163,184,.62); background: rgba(15,23,42,.3); }
+  .review-player-b .review-player-side-label { color: #f1f5f9; background: #293449; outline: 1px solid #64748b; }
+  .review-player-b .review-player-accuracy { color: #a9bbd8; }
+  .review-player-accuracy { white-space: nowrap; }
   .review-grade-list { display: grid; gap: 3px; }
   .review-grade-row { display: grid; grid-template-columns: 10px 28px minmax(0, 1fr) auto; align-items: center; gap: 5px; padding: 3px 5px; border-radius: 4px; font-size: .82em; background: rgba(128,128,128,.08); }
   .review-grade-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--review-grade-color, #9aa0b8); justify-self: center; }
