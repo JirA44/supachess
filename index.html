@@ -206,7 +206,8 @@
             <option value="manual">Manuel (auto-entraînement)</option>
           </select>
           <small id="opponent-fide-estimate" class="opponent-fide-estimate" role="status" aria-live="polite"></small>
-          <small class="opponent-fide-note">Les niveaux proposés de 2 400 à 3 450 progressent par pas de 50. Estimation FIDE-like indicative, pas un classement officiel. Le réglage Elo UCI de Stockfish est plafonné à 3 190; au-dessus, l’estimation ne correspond pas à un réglage UCI distinct. Pleine puissance : Stockfish 19, estimé ≈ 3 500 à 3 s.</small>
+          <small id="opponent-accuracy-estimate" class="opponent-fide-estimate" role="status" aria-live="polite"></small>
+          <small class="opponent-fide-note">La fourchette de précision est un repère heuristique ancré sur 1 500 Elo ≈ 50–60 %; elle n’est pas mesurée sur des parties Stockfish. La précision réelle varie selon les positions, les coups joués et le temps de réflexion. Les niveaux proposés de 2 400 à 3 450 progressent par pas de 50. Estimation FIDE-like indicative, pas un classement officiel. Le réglage Elo UCI de Stockfish est plafonné à 3 190; au-dessus, l’estimation ne correspond pas à un réglage UCI distinct. Pleine puissance : Stockfish 19, estimé ≈ 3 500 à 3 s.</small>
       </div>
     <div id="tablebase-panel" class="panel tablebase-panel">
       <h2>Finales résolues par tablebase</h2>
@@ -306,7 +307,7 @@
   <span id="registered-members-count" class="registered-members-count">Comptes inscrits : chargement…</span>
   <span id="unique-visitors-count" class="unique-visitors-count">Visiteurs uniques estimés : chargement…</span>
 </div>
-  <span class="site-version" aria-label="Version de SupaChess">Version SupaChess : 1.13.12446</span>
+  <span class="site-version" aria-label="Version de SupaChess">Version SupaChess : 1.13.12447</span>
 </footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -320,7 +321,7 @@
 <script src="js/supa.js"></script>
 <script src="js/board.js?v=exercise-drag-20261029"></script>
 <script src="js/move-feedback.js"></script>
-<script src="js/app.js?v=exercise-player-accuracy-20261029-ok-bubble-equal-20261029-ok-bubble-equal-20261029"></script>
+<script src="js/app.js?v=opponent-accuracy-range-20261029"></script>
 <script src="js/games.js?v=stockfish-performance-estimate-20261027"></script>
 <script src="js/tablebase.js?v=op1-partial-tablebase-20261027"></script>
 <script src="js/blindspots.js"></script>
