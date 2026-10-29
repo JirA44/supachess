@@ -131,12 +131,12 @@ function applyLevelDiagnosticLock() {
     boardUI.showDots = false;
     boardUI.showMoveDots = false;
   } else if (levelDiagnosticLockWasActive) {
-    boardUI.showDots = typeof diagnostic?.restoreDots === "boolean"
-      ? diagnostic.restoreDots : localStorage.getItem(DOTS_STORAGE_KEY) !== "false";
-    boardUI.showMoveDots = typeof diagnostic?.restoreMoveDots === "boolean"
-      ? diagnostic.restoreMoveDots : localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false";
-    localStorage.setItem(DOTS_STORAGE_KEY, String(boardUI.showDots));
-    localStorage.setItem(MOVE_DOTS_STORAGE_KEY, String(boardUI.showMoveDots));
+    // Leaving the diagnostic must turn both aids back on, even if older saved
+    // preferences were false; the player can switch either aid off afterwards.
+    boardUI.showDots = true;
+    boardUI.showMoveDots = true;
+    localStorage.setItem(DOTS_STORAGE_KEY, "true");
+    localStorage.setItem(MOVE_DOTS_STORAGE_KEY, "true");
   }
   levelDiagnosticLockWasActive = active;
   syncDotsButton();

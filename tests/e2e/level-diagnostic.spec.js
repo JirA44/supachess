@@ -1,5 +1,52 @@
 const { test, expect } = require('@playwright/test');
 
+test('turning the diagnostic off reactivates both move aids even if saved preferences were off', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('supachess-show-candidate-dots', 'false');
+    localStorage.setItem('supachess-show-legal-move-dots', 'false');
+    localStorage.setItem('supachess-level-diagnostic', JSON.stringify({
+      active: true,
+      defaultActivation: false,
+      startedAt: new Date().toISOString(),
+      restoreDots: false,
+      restoreMoveDots: false,
+    }));
+  });
+  await page.goto('/index.html');
+  await expect(page.locator('body')).toHaveAttribute('data-engine-ready', '1', { timeout: 30000 });
+  const panel = page.locator('#review-insights-panel');
+  const toggle = panel.locator('[data-level-diagnostic-toggle]');
+  await expect(toggle).toHaveText('Diagnostic actif — arrêter');
+  await expect(page.locator('#btn-dots')).toBeDisabled();
+  await expect(page.locator('#btn-move-dots')).toBeDisabled();
+
+  const whileLocked = await page.evaluate(() => {
+    boardUI.dots = [{ square: 'e4', label: '★1', quality: 'best' }];
+    boardUI.legalTargets = ['e4'];
+    renderBoard();
+    return [document.querySelectorAll('.cdot').length, document.querySelectorAll('.legal-hint').length];
+  });
+  expect(whileLocked).toEqual([0, 0]);
+
+  await toggle.click();
+  await expect(page.locator('#btn-dots')).toBeEnabled();
+  await expect(page.locator('#btn-move-dots')).toBeEnabled();
+  await expect(page.locator('#btn-dots')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#btn-move-dots')).toHaveAttribute('aria-pressed', 'true');
+  const restored = await page.evaluate(() => ({
+    dots: boardUI.showDots,
+    moveDots: boardUI.showMoveDots,
+    savedDots: localStorage.getItem('supachess-show-candidate-dots'),
+    savedMoveDots: localStorage.getItem('supachess-show-legal-move-dots'),
+    visibleBubbles: document.querySelectorAll('.cdot').length,
+    visibleLegalPoints: document.querySelectorAll('.legal-hint').length,
+  }));
+  expect(restored).toEqual({
+    dots: true, moveDots: true, savedDots: 'true', savedMoveDots: 'true',
+    visibleBubbles: 1, visibleLegalPoints: 1,
+  });
+});
+
 test('level diagnostic locks candidate and legal-move hints until ten new PGNs are analyzed', async ({ page }) => {
   await page.addInitScript(() => {
     if (sessionStorage.getItem('level-diagnostic-e2e-seeded')) return;
