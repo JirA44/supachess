@@ -174,8 +174,8 @@ function estimateOpponentAccuracyRange(fideLikeElo) {
   // Indicative heuristic anchored to the requested 1,500 Elo => 50–60% range.
   const center = 55 + (fideLikeElo - 1500) * 0.02;
   return {
-    min: Math.max(0, Math.floor(center - 5)),
-    max: Math.min(100, Math.ceil(center + 5)),
+    min: Math.max(0, Math.round(center - 5)),
+    max: Math.min(100, Math.round(center + 5)),
   };
 }
 function updateOpponentFideEstimate() {
