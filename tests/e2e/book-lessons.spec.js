@@ -233,5 +233,9 @@ test("profile opens inside the game page and remains available from lessons", as
   await page.goto("/book-lessons.html");
   const lessonProfile = page.getByRole("link", { name: "Ouvrir mon profil" });
   await expect(lessonProfile).toBeVisible();
-  await expect(lessonProfile).toHaveAttribute("href", "https://jira44.github.io/supachess-web/?openProfile=1");
+  await expect(lessonProfile).toHaveAttribute("href", "#profile");
+  await lessonProfile.click();
+  await expect(page).toHaveURL(/\\/book-lessons\\.html$/);
+  await expect(page.locator("#profile-modal")).toBeVisible();
+  await expect(page.locator("#profile-modal [data-profile-form]")).toBeVisible({ timeout: 15000 });
 });
