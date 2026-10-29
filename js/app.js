@@ -284,7 +284,7 @@ function buildCandidates(lines, fen) {
     const grade = moveGrade(cand.deltaCp, isBrilliantCandidate(fen, cand), cand.rank === 1);
     const evaluation = cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
       ? formatScore(cand.line, state.chess.turn() === "w") : "—";
-    const moveBadge = { san: cand.san, label: grade.category === "ok" ? `= ${grade.rating ?? "…"}` : `${grade.symbol}${grade.rating ?? "…"}`, evaluation, grade, rank: cand.rank };
+    const moveBadge = { san: cand.san, label: grade.category === "ok" ? "=" : `${grade.symbol}${grade.rating ?? "…"}`, evaluation, grade, rank: cand.rank };
     if (!dotsBySquare.has(square)) dotsBySquare.set(square, []);
     dotsBySquare.get(square).push(moveBadge);
   }
