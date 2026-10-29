@@ -9,13 +9,14 @@ test('plays correction exercises from a saved analyzed game',async({page})=>{
       id:'correction-game',pgn:'1. f3 e5',white:'Alice',black:'Bob',result:'*',
       correctionExercises:[{
         fen:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-        bestUci:'e2e4',bestScoreCp:12,bestMate:null,moveNumber:1,color:'w',
+        bestUci:'e2e4',bestScoreCp:12,bestMate:null,ply:1,moveNumber:1,color:'w',
         playedSan:'f3',classification:'ok',lossCp:4.2
       },{
         fen:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1',
-        bestUci:'e7e5',bestScoreCp:-8,bestMate:null,moveNumber:1,color:'b',
+        bestUci:'e7e5',bestScoreCp:-8,bestMate:null,ply:2,moveNumber:1,color:'b',
         playedSan:'d5',classification:'ok',lossCp:2.5
-      }]
+      }],
+      moveGrades:[{ply:1,color:'w',category:'mistake'},{ply:2,color:'b',category:'inaccuracy'}]
     }]));
     const saved=JSON.parse(localStorage.getItem('supachess_reviewed_pgns'));
     saved[0].correctionExercises.reverse();
@@ -28,6 +29,7 @@ test('plays correction exercises from a saved analyzed game',async({page})=>{
   await expect(exercisePanel).toBeVisible();
   await expect.poll(()=>exercisePanel.evaluate(el=>Math.abs(el.getBoundingClientRect().top))).toBeLessThan(5);
   expect(await page.evaluate(()=>state.chess.fen())).toBe('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+  await expect(page.locator('#move-grade-summary [data-color="w"] .grade-error [data-grade-count]')).toHaveText('0');
   const phase=page.locator('#review-exercise-phase');
   await phase.selectOption('endgame');
   await expect(page.locator('#review-exercise-heading')).toHaveText('Aucun exercice dans cette phase.');
@@ -59,6 +61,8 @@ test('plays correction exercises from a saved analyzed game',async({page})=>{
   await expect(page.locator('#btn-review-exercise-next')).toBeEnabled();
   await page.click('#btn-review-exercise-next');
   await expect(page.locator('#review-exercise-panel')).toBeVisible();
+  await expect(page.locator('#move-grade-summary [data-color="w"] .grade-error [data-grade-count]')).toHaveText('+1');
+  await expect(page.locator('#move-grade-summary [data-color="b"] .grade-inaccuracy [data-grade-count]')).toHaveText('0');
   await expect(page.locator('#review-exercise-heading')).toContainText('Bob');
   await expect(flipButton).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('#board [data-square]').first()).toHaveAttribute('data-square','h1');
@@ -111,9 +115,10 @@ test('adds a correction button to saved games and starts at their first reviewed
     localStorage.setItem('supachess_reviewed_pgns',JSON.stringify([{
       id:'saved-review',pgn,white:'Alice',black:'Bob',result:'*',
       correctionExercises:[
-        {fen:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1',bestUci:'e7e5',bestScoreCp:-8,bestMate:null,moveNumber:1,color:'b',playedSan:'d5',classification:'ok',lossCp:2.5},
-        {fen:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',bestUci:'e2e4',bestScoreCp:12,bestMate:null,moveNumber:1,color:'w',playedSan:'f3',classification:'ok',lossCp:4.2}
-      ]
+        {fen:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1',bestUci:'e7e5',bestScoreCp:-8,bestMate:null,ply:2,moveNumber:1,color:'b',playedSan:'d5',classification:'ok',lossCp:2.5},
+        {fen:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',bestUci:'e2e4',bestScoreCp:12,bestMate:null,moveNumber:1,color:'w',playedSan:'f3',classification:'ok',lossCp:4.2,ply:1}
+      ],
+      moveGrades:[{ply:1,color:'w',category:'mistake'},{ply:2,color:'b',category:'inaccuracy'}]
     }]));
     gamesRenderPanel();
     reviewHistoryRender();
@@ -135,8 +140,8 @@ test('resumes saved correction exercises from a profile link',async({page})=>{
   await page.addInitScript(()=>localStorage.setItem('supachess_reviewed_pgns',JSON.stringify([{
     id:'resume-game',pgn:'1. f3 e5',white:'Alice',black:'Bob',result:'*',correctionExercises:[{
       fen:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-      bestUci:'e2e4',bestScoreCp:12,bestMate:null,moveNumber:1,color:'w',playedSan:'f3',classification:'ok',lossCp:4.2
-    }]
+      bestUci:'e2e4',bestScoreCp:12,bestMate:null,ply:1,moveNumber:1,color:'w',playedSan:'f3',classification:'ok',lossCp:4.2
+    }],moveGrades:[{ply:1,color:'w',category:'mistake'},{ply:2,color:'b',category:'inaccuracy'}]
   }])));
   await page.goto('/index.html?resume-exercises=resume-game');
   await expect(page.locator('body')).toHaveAttribute('data-engine-ready','1',{timeout:30000});
