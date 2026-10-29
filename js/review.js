@@ -99,8 +99,15 @@ function reviewHistorySave(pgn, headers = {}, correctionExercises = [], analysis
   return true;
 }
 
+function reviewValidCorrectionExercises(items) {
+  return Array.isArray(items) ? items.filter((exercise) =>
+    exercise && typeof exercise.fen === "string" && exercise.fen.trim() &&
+    typeof exercise.bestUci === "string" && /^[a-h][1-8][a-h][1-8][qrbn]?$/.test(exercise.bestUci)
+  ) : [];
+}
+
 function reviewHistoryExerciseButton(item){
-  const count=Array.isArray(item.correctionExercises)?item.correctionExercises.length:0;
+  const count=reviewValidCorrectionExercises(item.correctionExercises).length;
   const title=`${item.white||"Blancs"} vs ${item.black||"Noirs"}`;
   return count
     ? `<button class="btn mini" type="button" data-review-history-act="exercise" aria-label="Corriger les coups de ${esc(title)} (${count})">Corriger (${count})</button>`
@@ -464,8 +471,12 @@ function reviewSetCorrectionPhase(phase){
 }
 
 function reviewStartCorrectionExercises(items,headers={}){
-  const valid=Array.isArray(items)?items.filter((item)=>item&&item.fen&&item.bestUci):[];
-  if(!valid.length)return;
+  const valid=reviewValidCorrectionExercises(items);
+  if(!valid.length){
+    const status=document.getElementById("review-history-status");
+    if(status)status.textContent="Aucune position de correction exploitable n’est enregistrée. Rouvre et analyse le PGN pour créer les exercices.";
+    return;
+  }
   reviewBeginReplay();
   reviewState.currentHeaders={...reviewState.currentHeaders,...headers};
   reviewState.exercise={allItems:valid,items:valid,index:0,solved:false,phase:"all"};
@@ -474,6 +485,7 @@ function reviewStartCorrectionExercises(items,headers={}){
   const panel=document.getElementById("review-exercise-panel");
   if(panel)panel.classList.remove("hidden");
   reviewShowCorrectionExercise(0);
+  panel?.scrollIntoView({block:"start"});
 }
 
 function reviewShowCorrectionExercise(index){
@@ -754,7 +766,7 @@ function resumeCorrectionExercisesFromUrl() {
   if (resumeId && !item) return;
   const resume = () => {
     if (!item) { reviewShowModal(); return; }
-    const exercises = Array.isArray(item.correctionExercises) ? item.correctionExercises : [];
+    const exercises = reviewValidCorrectionExercises(item.correctionExercises);
     if (exercises.length) {
       reviewState.currentHeaders = { White: item.white, Black: item.black };
       reviewStartCorrectionExercises(exercises, reviewState.currentHeaders);
