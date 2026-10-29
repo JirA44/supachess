@@ -214,6 +214,22 @@ function reviewCorrectionLabel(classification){
   })[classification]||"Coup à corriger";
 }
 
+async function reviewAnalyzePosition(options, moveNumber, totalMoves) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      return await state.engine.analyze(options);
+    } catch (error) {
+      if (attempt === 0 && error && error.retryable) {
+        reviewSetProgress("Stockfish ne répond pas au demi-coup " + moveNumber + "/" + totalMoves +
+          " — redémarrage du moteur et nouvelle tentative…");
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error("Stockfish n’a pas pu terminer l’analyse après une nouvelle tentative.");
+}
+
 async function reviewRun(options = {}) {
   if (reviewState.running) return false;
   const pgnText = document.getElementById("pgn-input").value.trim();
@@ -248,7 +264,7 @@ async function reviewRun(options = {}) {
       reviewSetProgress(`Analyse Stockfish… coup ${Math.min(i + 1, moves.length)}/${moves.length}`);
       const tmp = new Chess(fens[i]);
       if (tmp.game_over()) { cps.push(tmp.in_checkmate() ? -1000 : 0); positionLines.push(null); continue; }
-      const res = await state.engine.analyze({ fen: fens[i], multipv: 2, movetime: 400, elo: 0 });
+      const res = await reviewAnalyzePosition({ fen: fens[i], multipv: 2, movetime: 400, elo: 0 }, Math.min(i + 1, moves.length), moves.length);
       cps.push(res.lines.length ? clampCpFromLine(res.lines[0]) : 0);
       positionLines.push(res.lines[0] || null);
     }

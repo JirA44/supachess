@@ -152,3 +152,72 @@ test('opens PGN analysis from a profile link when no game is saved yet',async({p
   await expect(page.locator('#pgn-modal')).toBeVisible({timeout:10000});
   await expect(page.locator('#pgn-input')).toBeEmpty();
 });
+test('Stockfish completes a 67-halfmove PGN analysis and retries once after a worker failure',async({page})=>{
+  test.setTimeout(150000);
+  await page.goto('/index.html');
+  await expect(page.locator('body')).toHaveAttribute('data-engine-ready','1',{timeout:30000});
+  const setup=await page.evaluate(()=>{
+    const game=new Chess();
+    const seen=new Set([game.fen()]);
+    const sans=[];
+    for(let ply=0;ply<67;ply++){
+      const candidates=game.moves({verbose:true});
+      let chosen=null;
+      for(let offset=0;offset<candidates.length;offset++){
+        const candidate=candidates[(ply*11+offset)%candidates.length];
+        const played=game.move({from:candidate.from,to:candidate.to,promotion:candidate.promotion});
+        const fen=game.fen();
+        if(!game.game_over()&&!seen.has(fen)){
+          chosen=played;
+          seen.add(fen);
+          break;
+        }
+        game.undo();
+      }
+      if(!chosen)throw new Error('Could not construct a 67-ply legal PGN at ply '+(ply+1));
+      sans.push(chosen.san);
+    }
+    const pgn=sans.map((san,index)=>(index%2===0?(Math.floor(index/2)+1)+'. ':'')+san).join(' ')+' *';
+    const parsed=new Chess();
+    if(!parsed.load_pgn(pgn,{sloppy:true})||parsed.history().length!==67)throw new Error('Generated PGN did not contain 67 legal half-moves');
+    document.getElementById('pgn-input').value=pgn;
+    const originalAnalyze=state.engine.analyze.bind(state.engine);
+    let injectFailure=true;
+    state.engine.analyze=function(options){
+      if(injectFailure){
+        injectFailure=false;
+        const error=new Error('Simulated temporary Stockfish worker failure');
+        error.retryable=true;
+        return Promise.reject(error);
+      }
+      return originalAnalyze(options);
+    };
+    window.__reviewProgress=[];
+    const setProgress=reviewSetProgress;
+    reviewSetProgress=function(text){
+      window.__reviewProgress.push(text);
+      setProgress(text);
+    };
+    window.__reviewResult=null;
+    window.__reviewPromise=reviewRun({batch:true}).then(result=>{
+      window.__reviewResult=result;
+      return result;
+    },error=>{
+      window.__reviewResult=false;
+      throw error;
+    });
+    return {plies:sans.length};
+  });
+  expect(setup.plies).toBe(67);
+  await page.waitForFunction(()=>window.__reviewResult!==null,{timeout:120000});
+  const result=await page.evaluate(()=>({
+    ok:window.__reviewResult,
+    moves:reviewState.moves.length,
+    progress:window.__reviewProgress
+  }));
+  expect(result.ok).toBe(true);
+  expect(result.moves).toBe(67);
+  expect(result.progress).toContain('Stockfish ne répond pas au demi-coup 1/67 — redémarrage du moteur et nouvelle tentative…');
+  expect(result.progress).toContain('Analyse Stockfish… coup 67/67');
+  expect(result.progress.at(-1)).toBe('Analyse Stockfish terminée — bilan en cours…');
+});
