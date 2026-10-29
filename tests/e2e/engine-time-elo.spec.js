@@ -57,7 +57,10 @@ test('offers distinct 50-point Stockfish levels and reports the running-accuracy
   const levels = await page.locator('#sel-elo option').evaluateAll(options =>
     options.map(option => Number(option.value)).filter(value => value >= 2400 && value <= 3150)
   );
-  expect(levels).toEqual(Array.from({ length: 16 }, (_, index) => 2400 + index * 50));
+  expect(levels).toEqual(Array.from({ length: 22 }, (_, index) => 2400 + index * 50));
+  await expect(page.locator("#sel-elo option[value=\"3200\"]")).toContainText("3 200");
+  await expect(page.locator("#sel-elo option[value=\"3450\"]")).toContainText("3 450");
+  await expect(page.locator(".opponent-fide-note")).toContainText("plafonné à 3 190");
 
   const result = await page.evaluate(() => {
     state.accuracy = { w: [], b: [], pendingEngine: null, lastMove: null };
