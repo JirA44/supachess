@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#17211a">
   <title>SupaChess Académie — La route vers l’excellence</title>
   <link rel="stylesheet" href="css/style.css?v=fide-levels-profile-accuracy-20261027">
-  <link rel="stylesheet" href="css/book-lessons.css?v=stockfish-coach-20261027">
+  <link rel="stylesheet" href="css/book-lessons.css?v=evaluation-bar-toggle-20261029">
   <link rel="stylesheet" href="css/method-paths.css?v=methods-player-lessons-20261028">
 </head>
 <body class="lesson-mode">
@@ -114,8 +114,19 @@
     <section class="lesson-workspace" aria-labelledby="lesson-title">
       <div class="lesson-board-column">
         <p class="lesson-status" id="lesson-status" role="status" aria-live="polite">Choisis une leçon pour commencer.</p>
-        <div id="lesson-board" class="board" aria-label="Échiquier d’exercice"></div>
+        <div class="lesson-board-stage">
+          <div id="lesson-board" class="board" aria-label="Échiquier d’exercice"></div>
+          <div class="lesson-eval-widget" id="lesson-eval-widget" hidden>
+            <span class="lesson-eval-edge" aria-hidden="true">+</span>
+            <div class="lesson-evalbar" id="lesson-evalbar" role="meter" aria-label="Évaluation Stockfish, avantage des Blancs" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-valuetext="Évaluation non calculée">
+              <div class="lesson-evalbar-white" id="lesson-evalbar-white"></div>
+            </div>
+            <span class="lesson-eval-edge" aria-hidden="true">−</span>
+            <span class="lesson-eval-label" id="lesson-eval-label" aria-live="polite">À analyser</span>
+          </div>
+        </div>
         <div class="lesson-board-actions">
+          <button class="btn" id="lesson-eval-toggle" type="button" aria-pressed="false">Barre d’évaluation : Off</button>
           <button class="btn" id="lesson-anticipate" type="button" aria-pressed="false">Prévoir la réponse adverse</button><button class="btn" id="lesson-flip" type="button" aria-pressed="false">Retourner l’échiquier</button>
           <button class="btn" id="lesson-hint" type="button">Indice</button>
           <button class="btn" id="lesson-restart" type="button">Recommencer</button>
@@ -173,7 +184,7 @@
   <script src="js/engine.js"></script>
   <script src="js/board.js"></script>
   <script src="js/curriculum.js?v=academy-100-methods-20261026"></script>
-  <script src="js/book-lessons.js?v=stockfish-progressive-lessons-20261029"></script>
+  <script src="js/book-lessons.js?v=evaluation-bar-toggle-20261029"></script>
   <script src="js/method-paths.js?v=stockfish-coach-20261027"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
