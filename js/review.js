@@ -223,7 +223,8 @@ async function reviewRun(options = {}) {
   if (!game[loadFn](pgnText, { sloppy: true })) { alert("PGN invalide ou illisible."); return false; }
   const moves = game.history({ verbose: true });
   if (!moves.length) { alert("Aucun coup dans ce PGN."); return false; }
-  const headers = typeof game.header === "function" ? game.header() : {};
+  const parsedHeaders = typeof game.header === "function" ? game.header() : {};
+  const headers = { ...(options.headers || {}), ...parsedHeaders };
 
   reviewState.running = true;
   reviewSetReplayControls(false);
@@ -337,7 +338,7 @@ async function reviewRun(options = {}) {
   reviewState.running = false;
   if (options.startCorrections) {
     const exercises = reviewValidCorrectionExercises(reviewState.correctionExercises);
-    if (exercises.length) reviewStartCorrectionExercises(exercises, headers);
+    if (exercises.length) reviewStartCorrectionExercises(exercises, headers, analysisSummary);
     else {
       const status = document.getElementById("review-history-status");
       if (status) status.textContent = "Analyse terminée : aucun demi-coup à corriger n’a été détecté.";
@@ -532,7 +533,7 @@ async function reviewCorrectPgn(pgn,headers={}){
       .sort(reviewCompareCorrectionExercises);
     if(exercises.length){
       reviewState.currentHeaders={White:saved.white||headers.White||"Blancs",Black:saved.black||headers.Black||"Noirs"};
-      reviewStartCorrectionExercises(exercises,reviewState.currentHeaders);
+      reviewStartCorrectionExercises(exercises,reviewState.currentHeaders,saved.analysis||null);
       return true;
     }
     if(saved.analysis&&saved.analysis.version===1&&
@@ -549,7 +550,7 @@ async function reviewCorrectPgn(pgn,headers={}){
   reviewState.currentHeaders={...headers};
   const panel=document.getElementById("review-panel");
   if(panel)panel.classList.remove("hidden");
-  const completed=await reviewRun({batch:true,startCorrections:true});
+  const completed=await reviewRun({batch:true,startCorrections:true,headers:reviewState.currentHeaders});
   if(!completed){
     const status=document.getElementById("review-history-status");
     if(status)status.textContent="Impossible d’analyser cette partie. Vérifie que son PGN est valide.";
@@ -557,7 +558,7 @@ async function reviewCorrectPgn(pgn,headers={}){
   return completed;
 }
 
-function reviewStartCorrectionExercises(items,headers={}){
+function reviewStartCorrectionExercises(items,headers={},analysis=null){
   const valid=reviewValidCorrectionExercises(items).sort(reviewCompareCorrectionExercises);
   if(!valid.length){
     const status=document.getElementById("review-history-status");
@@ -566,13 +567,32 @@ function reviewStartCorrectionExercises(items,headers={}){
   }
   reviewBeginReplay();
   reviewState.currentHeaders={...reviewState.currentHeaders,...headers};
-  reviewState.exercise={allItems:valid,items:valid,index:0,solved:false,phase:"all"};
+  reviewState.exercise={allItems:valid,items:valid,index:0,solved:false,phase:"all",headers:{...reviewState.currentHeaders},analysis};
   const phaseSelect=document.getElementById("review-exercise-phase");
   if(phaseSelect)phaseSelect.value="all";
   const panel=document.getElementById("review-exercise-panel");
   if(panel)panel.classList.remove("hidden");
   reviewShowCorrectionExercise(0);
   panel?.scrollIntoView({block:"start"});
+}
+
+async function reviewAnalyzeCorrectionCandidates(item,generation){
+  if(!state.engine||typeof state.engine.analyze!=="function")return;
+  const fen=item.fen;
+  const legalCount=new Chess(fen).moves({verbose:true}).length;
+  if(!legalCount)return;
+  try{
+    const result=await state.engine.analyze({fen,multipv:Math.min(4,legalCount),movetime:300,elo:0});
+    const exercise=reviewState.exercise;
+    if(!exercise||state.gen!==generation||state.chess.fen()!==fen||
+      exercise.items[exercise.index]!==item)return;
+    if(typeof buildCandidates==="function")buildCandidates(result.lines||[],fen);
+    if(result.lines&&result.lines[0]&&typeof updateEvalBar==="function")updateEvalBar(result.lines[0]);
+    renderBoard();
+  }catch(_error){
+    const feedback=document.getElementById("review-exercise-feedback");
+    if(feedback)feedback.textContent="L’exercice reste jouable. L’analyse des bulles candidates est indisponible.";
+  }
 }
 
 function reviewShowCorrectionExercise(index){
@@ -602,6 +622,7 @@ function reviewShowCorrectionExercise(index){
   document.getElementById("btn-review-exercise-flip").setAttribute("aria-pressed",String(boardUI.flipped));
   boardUI.selected=null;
   boardUI.legalTargets=[];
+  boardUI.legalTargetHints={};
   boardUI.dots=[];
   boardUI.lastMove=null;
   hideCoach();
@@ -619,6 +640,9 @@ function reviewShowCorrectionExercise(index){
   next.textContent=index===exercise.items.length-1?"Terminer":"Exercice suivant";
   setStatus("Exercice de correction — trouve le meilleur coup.");
   renderAll();
+  if(typeof renderAccuracy==="function")renderAccuracy();
+  const exerciseGeneration=state.gen;
+  reviewAnalyzeCorrectionCandidates(item,exerciseGeneration);
   if(Number.isFinite(item.bestScoreCp)||Number.isFinite(item.bestMate)){
     updateEvalBar({scoreCp:Number.isFinite(item.bestScoreCp)?item.bestScoreCp:null,
       mate:Number.isFinite(item.bestMate)?item.bestMate:null,pv:[item.bestUci]});
@@ -663,6 +687,7 @@ function reviewHandleExerciseSquareClick(square){
   if(piece&&piece.color===state.chess.turn()){
     boardUI.selected=square;
     boardUI.legalTargets=state.chess.moves({square,verbose:true}).map((move)=>move.to);
+    boardUI.legalTargetHints={};
   }else{
     boardUI.selected=null;boardUI.legalTargets=[];
   }
@@ -855,7 +880,7 @@ function resumeCorrectionExercisesFromUrl() {
     const exercises = reviewValidCorrectionExercises(item.correctionExercises);
     if (exercises.length) {
       reviewState.currentHeaders = { White: item.white, Black: item.black };
-      reviewStartCorrectionExercises(exercises, reviewState.currentHeaders);
+      reviewStartCorrectionExercises(exercises, reviewState.currentHeaders, item.analysis||null);
       document.getElementById("review-exercise-panel")?.scrollIntoView({ block: "start" });
     } else {
       reviewStart(item.pgn);
