@@ -4,8 +4,9 @@ const path = require("node:path");
 const test = require("node:test");
 const vm = require("node:vm");
 
+const candidateList = { innerHTML: "" };
 const document = {
-  getElementById() { return { innerHTML: "", textContent: "", addEventListener() {}, classList: { add() {}, remove() {}, toggle() {} } }; },
+  getElementById(id) { return id === "candidates-list" ? candidateList : { innerHTML: "", textContent: "", addEventListener() {}, classList: { add() {}, remove() {}, toggle() {} } }; },
   querySelectorAll() { return []; },
 };
 const context = vm.createContext({ document, esc: String, sanFr: String, reviewState: { grades: [] }, state: { replayIdx: 0 } });
@@ -63,4 +64,18 @@ test("does not create exercises for the best played move or a missing engine PV"
     context
   );
   assert.equal(result.length, 0);
+});
+
+
+test("hides live engine candidates and board dots while solving a correction", () => {
+  context.reviewState.exercise = {};
+  context.state.candidates = [{ uci: "d7d5" }];
+  context.boardUI = { dots: [{ square: "d5" }] };
+
+  vm.runInContext("reviewHideCorrectionCandidates()", context);
+
+  assert.deepEqual(context.state.candidates, []);
+  assert.deepEqual(context.boardUI.dots, []);
+  assert.match(candidateList.innerHTML, /masqués pendant la correction/);
+  context.reviewState.exercise = null;
 });
