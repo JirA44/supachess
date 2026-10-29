@@ -114,6 +114,34 @@ function reviewHistoryExerciseButton(item){
     : `<button class="btn mini" type="button" data-review-history-act="reanalyze-corrections" aria-label="Analyser ${esc(title)} pour créer ses exercices">Analyser pour corriger</button>`;
 }
 
+function reviewCorrectionButtons(){
+  return [
+    ...document.querySelectorAll('#games-list button[data-act="correct"]'),
+    ...document.querySelectorAll('#review-history-list button[data-review-history-act="exercise"], #review-history-list button[data-review-history-act="reanalyze-corrections"]')
+  ];
+}
+
+function reviewRefreshCorrectionHotkeys(){
+  reviewCorrectionButtons().forEach((button,index)=>{
+    const label=button.dataset.correctionLabel || button.textContent.trim();
+    button.dataset.correctionLabel=label;
+    if(index>=10){
+      button.textContent=label;
+      delete button.dataset.correctionHotkey;
+      button.removeAttribute("aria-keyshortcuts");
+      return;
+    }
+    const number=index===9?0:index+1;
+    button.dataset.correctionHotkey=String(number);
+    button.textContent=label.startsWith("Corriger") && button.closest("#games-list")
+      ? `Corriger (${number})`
+      : `${label} [${number}]`;
+    button.setAttribute("aria-keyshortcuts",`Numpad${number}`);
+    if(!button.dataset.baseCorrectionTitle)button.dataset.baseCorrectionTitle=button.title;
+    button.title=`${button.dataset.baseCorrectionTitle ? button.dataset.baseCorrectionTitle+" · " : ""}Pavé numérique ${number}`;
+  });
+}
+
 function reviewHistoryRender(statusText) {
   const list = document.getElementById("review-history-list");
   if (!list || typeof localStorage === "undefined") return;
@@ -131,6 +159,7 @@ function reviewHistoryRender(statusText) {
       </span>
     </div>`;
   }).join("") : "<em>Aucun PGN analysé.</em>";
+  reviewRefreshCorrectionHotkeys();
   const status = document.getElementById("review-history-status");
   if (status && statusText) status.textContent = statusText;
 }
@@ -846,8 +875,15 @@ document.getElementById("btn-replay-prev").addEventListener("click", () => repla
 document.getElementById("btn-replay-next").addEventListener("click", () => replayGoto((state.replayIdx || 0) + 1).catch(console.error));
 document.getElementById("btn-replay-quit").addEventListener("click", reviewRestoreAfterReplay);
 if (typeof document.addEventListener === "function") document.addEventListener("keydown", (event) => {
+  const correctionKey=event.code.match(/^Numpad([0-9])$/);
+  const target=event.target;
+  if(correctionKey&&!event.altKey&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&
+    !(target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)))){
+    const digit=Number(correctionKey[1]);
+    const button=reviewCorrectionButtons()[digit===0?9:digit-1];
+    if(button){event.preventDefault();button.click();return;}
+  }
   if (!reviewState.returnState || document.getElementById("replay-bar").classList.contains("hidden")) return;
-  const target = event.target;
   if (target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
   if (event.key === "ArrowLeft") {
     event.preventDefault();
