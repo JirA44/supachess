@@ -1342,6 +1342,8 @@
         pv: line.pv.slice(),
         sanLine: sanLine,
         score: formatEngineLineScore(line),
+        scoreCp: Number.isFinite(line.scoreCp) ? line.scoreCp : null,
+        mate: Number.isFinite(line.mate) ? line.mate : null,
         deltaCp: deltaCp,
         depth: line.depth || 0,
         facts: firstMove ? engineHintForMove(firstMove, movedPiece && movedPiece.type) : "",
@@ -1379,6 +1381,44 @@
   let enginePreview = null;
   let analysisToken = 0;
   const engineCache = new Map();
+  let showEvalBar = false;
+
+  function clearEvalBar() {
+    const bar = $("lesson-evalbar");
+    const fill = $("lesson-evalbar-white");
+    const label = $("lesson-eval-label");
+    if (!bar || !fill || !label) return;
+    fill.style.height = "50%";
+    bar.setAttribute("aria-valuenow", "50");
+    bar.setAttribute("aria-valuetext", "Évaluation non calculée");
+    label.textContent = "À analyser";
+  }
+
+  function renderEvalBar(result) {
+    const best = result && result.choices && result.choices[0];
+    if (!best || !game) { clearEvalBar(); return; }
+    const sideToMoveSign = game.turn() === "w" ? 1 : -1;
+    let whitePercent = 50;
+    let text = "Évaluation indisponible";
+    let aria = text;
+    if (Number.isFinite(best.mate)) {
+      const whiteMate = best.mate * sideToMoveSign;
+      whitePercent = whiteMate > 0 ? 96 : 4;
+      text = whiteMate > 0 ? "Mat Blancs +" + whiteMate : "Mat Noirs #" + Math.abs(whiteMate);
+      aria = "Stockfish annonce " + text;
+    } else if (Number.isFinite(best.scoreCp)) {
+      const whiteCp = best.scoreCp * sideToMoveSign;
+      whitePercent = 50 + 45 * Math.tanh(whiteCp / 500);
+      const pawns = whiteCp / 100;
+      text = (pawns > 0 ? "+" : "") + pawns.toFixed(2);
+      aria = "Évaluation Stockfish, avantage des Blancs " + text + " pion(s)";
+    }
+    const bar = $("lesson-evalbar");
+    $("lesson-evalbar-white").style.height = Math.max(4, Math.min(96, whitePercent)) + "%";
+    bar.setAttribute("aria-valuenow", String(Math.round(whitePercent)));
+    bar.setAttribute("aria-valuetext", aria);
+    $("lesson-eval-label").textContent = text;
+  }
 
   function readProgress() {
     try { return JSON.parse(localStorage.getItem(STORE_KEY) || "{}"); }
@@ -1493,6 +1533,7 @@
     $("lesson-engine-status").textContent = "";
     $("lesson-engine-lines").textContent = "";
     lessonIndex = index;
+    clearEvalBar();
     surpriseMode = Boolean(options.surprise);
     anticipationPractice = Boolean(options.anticipate);
     anticipatingBook = false;
@@ -1613,6 +1654,7 @@
       return;
     }
     sequenceIndex++;
+    clearEvalBar();
     const anticipated = anticipatingBook;
     anticipatingBook = false;
     clearSelection();
@@ -1650,6 +1692,7 @@
           return;
         }
         sequenceIndex++;
+        clearEvalBar();
         boardUI.lastMove = { from: move.from, to: move.to, san: move.san };
         appendMove(move.san, "Ligne du livre");
         $("lesson-status").textContent = "À toi : joue la suite.";
@@ -1791,6 +1834,7 @@
     }
     if (!last) return;
     enginePreview = preview;
+    clearEvalBar();
     boardUI.lastMove = { from: last.from, to: last.to, san: last.san };
     $("lesson-engine-return").hidden = false;
     $("lesson-status").textContent = "Aperçu Stockfish : " + choice.sanLine.slice(0, 5).join(" ") + ". Reviens à l’exercice pour continuer à jouer.";
@@ -1855,6 +1899,7 @@
       }
       if (token !== analysisToken || !game || game.fen() !== fen) return;
       renderEngineChoices(result, fen);
+      renderEvalBar(result);
       $("lesson-engine-status").setAttribute("data-source", "stockfish-19");
       if (stockfishCoachMode && stockfishReflection) {
         const bestLine = result.choices[0] ? result.choices[0].sanLine.join(" ") : "aucune variante disponible";
@@ -1913,7 +1958,18 @@
     $("lesson-engine-analyze").hidden = false;
     $("lesson-engine-analyze").focus();
   });
-  $("lesson-engine-analyze").addEventListener("click", () => runEngineComparison(false));
+  $("lesson-eval-toggle").addEventListener("click", () => {
+    showEvalBar = !showEvalBar;
+    $("lesson-eval-widget").hidden = !showEvalBar;
+    $("lesson-eval-toggle").setAttribute("aria-pressed", String(showEvalBar));
+    $("lesson-eval-toggle").textContent = "Barre d’évaluation : " + (showEvalBar ? "On" : "Off");
+    if (showEvalBar && game) {
+      const cached = engineCache.get(game.fen());
+      if (cached) renderEvalBar(cached);
+      else clearEvalBar();
+    }
+  });
+    $("lesson-engine-analyze").addEventListener("click", () => runEngineComparison(false));
   $("lesson-review-save").addEventListener("click", () => {
     if (!stockfishCoachMode || !stockfishReflection || !game) return;
     const result = engineCache.get(game.fen());
