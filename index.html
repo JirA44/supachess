@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SupaChess Coach IA — Entraîneur d'échecs</title>
-<link rel="stylesheet" href="css/style.css?v=live-move-grade-counts-20261026-lessons-nav-20261026-move-hover-20261026-legal-move-dots-20261026-fide-levels-profile-accuracy-20261027-level-diagnostic-lock-20261027-move-grade-colors-20261028-grade-gradient-20261028-profile-accuracy-20261028-profile-contrast-20261028-profile-diagnostic-20261028-profile-mastery-20261028-profile-resume-links-20261028-resume-match-mastery-20261028-resume-strong-frames-20261028">
+<link rel="stylesheet" href="css/style.css?v=live-move-grade-counts-20261026-lessons-nav-20261026-move-hover-20261026-legal-move-dots-20261026-fide-levels-profile-accuracy-20261027-level-diagnostic-lock-20261027-move-grade-colors-20261028-grade-gradient-20261028-profile-accuracy-20261028-profile-contrast-20261028-profile-diagnostic-20261028-profile-mastery-20261028-profile-resume-links-20261028-resume-match-mastery-20261028-resume-strong-frames-20261028-site-counters-20261029">
 <style>
   .supa-section { margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(128,128,128,.4); }
   .supa-head { font-weight: 600; font-size: .85em; opacity: .9; }
@@ -289,13 +289,16 @@
   <a href="book-lessons.html" class="hub-link">♟ SupaChess Académie · La route vers l’excellence</a>
   <a href="learn-moves.html" class="hub-link">🎓 Apprendre à compter & calculer les coups</a>
   <a href="https://jira44.github.io/supachess-web/" target="_blank" rel="noopener" class="hub-link">♞ Hub SupaChess</a>
-  <span id="registered-members-count" class="registered-members-count" aria-live="polite">Membres inscrits : chargement…</span>
+  <div class="site-counters" aria-live="polite" aria-label="Statistiques du site">
+  <span id="registered-members-count" class="registered-members-count">Comptes inscrits : chargement…</span>
+  <span id="unique-visitors-count" class="unique-visitors-count">Visiteurs uniques estimés : chargement…</span>
+</div>
 </footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-<script src="js/site-stats.js"></script>
+<script src="js/site-stats.js?v=unique-visitors-20261029"></script>
 <script src="js/profile.js?v=profile-xp-next-level-20261028"></script>
 <script src="vendor/chess.js"></script>
 <script src="js/engine.js"></script>
@@ -311,6 +314,6 @@
   <script src="js/centipawn-explanations.js"></script>
   <script src="js/review.js?v=accessibility-dialog-20261028"></script>
 <script src="js/review-insights.js?v=learning-baseline-20261027-level-diagnostic-lock-20261027"></script>
-<script src="js/profile-page.js?v=in-page-profile-20261027"></script>
+<script src="js/profile-page.js?v=profile-counts-20261029"></script>
 </body>
 </html>

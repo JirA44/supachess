@@ -28,6 +28,13 @@
     console.error("SupaChess profile initialization failed:", error);
   }
 
+  function incrementRegisteredAccountCount() {
+    if (!database || typeof firebase === "undefined" || !firebase.firestore) return Promise.resolve();
+    return database.collection("site_stats").doc("counters").set({
+      registered_users: firebase.firestore.FieldValue.increment(1)
+    }, { merge: true }).catch(() => {});
+  }
+
   function closeProfileDialog() {
     const overlay = document.getElementById("profile-modal");
     if (overlay) overlay.remove();
@@ -170,10 +177,12 @@
         return;
       }
       submit.disabled = true;
-      const action = mode === "login"
-        ? auth.signInWithEmailAndPassword(email, password)
-        : auth.createUserWithEmailAndPassword(email, password);
-      action.then((credential) => openAccountProfile(credential.user))
+      const registering = mode === "register";
+      const action = registering
+        ? auth.createUserWithEmailAndPassword(email, password)
+        : auth.signInWithEmailAndPassword(email, password);
+      action.then((credential) => (registering ? incrementRegisteredAccountCount() : Promise.resolve())
+        .then(() => openAccountProfile(credential.user)))
         .catch((error) => showNotice(firebaseErrorMessage(error), true))
         .finally(() => { submit.disabled = false; });
     });
@@ -183,7 +192,11 @@
         return;
       }
       auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
-        .then((credential) => openAccountProfile(credential.user))
+        .then((credential) => {
+          const isNewUser = credential.additionalUserInfo && credential.additionalUserInfo.isNewUser;
+          return (isNewUser ? incrementRegisteredAccountCount() : Promise.resolve())
+            .then(() => openAccountProfile(credential.user));
+        })
         .catch((error) => showNotice(firebaseErrorMessage(error), true));
     });
     content.querySelector("[data-profile-reset]").addEventListener("click", () => {

@@ -371,3 +371,9 @@ body {
 @media (max-width: 480px) {
   .profile-learning .profile-learning-actions .profile-resume-link { min-height: 48px; gap: 8px; padding: 9px 10px; font-size: .93rem; }
 }
+
+
+/* Readable site-wide account and visitor counters. */
+.site-counters{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 22px;width:100%;box-sizing:border-box;padding:12px 16px;margin-top:8px;border-top:1px solid rgba(255,255,255,.16);color:#eef5f2;font-size:.9rem;text-align:center}
+.site-counters span{display:inline-block;max-width:100%}
+@media(max-width:520px){.site-counters{flex-direction:column;gap:6px;padding:12px 10px;font-size:.82rem}}
