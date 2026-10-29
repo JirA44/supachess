@@ -194,7 +194,7 @@ test("eight learning paths explain their progression and open matching lessons",
 
   await stockfish.getByRole("button", { name: "Commencer sur une position" }).click();
   await expect(page.locator("#lesson-program-filter")).toHaveValue("");
-  await expect(page.locator("#lesson-title")).toHaveText("Stockfish · Repérer le mat forcé");
+  await expect(page.locator("#lesson-title")).toHaveText("Stockfish · Lire une évaluation avec le bon repère");
   await expect(page.locator("#lesson-catalog .lesson-catalog-button:not(.anticipation-exercise)").first()).toBeVisible();
   await expect(page.locator("#lesson-reflection")).toBeVisible();
   await expect(page.locator("#lesson-engine-analyze")).toBeHidden();
@@ -248,6 +248,6 @@ test("Stockfish path opens its beginner lesson and accepts a legal board move", 
   await page.locator("#lesson-choices .lesson-choice").filter({ hasText: "La position exacte" }).click();
   await page.locator('.sq[data-square="f1"]').click();
   await page.locator('.sq[data-square="c4"]').click();
-  await expect(page.locator("#lesson-move-list")).toContainText("Toi : Fc4");
+  await expect(page.locator("#lesson-move-list")).toContainText("Toi : Bc4");
   await expect(page.locator("#lesson-explanation")).toContainText("Ce que tu viens d’apprendre");
 });
