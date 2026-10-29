@@ -576,23 +576,12 @@ function reviewStartCorrectionExercises(items,headers={},analysis=null){
   panel?.scrollIntoView({block:"start"});
 }
 
-async function reviewAnalyzeCorrectionCandidates(item,generation){
-  if(!state.engine||typeof state.engine.analyze!=="function")return;
-  const fen=item.fen;
-  const legalCount=new Chess(fen).moves({verbose:true}).length;
-  if(!legalCount)return;
-  try{
-    const result=await state.engine.analyze({fen,multipv:Math.min(4,legalCount),movetime:300,elo:0});
-    const exercise=reviewState.exercise;
-    if(!exercise||state.gen!==generation||state.chess.fen()!==fen||
-      exercise.items[exercise.index]!==item)return;
-    if(typeof buildCandidates==="function")buildCandidates(result.lines||[],fen);
-    if(result.lines&&result.lines[0]&&typeof updateEvalBar==="function")updateEvalBar(result.lines[0]);
-    renderBoard();
-  }catch(_error){
-    const feedback=document.getElementById("review-exercise-feedback");
-    if(feedback)feedback.textContent="L’exercice reste jouable. L’analyse des bulles candidates est indisponible.";
-  }
+function reviewHideCorrectionCandidates(){
+  if(!reviewState.exercise)return;
+  state.candidates=[];
+  boardUI.dots=[];
+  const list=document.getElementById("candidates-list");
+  if(list)list.innerHTML="<em>Les coups candidats sont masqués pendant la correction pour te laisser chercher.</em>";
 }
 
 function reviewShowCorrectionExercise(index){
@@ -642,9 +631,8 @@ function reviewShowCorrectionExercise(index){
   next.textContent=index===exercise.items.length-1?"Terminer":"Exercice suivant";
   setStatus("Exercice de correction — trouve le meilleur coup.");
   renderAll();
+  reviewHideCorrectionCandidates();
   if(typeof renderAccuracy==="function")renderAccuracy();
-  const exerciseGeneration=state.gen;
-  reviewAnalyzeCorrectionCandidates(item,exerciseGeneration);
   if(Number.isFinite(item.bestScoreCp)||Number.isFinite(item.bestMate)){
     updateEvalBar({scoreCp:Number.isFinite(item.bestScoreCp)?item.bestScoreCp:null,
       mate:Number.isFinite(item.bestMate)?item.bestMate:null,pv:[item.bestUci]});
@@ -683,6 +671,7 @@ function reviewHandleExerciseSquareClick(square){
         document.getElementById("btn-review-exercise-retry")?.classList.remove("hidden");
         setStatus("Coup légal joué — recommence pour trouver la correction.");
         renderAll();
+        reviewHideCorrectionCandidates();
         return true;
       }
       const played=state.chess.move({from:selected,to:square,promotion});
@@ -694,6 +683,7 @@ function reviewHandleExerciseSquareClick(square){
       document.getElementById("btn-review-exercise-next").disabled=false;
       setStatus("Position corrigée.");
       renderAll();
+      reviewHideCorrectionCandidates();
       return true;
     }
   }
