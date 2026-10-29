@@ -31,6 +31,11 @@
     padding: 6px 0; border-bottom: 1px dashed rgba(128,128,128,.25); font-size: .85em; }
   .review-history-meta { min-width: 0; overflow-wrap: anywhere; }
   .review-history-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  @media (max-width: 520px) {
+    .review-history-row { align-items: flex-start; flex-direction: column; }
+    .review-history-meta, .review-history-actions { width: 100%; }
+    .review-history-actions { flex-wrap: wrap; }
+  }
   .review-history-status { min-height: 1em; font-size: .78em; opacity: .75; }
   .review-correction-practice { margin-top: 10px; padding: 10px; border: 1px solid rgba(240,179,92,.5); border-radius: 8px; }
   .review-exercise-panel { width: min(720px, 96%); margin: 8px auto; padding: 10px; border: 1px solid rgba(240,179,92,.5); border-radius: 8px; background: var(--panel, #222); }
