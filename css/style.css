@@ -131,6 +131,7 @@ body {
 .candidate-move-tooltip[hidden] { display: none; }
 .played-move-bubble { bottom: 2px; left: 2px; }
 .board-bubble-grade { font-size: 1em; }
+.grade-ok .board-bubble-grade { font-size: 1.35em; line-height: .95; }
 .board-bubble-eval { font-size: .82em; font-weight: 750; opacity: .88; }
 .cdot.q-best, .tone-best { background: var(--green); }
 .cdot.q-good, .tone-good { background: var(--yellow); }
