@@ -209,7 +209,7 @@ test('Stockfish completes a 67-halfmove PGN analysis and retries once after a wo
     return {plies:sans.length};
   });
   expect(setup.plies).toBe(67);
-  await page.waitForFunction(()=>window.__reviewResult!==null,{timeout:120000});
+  await page.waitForFunction(()=>window.__reviewResult!==null,null,{timeout:120000});
   const result=await page.evaluate(()=>({
     ok:window.__reviewResult,
     moves:reviewState.moves.length,
