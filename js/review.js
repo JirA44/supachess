@@ -298,12 +298,22 @@ async function reviewRun(options = {}) {
   // Le lot reste local : le bilan transversal est calculé après les analyses.
   if (!options.batch) {
     await reviewAskSupa(rows, accW, accB, headers);
-    reviewBeginReplay();
-    document.getElementById("replay-bar").classList.remove("hidden");
-    reviewSetReplayControls(true);
-    await replayGoto(0);
+    if (!options.startCorrections) {
+      reviewBeginReplay();
+      document.getElementById("replay-bar").classList.remove("hidden");
+      reviewSetReplayControls(true);
+      await replayGoto(0);
+    }
   }
   reviewState.running = false;
+  if (options.startCorrections) {
+    const exercises = reviewValidCorrectionExercises(reviewState.correctionExercises);
+    if (exercises.length) reviewStartCorrectionExercises(exercises, headers);
+    else {
+      const status = document.getElementById("review-history-status");
+      if (status) status.textContent = "Analyse terminée : aucun demi-coup à corriger n’a été détecté.";
+    }
+  }
   return true;
 }
 
@@ -470,8 +480,56 @@ function reviewSetCorrectionPhase(phase){
   reviewShowCorrectionExercise(0);
 }
 
+function reviewCompareCorrectionExercises(a,b){
+  const moveA=Number.isFinite(Number(a.moveNumber))?Number(a.moveNumber):Number.MAX_SAFE_INTEGER;
+  const moveB=Number.isFinite(Number(b.moveNumber))?Number(b.moveNumber):Number.MAX_SAFE_INTEGER;
+  if(moveA!==moveB)return moveA-moveB;
+  if(a.color===b.color)return 0;
+  return a.color==="w"?-1:1;
+}
+
+async function reviewCorrectPgn(pgn,headers={}){
+  const normalized=String(pgn||"").replace(/\r\n?/g,"\n").trim();
+  if(!normalized)return false;
+  if(reviewState.running){
+    const status=document.getElementById("review-history-status");
+    if(status)status.textContent="Une analyse est déjà en cours. Attends sa fin avant de lancer une correction.";
+    return false;
+  }
+  const saved=reviewHistoryLoad().find((item)=>
+    item.pgn.replace(/\r\n?/g,"\n").trim()===normalized);
+  if(saved){
+    const exercises=reviewValidCorrectionExercises(saved.correctionExercises)
+      .sort(reviewCompareCorrectionExercises);
+    if(exercises.length){
+      reviewState.currentHeaders={White:saved.white||headers.White||"Blancs",Black:saved.black||headers.Black||"Noirs"};
+      reviewStartCorrectionExercises(exercises,reviewState.currentHeaders);
+      return true;
+    }
+    if(saved.analysis&&saved.analysis.version===1&&
+      (!Array.isArray(saved.correctionExercises)||saved.correctionExercises.length===0)){
+      const status=document.getElementById("review-history-status");
+      if(status)status.textContent="Cette partie a déjà été analysée : aucun demi-coup à corriger n’a été détecté.";
+      document.getElementById("review-panel")?.scrollIntoView({block:"start"});
+      return true;
+    }
+  }
+  const input=document.getElementById("pgn-input");
+  if(!input)return false;
+  input.value=normalized;
+  reviewState.currentHeaders={...headers};
+  const panel=document.getElementById("review-panel");
+  if(panel)panel.classList.remove("hidden");
+  const completed=await reviewRun({batch:true,startCorrections:true});
+  if(!completed){
+    const status=document.getElementById("review-history-status");
+    if(status)status.textContent="Impossible d’analyser cette partie. Vérifie que son PGN est valide.";
+  }
+  return completed;
+}
+
 function reviewStartCorrectionExercises(items,headers={}){
-  const valid=reviewValidCorrectionExercises(items);
+  const valid=reviewValidCorrectionExercises(items).sort(reviewCompareCorrectionExercises);
   if(!valid.length){
     const status=document.getElementById("review-history-status");
     if(status)status.textContent="Aucune position de correction exploitable n’est enregistrée. Rouvre et analyse le PGN pour créer les exercices.";
@@ -749,11 +807,10 @@ if (reviewHistoryList) reviewHistoryList.addEventListener("click", (event) => {
   const item = reviewHistoryLoad().find((saved) => saved.id === id);
   if (button.dataset.reviewHistoryAct === "delete") reviewHistoryRemove(id);
   else if (button.dataset.reviewHistoryAct === "open" && item) reviewStart(item.pgn);
-  else if (button.dataset.reviewHistoryAct === "reanalyze-corrections" && item) reviewStart(item.pgn);
-  else if (button.dataset.reviewHistoryAct === "exercise" && item) {
-    reviewState.currentHeaders = { White: item.white, Black: item.black };
-    reviewStartCorrectionExercises(item.correctionExercises, reviewState.currentHeaders);
-  }
+  else if (button.dataset.reviewHistoryAct === "reanalyze-corrections" && item)
+    reviewCorrectPgn(item.pgn,{White:item.white,Black:item.black});
+  else if (button.dataset.reviewHistoryAct === "exercise" && item)
+    reviewCorrectPgn(item.pgn,{White:item.white,Black:item.black});
 });
 reviewHistoryRender();
 function resumeCorrectionExercisesFromUrl() {

@@ -24,7 +24,8 @@
   .game-row { display: flex; align-items: center; justify-content: space-between; gap: 6px;
     padding: 3px 0; border-bottom: 1px dashed rgba(128,128,128,.25); font-size: .85em; }
   .game-row:last-child { border-bottom: none; }
-  .game-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .game-actions { display: flex; gap: 4px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+  @media (max-width: 560px) { .game-row { align-items: flex-start; flex-direction: column; } .game-actions { width: 100%; justify-content: flex-start; } }
   .review-history-list { display: grid; gap: 5px; margin-top: 8px; }
   .review-history-row { display: flex; align-items: center; justify-content: space-between; gap: 8px;
     padding: 6px 0; border-bottom: 1px dashed rgba(128,128,128,.25); font-size: .85em; }

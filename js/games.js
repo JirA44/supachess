@@ -147,6 +147,7 @@ function gamesRenderPanel() {
     return `<div class="game-row" data-id="${esc(g.id)}">
       <span class="game-meta">${esc(when)} · <strong>${esc(g.result)}</strong> · préc. B/N ${esc(acc)}</span>
       <span class="game-actions">
+        <button class="btn mini" data-act="correct" title="Aller à la première erreur à corriger">Corriger</button>
         <button class="btn mini" data-act="dl" title="Télécharger le PGN">⬇ PGN</button>
         <button class="btn mini" data-act="analyse" title="Analyser avec Supa">Analyser</button>
         <button class="btn mini danger" data-act="del" title="Supprimer">✕</button>
@@ -167,6 +168,8 @@ document.getElementById("games-list").addEventListener("click", (e) => {
     gamesDownload(`supachess_${id}.pgn`, game.pgn);
   } else if (act === "analyse") {
     if (typeof reviewStart === "function") reviewStart(game.pgn);
+  } else if (act === "correct") {
+    if (typeof reviewCorrectPgn === "function") reviewCorrectPgn(game.pgn);
   } else if (act === "del") {
     gamesStore(gamesLoad().filter((g) => g.id !== id));
     gamesRenderPanel();

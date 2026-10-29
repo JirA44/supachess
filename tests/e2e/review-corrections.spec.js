@@ -17,6 +17,9 @@ test('plays correction exercises from a saved analyzed game',async({page})=>{
         playedSan:'d5',classification:'ok',lossCp:2.5
       }]
     }]));
+    const saved=JSON.parse(localStorage.getItem('supachess_reviewed_pgns'));
+    saved[0].correctionExercises.reverse();
+    localStorage.setItem('supachess_reviewed_pgns',JSON.stringify(saved));
     reviewHistoryRender();
   });
   await expect(page.locator('#review-history-list')).toContainText('Corriger (2)');
@@ -67,20 +70,57 @@ test('plays correction exercises from a saved analyzed game',async({page})=>{
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('supachess_reviewed_pgns')).length)).toBe(1);
 });
 
-test('offers PGN reanalysis instead of a dead correction button when saved positions are invalid',async({page})=>{
+test('reanalyzes invalid saved corrections and opens the first error directly',async({page})=>{
   await page.goto('/index.html');
+  await expect(page.locator('body')).toHaveAttribute('data-engine-ready','1',{timeout:30000});
   await page.evaluate(()=>{
     localStorage.clear();
     localStorage.setItem('supachess_reviewed_pgns',JSON.stringify([{
-      id:'legacy-game',pgn:'1. e4 e5',white:'Carol',black:'Dan',result:'*',
+      id:'legacy-game',pgn:'1. f3 e5 2. g4 Qh4#',white:'Carol',black:'Dan',result:'0-1',
       correctionExercises:[{fen:'',bestUci:''}]
     }]));
     reviewHistoryRender();
   });
-  await expect(page.locator('#review-history-list [data-review-history-act="exercise"]')).toHaveCount(0);
   await page.click('#review-history-list [data-review-history-act="reanalyze-corrections"]');
-  await expect(page.locator('#pgn-modal')).toBeVisible();
-  await expect(page.locator('#pgn-input')).toHaveValue('1. e4 e5');
+  await expect(page.locator('#review-exercise-panel')).toBeVisible();
+  await expect.poll(()=>page.evaluate(()=>({
+    running:reviewState.running,
+    first:reviewState.exercise?.items?.[0]&&{
+      moveNumber:reviewState.exercise.items[0].moveNumber,
+      color:reviewState.exercise.items[0].color,
+      playedSan:reviewState.exercise.items[0].playedSan
+    }
+  })),{timeout:60000}).toEqual({
+    running:false,first:{moveNumber:1,color:'w',playedSan:'f3'}
+  });
+  await expect(page.locator('#review-exercise-heading')).toContainText('Exercice 1/');
+});
+
+test('adds a correction button to saved games and starts at their first reviewed error',async({page})=>{
+  await page.goto('/index.html');
+  await expect(page.locator('body')).toHaveAttribute('data-engine-ready','1',{timeout:30000});
+  await page.evaluate(()=>{
+    localStorage.clear();
+    const pgn='1. f3 e5';
+    localStorage.setItem('supachess_games',JSON.stringify([{
+      id:'saved-game',date:'2026-10-28T19:59:00.000Z',pgn,result:'*',accuracyW:92.8,accuracyB:null
+    }]));
+    localStorage.setItem('supachess_reviewed_pgns',JSON.stringify([{
+      id:'saved-review',pgn,white:'Alice',black:'Bob',result:'*',
+      correctionExercises:[
+        {fen:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1',bestUci:'e7e5',bestScoreCp:-8,bestMate:null,moveNumber:1,color:'b',playedSan:'d5',classification:'ok',lossCp:2.5},
+        {fen:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',bestUci:'e2e4',bestScoreCp:12,bestMate:null,moveNumber:1,color:'w',playedSan:'f3',classification:'ok',lossCp:4.2}
+      ]
+    }]));
+    gamesRenderPanel();
+    reviewHistoryRender();
+  });
+  await expect(page.locator('.game-row [data-act="correct"]')).toBeVisible();
+  await page.click('.game-row [data-act="correct"]');
+  await expect(page.locator('#review-exercise-panel')).toBeVisible();
+  await expect(page.locator('#review-exercise-heading')).toContainText('Exercice 1/2');
+  await expect(page.locator('#review-exercise-prompt')).toContainText('1. f3');
+  expect(await page.evaluate(()=>state.chess.fen())).toBe('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
 });
 
 test('resumes saved correction exercises from a profile link',async({page})=>{
