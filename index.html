@@ -88,7 +88,8 @@
   .hub-link:hover { color: #7fc97f; }
   .brand-tag { font-size: .6em; font-weight: 400; opacity: .8; vertical-align: super; }
   h1.brand { margin: 0; line-height: 1.2; }
-</style>
+.side-group-heading { font-size: .72rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); padding: 2px 2px 7px; border-bottom: 1px solid var(--panel-edge); }
+  </style>
 </head>
 <body>
 <header class="topbar">
@@ -219,6 +220,8 @@
 
   <!-- Colonne droite : coach + historique + stats -->
   <section class="side-zone">
+    <h2 class="side-group-heading">Pendant la partie</h2>
+
     <div id="move-grade-panel" class="panel">
       <h2>Coups joués · qualité en direct</h2>
       <div id="move-grade-summary" class="move-grade-summary" aria-live="polite"></div>
@@ -239,24 +242,6 @@
       <div id="candidates-list" class="candidates-list"><em>En attente d'analyse…</em></div>
     </div>
 
-    <div id="review-panel" class="panel hidden">
-      <h2>Analyse de partie</h2>
-      <div id="review-progress" class="review-progress"></div>
-      <div id="review-report" class="review-report"></div>
-      <div class="coach-actions">
-        <button id="btn-replay-game" class="btn hidden">Rejouer cette partie</button>
-      </div>
-    </div>
-
-    <div class="panel">
-      <h2>Parties</h2>
-      <div id="games-list" class="games-list"><em>Aucune partie enregistrée.</em></div>
-      <button id="btn-export-all" class="btn" style="margin-top:6px">Tout exporter (.pgn)</button>
-      <h3 style="margin:14px 0 4px">PGN analysés</h3>
-      <div id="review-history-status" class="review-history-status" aria-live="polite"></div>
-      <div id="review-history-list" class="review-history-list"><em>Aucun PGN analysé.</em></div>
-    </div>
-
     <div class="panel">
       <h2>Historique</h2>
       <div id="move-history" class="move-history"></div>
@@ -274,6 +259,26 @@
           <tr><td>Coups forcés malgré le coach</td><td id="stat-forced">0</td></tr>
         </tbody>
       </table>
+    </div>
+
+    <h2 class="side-group-heading">Revoir et retrouver</h2>
+
+    <div id="review-panel" class="panel hidden">
+      <h2>Analyse de partie</h2>
+      <div id="review-progress" class="review-progress"></div>
+      <div id="review-report" class="review-report"></div>
+      <div class="coach-actions">
+        <button id="btn-replay-game" class="btn hidden">Rejouer cette partie</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Parties</h2>
+      <div id="games-list" class="games-list"><em>Aucune partie enregistrée.</em></div>
+      <button id="btn-export-all" class="btn" style="margin-top:6px">Tout exporter (.pgn)</button>
+      <h3 style="margin:14px 0 4px">PGN analysés</h3>
+      <div id="review-history-status" class="review-history-status" aria-live="polite"></div>
+      <div id="review-history-list" class="review-history-list"><em>Aucun PGN analysé.</em></div>
     </div>
   </section>
 </main>
