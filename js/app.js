@@ -167,17 +167,16 @@ boardUI.showMoveDots = levelDiagnosticLockWasActive ? false : localStorage.getIt
 function syncDotsButton() {
   const button = $("btn-dots");
   if (!button) return;
-  const diagnosticLocked = isDiagnosticControlLockActive();
-  const correctionLocked = correctionExerciseModeActive;
+  const locked = isDiagnosticControlLockActive();
   const candidatesPanel = $("candidates-panel");
   if (candidatesPanel) {
-    candidatesPanel.hidden = diagnosticLocked;
-    candidatesPanel.setAttribute("aria-hidden", String(diagnosticLocked));
+    candidatesPanel.hidden = locked;
+    candidatesPanel.setAttribute("aria-hidden", String(locked));
   }
-  button.disabled = diagnosticLocked || correctionLocked;
-  button.title = diagnosticLocked ? "Bloqué pendant le diagnostic de niveau" : correctionLocked ? "Masquées pendant l’exercice pour ne pas révéler la réponse" : "Afficher ou masquer les bulles candidates";
-  button.textContent = diagnosticLocked ? "Bulles candidates : bloquées pendant le diagnostic" : correctionLocked ? "Bulles candidates : masquées pendant la correction" : "Bulles candidates : " + (boardUI.showDots ? "ON" : "OFF");
-  button.setAttribute("aria-pressed", String(!diagnosticLocked && !correctionLocked && boardUI.showDots));
+  button.disabled = locked;
+  button.title = locked ? "Bloqué pendant le diagnostic de niveau" : "Afficher ou masquer les bulles candidates";
+  button.textContent = locked ? "Bulles candidates : bloquées pendant le diagnostic" : "Bulles candidates : " + (boardUI.showDots ? "ON" : "OFF");
+  button.setAttribute("aria-pressed", String(!locked && boardUI.showDots));
   syncLevelDiagnosticBanner();
 }
 function syncMoveDotsButton() {
