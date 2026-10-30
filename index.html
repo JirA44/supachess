@@ -30,7 +30,12 @@
   .review-history-list { display: grid; gap: 5px; margin-top: 8px; }
   .review-history-row { display: flex; align-items: center; justify-content: space-between; gap: 8px;
     padding: 6px 0; border-bottom: 1px dashed rgba(128,128,128,.25); font-size: .85em; }
-  .review-history-meta { min-width: 0; overflow-wrap: anywhere; }
+  .review-history-meta { min-width: 0; overflow-wrap: anywhere; flex: 1; }
+  .review-history-moves { margin-top: 6px; }
+  .review-history-moves summary { cursor: pointer; color: var(--accent); }
+  .review-history-moves ol { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 6px 0 0; padding: 0; }
+  .review-history-ply { border: 1px solid rgba(128,128,128,.35); border-radius: 6px; padding: 3px 6px; background: rgba(128,128,128,.08); color: inherit; cursor: pointer; font: inherit; }
+  .review-history-ply:hover, .review-history-ply:focus-visible { border-color: var(--accent); background: rgba(240,179,92,.18); }
   .review-history-actions { display: flex; gap: 4px; flex-shrink: 0; }
   @media (max-width: 520px) {
     .review-history-row { align-items: flex-start; flex-direction: column; }
@@ -368,7 +373,7 @@
 <script src="js/blindspots.js"></script>
   <script src="js/learning-loop.js"></script>
   <script src="js/centipawn-explanations.js"></script>
-  <script src="js/review.js?v=correction-move-explanations-20261030"></script>
+  <script src="js/review.js?v=history-halfmove-navigation-20261030"></script>
 <script src="js/review-insights.js?v=learning-baseline-20261027-level-diagnostic-lock-20261027"></script>
 <script src="js/profile-page.js?v=profile-counts-20261029"></script>
 </body>
