@@ -185,6 +185,16 @@ function reviewTagOf(delta) {
 }
 
 function reviewClassOf(row, grade = {}) {
+  if (Number.isFinite(grade.mateAwareLoss)) {
+    const loss = grade.mateAwareLoss;
+    if (loss >= 200) return "blunder";
+    if (loss >= 60) return "mistake";
+    if (loss >= 30) return "inaccuracy";
+    if (row.bestMove) return "best";
+    if (loss <= 10) return "very-good";
+    if (loss <= 20) return "good";
+    return "ok";
+  }
   if (!Number.isFinite(row.lossCp)) return "unrated";
   if (row.lossCp >= 200) return "blunder";
   if (row.lossCp >= 60) return "mistake";
@@ -300,6 +310,8 @@ async function reviewRun(options = {}) {
           captureFacts:blindspot && blindspot.status === "OK" ? blindspot.facts : []
         }) : null;
     const verifiedLossCp = cpEvidence && cpEvidence.status === "OK" ? cpEvidence.lossCp : null;
+    const mateAwareLoss = cpEvidence && cpEvidence.status === "MATE_EVALUATION" && Number.isFinite(delta)
+      ? Math.round(delta * 100) : null;
     const displayDelta = verifiedLossCp === null ? null : verifiedLossCp / 100;
     if (verifiedLossCp !== null) accs[moves[i].color].push(moveAccuracyPct(before, after));
     rows.push({
@@ -312,6 +324,7 @@ async function reviewRun(options = {}) {
       diagnostics: blindspot && blindspot.status === "OK" ? blindspot.diagnostics : [],
       centipawns: cpEvidence,
       lossCp: verifiedLossCp,
+      mateAwareLoss,
     });
   }
   const r1 = (v) => (v === null ? null : Math.round(v * 10) / 10);
@@ -330,8 +343,8 @@ async function reviewRun(options = {}) {
     const evaluation = reply && (reply.scoreCp !== null || reply.mate !== null)
       ? formatScore(reply, move.color === "b") : "—";
     const brilliant = eligible ? isBrilliantCandidate(fens[i], cand) : false;
-    const category = reviewClassOf(row, { brilliant });
-    return { deltaCp: eligible ? cand.deltaCp : null, brilliant, category, evaluation };
+    const category = reviewClassOf(row, { brilliant, mateAwareLoss: row.mateAwareLoss });
+    return { deltaCp: eligible ? cand.deltaCp : null, mateAwareLoss: row.mateAwareLoss, brilliant, category, evaluation };
   });
   rows.forEach((row, i) => { row.evaluation = reviewState.grades[i].evaluation; row.classification = reviewClassOf(row, reviewState.grades[i]); });
   reviewState.moveGrades = reviewState.grades.map((grade, index) => ({ ply: index + 1, color: moves[index].color, category: grade.category || "unrated" }));
@@ -435,7 +448,9 @@ function reviewRenderLocal(rows, accW, accB, headers) {
       ? ` · variation côté Blancs : ${cp.swingWhiteCp>=0?"+":""}${cp.swingWhiteCp.toFixed(0)} cp` : "";
     const facts = (cp.observations||[]).map(o=>o.text).join(" ");
     const principles = (cp.principles||[]).map(p=>`<strong>Principe à vérifier : ${esc(p.label)}.</strong> ${esc(p.text)} <small>${esc(p.caveat)}</small>`).join(" ");
-    return `<li class="review-ply" data-review-ply="${idx + 1}">${moveLink}${evaluation} — perte / meilleur coup : ${esc(loss)}${esc(evalChange)}. ${esc(cp.explanation)} ${esc(facts)} ${principles || "<small>Aucun principe précis ne peut être confirmé à partir des preuves disponibles pour ce demi-coup.</small>"}</li>`;
+    const mateQualityNote = Number.isFinite(r.mateAwareLoss)
+      ? " Le classement du coup utilise la distance au mat calculée par Stockfish; aucune perte en centipions n’est revendiquée." : "";
+    return `<li class="review-ply" data-review-ply="${idx + 1}">${moveLink}${evaluation} — perte / meilleur coup : ${esc(loss)}${esc(evalChange)}. ${esc(cp.explanation)}${esc(mateQualityNote)} ${esc(facts)} ${principles || "<small>Aucun principe précis ne peut être confirmé à partir des preuves disponibles pour ce demi-coup.</small>"}</li>`;
   }).join("");
   const blindspots = rows.flatMap((r) => (r.diagnostics || []).map((d) => ({ ...d, n: r.n, color: r.color })));
   const examples = blindspots.slice(0, 8).map((d) => `<li><strong>${d.n}${d.color === "w" ? "." : "..."} :</strong> ${esc(d.text)} <small>${esc(d.caveat)}</small></li>`).join("");
