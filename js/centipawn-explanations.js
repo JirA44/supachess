@@ -106,9 +106,9 @@ const SupaChessCentipawns = (() => {
         text:`Pression sur le ${pieceNames[fact.piece]||fact.piece} en ${fact.square} : ${attackerCount} attaquant${attackerCount>1?"s":""} (${attackers}) contre ${defenderCount} défenseur${defenderCount>1?"s":""} (${defenders}) après le coup; avant, ${fact.previousEnemyAttackers} attaquant(s) et ${fact.previousDefenders} défenseur(s).`});
     }
     const opponentReply=bestAfter?.pv?.[0]?playedMove(fenAfter,bestAfter.pv[0]):null;
-    if(opponentReply && opponentReply.san.includes("+")) observations.push({
+    if(opponentReply && (opponentReply.san.includes("+")||opponentReply.san.includes("#"))) observations.push({
       code:"OPPONENT_CHECK",evidence:"ENGINE_PV",
-      text:`Dans la variante Stockfish après ${played}, la meilleure réponse commence par ${opponentReply.san}, un échec. Il faut vérifier les réponses forcées du roi.`
+      text:`Dans la variante Stockfish après ${played}, la meilleure réponse commence par ${opponentReply.san}, ${opponentReply.san.includes("#")?"un échec et mat":"un échec"}. Il faut vérifier les réponses forcées du roi.`
     });
     if(opponentReply && opponentReply.captured) observations.push({
       code:"OPPONENT_CAPTURE",evidence:"ENGINE_PV",
