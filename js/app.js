@@ -69,33 +69,61 @@ if (new URLSearchParams(window.location.search).get("start-diagnostic") === "1")
   window.history.replaceState(window.history.state, "", launchUrl);
 }
 let levelDiagnosticLockWasActive = isLevelDiagnosticActive();
+function countCompletedDiagnosticGames(diagnostic) {
+  const start = Date.parse(diagnostic && diagnostic.startedAt || "");
+  if (!Number.isFinite(start)) return 0;
+  try {
+    const games = JSON.parse(localStorage.getItem("supachess_games") || "[]");
+    if (!Array.isArray(games)) return 0;
+    const counted = new Set();
+    for (const game of games) {
+      if (!game || !game.id || !["1-0", "0-1", "1/2-1/2"].includes(game.result)) continue;
+      if (!Number(game.stats && game.stats.moves)) continue;
+      const startedAt = Number.parseInt(String(game.id), 10);
+      const playedAgainstStockfish = /stockfish/i.test(String(game.engineName || "")) ||
+        game.stockfishRatingSource === "supachess-engine-setting-v1";
+      if (Number.isFinite(startedAt) && startedAt >= start && playedAgainstStockfish) counted.add(String(game.id));
+    }
+    return counted.size;
+  } catch (_) { return 0; }
+}
+function refreshLevelDiagnosticProgress() {
+  const diagnostic = readLevelDiagnostic();
+  if (!diagnostic || !diagnostic.active) {
+    syncLevelDiagnosticBanner();
+    return;
+  }
+  const count = countCompletedDiagnosticGames(diagnostic);
+  if (count >= 10) {
+    try {
+      localStorage.setItem(LEVEL_DIAGNOSTIC_KEY, JSON.stringify({
+        ...diagnostic, active: false, completed: true, endedEarly: false,
+        analyzedGamesAtCompletion: count,
+      }));
+    } catch (_) {}
+    applyLevelDiagnosticLock();
+    return;
+  }
+  syncLevelDiagnosticBanner();
+}
 function syncLevelDiagnosticBanner() {
   const banner = $("level-diagnostic-banner");
   if (!banner) return;
   const diagnostic = readLevelDiagnostic();
   if (!diagnostic) {
     banner.hidden = false;
-    banner.textContent = "Diagnostic de niveau activé par défaut : analyse 10 parties avec Stockfish. Coaching, bulles candidates et points de coups sont désactivés pendant ce bilan.";
+    banner.textContent = "Diagnostic de niveau activé par défaut : termine 10 parties contre Stockfish. Coaching, bulles candidates et points de coups sont désactivés pendant ce bilan.";
     return;
   }
   if (diagnostic.active) {
-    let count = 0;
-    try {
-      const items = JSON.parse(localStorage.getItem("supachess_reviewed_pgns") || "[]");
-      const start = Date.parse(diagnostic.startedAt || "");
-      if (Array.isArray(items) && Number.isFinite(start)) count = items.filter((item) =>
-        item && item.analysis && item.analysis.version === 1 &&
-        Array.isArray(item.analysis.players) && item.analysis.players.some((player) => Number(player && player.ratedMoves) > 0) &&
-        Date.parse(item.analyzedAt || "") >= start
-      ).length;
-    } catch (_) {}
+    const count = countCompletedDiagnosticGames(diagnostic);
     banner.hidden = false;
     const prefix = diagnostic.defaultActivation ? "Diagnostic de niveau activé par défaut : " : "Diagnostic actif : ";
-    banner.textContent = prefix + count + "/10 parties analysées depuis son activation. Coaching, bulles candidates et points de coups sont désactivés pendant le diagnostic.";
+    banner.textContent = prefix + count + "/10 parties terminées contre Stockfish depuis son activation. Coaching, bulles candidates et points de coups sont désactivés pendant le diagnostic.";
   } else if (diagnostic.completed) {
     banner.hidden = false;
     banner.textContent = "Diagnostic terminé : " + (diagnostic.analyzedGamesAtCompletion || 10) +
-      " parties analysées. Les bulles candidates et points de coups sont réactivés. Consulte le bilan et les exercices ciblés.";
+      " parties terminées contre Stockfish. Les bulles candidates et points de coups sont réactivés. Consulte le bilan et les exercices ciblés.";
   } else if (diagnostic.endedEarly) {
     banner.hidden = false;
     banner.textContent = "Diagnostic interrompu avant 10 parties. Les aides sont réactivées; le bilan de niveau reste à confirmer.";
@@ -699,6 +727,7 @@ function checkGameOver() {
   else if (c.insufficient_material()) msg += "nulle (matériel insuffisant).";
   else msg += "nulle.";
   if (typeof gamesAutoSave === "function") gamesAutoSave();
+  refreshLevelDiagnosticProgress();
   setStatus(msg);
   renderBoard();
   return true;
@@ -1027,5 +1056,6 @@ $("btn-fen").addEventListener("click", () => {
   startTurn();
 });
 
+refreshLevelDiagnosticProgress();
 init();
 
