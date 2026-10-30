@@ -10,6 +10,7 @@ const state = {
   candidates: [],        // [{rank, uci, san, line, deltaCp, args}]
   phase: "init",         // init | analyzing | userTurn | coach | engineThinking | gameover
   abandoned: false,
+  stopped: false,
   pendingMove: null,     // coup utilisateur intercepté {from,to,promotion,uci}
   fenHistory: [],        // clés FEN (4 champs) pour détection de répétition
   evalHistory: [],       // éval (côté Blancs) de chaque demi-coup joué, parallèle à history()
@@ -273,8 +274,11 @@ async function init() {
 
 function newGame() {
   state.abandoned = false;
+  state.stopped = false;
   const abandonButton = $("btn-abandon-game");
+  const stopButton = $("btn-stop-game");
   if (abandonButton) abandonButton.disabled = false;
+  if (stopButton) stopButton.disabled = false;
   state.gen++;
   moveFeedback.clear();
   state.moveGradeHistory = [];
@@ -301,9 +305,12 @@ function abandonCurrentGame() {
   if (state.phase === "init" || state.phase === "gameover") return;
   state.gen++;
   state.abandoned = true;
+  state.stopped = false;
   state.phase = "gameover";
   const abandonButton = $("btn-abandon-game");
+  const stopButton = $("btn-stop-game");
   if (abandonButton) abandonButton.disabled = true;
+  if (stopButton) stopButton.disabled = true;
   state.pendingMove = null;
   moveFeedback.clear();
   hideCoach();
@@ -312,6 +319,27 @@ function abandonCurrentGame() {
   boardUI.dots = [];
   if (typeof gamesAutoSave === "function") gamesAutoSave();
   setStatus("Partie abandonnée — défaite enregistrée.");
+  renderAll();
+}
+
+function stopCurrentGame() {
+  if (state.phase === "init" || state.phase === "gameover") return;
+  state.gen++;
+  state.abandoned = false;
+  state.stopped = true;
+  state.phase = "gameover";
+  state.pendingMove = null;
+  moveFeedback.clear();
+  hideCoach();
+  boardUI.selected = null;
+  boardUI.legalTargets = [];
+  boardUI.dots = [];
+  const abandonButton = $("btn-abandon-game");
+  const stopButton = $("btn-stop-game");
+  if (abandonButton) abandonButton.disabled = true;
+  if (stopButton) stopButton.disabled = true;
+  if (typeof gamesAutoSave === "function") gamesAutoSave();
+  setStatus("Partie arrêtée — résultat non décidé, aucune défaite enregistrée.");
   renderAll();
 }
 
@@ -758,12 +786,14 @@ function hideCoach() {
 
 /* ── Fin de partie ── */
 function checkGameOver() {
-  if (state.abandoned) return true;
+  if (state.abandoned || state.stopped) return true;
   const c = state.chess;
   if (!c.game_over()) return false;
   state.phase = "gameover";
   const abandonButton = $("btn-abandon-game");
+  const stopButton = $("btn-stop-game");
   if (abandonButton) abandonButton.disabled = true;
+  if (stopButton) stopButton.disabled = true;
   boardUI.dots = [];
   let msg = "Partie terminée — ";
   if (c.in_checkmate()) {
@@ -1003,6 +1033,7 @@ function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
 /* ── Boutons ── */
 $("btn-new").addEventListener("click", newGame);
 $("btn-abandon-game")?.addEventListener("click", abandonCurrentGame);
+$("btn-stop-game")?.addEventListener("click", stopCurrentGame);
 syncDotsButton();
 syncMoveDotsButton();
 $("btn-abandon-diagnostic")?.addEventListener("click", abandonLevelDiagnostic);
