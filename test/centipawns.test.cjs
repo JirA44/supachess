@@ -3,7 +3,7 @@ const assert=require("node:assert/strict");
 const {Chess}=require("chess.js");
 global.Chess=Chess;
 global.ChessBlindspots=require("../js/blindspots.js");
-const {explain}=require("../js/centipawn-explanations.js");
+const {explain,causeCatalog}=require("../js/centipawn-explanations.js");
 
 test("a normal move can be +0 cp loss even when raw white evaluation shifts",()=>{
   const c=new Chess();const before=c.fen();c.move("e4");
@@ -61,7 +61,7 @@ test("explains a checking reply found in the engine line and exposes the cause c
     bestBefore:{scoreCp:50,mate:null,depth:12,pv:["c1b1"]},
     bestAfter:{scoreCp:100,mate:null,depth:14,pv:["e7e1"]}});
   assert.ok(r.observations.some(x=>x.code==="OPPONENT_CHECK"));
-  assert.ok(r.causeCatalog.length>=20);
+  assert.ok(causeCatalog.length>=20);
 });
 
 test("explains an engine-preferred attack with a three-to-one pressure count",()=>{
