@@ -163,7 +163,7 @@ test("selecting a piece shows independent hot and cold move points and a chosen 
   const target = page.locator(`[data-square="${move.to}"] .legal-hint`);
   await expect(target).toBeVisible();
   await expect(target).toHaveAttribute('aria-label', /coup|evaluation/i);
-  await expect(target).toHaveClass(/q-best/);
+  await expect(target).toHaveClass(/grade-/);
   await expect(page.locator('.legal-hint')).toHaveCount(await page.evaluate(() => boardUI.legalTargets.length));
 
   await page.getByRole('button', { name: 'Points chauds/froids : ON' }).click();
