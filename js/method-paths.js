@@ -49,8 +49,17 @@
         const firstLesson = catalog.querySelector(".lesson-catalog-button:not(.anticipation-exercise)");
         if (firstLesson) firstLesson.click();
       }
+    } else if (typeof window.startSupaChessMethodPath === "function") {
+      const started = window.startSupaChessMethodPath(program);
+      if (!started) {
+        const firstLesson = Array.from(catalog.querySelectorAll(".lesson-catalog-button"))
+          .find((button) => button.dataset.program === program);
+        if (firstLesson) firstLesson.click();
+        else document.getElementById("lesson-status").textContent = "Aucune leçon n’est encore disponible pour ce parcours.";
+      }
     } else {
-      const firstLesson = catalog.querySelector(".lesson-catalog-button");
+      const firstLesson = Array.from(catalog.querySelectorAll(".lesson-catalog-button"))
+        .find((button) => button.dataset.program === program);
       if (firstLesson) firstLesson.click();
     }
     document.querySelector(".lesson-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
