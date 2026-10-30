@@ -143,6 +143,57 @@ function reviewRefreshCorrectionHotkeys(){
   });
 }
 
+function reviewHistoryMoveButtons(item){
+  try{
+    const game=new Chess();
+    const loadFn=game.load_pgn?"load_pgn":"loadPgn";
+    if(!game[loadFn](item.pgn,{sloppy:true}))return "";
+    const moves=game.history({verbose:true});
+    if(!moves.length)return "";
+    const headers=typeof game.header==="function"?game.header():{};
+    const fields=String(headers.FEN||"").split(/\s+/);
+    let moveNumber=Number(fields[5])||1;
+    const buttons=moves.map((move,index)=>{
+      const label=moveNumber+(move.color==="w"?".":"...")+" "+sanFr(move.san);
+      if(move.color==="b")moveNumber++;
+      return '<li><button class="review-history-ply" type="button" data-review-history-act="goto-ply" data-ply="'+(index+1)+'" aria-label="Afficher la position après '+esc(label)+'">'+esc(label)+'</button></li>';
+    }).join("");
+    return '<details class="review-history-moves"><summary>Afficher les '+moves.length+' demi-coups</summary><ol>'+buttons+'</ol></details>';
+  }catch(_error){return "";}
+}
+
+function reviewHistoryReplayAtPly(item,ply){
+  try{
+    const parsed=new Chess();
+    const loadFn=parsed.load_pgn?"load_pgn":"loadPgn";
+    if(!parsed[loadFn](item.pgn,{sloppy:true}))throw new Error("PGN invalide");
+    const moves=parsed.history({verbose:true});
+    const headers=typeof parsed.header==="function"?parsed.header():{};
+    const startFen=headers.FEN||undefined;
+    const replay=startFen?new Chess(startFen):new Chess();
+    const fens=[replay.fen()];
+    for(const move of moves){
+      if(!replay.move({from:move.from,to:move.to,promotion:move.promotion}))throw new Error("Coup illégal");
+      fens.push(replay.fen());
+    }
+    reviewState.fens=fens;
+    reviewState.moves=moves;
+    reviewState.currentHeaders={...headers,White:item.white||headers.White,Black:item.black||headers.Black};
+    reviewState.moveGrades=Array.isArray(item.moveGrades)?item.moveGrades:[];
+    reviewState.grades=moves.map((move,index)=>({
+      deltaCp:null,brilliant:false,category:reviewState.moveGrades[index]?.category||"unrated",evaluation:"—"
+    }));
+    document.getElementById("review-panel")?.classList.remove("hidden");
+    reviewBeginReplay();
+    document.getElementById("replay-bar")?.classList.remove("hidden");
+    replayGoto(Math.max(0,Math.min(moves.length,Number(ply)||0))).catch(console.error);
+    document.getElementById("board")?.scrollIntoView({behavior:"smooth",block:"center"});
+  }catch(_error){
+    const status=document.getElementById("review-history-status");
+    if(status)status.textContent="Impossible de retrouver cette position : le PGN de l’historique est illisible.";
+  }
+}
+
 function reviewHistoryRender(statusText) {
   const list = document.getElementById("review-history-list");
   if (!list || typeof localStorage === "undefined") return;
@@ -152,7 +203,7 @@ function reviewHistoryRender(statusText) {
     const title = `${item.white || "Blancs"} vs ${item.black || "Noirs"}`;
     const detail = [item.event, item.result, when].filter(Boolean).join(" · ");
     return `<div class="review-history-row" data-review-history-id="${esc(item.id)}">
-      <span class="review-history-meta"><strong>${esc(title)}</strong>${detail ? `<br><small>${esc(detail)}</small>` : ""}</span>
+      <div class="review-history-meta"><strong>${esc(title)}</strong>${detail ? `<br><small>${esc(detail)}</small>` : ""}${reviewHistoryMoveButtons(item)}</div>
       <span class="review-history-actions">
         <button class="btn mini" type="button" data-review-history-act="open">Analyser à nouveau</button>
         ${reviewHistoryExerciseButton(item)}
@@ -1093,6 +1144,8 @@ if (reviewHistoryList) reviewHistoryList.addEventListener("click", (event) => {
     reviewCorrectPgn(item.pgn,{White:item.white,Black:item.black});
   else if (button.dataset.reviewHistoryAct === "exercise" && item)
     reviewCorrectPgn(item.pgn,{White:item.white,Black:item.black});
+  else if (button.dataset.reviewHistoryAct === "goto-ply" && item)
+    reviewHistoryReplayAtPly(item,button.dataset.ply);
 });
 reviewHistoryRender();
 function resumeCorrectionExercisesFromUrl() {
