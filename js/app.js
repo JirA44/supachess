@@ -75,7 +75,7 @@ function syncLevelDiagnosticBanner() {
   const diagnostic = readLevelDiagnostic();
   if (!diagnostic) {
     banner.hidden = false;
-    banner.textContent = "Le diagnostic de niveau est activé par défaut : analyse 10 parties avec Stockfish. Bulles candidates et points de coups sont désactivés pendant ce bilan.";
+    banner.textContent = "Diagnostic de niveau activé par défaut : analyse 10 parties avec Stockfish. Coaching, bulles candidates et points de coups sont désactivés pendant ce bilan.";
     return;
   }
   if (diagnostic.active) {
@@ -91,7 +91,7 @@ function syncLevelDiagnosticBanner() {
     } catch (_) {}
     banner.hidden = false;
     const prefix = diagnostic.defaultActivation ? "Diagnostic de niveau activé par défaut : " : "Diagnostic actif : ";
-    banner.textContent = prefix + count + "/10 parties analysées depuis son activation. Joue sans bulles candidates ni points de coups possibles; les aides reviennent après la dixième partie.";
+    banner.textContent = prefix + count + "/10 parties analysées depuis son activation. Coaching, bulles candidates et points de coups sont désactivés pendant le diagnostic.";
   } else if (diagnostic.completed) {
     banner.hidden = false;
     banner.textContent = "Diagnostic terminé : " + (diagnostic.analyzedGamesAtCompletion || 10) +
@@ -566,6 +566,10 @@ async function attemptUserMove(moveObj) {
 }
 
 function interceptMove(moveObj, cand) {
+  if (isLevelDiagnosticActive()) {
+    commitUserMove(moveObj, cand, false);
+    return;
+  }
   previewCandidate(cand);
   state.phase = "coach";
   state.pendingMove = { ...moveObj, uci: cand.uci, cand };
