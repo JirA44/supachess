@@ -615,12 +615,45 @@ function reviewStartCorrectionExercises(items,headers={},analysis=null,moveGrade
   panel?.scrollIntoView({block:"start"});
 }
 
-function reviewHideCorrectionCandidates(){
-  if(!reviewState.exercise)return;
+function reviewClearCorrectionCandidates(message){
   state.candidates=[];
   boardUI.dots=[];
   const list=document.getElementById("candidates-list");
-  if(list)list.innerHTML="<em>Les coups candidats sont masqués pendant la correction pour te laisser chercher.</em>";
+  if(list)list.innerHTML="<em>"+message+"</em>";
+}
+
+async function reviewAnalyzeCorrectionCandidates(exercise,index){
+  const fen=state.chess.fen();
+  const list=document.getElementById("candidates-list");
+  if(document.body.dataset.engineReady!=="1"||!state.engine){
+    if(list)list.innerHTML="<em>Stockfish prépare l’analyse des coups candidats…</em>";
+    document.addEventListener("supachess:engine-ready",function(){
+      if(reviewState.exercise===exercise&&exercise.index===index)reviewAnalyzeCorrectionCandidates(exercise,index);
+    },{once:true});
+    return;
+  }
+  const legalMoveCount=state.chess.moves({verbose:true}).length;
+  if(!legalMoveCount){
+    reviewClearCorrectionCandidates("Aucun coup légal dans cette position.");
+    return;
+  }
+  const generation=state.gen;
+  if(list)list.innerHTML="<em>Stockfish analyse les coups candidats…</em>";
+  try{
+    const result=await state.engine.analyze({fen,multipv:Math.min(12,legalMoveCount),movetime:1200,elo:0});
+    if(reviewState.exercise!==exercise||exercise.index!==index||state.gen!==generation||state.chess.fen()!==fen)return;
+    if(typeof buildCandidates==="function")buildCandidates(result.lines||[],fen);
+    if(!state.candidates.length){
+      reviewClearCorrectionCandidates("Stockfish n’a pas fourni de coup candidat pour cette position.");
+      return;
+    }
+    renderCandidatesList();
+    renderBoard();
+    if(result.lines&&result.lines.length&&typeof updateEvalBar==="function")updateEvalBar(result.lines[0]);
+  }catch(error){
+    if(reviewState.exercise!==exercise||exercise.index!==index||state.chess.fen()!==fen)return;
+    reviewClearCorrectionCandidates("Analyse Stockfish indisponible pour ces coups candidats. Tu peux tout de même résoudre l’exercice.");
+  }
 }
 
 function reviewShowCorrectionExercise(index){
@@ -655,6 +688,8 @@ function reviewShowCorrectionExercise(index){
   boardUI.legalTargets=[];
   boardUI.legalTargetHints={};
   boardUI.dots=[];
+  boardUI.showDots=true;
+  boardUI.showMoveDots=true;
   boardUI.lastMove=null;
   hideCoach();
   moveFeedback.clear();
@@ -671,12 +706,13 @@ function reviewShowCorrectionExercise(index){
   next.textContent=index===exercise.items.length-1?"Terminer":"Exercice suivant";
   setStatus("Exercice de correction — trouve le meilleur coup.");
   renderAll();
-  reviewHideCorrectionCandidates();
+  window.applyLevelDiagnosticLock?.();
   if(typeof renderAccuracy==="function")renderAccuracy();
   if(Number.isFinite(item.bestScoreCp)||Number.isFinite(item.bestMate)){
     updateEvalBar({scoreCp:Number.isFinite(item.bestScoreCp)?item.bestScoreCp:null,
       mate:Number.isFinite(item.bestMate)?item.bestMate:null,pv:[item.bestUci]});
   }else document.getElementById("evalbar-label").textContent="—";
+  reviewAnalyzeCorrectionCandidates(exercise,index);
 }
 
 function reviewHandleExerciseSquareClick(square){
@@ -711,7 +747,7 @@ function reviewHandleExerciseSquareClick(square){
         document.getElementById("btn-review-exercise-retry")?.classList.remove("hidden");
         setStatus("Coup légal joué — recommence pour trouver la correction.");
         renderAll();
-        reviewHideCorrectionCandidates();
+        reviewClearCorrectionCandidates("Le coup joué ne corrige pas l’erreur. Recommence pour relancer les candidats de la position initiale.");
         return true;
       }
       const played=state.chess.move({from:selected,to:square,promotion});
@@ -723,7 +759,7 @@ function reviewHandleExerciseSquareClick(square){
       document.getElementById("btn-review-exercise-next").disabled=false;
       setStatus("Position corrigée.");
       renderAll();
-      reviewHideCorrectionCandidates();
+      reviewClearCorrectionCandidates("Correction trouvée. Passe à l’exercice suivant quand tu es prêt.");
       return true;
     }
   }
