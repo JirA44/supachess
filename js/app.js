@@ -109,6 +109,11 @@ function syncDotsButton() {
   const button = $("btn-dots");
   if (!button) return;
   const locked = isLevelDiagnosticActive();
+  const candidatesPanel = $("candidates-panel");
+  if (candidatesPanel) {
+    candidatesPanel.hidden = locked;
+    candidatesPanel.setAttribute("aria-hidden", String(locked));
+  }
   button.disabled = locked;
   button.title = locked ? "Bloqué pendant le diagnostic de niveau" : "Afficher ou masquer les bulles candidates";
   button.textContent = locked ? "Bulles candidates : bloquées" : "Bulles candidates : " + (boardUI.showDots ? "ON" : "OFF");
