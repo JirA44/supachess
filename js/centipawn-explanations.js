@@ -4,6 +4,7 @@
 "use strict";
 const SupaChessCentipawns = (() => {
   const other = c => c==="w"?"b":"w";
+  const pieceNames={p:"pion",n:"cavalier",b:"fou",r:"tour",q:"dame",k:"roi"};
   const causeCatalog = [
     {id:"HANGING_PIECE",group:"Matériel",label:"Pièce ou pion en prise",level:"confirmable",rule:"Prise légale immédiate, puis vérification de la suite."},
     {id:"LOST_DEFENDER",group:"Matériel",label:"Défenseur déplacé ou supprimé",level:"candidate",rule:"Comparer les attaquants et défenseurs avant/après le coup."},
@@ -101,7 +102,7 @@ const SupaChessCentipawns = (() => {
       const defenders=(fact.defenders||[]).map(p=>p.square).join(", ")||"aucun compté";
       observations.push({code:fact.outnumbered?"OUTNUMBERED_ATTACK":"DEFENDER_CHANGE",
         evidence:"GEOMETRIC_ATTACK_DEFENDER_COUNT",
-        text:`Pression sur la ${fact.piece} en ${fact.square} : ${fact.enemyAttackers?.length||0} attaquant(s) (${attackers}) contre ${fact.defenders?.length||0} défenseur(s) (${defenders}) après le coup; avant, ${fact.previousEnemyAttackers} attaquant(s) et ${fact.previousDefenders} défenseur(s).`});
+        text:`Pression sur le ${pieceNames[fact.piece]||fact.piece} en ${fact.square} : ${fact.enemyAttackers?.length||0} attaquant(s) (${attackers}) contre ${fact.defenders?.length||0} défenseur(s) (${defenders}) après le coup; avant, ${fact.previousEnemyAttackers} attaquant(s) et ${fact.previousDefenders} défenseur(s).`});
     }
     const opponentReply=bestAfter?.pv?.[0]?playedMove(fenAfter,bestAfter.pv[0]):null;
     if(opponentReply && opponentReply.san.includes("+")) observations.push({
@@ -120,7 +121,7 @@ const SupaChessCentipawns = (() => {
       const targets=ChessBlindspots.pressureTargets(candidatePosition,mover);
       const target=targets[0];
       if(target) observations.push({code:"BEST_MOVE_OUTNUMBERED_ATTACK",evidence:"ENGINE_LINE_AND_GEOMETRIC_COUNT",
-        text:`Avec ${bestCandidate.san}, le meilleur coup calculé, Stockfish met la ${target.piece} adverse en ${target.square} sous une pression de ${target.attackers.length} attaquants contre ${target.defenders.length} défenseur(s). C’est un motif candidat à vérifier dans la variante.`});
+        text:`Avec ${bestCandidate.san}, le meilleur coup calculé, Stockfish met la ${pieceNames[target.piece]||target.piece} adverse en ${target.square} sous une pression de ${target.attackers.length} attaquants contre ${target.defenders.length} défenseur(s). C’est un motif candidat à vérifier dans la variante.`});
     }
     if(mate(bestBefore)!==null || mate(bestAfter)!==null || after.in_checkmate()) {
       return {
