@@ -110,26 +110,47 @@ function syncLevelDiagnosticBanner() {
   const banner = $("level-diagnostic-banner");
   if (!banner) return;
   const diagnostic = readLevelDiagnostic();
+  const abandonButton = $("btn-abandon-diagnostic");
+  const setAbandonVisible = (visible) => { if (abandonButton) abandonButton.hidden = !visible; };
   if (!diagnostic) {
+    setAbandonVisible(true);
     banner.hidden = false;
     banner.textContent = "Diagnostic de niveau activé par défaut : termine 10 parties contre Stockfish. Coaching, bulles candidates et points de coups sont désactivés pendant ce bilan.";
     return;
   }
   if (diagnostic.active) {
+    setAbandonVisible(true);
     const count = countCompletedDiagnosticGames(diagnostic);
     banner.hidden = false;
     const prefix = diagnostic.defaultActivation ? "Diagnostic de niveau activé par défaut : " : "Diagnostic actif : ";
     banner.textContent = prefix + count + "/10 parties terminées contre Stockfish depuis son activation. Coaching, bulles candidates et points de coups sont désactivés pendant le diagnostic.";
   } else if (diagnostic.completed) {
+    setAbandonVisible(false);
     banner.hidden = false;
     banner.textContent = "Diagnostic terminé : " + (diagnostic.analyzedGamesAtCompletion || 10) +
       " parties terminées contre Stockfish. Les bulles candidates et points de coups sont réactivés. Consulte le bilan et les exercices ciblés.";
   } else if (diagnostic.endedEarly) {
+    setAbandonVisible(false);
     banner.hidden = false;
     banner.textContent = "Diagnostic interrompu avant 10 parties. Les aides sont réactivées; le bilan de niveau reste à confirmer.";
   } else {
+    setAbandonVisible(false);
     banner.hidden = true;
   }
+}
+function abandonLevelDiagnostic() {
+  const diagnostic = readLevelDiagnostic();
+  if (!diagnostic || !diagnostic.active) return;
+  const endedEarly = {
+    ...diagnostic,
+    active: false,
+    completed: false,
+    endedEarly: true,
+    endedAt: new Date().toISOString(),
+    gamesCompletedBeforeEnd: countCompletedDiagnosticGames(diagnostic),
+  };
+  try { localStorage.setItem(LEVEL_DIAGNOSTIC_KEY, JSON.stringify(endedEarly)); } catch (_) {}
+  applyLevelDiagnosticLock();
 }
 boardUI.showDots = levelDiagnosticLockWasActive ? false : localStorage.getItem(DOTS_STORAGE_KEY) !== "false";
 boardUI.showMoveDots = levelDiagnosticLockWasActive ? false : localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false";
@@ -958,6 +979,7 @@ function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
 $("btn-new").addEventListener("click", newGame);
 syncDotsButton();
 syncMoveDotsButton();
+$("btn-abandon-diagnostic")?.addEventListener("click", abandonLevelDiagnostic);
 $("btn-dots").addEventListener("click", () => {
   if (isLevelDiagnosticActive()) return;
   boardUI.showDots = !boardUI.showDots;
