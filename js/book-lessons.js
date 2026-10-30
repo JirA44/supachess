@@ -2444,13 +2444,9 @@
   LESSONS.sort((a, b) => (LEVEL_ORDER[a.level] ?? 99) - (LEVEL_ORDER[b.level] ?? 99));
 
   function methodPathLessonIndices(program) {
-    const kindOrder = { method: 0, reinforcement: 1, anticipation: 2 };
     return LESSONS.map((lesson, index) => ({ lesson, index }))
       .filter(({ lesson }) => lesson.program === program)
-      .sort((a, b) =>
-        (LEVEL_ORDER[a.lesson.level] ?? 99) - (LEVEL_ORDER[b.lesson.level] ?? 99) ||
-        (kindOrder[a.lesson.kind] ?? 0) - (kindOrder[b.lesson.kind] ?? 0) ||
-        a.index - b.index)
+      .sort((a, b) => (LEVEL_ORDER[a.lesson.level] ?? 99) - (LEVEL_ORDER[b.lesson.level] ?? 99) || a.index - b.index)
       .map(({ index }) => index);
   }
 
