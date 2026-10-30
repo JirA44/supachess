@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SupaChess Coach IA — Entraîneur d'échecs</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="css/style.css?v=live-move-grade-counts-20261026-lessons-nav-20261026-move-hover-20261026-legal-move-dots-20261026-fide-levels-profile-accuracy-20261027-level-diagnostic-lock-20261027-move-grade-colors-20261028-grade-gradient-20261028-profile-accuracy-20261028-profile-contrast-20261028-profile-diagnostic-20261028-profile-mastery-20261028-profile-resume-links-20261028-resume-match-mastery-20261028-resume-strong-frames-20261028-site-counters-20261029-ok-bubble-equal-20261029-opponent-accuracy-layout-20261029-accuracy-block-20261029-engine-choice-accuracy-20261029-engine-option-width-20261029-ios-white-pieces-grade-counts-20261029">
 <style>
   .supa-section { margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(128,128,128,.4); }
@@ -114,8 +115,8 @@
     <span id="engine-label">Stockfish NNUE — chargement…</span>
   </div>
   <div class="engine-status">
-    <span id="supa-dot" class="status-dot loading"></span>
-    <span id="supa-label">Supa : vérification…</span>
+    <span id="supa-dot" class="status-dot"></span>
+    <span id="supa-label" title="Service IA local facultatif : il est contacté seulement quand une explication Supa est demandée.">Coach Supa local : à la demande</span>
   </div>
   <a id="topbar-profile-btn" class="topbar-profile-btn" href="#profile" aria-label="Ouvrir mon profil" aria-haspopup="dialog">👤 Profil</a>
 </header>
@@ -341,7 +342,7 @@
 <script src="vendor/chess.js"></script>
 <script src="js/engine.js?v=stockfish-worker-recovery-20261029"></script>
 <script src="js/coach.js"></script>
-<script src="js/supa.js"></script>
+<script src="js/supa.js?v=on-demand-local-coach-20261030"></script>
 <script src="js/board.js?v=exercise-drag-20261029"></script>
 <script src="js/move-feedback.js?v=restore-ok-grade-note-20261029"></script>
 <script src="js/app.js?v=restore-ok-grade-note-20261029"></script>

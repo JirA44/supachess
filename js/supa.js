@@ -3,33 +3,24 @@
 "use strict";
 
 const SUPA_BASE = "http://localhost:8778";
-const SUPA_TIMEOUT_MS = 8000;       // timeout silencieux pour ne pas bloquer l'UI
 const SUPA_FETCH_TIMEOUT_MS = 150000; // budget total /coach (nemotron free peut être lent; cache serveur ensuite)
 
 const supaState = { online: false, model: null, lastFen: null };
 
-function supaFetch(url, options = {}, timeoutMs = SUPA_TIMEOUT_MS) {
+function supaFetch(url, options = {}, timeoutMs = SUPA_FETCH_TIMEOUT_MS) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   return fetch(url, { ...options, signal: ctrl.signal }).finally(() => clearTimeout(t));
 }
 
-/* Ping /health au chargement → indicateur dans le header. */
-async function supaPingHealth() {
+function setSupaConnection(online, model) {
+  supaState.online = online;
   const el = document.getElementById("supa-label");
   const dot = document.getElementById("supa-dot");
-  try {
-    const r = await supaFetch(SUPA_BASE + "/health");
-    const j = await r.json();
-    supaState.online = !!j.ok;
-    supaState.model = j.model || "?";
-    if (el) el.textContent = `Supa : connecté (${supaState.model})`;
-    if (dot) dot.className = "status-dot ready";
-  } catch (_e) {
-    supaState.online = false;
-    if (el) el.textContent = "Supa : hors-ligne";
-    if (dot) dot.className = "status-dot";
-  }
+  if (el) el.textContent = online
+    ? "Coach Supa local : connecté" + (model ? " (" + model + ")" : "")
+    : "Coach Supa local : indisponible";
+  if (dot) dot.className = online ? "status-dot ready" : "status-dot";
 }
 
 /* Appelé quand le panneau coach s'ouvre. Enrichit chaque carte candidat
@@ -52,10 +43,13 @@ async function supaEnrichCoach(fen, playedSan, candidates) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     }, SUPA_FETCH_TIMEOUT_MS);
+    if (!r.ok) throw new Error("Coach local HTTP " + r.status);
     resp = await r.json();
   } catch (_e) {
+    setSupaConnection(false);
     return; // serveur absent / timeout → on garde les heuristiques
   }
+  setSupaConnection(true, resp && resp.source);
   if (!resp || !resp.comments) return;
   // Le panneau a peut-être changé de position entre temps
   if (supaState.lastFen !== fen) return;
@@ -76,4 +70,3 @@ async function supaEnrichCoach(fen, playedSan, candidates) {
   }
 }
 
-supaPingHealth();
