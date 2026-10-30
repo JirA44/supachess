@@ -2249,6 +2249,105 @@
     },
   );
 
+  // Explicit progressive method: calculate the opponent's strongest practical reply at every branch.
+  LESSONS.push(
+    {
+      id: "calculation-reflex-checklist",
+      kind: "method",
+      level: "Débutant",
+      title: "Le réflexe de calcul · vérifier avant de jouer",
+      category: "Calcul · meilleure réponse adverse",
+      program: "Calcul · meilleure réponse adverse",
+      author: "SupaChess Académie",
+      book: "Méthode originale de réflexion",
+      reference: "Leçon 1 · routine avant chaque coup",
+      setup: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6"],
+      color: "w",
+      question: "Avant de choisir un candidat comme Cg5, quelle vérification est indispensable ?",
+      choices: [
+        { text: "Chercher la meilleure réponse adverse, puis vérifier échecs, captures, menaces, pièces sans défense et tactiques", correct: true },
+        { text: "Supposer que l’adversaire répondra comme je le souhaite", correct: false },
+        { text: "Ne calculer que ma menace et jouer immédiatement", correct: false },
+      ],
+      principle: "Le calcul commence par une hypothèse adverse exigeante : quelle réponse gêne le plus mon idée ? Dans cette position, après Cg5, les Noirs ont notamment …d5!, une contre-attaque centrale. On vérifie ensuite les échecs, captures, menaces, pièces attaquées ou non protégées, puis les tactiques.",
+      transfer: "À chaque demi-coup, arrête la variante et recommence le même inventaire. Ne poursuis pas une ligne si tu n’as pas répondu à la meilleure réplique adverse.",
+      hints: [
+        "Remplace la question « que va-t-il probablement jouer ? » par « quelle est sa réponse la plus forte ? ».",
+        "Après la réponse adverse, énumère les échecs, les captures et les menaces avant de continuer.",
+      ],
+      pitfall: "Ne confonds pas un coup légal avec un bon coup : une pièce peut bouger légalement tout en laissant une tactique ou une pièce sans défense.",
+      sequence: [
+        { side: "user", uci: "e1g1", explanation: "Le roque est le coup joué dans la ligne d’étude; le réflexe à entraîner reste de calculer la meilleure réponse noire après chaque candidat." },
+        { side: "book", uci: "f8c5", explanation: "Les Noirs développent le fou. Vérifie ses menaces et les pièces qu’il vise avant de poursuivre." },
+        { side: "user", uci: "d2d3", explanation: "Les Blancs consolident e4. Avant ce coup, ils vérifient aussi les prises et les échecs dont les Noirs pourraient disposer." },
+      ],
+    },
+    {
+      id: "calculation-reflex-counterstrike",
+      kind: "method",
+      level: "Intermédiaire",
+      title: "Calculer la meilleure riposte · …d5!",
+      category: "Calcul · meilleure réponse adverse",
+      program: "Calcul · meilleure réponse adverse",
+      author: "SupaChess Académie",
+      book: "Méthode originale de réflexion",
+      reference: "Leçon 2 · réponse forcing à une attaque",
+      setup: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5"],
+      color: "b",
+      question: "Les Blancs menacent f7 avec Cg5. Quelle réponse noire forcing faut-il calculer en premier ?",
+      choices: [
+        { text: "…d5!, contre-attaquer le fou et contester le centre", correct: true },
+        { text: "…h6, sans vérifier la prise au centre", correct: false },
+        { text: "…a6, en ignorant la menace sur f7", correct: false },
+      ],
+      principle: "…d5! répond à l’idée blanche par une contre-attaque centrale. Il faut ensuite calculer les prises sur d5, les échecs et les menaces sur les pièces exposées.",
+      transfer: "Quand l’adversaire attaque, cherche une réponse forcing qui retourne une menace : échec, capture ou attaque d’une pièce. Vérifie chaque variante jusqu’à ce que les menaces immédiates soient résolues.",
+      hints: [
+        "Une poussée centrale peut attaquer le fou c4 tout en ouvrant des lignes.",
+        "La réponse recherchée est …d5!; calcule ensuite la reprise exd5 et la suite …Ca5.",
+      ],
+      pitfall: "Ne te contente pas de défendre f7 automatiquement; compare les contre-attaques forcing et vérifie les conséquences concrètes.",
+      sequence: [
+        { side: "user", uci: "d7d5", explanation: "…d5! attaque le fou c4 et impose une décision centrale aux Blancs." },
+        { side: "book", uci: "e4d5", explanation: "Les Blancs prennent le pion d5. Il faut maintenant recalculer les menaces, pas continuer la ligne imaginée avant cette prise." },
+        { side: "user", uci: "c6a5", explanation: "…Ca5! attaque le fou c4 avec tempo et poursuit la pression." },
+        { side: "book", uci: "c4b5", explanation: "Fb5+ donne échec; les Noirs doivent traiter cette menace avant de poursuivre leur plan." },
+        { side: "user", uci: "c7c6", explanation: "…c6 interpose le pion sur la diagonale d’échec et attaque le fou b5." },
+      ],
+    },
+    {
+      id: "calculation-reflex-forcing-check",
+      kind: "method",
+      level: "Avancé",
+      title: "Réévaluer après la riposte · Fb5+",
+      category: "Calcul · meilleure réponse adverse",
+      program: "Calcul · meilleure réponse adverse",
+      author: "SupaChess Académie",
+      book: "Méthode originale de réflexion",
+      reference: "Leçon 3 · échec, interposition et pièce attaquée",
+      setup: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Na5"],
+      color: "w",
+      question: "Après …Ca5, le fou c4 est attaqué. Quel coup donne échec tout en créant une nouvelle question à l’adversaire ?",
+      choices: [
+        { text: "Fb5+", correct: true },
+        { text: "h3, sans traiter l’attaque du fou", correct: false },
+        { text: "Cxf7, sans calculer la prise du roi", correct: false },
+      ],
+      principle: "Fb5+ répond à l’attaque du fou par un échec. Les Noirs doivent traiter le roi en échec; après …c6, les Blancs doivent à nouveau vérifier l’attaque du pion sur le fou.",
+      transfer: "Dans une variante, chaque réponse adverse change la position. Après un échec, identifie les réponses légales; après une interposition, vérifie quelles pièces sont attaquées et où elles peuvent aller.",
+      hints: [
+        "Priorise les échecs disponibles; le fou c4 peut se déplacer avec échec.",
+        "Joue le fou en b5. Après …c6, vérifie que le pion attaque ce fou.",
+      ],
+      pitfall: "Un échec ne termine pas le calcul : examine toutes les réponses légales, puis les menaces créées par l’interposition.",
+      sequence: [
+        { side: "user", uci: "c4b5", explanation: "Fb5+ est un échec légal et force les Noirs à répondre au roi attaqué." },
+        { side: "book", uci: "c7c6", explanation: "…c6 bloque l’échec et attaque le fou b5; les Blancs doivent repérer les deux effets du coup." },
+        { side: "user", uci: "b5f1", explanation: "Ff1 met le fou à l’abri après que les Blancs ont vérifié les cases de retraite." },
+      ],
+    },
+  );
+
   const LEVEL_ORDER = { "Débutant": 0, "Intermédiaire": 1, "Avancé": 2, "Expert": 3 };
   LESSONS.sort((a, b) => (LEVEL_ORDER[a.level] ?? 99) - (LEVEL_ORDER[b.level] ?? 99));
 
