@@ -58,3 +58,18 @@ test("PGN reports evidence separately for each player", () => {
 });
 
 test("invalid PGN is refused",()=> assert.throws(()=>analyzePgn("not a legal pgn")));
+
+test("detects newly created pressure and reports attacker/defender counts as a candidate", () => {
+  const r=tacticalMisses("3rk3/8/8/8/8/8/3B4/3QK3 w - - 0 1","d2e3",{lossCp:100});
+  assert.ok(r.facts.some(f=>f.id==="PRESSURE_OR_DEFENDER_CHANGE"&&f.square==="d1"&&f.newlyAttacked));
+  assert.ok(r.diagnostics.some(d=>d.evidence==="GEOMETRIC_ATTACK_DEFENDER_COUNT"&&d.square==="d1"));
+});
+
+test("counts a best-move target attacked three times and defended once", () => {
+  const c=new Chess("8/8/4k3/Q3r3/2N5/8/8/4R2K w - - 0 1");
+  assert.ok(c.move("Kg1"));
+  const target=require("../js/blindspots.js").pressureTargets(c,"w").find(f=>f.square==="e5");
+  assert.ok(target);
+  assert.equal(target.attackers.length,3);
+  assert.equal(target.defenders.length,1);
+});

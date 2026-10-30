@@ -265,7 +265,7 @@ function reviewBuildCorrectionExercises(rows,fens,moves,positionLines){
     const playedUci=move.from+move.to+(move.promotion||"");
     if(bestUci===playedUci)return [];
     return [{fen:fens[index],bestUci,bestScoreCp:bestLine.scoreCp,bestMate:bestLine.mate,
-      ply:index+1,moveNumber:row.n,color:row.color,playedSan:row.san,classification:row.classification,lossCp:row.lossCp}];
+      ply:index+1,moveNumber:row.n,color:row.color,playedSan:row.san,classification:row.classification,lossCp:row.lossCp,diagnostics:row.diagnostics||[],centipawns:row.centipawns||null}];
   });
 }
 
@@ -505,7 +505,8 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     const principles = (cp.principles||[]).map(p=>`<strong>Principe à vérifier : ${esc(p.label)}.</strong> ${esc(p.text)} <small>${esc(p.caveat)}</small>`).join(" ");
     const mateQualityNote = Number.isFinite(r.mateAwareLoss)
       ? " Le classement du coup utilise la distance au mat calculée par Stockfish; aucune perte en centipions n’est revendiquée." : "";
-    return `<li class="review-ply" data-review-ply="${idx + 1}">${moveLink}${evaluation} — perte / meilleur coup : ${esc(loss)}${esc(evalChange)}. ${esc(cp.explanation)}${esc(mateQualityNote)} ${esc(facts)} ${principles || "<small>Aucun principe précis ne peut être confirmé à partir des preuves disponibles pour ce demi-coup.</small>"}</li>`;
+    const noCauseYet=facts||principles?"":"<small>Les contrôles de prise immédiate, pression attaquants/défenseurs et meilleure ligne moteur n’ont pas établi ici une cause tactique précise. La perte est mesurée; une cause positionnelle peut demander une variante plus profonde.</small>";
+    return `<li class="review-ply" data-review-ply="${idx + 1}">${moveLink}${evaluation} — perte / meilleur coup : ${esc(loss)}${esc(evalChange)}. ${esc(cp.explanation)}${esc(mateQualityNote)} ${esc(facts)} ${principles} ${noCauseYet}</li>`;
   }).join("");
   const blindspots = rows.flatMap((r) => (r.diagnostics || []).map((d) => ({ ...d, n: r.n, color: r.color })));
   const examples = blindspots.slice(0, 8).map((d) => `<li><strong>${d.n}${d.color === "w" ? "." : "..."} :</strong> ${esc(d.text)} <small>${esc(d.caveat)}</small></li>`).join("");
@@ -795,6 +796,32 @@ function reviewCorrectionPv(fen,pv){
   return tokens.length?tokens.join(" "):"Variante Stockfish indisponible.";
 }
 
+function reviewAppendCauseDictionary(parent){
+  const catalog=typeof SupaChessCentipawns!=="undefined"?SupaChessCentipawns.causeCatalog:[];
+  if(!catalog.length)return;
+  const details=document.createElement("details");
+  const summary=document.createElement("summary");
+  summary.textContent="Dictionnaire des causes possibles ("+catalog.length+")";
+  details.appendChild(summary);
+  const intro=document.createElement("p");
+  intro.textContent="Les motifs marqués comme candidats doivent être confirmés dans la variante. Les causes positionnelles demandent un examen plus profond et ne sont pas déduites automatiquement des centipions.";
+  details.appendChild(intro);
+  const labels={confirmable:"prise légale et variante",candidate:"piste géométrique à confirmer","engine-line":"ligne Stockfish à vérifier","deeper-analysis":"calcul plus profond requis","positional-review":"analyse positionnelle requise"};
+  const groups=new Map();
+  for(const cause of catalog){const list=groups.get(cause.group)||[];list.push(cause);groups.set(cause.group,list);}
+  for(const [group,causes] of groups){
+    const heading=document.createElement("h4");heading.textContent=group;details.appendChild(heading);
+    const list=document.createElement("ul");
+    for(const cause of causes){const row=document.createElement("li");
+      const strong=document.createElement("strong");strong.textContent=cause.label+" : ";
+      const description=document.createTextNode(cause.rule+" ");
+      const status=document.createElement("small");status.textContent="Vérification : "+(labels[cause.level]||"analyse à confirmer")+".";
+      row.append(strong,description,status);list.appendChild(row);}
+    details.appendChild(list);
+  }
+  parent.appendChild(details);
+}
+
 async function reviewRenderCorrectionExplanation(exercise,index,item){
   const panel=document.getElementById("review-exercise-analysis");
   const content=document.getElementById("review-exercise-analysis-content");
@@ -849,15 +876,20 @@ async function reviewRenderCorrectionExplanation(exercise,index,item){
       reviewAppendCorrectionExplanation(content,"Conséquence tactique vérifiée",
         "Après "+item.playedSan+", l’adversaire avait une prise légale immédiate : "+immediate.slice(0,4).map(f=>f.captureSan).join(", ")+". Une prise légale ne garantit pas seule un gain net de matériel.");
     }
+    const pressureDiagnoses=facts&&facts.status==="OK"?(facts.diagnostics||[]).filter(d=>d.evidence==="GEOMETRIC_ATTACK_DEFENDER_COUNT"):[];
+    for(const diagnosis of pressureDiagnoses)
+      reviewAppendCorrectionExplanation(content,diagnosis.severity==="piste_a_verifier"?"Pression ou défense à vérifier":"Cause détectée",diagnosis.text+" "+(diagnosis.caveat||""));
     if(evidence&&evidence.observations)
       for(const observation of evidence.observations)
         reviewAppendCorrectionExplanation(content,"Observation Stockfish",observation.text);
     if(evidence&&evidence.explanation)
       reviewAppendCorrectionExplanation(content,"Comparaison Stockfish",evidence.explanation);
-    if(!((evidence&&evidence.principles&&evidence.principles.length)||immediate.length)){
-      reviewAppendCorrectionExplanation(content,"Cause précise",
-        "Aucune cause tactique ponctuelle n’est confirmée par les détecteurs disponibles. La perte est mesurée par Stockfish; les deux variantes ci-dessus montrent les réponses calculées, mais ne prouvent pas à elles seules toutes les raisons positionnelles.");
+    const concreteObservations=evidence&&Array.isArray(evidence.observations)?evidence.observations.filter(o=>o.code!=="ENGINE_PREFERS_ALTERNATIVE"):[];
+    if(!((evidence&&evidence.principles&&evidence.principles.length)||immediate.length||pressureDiagnoses.length||concreteObservations.length)){
+      reviewAppendCorrectionExplanation(content,"Ce qui reste à établir",
+        "Cette analyse a vérifié les prises immédiates, les changements de défense, les rapports attaquants/défenseurs et les variantes Stockfish. Aucun motif tactique précis n’est confirmé ici; cela ne signifie pas que le coup n’a pas de cause. Une ligne plus profonde ou une analyse positionnelle est nécessaire pour la préciser.");
     }
+    reviewAppendCauseDictionary(content);
     if(rootLine&&afterLine&&Number.isFinite(rootLine.scoreCp)&&Number.isFinite(afterLine.scoreCp)){
       const beforeWhite=rootLine.scoreCp*(new Chess(item.fen).turn()==="w"?1:-1);
       const afterWhite=afterLine.scoreCp*(new Chess(afterPlayedFen).turn()==="w"?1:-1);
