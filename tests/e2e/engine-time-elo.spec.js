@@ -79,3 +79,18 @@ test('offers 50-point FIDE-like levels through 3450 and reports the running-accu
   const deltaText = Math.abs(result.delta).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   expect(result.badge).toContain('−' + deltaText + '%');
 });
+
+
+test('offers gradual 100-point engine levels from 1600 to 2400', async ({ page }) => {
+  await page.goto('/index.html');
+  const levels = await page.locator('#sel-elo option').evaluateAll(options =>
+    options.map(option => Number(option.value)).filter(value => value >= 1600 && value <= 2400)
+  );
+  expect(levels).toEqual([1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400]);
+  for (const [elo, accuracy] of [[1700, '54–64 %'], [1800, '56–66 %'], [1900, '58–68 %'], [2100, '62–72 %'], [2200, '64–74 %'], [2300, '66–76 %']]) {
+    await expect(page.locator('#sel-elo option[value="' + elo + '"]')).toContainText(accuracy);
+  }
+  await page.locator('#sel-movetime').selectOption('3000');
+  await page.locator('#sel-elo').selectOption('2200');
+  await expect(page.locator('#opponent-fide-estimate')).toContainText('2 200 Elo FIDE-like');
+});
