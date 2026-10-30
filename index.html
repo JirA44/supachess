@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SupaChess Coach IA — Entraîneur d'échecs</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="stylesheet" href="css/style.css?v=live-move-grade-counts-20261026-lessons-nav-20261026-move-hover-20261026-legal-move-dots-20261026-fide-levels-profile-accuracy-20261027-level-diagnostic-lock-20261027-move-grade-colors-20261028-grade-gradient-20261028-profile-accuracy-20261028-profile-contrast-20261028-profile-diagnostic-20261028-profile-mastery-20261028-profile-resume-links-20261028-resume-match-mastery-20261028-resume-strong-frames-20261028-site-counters-20261029-ok-bubble-equal-20261029-opponent-accuracy-layout-20261029-accuracy-block-20261029-engine-choice-accuracy-20261029-engine-option-width-20261029-ios-white-pieces-grade-counts-20261029-move-grade-legend-20261030">
+<link rel="stylesheet" href="css/style.css?v=live-move-grade-counts-20261026-lessons-nav-20261026-move-hover-20261026-legal-move-dots-20261026-fide-levels-profile-accuracy-20261027-level-diagnostic-lock-20261027-move-grade-colors-20261028-grade-gradient-20261028-profile-accuracy-20261028-profile-contrast-20261028-profile-diagnostic-20261028-profile-mastery-20261028-profile-resume-links-20261028-resume-match-mastery-20261028-resume-strong-frames-20261028-site-counters-20261029-ok-bubble-equal-20261029-opponent-accuracy-layout-20261029-accuracy-block-20261029-engine-choice-accuracy-20261029-engine-option-width-20261029-ios-white-pieces-grade-counts-20261029-move-grade-legend-20261030-legal-dot-grades-20261030">
 <style>
   .supa-section { margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(128,128,128,.4); }
   .supa-head { font-weight: 600; font-size: .85em; opacity: .9; }
@@ -172,6 +172,7 @@
         <button id="btn-dots" class="btn" type="button" aria-pressed="true">Bulles candidates : ON</button>
         <button id="btn-move-dots" class="btn" type="button" aria-pressed="true">Points chauds/froids : ON</button>
         <p id="level-diagnostic-banner" class="level-diagnostic-banner" role="status" aria-live="polite">Diagnostic de niveau activé par défaut : analyse 10 parties avec Stockfish. Bulles candidates et points de coups désactivés pendant le bilan.</p>
+        <p id="legal-move-dot-legend" class="legal-move-dot-legend"><span class="legal-dot-swatch legal-dot-unknown" aria-hidden="true"></span> Gris : coup légal non évalué dans cette position, qualité inconnue. <span class="legal-dot-swatch legal-dot-rated" aria-hidden="true"></span> Couleur : qualité déjà évaluée par Stockfish.</p>
         <button id="btn-abandon-diagnostic" class="btn" type="button" hidden>Abandonner le diagnostic</button>
         <select id="sel-color" class="btn select">
           <option value="w">Je joue les Blancs</option>
@@ -352,7 +353,7 @@
   <span id="registered-members-count" class="registered-members-count">Comptes inscrits : chargement…</span>
   <span id="unique-visitors-count" class="unique-visitors-count">Visiteurs uniques estimés : chargement…</span>
 </div>
-  <span class="site-version" aria-label="Version de SupaChess">Version SupaChess : 1.13.12454</span>
+  <span class="site-version" aria-label="Version de SupaChess">Version SupaChess : 1.13.12455</span>
 </footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -364,16 +365,16 @@
 <script src="js/engine.js?v=stockfish-worker-recovery-20261029"></script>
 <script src="js/coach.js"></script>
 <script src="js/supa.js?v=on-demand-local-coach-20261030"></script>
-<script src="js/board.js?v=exercise-drag-20261029"></script>
+<script src="js/board.js?v=graded-legal-dots-20261030"></script>
 <script src="js/move-feedback.js?v=restore-ok-grade-note-20261029"></script>
-<script src="js/app.js?v=correction-candidate-toggle-20261030"></script>
+<script src="js/app.js?v=reuse-known-move-grades-20261030"></script>
 <script src="js/diagnostic-undo-lock.js?v=diagnostic-undo-lock-20261030"></script>
-<script src="js/games.js?v=stop-vs-resign-labels-20261030"></script>
+<script src="js/games.js?v=persist-move-grades-20261030"></script>
 <script src="js/tablebase.js?v=op1-partial-tablebase-20261027"></script>
 <script src="js/blindspots.js?v=pressure-defender-causes-20261030"></script>
   <script src="js/learning-loop.js"></script>
   <script src="js/centipawn-explanations.js?v=chess-cause-library-20261030"></script>
-  <script src="js/review.js?v=correction-cause-explanations-20261030"></script>
+  <script src="js/review.js?v=lookup-reviewed-move-grades-20261030"></script>
 <script src="js/review-insights.js?v=learning-baseline-20261027-level-diagnostic-lock-20261027"></script>
 <script src="js/profile-page.js?v=profile-counts-20261029"></script>
 </body>
