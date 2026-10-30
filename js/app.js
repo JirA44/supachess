@@ -9,6 +9,7 @@ const state = {
   userColor: "w",
   candidates: [],        // [{rank, uci, san, line, deltaCp, args}]
   phase: "init",         // init | analyzing | userTurn | coach | engineThinking | gameover
+  abandoned: false,
   pendingMove: null,     // coup utilisateur intercepté {from,to,promotion,uci}
   fenHistory: [],        // clés FEN (4 champs) pour détection de répétition
   evalHistory: [],       // éval (côté Blancs) de chaque demi-coup joué, parallèle à history()
@@ -77,7 +78,7 @@ function countCompletedDiagnosticGames(diagnostic) {
     if (!Array.isArray(games)) return 0;
     const counted = new Set();
     for (const game of games) {
-      if (!game || !game.id || !["1-0", "0-1", "1/2-1/2"].includes(game.result)) continue;
+      if (!game || !game.id || game.abandoned || game.termination === "abandoned" || !["1-0", "0-1", "1/2-1/2"].includes(game.result)) continue;
       if (!Number(game.stats && game.stats.moves)) continue;
       const startedAt = Number.parseInt(String(game.id), 10);
       const playedAgainstStockfish = /stockfish/i.test(String(game.engineName || "")) ||
@@ -271,6 +272,7 @@ async function init() {
 }
 
 function newGame() {
+  state.abandoned = false;
   state.gen++;
   moveFeedback.clear();
   state.moveGradeHistory = [];
@@ -291,6 +293,22 @@ function newGame() {
   if (typeof gamesNewEntry === "function") gamesNewEntry();
   renderAll();
   startTurn();
+}
+
+function abandonCurrentGame() {
+  if (state.phase === "init" || state.phase === "gameover") return;
+  state.gen++;
+  state.abandoned = true;
+  state.phase = "gameover";
+  state.pendingMove = null;
+  moveFeedback.clear();
+  hideCoach();
+  boardUI.selected = null;
+  boardUI.legalTargets = [];
+  boardUI.dots = [];
+  if (typeof gamesAutoSave === "function") gamesAutoSave();
+  setStatus("Partie abandonnée — défaite enregistrée.");
+  renderAll();
 }
 
 function fenKey(fen) { return fen.split(" ").slice(0, 4).join(" "); }
@@ -736,6 +754,7 @@ function hideCoach() {
 
 /* ── Fin de partie ── */
 function checkGameOver() {
+  if (state.abandoned) return true;
   const c = state.chess;
   if (!c.game_over()) return false;
   state.phase = "gameover";
@@ -977,6 +996,7 @@ function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
 
 /* ── Boutons ── */
 $("btn-new").addEventListener("click", newGame);
+$("btn-abandon-game")?.addEventListener("click", abandonCurrentGame);
 syncDotsButton();
 syncMoveDotsButton();
 $("btn-abandon-diagnostic")?.addEventListener("click", abandonLevelDiagnostic);
