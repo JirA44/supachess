@@ -40,6 +40,7 @@ function gamesRound1(v) { return v === null || v === undefined ? null : Math.rou
 
 function gamesResult() {
   if (state.abandoned) return state.userColor === "w" ? "0-1" : "1-0";
+  if (state.stopped) return "*";
   const c = state.chess;
   if (c.in_checkmate()) return c.turn() === "w" ? "0-1" : "1-0";
   if (c.game_over()) return "1/2-1/2";
@@ -58,6 +59,7 @@ function gamesBuildPgn(result) {
     "Result", result
   );
   if (state.abandoned) state.chess.header("Termination", "abandoned");
+  else if (state.stopped) state.chess.header("Termination", "unterminated");
   if (currentGameMetadata.engineName) {
     const customHeaders = [
       "SupaChessOpponent", currentGameMetadata.engineName,
@@ -75,7 +77,7 @@ function gamesBuildPgn(result) {
 /* Appelé après chaque coup (joueur + engine) et à la fin de partie. */
 function gamesAutoSave() {
   if (!currentGameId) gamesNewEntry();
-  if (state.chess.history().length === 0 && !state.abandoned) return;
+  if (state.chess.history().length === 0 && !state.abandoned && !state.stopped) return;
   const result = gamesResult();
   const entry = {
     id: currentGameId,
@@ -83,7 +85,8 @@ function gamesAutoSave() {
     pgn: gamesBuildPgn(result),
     result,
     abandoned: Boolean(state.abandoned),
-    termination: state.abandoned ? "abandoned" : null,
+    stopped: Boolean(state.stopped),
+    termination: state.abandoned ? "abandoned" : state.stopped ? "unterminated" : null,
     accuracyW: gamesRound1(avgAccuracy(state.accuracy.w)),
     accuracyB: gamesRound1(avgAccuracy(state.accuracy.b)),
     stats: { ...state.stats },
