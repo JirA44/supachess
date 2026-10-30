@@ -765,8 +765,25 @@ function reviewHandleExerciseSquareClick(square){
   }
   if(piece&&piece.color===state.chess.turn()){
     boardUI.selected=square;
-    boardUI.legalTargets=state.chess.moves({square,verbose:true}).map((move)=>move.to);
+    const legalMoves=state.chess.moves({square,verbose:true});
+    boardUI.legalTargets=[...new Set(legalMoves.map((move)=>move.to))];
     boardUI.legalTargetHints={};
+    for(const move of legalMoves){
+      const prefix=move.from+move.to;
+      const candidate=state.candidates
+        .filter((entry)=>entry.uci.startsWith(prefix))
+        .sort((a,b)=>a.deltaCp-b.deltaCp)[0];
+      const previous=boardUI.legalTargetHints[move.to];
+      if(previous&&candidate&&previous.rank<=candidate.rank)continue;
+      boardUI.legalTargetHints[move.to]={
+        quality:candidate?qualityClass(candidate.deltaCp,candidate.rank):null,
+        rank:candidate?.rank??999,
+        capture:move.flags.includes("c")||move.flags.includes("e"),
+        san:move.san,
+        evaluation:candidate&&(candidate.line.scoreCp!==null||candidate.line.mate!==null)
+          ? formatScore(candidate.line,state.chess.turn()==="w"):"—",
+      };
+    }
   }else{
     boardUI.selected=null;boardUI.legalTargets=[];
   }
