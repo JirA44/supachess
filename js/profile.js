@@ -244,7 +244,7 @@ function renderLocalLearningPanel(data){
   },null):null;
   var weaknessesUrl=weaknessGame
     ? 'https://jira44.github.io/supachess/index.html?resume-exercises='+encodeURIComponent(weaknessGame.game.id)
-    : exercisesUrl;
+    : weaknesses.length?exercisesUrl:'https://jira44.github.io/supachess/index.html?open-review=1';
   var weaknessFocusText=focusWeaknesses.length
     ? 'Priorité : '+(labels[focusWeaknesses[0]]||focusWeaknesses[0])+' ('+local.categoryCounts[focusWeaknesses[0]]+')'
     : 'Analysez vos parties pour repérer vos lacunes.';
