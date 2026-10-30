@@ -97,13 +97,13 @@ test("legal move dots are independent of candidate bubbles and use move quality"
   const square = renderBubble({
     dots: [{ square: "e4", label: "★10", evaluation: "+0.11", quality: "best" }],
     legalTargets: ["e4"],
-    legalTargetHints: { e4: { quality: "q-bad", capture: true, san: "Nxe4", evaluation: "-1.20" } },
+    legalTargetHints: { e4: { quality: "grade-error", category: "error", categoryLabel: "Erreur", source: "analyse Stockfish de cette position", capture: true, san: "Nxe4", evaluation: "-1.20" } },
   });
   const marker = square.children.find((child) => child.className.includes("legal-hint"));
   const bubbles = square.children.find((child) => child.className.includes("cdot-stack"));
-  assert.match(marker.className, /q-bad/);
+  assert.match(marker.className, /grade-error/);
   assert.match(marker.className, /capture/);
-  assert.equal(marker.title, "Prise possible : Nxe4 · évaluation -1.20");
+  assert.equal(marker.title, "Prise possible : Nxe4 · Erreur · analyse Stockfish de cette position · évaluation -1.20");
   assert.ok(bubbles, "candidate evaluation bubble remains visible");
 
   const hiddenSquare = renderBubble({ legalTargets: ["e4"], showMoveDots: false });
@@ -180,4 +180,26 @@ test("Coup OK candidate bubble retains its 7/10 note", () => {
   const square = renderBubble({ dots: [{ square: "e4", label: context.moveGradeBadgeLabel(grade), evaluation: "0.00", quality: grade.tone, category: grade.category }] });
   const stack = square.children.find((child) => child.className.includes("cdot-stack"));
   assert.equal(stack.children[0].children[0].textContent, "=7");
+});
+
+
+test("gray legal marker explicitly says the move is legal but has unknown quality", () => {
+  const square = renderBubble({ legalTargets: ["e4"], legalTargetHints: { e4: { san: "Nf3" } } });
+  const marker = square.children.find((child) => child.className.includes("legal-hint"));
+  assert.match(marker.className, /q-neutral/);
+  assert.match(marker.title, /coup légal/i);
+  assert.match(marker.title, /non évalué dans cette position/i);
+  assert.match(marker.title, /qualité inconnue/i);
+});
+
+test("a previously evaluated legal move uses its exact grade color and explains the source", () => {
+  const square = renderBubble({ legalTargets: ["e4"], legalTargetHints: { e4: {
+    san: "Nf3", quality: "grade-brilliant", category: "brilliant", categoryLabel: "Brillant",
+    source: "déjà évalué dans cette analyse PGN", evaluation: "+0.42",
+  } } });
+  const marker = square.children.find((child) => child.className.includes("legal-hint"));
+  assert.match(marker.className, /grade-brilliant/);
+  assert.match(marker.title, /Brillant/);
+  assert.match(marker.title, /analyse PGN/);
+  assert.match(marker.title, /\+0\.42/);
 });
