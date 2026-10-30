@@ -602,6 +602,7 @@ function reviewStartCorrectionExercises(items,headers={},analysis=null,moveGrade
     if(status)status.textContent="Aucune position de correction exploitable n’est enregistrée. Rouvre et analyse le PGN pour créer les exercices.";
     return;
   }
+  window.setSupaCorrectionExerciseMode?.(true);
   reviewBeginReplay();
   reviewState.currentHeaders={...reviewState.currentHeaders,...headers};
   reviewState.moveGrades=Array.isArray(moveGrades)?moveGrades:[];
@@ -770,6 +771,7 @@ function reviewBeginReplay() {
 }
 
 function reviewRestoreAfterReplay() {
+  window.setSupaCorrectionExerciseMode?.(false);
   const exercisePanel = document.getElementById("review-exercise-panel");
   if (exercisePanel) exercisePanel.classList.add("hidden");
   reviewState.exercise = null;
