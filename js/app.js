@@ -531,8 +531,19 @@ function renderMoveGradeSummary() {
     ["brilliant", "!!", "Brillant"], ["best", "★", "Meilleur coup"],
     ["very-good", "!", "Très bon coup"], ["good", "✓", "Bon coup"],
     ["ok", "=", "Coup OK"], ["inaccuracy", "?!", "Imprécision"],
-    ["error", "?", "Erreur"], ["blunder", "??", "Gaffe"], ["unrated", "…", "En attente"],
+    ["error", "?", "Erreur"], ["blunder", "??", "Gaffe"], ["unrated", "…", "Non évalué"],
   ];
+  const explanations = {
+    brilliant: "Perte inférieure à 30 cp, avec un motif brillant confirmé.",
+    best: "Meilleur coup retenu par Stockfish (perte de 0 cp).",
+    "very-good": "Perte de 0 à 10 cp, hors coup meilleur ou brillant.",
+    good: "Perte supérieure à 10 et inférieure à 20 cp.",
+    ok: "Perte de 20 à moins de 30 cp.",
+    inaccuracy: "Perte de 30 à moins de 60 cp.",
+    error: "Perte de 60 à moins de 200 cp.",
+    blunder: "Perte de 200 cp ou plus.",
+    unrated: "Demi-coup pas encore évalué par Stockfish.",
+  };
   wrap.replaceChildren();
   for (const [color, label] of [["w", "Blancs"], ["b", "Noirs"]]) {
     const side = document.createElement("section");
@@ -550,6 +561,18 @@ function renderMoveGradeSummary() {
       side.appendChild(row);
     }
     wrap.appendChild(side);
+  }
+
+  const legend = $("move-grade-legend");
+  if (!legend) return;
+  legend.replaceChildren();
+  for (const [key, symbol, name] of categories) {
+    const count = state.moveGradeHistory.filter((entry) => entry.category === key).length;
+    const row = document.createElement("div");
+    row.className = "move-grade-count-row grade-" + key + " move-grade-legend-row";
+    row.dataset.grade = key;
+    row.innerHTML = `<span class="move-grade-count-dot" aria-hidden="true"></span><span class="move-grade-count-symbol" aria-hidden="true">${symbol}</span><span class="move-grade-count-name">${name}</span><strong data-grade-count>${count}</strong><small>${explanations[key]}</small>`;
+    legend.appendChild(row);
   }
 }
 
