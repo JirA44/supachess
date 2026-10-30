@@ -26,9 +26,9 @@ const ChessBlindspots = (() => {
       if(p.type==="p") attacks=adf===1 && dr===(color==="w"?-1:1);
       else if(p.type==="n") attacks=(adf===1&&adr===2)||(adf===2&&adr===1);
       else if(p.type==="k") attacks=Math.max(adf,adr)===1;
-      else if(p.type==="b") attacks=adf===adr && adf>0, sliding=attacks;
-      else if(p.type==="r") attacks=((df===0&&dr!==0)||(dr===0&&df!==0)), sliding=attacks;
-      else if(p.type==="q") attacks=((adf===adr&&adf>0)||((df===0&&dr!==0)||(dr===0&&df!==0))), sliding=attacks;
+      else if(p.type==="b") { attacks=adf===adr && adf>0; sliding=attacks; }
+      else if(p.type==="r") { attacks=(df===0&&dr!==0)||(dr===0&&df!==0); sliding=attacks; }
+      else if(p.type==="q") { attacks=(adf===adr&&adf>0)||((df===0&&dr!==0)||(dr===0&&df!==0)); sliding=attacks; }
       if(!attacks) continue;
       if(sliding) {
         const sf=Math.sign(df), sr=Math.sign(dr); let f=pf+sf,r=pr+sr,blocked=false;
