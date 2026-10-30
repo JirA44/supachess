@@ -60,7 +60,7 @@ test("catalog completion count ignores stale lesson IDs from an older catalog", 
 
   await page.goto("/book-lessons.html");
   await expect(page.locator("#lesson-catalog-count")).toContainText("1 terminés.");
-  await expect(page.locator("#lesson-catalog-count")).toContainText("236 entrées au total");
+  await expect(page.locator("#lesson-catalog-count")).toContainText("260 entrées au total");
 });
 
 
