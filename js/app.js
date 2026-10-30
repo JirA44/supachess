@@ -13,6 +13,7 @@ const state = {
   stopped: false,
   pendingMove: null,     // coup utilisateur intercepté {from,to,promotion,uci}
   fenHistory: [],        // clés FEN (4 champs) pour détection de répétition
+  positionFenHistory: [], // FEN exacts avant chaque demi-coup pour retrouver les évaluations
   evalHistory: [],       // éval (côté Blancs) de chaque demi-coup joué, parallèle à history()
   evalWhiteCp: 0,
   gen: 0,                // génération de tour : invalide les analyses en vol au changement de mode
@@ -299,6 +300,7 @@ function newGame() {
   state.pendingMove = null;
   resetAccuracy();
   state.fenHistory = [fenKey(state.chess.fen())];
+  state.positionFenHistory = [state.chess.fen()];
   state.evalHistory = [];
   state.userColor = $("sel-color").value;
   boardUI.setFlipped(state.userColor === "b");
@@ -477,6 +479,7 @@ async function playEngineMove() {
   if (mv) {
     boardUI.lastMove = { from: mv.from, to: mv.to };
     state.fenHistory.push(fenKey(state.chess.fen()));
+    state.positionFenHistory.push(state.chess.fen());
     state.evalHistory.push(res.lines.length ? whitePovEval(res.lines[0], engineColor === "w") : null);
     // Eval AVANT (POV engine) = top-1 de son analyse ; APRÈS = top-1 de la
     // prochaine analyse MultiPV utilisateur (déjà lancée pour son tour).
@@ -595,6 +598,28 @@ function finishEngineFeedback(pending, replyLine) {
 }
 
 /* ── Interaction échiquier ── */
+function evaluationPositionKey(fen) { return String(fen || "").split(" ").slice(0, 5).join(" "); }
+
+function findPreviouslyEvaluatedMove(fen, uci) {
+  const key = evaluationPositionKey(fen);
+  if (typeof reviewFindKnownMoveGrade === "function") {
+    const reviewed = reviewFindKnownMoveGrade(fen, uci);
+    if (reviewed) return reviewed;
+  }
+  const played = state.chess.history({ verbose: true });
+  const priorFens = state.positionFenHistory || [];
+  for (let i = 0; i < Math.min(played.length, priorFens.length - 1); i++) {
+    const move = played[i];
+    const playedUci = move.from + move.to + (move.promotion || "");
+    if (evaluationPositionKey(priorFens[i]) !== key || playedUci !== uci) continue;
+    const grade = state.moveGradeHistory.find((entry) => entry.ply === i + 1);
+    if (grade && grade.category && grade.category !== "unrated") {
+      return { category: grade.category, evaluation: grade.evaluation || "—", source: "déjà évalué pendant cette partie" };
+    }
+  }
+  return null;
+}
+
 function onSquareClick(sq) {
   if (typeof reviewHandleExerciseSquareClick === "function" && reviewHandleExerciseSquareClick(sq)) return;
   if (state.phase !== "userTurn") return;
@@ -619,19 +644,27 @@ function onSquareClick(sq) {
     boardUI.legalTargets = [...new Set(legalMoves.map((m) => m.to))];
     boardUI.legalTargetHints = {};
     for (const move of legalMoves) {
+      const uci = move.from + move.to + (move.promotion || "");
       const prefix = move.from + move.to;
       const candidate = state.candidates
-        .filter((c) => c.uci.startsWith(prefix))
+        .filter((c) => c.uci === uci || (move.promotion && c.uci.startsWith(prefix)))
         .sort((a, b) => a.deltaCp - b.deltaCp)[0];
+      const known = candidate ? null : findPreviouslyEvaluatedMove(state.chess.fen(), uci);
+      const grade = candidate
+        ? moveGrade(candidate.deltaCp, isBrilliantCandidate(state.chess.fen(), candidate), candidate.rank === 1)
+        : known ? moveGrade(null, false, false, known.category) : null;
       const previous = boardUI.legalTargetHints[move.to];
       if (previous && candidate && previous.rank <= candidate.rank) continue;
       boardUI.legalTargetHints[move.to] = {
-        quality: candidate ? qualityClass(candidate.deltaCp, candidate.rank) : null,
+        quality: grade ? `grade-${grade.category}` : null,
+        category: grade?.category || null,
+        categoryLabel: grade?.label || null,
+        source: candidate ? "analyse Stockfish de cette position" : known?.source || null,
         rank: candidate?.rank ?? 999,
         capture: move.flags.includes("c") || move.flags.includes("e"),
         san: move.san,
         evaluation: candidate && (candidate.line.scoreCp !== null || candidate.line.mate !== null)
-          ? formatScore(candidate.line, state.chess.turn() === "w") : "—",
+          ? formatScore(candidate.line, state.chess.turn() === "w") : known?.evaluation || "—",
       };
     }
   } else {
@@ -804,6 +837,7 @@ function commitUserMove(moveObj, cand, forced) {
   state.evalHistory.push(cand && cand.line ? whitePovEval(cand.line, userMoveColor === "w") : null);
   boardUI.dots = [];
   state.fenHistory.push(fenKey(state.chess.fen()));
+  state.positionFenHistory.push(state.chess.fen());
   state.stats.moves++;
   if (cand && cand.rank === 1) state.stats.top1++;
   if (cand && cand.rank !== null && cand.rank <= 3) state.stats.top3++;
@@ -1121,6 +1155,7 @@ $("btn-undo").addEventListener("click", () => {
   while (undone < 2 && state.chess.history().length > 0) {
     state.chess.undo();
     state.fenHistory.pop();
+    state.positionFenHistory.pop();
     state.evalHistory.pop();
     undone++;
     if (state.chess.turn() === state.userColor) break;
@@ -1159,6 +1194,7 @@ $("btn-fen").addEventListener("click", () => {
   moveFeedback.clear();
   state.chess = new Chess(fen.trim());
   state.fenHistory = [fenKey(state.chess.fen())];
+  state.positionFenHistory = [state.chess.fen()];
   state.evalHistory = [];
   state.candidates = [];
   if (typeof gamesNewEntry === "function") gamesNewEntry();
