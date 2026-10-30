@@ -595,6 +595,7 @@ function finishEngineFeedback(pending, replyLine) {
       ? formatScore(replyLine, pending.color === "b") : "—";
     renderBoard();
   }
+  if (typeof gamesAutoSave === "function") gamesAutoSave();
 }
 
 /* ── Interaction échiquier ── */
