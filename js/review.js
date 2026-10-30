@@ -771,12 +771,14 @@ function reviewBeginReplay() {
 }
 
 function reviewRestoreAfterReplay() {
-  window.setSupaCorrectionExerciseMode?.(false);
   const exercisePanel = document.getElementById("review-exercise-panel");
   if (exercisePanel) exercisePanel.classList.add("hidden");
   reviewState.exercise = null;
   const saved = reviewState.returnState;
-  if (!saved) return;
+  if (!saved) {
+    window.setSupaCorrectionExerciseMode?.(false);
+    return;
+  }
   const nextGen = state.gen + 1; // invalidate any analysis started by the replay
   Object.assign(state, saved.state);
   state.gen = nextGen;
@@ -791,6 +793,7 @@ function reviewRestoreAfterReplay() {
   reviewState.returnState = null;
   document.getElementById("replay-bar").classList.remove("hidden");
   reviewSetReplayControls(false);
+  window.setSupaCorrectionExerciseMode?.(false);
   renderAll();
   if (["engineThinking", "analyzing"].includes(state.phase)) startTurn();
 }
