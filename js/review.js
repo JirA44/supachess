@@ -66,6 +66,57 @@ function reviewHistoryLoad() {
   } catch (_e) { return []; }
 }
 
+
+let reviewMoveGradeIndex = null;
+let reviewMoveGradeIndexSignature = "";
+function reviewFindKnownMoveGrade(fen, uci) {
+  const key = evaluationPositionKey(fen);
+  if (Array.isArray(reviewState.fens) && Array.isArray(reviewState.moves)) {
+    for (let i = 0; i < reviewState.moves.length; i++) {
+      const move = reviewState.moves[i];
+      if (evaluationPositionKey(reviewState.fens[i]) !== key) continue;
+      if (move.from + move.to + (move.promotion || "") !== uci) continue;
+      const grade = reviewState.grades[i];
+      if (grade && grade.category && grade.category !== "unrated") {
+        return { category: grade.category, evaluation: grade.evaluation || "—", source: "déjà évalué dans cette analyse PGN" };
+      }
+    }
+  }
+
+  const games = typeof gamesLoad === "function" ? gamesLoad() : [];
+  const items = [...games, ...reviewHistoryLoad()];
+  const signature = JSON.stringify(items.map((item) => [item.pgn, item.moveGrades]));
+  if (!reviewMoveGradeIndex || signature !== reviewMoveGradeIndexSignature) {
+    reviewMoveGradeIndex = new Map();
+    reviewMoveGradeIndexSignature = signature;
+    for (const item of items) {
+      const grades = Array.isArray(item.moveGrades) ? item.moveGrades : [];
+      if (!grades.length || typeof item.pgn !== "string") continue;
+      const parsed = new Chess();
+      const loadFn = parsed.load_pgn ? "load_pgn" : "loadPgn";
+      if (!parsed[loadFn](item.pgn, { sloppy: true })) continue;
+      const headers = parsed.header();
+      const moves = parsed.history({ verbose: true });
+      const cursor = headers.FEN ? new Chess(headers.FEN) : new Chess();
+      for (let i = 0; i < moves.length; i++) {
+        const move = moves[i];
+        const moveUci = move.from + move.to + (move.promotion || "");
+        const grade = grades.find((entry) => entry.ply === i + 1);
+        if (grade && grade.category && grade.category !== "unrated") {
+          const position = evaluationPositionKey(cursor.fen());
+          reviewMoveGradeIndex.set(position + "|" + moveUci, {
+            category: grade.category,
+            evaluation: grade.evaluation || "—",
+            source: "déjà évalué dans une partie enregistrée",
+          });
+        }
+        cursor.move(move.san);
+      }
+    }
+  }
+  return reviewMoveGradeIndex.get(key + "|" + uci) || null;
+}
+
 function reviewHistorySave(pgn, headers = {}, correctionExercises = [], analysis = null, moveGrades = []) {
   const normalizedPgn = String(pgn || "").replace(/\r\n?/g, "\n").trim();
   if (!normalizedPgn) return false;
