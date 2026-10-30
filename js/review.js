@@ -927,6 +927,8 @@ function resumeCorrectionExercisesFromUrl() {
   const params = new URLSearchParams(location.search);
   const resumeId = params.get("resume-exercises");
   const openReview = params.get("open-review") === "1";
+  const focusCategory = params.get("focus-category");
+  const validFocusCategories = new Set(["inaccuracy","mistake","blunder"]);
   if (!resumeId && !openReview) return;
   const item = resumeId ? reviewHistoryLoad().find((saved) => saved.id === resumeId) : null;
   if (resumeId && !item) return;
@@ -934,8 +936,19 @@ function resumeCorrectionExercisesFromUrl() {
     if (!item) { reviewShowModal(); return; }
     const exercises = reviewValidCorrectionExercises(item.correctionExercises);
     if (exercises.length) {
-      reviewState.currentHeaders = { White: item.white, Black: item.black };
-      reviewCorrectPgn(item.pgn,{White:item.white,Black:item.black});
+      const headers = { White: item.white, Black: item.black };
+      if (focusCategory && validFocusCategories.has(focusCategory)) {
+        const focusedExercises = exercises.filter((exercise) => exercise.classification === focusCategory);
+        reviewState.currentHeaders = headers;
+        reviewStartCorrectionExercises(focusedExercises,headers,item.analysis||null,item.moveGrades||[]);
+        if (!focusedExercises.length) {
+          const feedback=document.getElementById("review-exercise-feedback");
+          if (feedback) feedback.textContent = "Aucun exercice de cette catégorie n’est enregistré dans cette partie. Actualise ton classement des lacunes.";
+        }
+      } else {
+        reviewState.currentHeaders = headers;
+        reviewCorrectPgn(item.pgn,headers);
+      }
       document.getElementById("review-exercise-panel")?.scrollIntoView({ block: "start" });
     } else {
       reviewStart(item.pgn);
