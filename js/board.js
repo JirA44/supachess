@@ -82,7 +82,9 @@ class BoardUI {
           const detail = this.legalTargetHints[sq] || {};
           hint.className = "legal-hint" + (detail.quality ? " " + detail.quality : " q-neutral") + (detail.capture ? " capture" : "");
           hint.title = detail.san
-            ? `${detail.capture ? "Prise possible" : "Coup possible"} : ${detail.san} · évaluation ${detail.evaluation || "en cours"}`
+            ? detail.categoryLabel
+              ? `${detail.capture ? "Prise possible" : "Coup légal"} : ${detail.san} · ${detail.categoryLabel} · ${detail.source || "déjà évalué"} · évaluation ${detail.evaluation || "—"}`
+              : `${detail.capture ? "Prise légale possible" : "Coup légal possible"} : ${detail.san} · non évalué par Stockfish dans cette position : qualité inconnue`
             : "Coup légal possible";
           hint.setAttribute("aria-label", hint.title);
           cell.appendChild(hint);
