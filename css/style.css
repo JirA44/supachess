@@ -104,6 +104,10 @@ body {
 .sq .legal-hint.capture.q-best, .sq .legal-hint.capture.q-good { color: #36b679; }
 .sq .legal-hint.capture.q-mid { color: #e8a72e; }
 .sq .legal-hint.capture.q-bad { color: #df424b; }
+
+/* Pastilles de coups légaux déjà évalués : réutiliser la couleur officielle de leur catégorie. */
+.sq .legal-hint[class*="grade-"] { background: var(--grade-dot-color); box-shadow: 0 0 0 2px rgba(13, 25, 34, .78), 0 0 8px var(--grade-dot-color); }
+.sq .legal-hint.capture[class*="grade-"] { background: transparent; border-color: var(--grade-dot-color); color: var(--grade-dot-color); }
 .sq.bad-move { outline: 4px solid #ff3947; outline-offset: -4px; z-index: 3; }
 .sq .bad-move-marker { position: absolute; z-index: 7; top: 3px; right: 3px; width: 18px; height: 18px;
   display: grid; place-items: center; border-radius: 50%; background: #e73543; color: #fff;
@@ -388,3 +392,8 @@ body {
 .site-counters{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 22px;width:100%;box-sizing:border-box;padding:12px 16px;margin-top:8px;border-top:1px solid rgba(255,255,255,.16);color:#eef5f2;font-size:.9rem;text-align:center}
 .site-counters span{display:inline-block;max-width:100%}
 @media(max-width:520px){.site-counters{flex-direction:column;gap:6px;padding:12px 10px;font-size:.82rem}}
+
+.legal-move-dot-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 5px 0 10px; padding: 7px 10px; border: 1px solid rgba(159,177,196,.35); border-radius: 8px; color: var(--text, #eef2f7); font-size: .88rem; line-height: 1.4; }
+.legal-dot-swatch { display: inline-block; width: 12px; height: 12px; flex: 0 0 12px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.4); }
+.legal-dot-unknown { background: #9fb1c4; }
+.legal-dot-rated { background: linear-gradient(135deg,#c084fc 0 15%,#38bdf8 15% 30%,#22c55e 30% 48%,#86efac 48% 64%,#facc15 64% 78%,#fb923c 78% 89%,#ef4444 89%); }
