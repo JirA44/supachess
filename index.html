@@ -257,6 +257,12 @@
       <div id="move-grade-summary" class="move-grade-summary" aria-live="polite"></div>
     </div>
 
+    <div id="move-grade-legend-panel" class="panel">
+      <h2>Légende des qualités de demi-coup</h2>
+      <p class="move-grade-context">Décompte cumulatif jusqu’à la position affichée. Les seuils indiquent la perte par rapport au meilleur coup Stockfish (cp = centipions), pas l’évaluation absolue de la position.</p>
+      <div id="move-grade-legend" class="move-grade-legend" aria-live="polite"></div>
+    </div>
+
     <div id="coach-panel" class="panel coach-panel hidden">
       <h2 id="coach-title">Coach</h2>
       <p id="coach-message" class="coach-message"></p>
@@ -348,7 +354,7 @@
 <script src="js/supa.js?v=on-demand-local-coach-20261030"></script>
 <script src="js/board.js?v=exercise-drag-20261029"></script>
 <script src="js/move-feedback.js?v=restore-ok-grade-note-20261029"></script>
-<script src="js/app.js?v=correction-candidate-bubbles-20261030"></script>
+<script src="js/app.js?v=move-grade-legend-20261030"></script>
 <script src="js/diagnostic-undo-lock.js?v=diagnostic-undo-lock-20261030"></script>
 <script src="js/games.js?v=stop-vs-resign-labels-20261030"></script>
 <script src="js/tablebase.js?v=op1-partial-tablebase-20261027"></script>
