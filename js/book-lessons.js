@@ -2457,6 +2457,19 @@
     return path[position < 0 ? 0 : (position + 1) % path.length];
   }
 
+  root.startSupaChessMethodPath = function (program) {
+    const path = methodPathLessonIndices(program);
+    if (!path.length) return false;
+    $("lesson-search").value = "";
+    $("lesson-level-filter").value = "";
+    $("lesson-program-filter").value = program;
+    $("lesson-program-filter").dispatchEvent(new Event("change", { bubbles: true }));
+    renderCatalog();
+    loadLesson(path[0]);
+    document.querySelector(".lesson-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return true;
+  };
+
   root.SupaChessLessons = LESSONS;
 
   function setupGame(lesson, ChessClass) {
@@ -2968,8 +2981,7 @@
     if (followsPath) $("lesson-next-preview").textContent = "Prochaine étape du parcours " + pathProgram + " : " +
       nextLesson.title + " (" + nextLesson.level + ") — " + nextLesson.category + ".";
     updateProgressLabel();
-    $("lesson-progress").textContent = "Essais et indices utilisés : " + attempts + " · " + hintsUsed +
-      (hintsUsed === 1 ? " indice." : " indices.");
+    updateProgressLabel();
     explanation.hidden = false;
   }
 
@@ -2997,7 +3009,13 @@
   }
 
   function updateProgressLabel() {
-    $("lesson-progress").textContent = "Essais : " + attempts + " · Indices utilisés : " + hintsUsed;
+    const lesson = LESSONS[lessonIndex];
+    const selectedProgram = $("lesson-program-filter").value;
+    const path = selectedProgram && lesson && lesson.program === selectedProgram
+      ? methodPathLessonIndices(selectedProgram) : [];
+    const position = path.indexOf(lessonIndex);
+    const step = position >= 0 ? "Étape " + (position + 1) + "/" + path.length + " · " : "";
+    $("lesson-progress").textContent = step + "Essais : " + attempts + " · Indices utilisés : " + hintsUsed;
   }
 
   function clearSelection() {
