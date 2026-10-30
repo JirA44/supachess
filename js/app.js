@@ -273,6 +273,8 @@ async function init() {
 
 function newGame() {
   state.abandoned = false;
+  const abandonButton = $("btn-abandon-game");
+  if (abandonButton) abandonButton.disabled = false;
   state.gen++;
   moveFeedback.clear();
   state.moveGradeHistory = [];
@@ -300,6 +302,8 @@ function abandonCurrentGame() {
   state.gen++;
   state.abandoned = true;
   state.phase = "gameover";
+  const abandonButton = $("btn-abandon-game");
+  if (abandonButton) abandonButton.disabled = true;
   state.pendingMove = null;
   moveFeedback.clear();
   hideCoach();
@@ -758,6 +762,8 @@ function checkGameOver() {
   const c = state.chess;
   if (!c.game_over()) return false;
   state.phase = "gameover";
+  const abandonButton = $("btn-abandon-game");
+  if (abandonButton) abandonButton.disabled = true;
   boardUI.dots = [];
   let msg = "Partie terminée — ";
   if (c.in_checkmate()) {
