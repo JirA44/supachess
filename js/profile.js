@@ -230,24 +230,31 @@ function profileNextLevelXP(xp,level){
 function renderLocalLearningPanel(data){
   var local=readLocalLearningProgress(data);
   var labels={brilliant:profileText('profile_category_brilliant','Brillant'),best:profileText('profile_category_best','Meilleurs coups'),'very-good':profileText('profile_category_very_good','Très bons coups'),good:profileText('profile_category_good','Bons coups'),ok:profileText('profile_category_ok','Coups corrects'),inaccuracy:profileText('profile_category_inaccuracy','Imprécisions'),mistake:profileText('profile_category_mistake','Erreurs'),blunder:profileText('profile_category_blunder','Gaffes'),unrated:profileText('profile_category_unrated','Non évalués')};
-  var weaknesses=Object.keys(local.categoryCounts).filter(function(key){return key==='inaccuracy'||key==='mistake'||key==='blunder';}).sort(function(a,b){return local.categoryCounts[b]-local.categoryCounts[a];});
+  var weaknessSeverity={blunder:0,mistake:1,inaccuracy:2};
+  var weaknesses=Object.keys(local.categoryCounts).filter(function(key){return key==='inaccuracy'||key==='mistake'||key==='blunder';}).sort(function(a,b){
+    var byCount=local.categoryCounts[b]-local.categoryCounts[a];
+    return byCount||weaknessSeverity[a]-weaknessSeverity[b];
+  });
   var exercisesUrl=local.latest
     ? 'https://jira44.github.io/supachess/index.html?resume-exercises='+encodeURIComponent(local.latest.id)
     : 'https://jira44.github.io/supachess/index.html?open-review=1';
-  var focusWeaknesses=weaknesses.slice(0,2);
-  var weaknessGame=focusWeaknesses.length?local.games.reduce(function(best,game){
-    var score=(Array.isArray(game.correctionExercises)?game.correctionExercises:[]).reduce(function(sum,exercise){
-      var rank=focusWeaknesses.indexOf(exercise.classification);
-      return sum+(rank===0?3:rank===1?1:0);
-    },0);
-    return score>0&&(!best||score>best.score)?{game:game,score:score}:best;
-  },null):null;
-  var weaknessesUrl=weaknessGame
-    ? 'https://jira44.github.io/supachess/index.html?resume-exercises='+encodeURIComponent(weaknessGame.game.id)
-    : weaknesses.length?exercisesUrl:'https://jira44.github.io/supachess/index.html?open-review=1';
-  var weaknessFocusText=focusWeaknesses.length
-    ? 'Priorité : '+(labels[focusWeaknesses[0]]||focusWeaknesses[0])+' ('+local.categoryCounts[focusWeaknesses[0]]+')'
-    : 'Analysez vos parties pour repérer vos lacunes.';
+  var weaknessRanks=weaknesses.map(function(key){
+    var match=local.games.reduce(function(best,game){
+      var count=(Array.isArray(game.correctionExercises)?game.correctionExercises:[]).filter(function(exercise){return exercise.classification===key;}).length;
+      return count>0&&(!best||count>best.count)?{game:game,count:count}:best;
+    },null);
+    return {
+      key:key,
+      count:local.categoryCounts[key],
+      href:match&&match.game.id
+        ? 'https://jira44.github.io/supachess/index.html?resume-exercises='+encodeURIComponent(match.game.id)+'&focus-category='+encodeURIComponent(key)
+        : exercisesUrl
+    };
+  });
+  var weaknessesUrl=weaknessRanks.length?weaknessRanks[0].href:'https://jira44.github.io/supachess/index.html?open-review=1';
+  var weaknessFocusText=weaknessRanks.length
+    ? 'Priorité n° 1 : '+(labels[weaknessRanks[0].key]||weaknessRanks[0].key)+' ('+weaknessRanks[0].count+')'
+    : 'Analysez vos parties pour établir votre classement personnel.';
   var mastered=local.completed.length;
   var nextXP=profileNextLevelXP(local.xp,local.level);
   var xpRemaining=nextXP===null?null:Math.max(0,Math.ceil(nextXP-local.xp));
@@ -267,8 +274,8 @@ function renderLocalLearningPanel(data){
     renderPlayerAccuracyPanel(local.accuracySummary)+
     '<h4>'+profileText('profile_mastery_title','Maîtrise et progression')+'</h4><ul class="profile-mastery-list">'+training.map(function(item){var label=escapeProfileText(item.label);var value='<strong>'+item.value+'</strong>';return '<li>'+(item.href?'<a class="profile-mastery-link" href="'+item.href+'" aria-label="'+label+' : '+item.value+'">'+label+value+'</a>':'<div class="profile-mastery-entry">'+label+value+'</div>')+'</li>';}).join('')+'</ul>'+
     '<div class="profile-learning-actions"><div class="profile-resume-card"><a class="profile-resume-link" href="'+weaknessesUrl+'"><span>🎯 Travailler mes plus grandes lacunes<small style="display:block;font-weight:500;opacity:.82;margin-top:3px">'+escapeProfileText(weaknessFocusText)+'</small></span><span aria-hidden="true">›</span></a></div><a class="profile-diagnostic-button" role="button" href="index.html?start-diagnostic=1#level-diagnostic-banner">🧭 Passer le diagnostic de niveau</a><small class="profile-diagnostic-help">Relance un bilan de 10 parties analysées par Stockfish.</small><div class="profile-resume-card"><a class="profile-resume-link" href="'+exercisesUrl+'"><span>'+profileText('profile_resume_exercises','Reprendre mes exercices')+'</span><span aria-hidden="true">›</span></a></div><div class="profile-resume-card"><a class="profile-resume-link" href="https://jira44.github.io/supachess/book-lessons.html?next=1"><span>'+profileText('profile_resume_lessons','Reprendre mes leçons')+'</span><span aria-hidden="true">›</span></a></div><div class="profile-resume-card"><a class="profile-resume-link" href="https://jira44.github.io/supachess-web/TRAINING_OPENINGS.html"><span>'+profileText('profile_resume_mastery','Reprendre l’entraînement de maîtrise')+'</span><span aria-hidden="true">›</span></a></div></div>';
-  if(weaknesses.length){
-    html+='<h4>'+profileText('profile_work_on','À travailler dans vos parties')+'</h4><ul class="profile-learning-list">'+weaknesses.slice(0,3).map(function(key){return '<li>'+escapeProfileText(labels[key]||key)+' : '+local.categoryCounts[key]+'</li>';}).join('')+'</ul>';
+  if(weaknessRanks.length){
+    html+='<h4>Classement de mes lacunes</h4><ol class="profile-learning-list">'+weaknessRanks.map(function(item,index){return '<li><a class="profile-mastery-link" href="'+item.href+'" aria-label="Rang '+(index+1)+' : '+escapeProfileText(labels[item.key]||item.key)+' : '+item.count+' exercices"><span>'+escapeProfileText(labels[item.key]||item.key)+'</span><strong>'+item.count+'</strong></a></li>';}).join('')+'</ol>';
   }else if(local.moveExercises){html+='<p class="profile-learning-note">'+profileText('profile_no_recorded_errors','Aucune imprécision, erreur ou gaffe enregistrée dans les exercices disponibles.')+'</p>';}
   var points=local.completed.map(function(item){return item.progress.completedAt?new Date(item.progress.completedAt).getTime():null;}).filter(function(time){return Number.isFinite(time);}).sort(function(a,b){return a-b;});
   if(points.length>1){
