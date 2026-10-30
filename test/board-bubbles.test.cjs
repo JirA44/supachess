@@ -188,7 +188,7 @@ test("gray legal marker explicitly says the move is legal but has unknown qualit
   const marker = square.children.find((child) => child.className.includes("legal-hint"));
   assert.match(marker.className, /q-neutral/);
   assert.match(marker.title, /coup légal possible/i);
-  assert.match(marker.title, /non évalué dans cette position/i);
+  assert.match(marker.title, /non évalué par Stockfish dans cette position/i);
   assert.match(marker.title, /qualité inconnue/i);
 });
 
