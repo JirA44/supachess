@@ -84,7 +84,7 @@ class BoardUI {
           hint.title = detail.san
             ? detail.categoryLabel
               ? `${detail.capture ? "Prise possible" : "Coup légal"} : ${detail.san} · ${detail.categoryLabel} · ${detail.source || "déjà évalué"} · évaluation ${detail.evaluation || "—"}`
-              : `${detail.capture ? "Prise légale possible" : "Coup légal possible"} : ${detail.san} · Stockfish ne l’a pas évalué dans cette position : qualité inconnue`
+              : `${detail.capture ? "Prise légale possible" : "Coup légal possible"} : ${detail.san} · non évalué par Stockfish dans cette position : qualité inconnue`
             : "Coup légal possible";
           hint.setAttribute("aria-label", hint.title);
           cell.appendChild(hint);
