@@ -1339,9 +1339,7 @@
             level: source.level,
             title: "Anticipation · prévoir la réponse à " + source.title,
             category: "Anticipation · " + source.category,
-            program: source.program === "Calcul · meilleure réponse adverse"
-              ? "Calcul · meilleure réponse adverse"
-              : "Anti-erreurs · anticiper l’adversaire",
+            program: "Anti-erreurs · anticiper l’adversaire",
             author: "SupaChess Académie",
             book: "Programme de renforcement et rappel actif",
             reference: "Exercice original de prévision du demi-coup adverse",
