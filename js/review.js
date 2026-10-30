@@ -759,7 +759,7 @@ async function reviewRenderCorrectionExplanation(exercise,index,item){
       const rootResult=await state.engine.analyze({fen:item.fen,multipv:1,movetime:1400,elo:0});
       rootLines=rootResult.lines||[];
     }
-    const rootLine=rootLines.find(line=>line.pv&&line.pv[0]===item.bestUci)||rootLines[0];
+    const rootLine=rootLines.find(line=>line.pv&&line.pv[0]===item.bestUci)||null;
     const root=new Chess(item.fen);
     const playedMove=item.playedSan?root.move(item.playedSan):null;
     if(!playedMove)throw new Error("Le demi-coup joué n’est pas disponible dans l’exercice.");
@@ -771,14 +771,16 @@ async function reviewRenderCorrectionExplanation(exercise,index,item){
     content.replaceChildren();
 
     const heading=document.createElement("h3");
+    heading.id="review-exercise-analysis-title";
     heading.textContent="Pourquoi "+item.playedSan+" était moins bon";
     content.appendChild(heading);
 
-    const bestMove=root.move({from:item.bestUci.slice(0,2),to:item.bestUci.slice(2,4),promotion:item.bestUci[4]});
+    const bestPosition=new Chess(item.fen);
+    const bestMove=bestPosition.move({from:item.bestUci.slice(0,2),to:item.bestUci.slice(2,4),promotion:item.bestUci[4]});
     reviewAppendCorrectionExplanation(content,"Écart relevé dans l’analyse de la partie",
       reviewCorrectionLossText(item.lossCp)+" par rapport au meilleur coup retenu.");
     reviewAppendCorrectionExplanation(content,"Meilleur coup et suite calculée",
-      bestMove?reviewCorrectionPv(item.fen,rootLines.find(line=>line.pv&&line.pv[0]===item.bestUci)?.pv||[item.bestUci]):"Meilleur coup légal confirmé; variante détaillée indisponible.");
+      bestMove?(rootLine?reviewCorrectionPv(item.fen,rootLine.pv):"Meilleur coup retenu : "+(bestMove?bestMove.san:item.bestUci)+"; variante détaillée indisponible."):"Meilleur coup légal confirmé; variante détaillée indisponible.");
     reviewAppendCorrectionExplanation(content,"Réponse adverse après le coup joué",
       afterLine?reviewCorrectionPv(afterPlayedFen,afterLine.pv):"Stockfish n’a pas fourni de variante après le coup joué.");
 
@@ -799,6 +801,8 @@ async function reviewRenderCorrectionExplanation(exercise,index,item){
     if(evidence&&evidence.observations)
       for(const observation of evidence.observations)
         reviewAppendCorrectionExplanation(content,"Observation Stockfish",observation.text);
+    if(evidence&&evidence.explanation)
+      reviewAppendCorrectionExplanation(content,"Comparaison Stockfish",evidence.explanation);
     if(!((evidence&&evidence.principles&&evidence.principles.length)||immediate.length)){
       reviewAppendCorrectionExplanation(content,"Cause précise",
         "Aucune cause tactique ponctuelle n’est confirmée par les détecteurs disponibles. La perte est mesurée par Stockfish; les deux variantes ci-dessus montrent les réponses calculées, mais ne prouvent pas à elles seules toutes les raisons positionnelles.");
