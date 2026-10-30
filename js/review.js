@@ -428,10 +428,14 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     <div class="review-grade-list">${REVIEW_MOVE_CLASSES.map((category) => {
       const moves = rows.filter((row) => row.color === color && row.classification === category.id);
       const count = reviewCount(rows, color, category.id);
+      const firstMove = moves[0];
       const moveList = moves.length
         ? `<details class="review-grade-moves"><summary>${moves.length} coup${moves.length === 1 ? "" : "s"}</summary><ol>${moves.map(moveButton).join("")}</ol></details>`
         : "";
-      return `<div class="review-grade-row review-grade-${category.id}" title="${category.label}"><span class="review-grade-dot" aria-hidden="true"></span><span class="review-grade-symbol" aria-hidden="true">${category.symbol}</span><span class="review-grade-label">${category.label}</span><span class="review-grade-count">${count}</span>${moveList}</div>`;
+      const categoryJump = firstMove
+        ? `<button type="button" class="review-grade-jump review-ply-link" data-review-ply="${firstMove.ply}" aria-label="Aller au premier demi-coup classé ${esc(category.label)}" style="grid-column:3 / 5;display:flex;align-items:center;justify-content:space-between;width:100%;padding:0;border:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer"><span class="review-grade-label">${category.label}</span><span class="review-grade-count">${count}</span></button>`
+        : `<span class="review-grade-label">${category.label}</span><span class="review-grade-count">${count}</span>`;
+      return `<div class="review-grade-row review-grade-${category.id}" title="${category.label}"><span class="review-grade-dot" aria-hidden="true"></span><span class="review-grade-symbol" aria-hidden="true">${category.symbol}</span>${categoryJump}${moveList}</div>`;
     }).join("")}</div>
   </section>`;
   const halfmoveExplanations = rows.map((r, idx) => {
