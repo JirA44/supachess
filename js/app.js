@@ -135,6 +135,12 @@ function applyLevelDiagnosticLock() {
   if (active) {
     boardUI.showDots = false;
     boardUI.showMoveDots = false;
+    if (state.phase === "coach") {
+      state.phase = "userTurn";
+      state.pendingMove = null;
+      moveFeedback.clearPreview();
+      hideCoach();
+    }
   } else if (levelDiagnosticLockWasActive) {
     // Leaving the diagnostic must turn both aids back on, even if older saved
     // preferences were false; the player can switch either aid off afterwards.
