@@ -2350,6 +2350,98 @@
     },
   );
 
+  // Active recall drills put the learner on the opponent's turn to practice the reply itself.
+  LESSONS.push(
+    {
+      id: "calculation-reflex-exercise-counterattack",
+      kind: "anticipation",
+      level: "Débutant",
+      title: "Exercice · trouver …d5! face à Cg5",
+      category: "Calcul · réponse forcing",
+      program: "Calcul · meilleure réponse adverse",
+      author: "SupaChess Académie",
+      book: "Rappel actif original",
+      reference: "Exercice 1 · échecs, captures et menaces",
+      setup: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5"],
+      color: "b",
+      question: "Les Blancs visent f7. Quel coup forcing noir faut-il calculer avant de défendre passivement ?",
+      choices: [
+        { text: "…d5!, contre-attaquer le fou et le centre", correct: true },
+        { text: "…h6, sans analyser la prise en d5", correct: false },
+        { text: "…a6, sans traiter la menace sur f7", correct: false },
+      ],
+      principle: "…d5! est la réponse forcing de cette ligne. Après exd5, les Noirs doivent réexaminer les prises et les menaces plutôt que suivre une variante par cœur.",
+      transfer: "Cherche la réponse adverse la plus forte, puis calcule sa meilleure suite.",
+      hints: ["Le coup central peut attaquer directement le fou c4.", "Joue …d5! puis vérifie la prise exd5."],
+      anticipatedMove: "d5",
+      previousMove: "Ng5",
+      sequence: [
+        { side: "user", uci: "d7d5", explanation: "…d5! attaque le fou c4 et contre le plan blanc." },
+        { side: "book", uci: "e4d5", explanation: "exd5 est la prise à calculer; elle modifie les menaces et exige une nouvelle évaluation." },
+        { side: "user", uci: "c6a5", explanation: "…Ca5! attaque le fou c4 avec tempo." },
+      ],
+    },
+    {
+      id: "calculation-reflex-exercise-capture",
+      kind: "anticipation",
+      level: "Intermédiaire",
+      title: "Exercice · répondre à …d5",
+      category: "Calcul · meilleure réponse adverse",
+      program: "Calcul · meilleure réponse adverse",
+      author: "SupaChess Académie",
+      book: "Rappel actif original",
+      reference: "Exercice 2 · prise et contre-menace",
+      setup: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5"],
+      color: "w",
+      question: "Après …d5, quelle prise centrale faut-il calculer en premier ?",
+      choices: [
+        { text: "exd5, puis calculer …Ca5 et ses menaces sur le fou", correct: true },
+        { text: "h3, sans traiter l’attaque du fou", correct: false },
+        { text: "Cxf7, sans vérifier la réponse du roi", correct: false },
+      ],
+      principle: "exd5 est la prise de la ligne. La réponse …Ca5 vise le fou c4; il faut alors calculer un échec intermédiaire avant de décider où reculer.",
+      transfer: "Après chaque capture, compte les pièces attaquées et cherche les coups forcing des deux camps.",
+      hints: ["Le pion e4 peut prendre en d5.", "Après exd5, la réponse …Ca5 attaque le fou c4."],
+      anticipatedMove: "exd5",
+      previousMove: "d5",
+      sequence: [
+        { side: "user", uci: "e4d5", explanation: "exd5 reprend le pion central; vérifie immédiatement la suite noire." },
+        { side: "book", uci: "c6a5", explanation: "…Ca5 attaque le fou c4 et crée une menace concrète." },
+        { side: "user", uci: "c4b5", explanation: "Fb5+ répond par un échec forcing avant de traiter la retraite du fou." },
+        { side: "book", uci: "c7c6", explanation: "…c6 interpose et attaque le fou b5." },
+      ],
+    },
+    {
+      id: "calculation-reflex-exercise-check",
+      kind: "anticipation",
+      level: "Avancé",
+      title: "Exercice · traiter l’échec puis la pièce attaquée",
+      category: "Calcul · échec intermédiaire",
+      program: "Calcul · meilleure réponse adverse",
+      author: "SupaChess Académie",
+      book: "Rappel actif original",
+      reference: "Exercice 3 · échec, interposition et retraite",
+      setup: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Ng5", "d5", "exd5", "Na5"],
+      color: "w",
+      question: "Après …Ca5, quel coup force d’abord une réponse du roi et prépare le traitement du fou attaqué ?",
+      choices: [
+        { text: "Fb5+", correct: true },
+        { text: "h3, en ignorant l’attaque du fou", correct: false },
+        { text: "Cxf7, sans vérifier les prises possibles", correct: false },
+      ],
+      principle: "Fb5+ est un échec. Après …c6, le pion attaque le fou : il faut repérer cette nouvelle menace et choisir une retraite légale.",
+      transfer: "Un échec intermédiaire ne clôt pas le calcul. Après la réponse forcée, réévalue les pièces attaquées et les menaces créées.",
+      hints: ["Le fou peut donner échec depuis b5.", "Après …c6, la diagonale d’échec est bloquée et le fou b5 est attaqué."],
+      anticipatedMove: "Bb5+",
+      previousMove: "Na5",
+      sequence: [
+        { side: "user", uci: "c4b5", explanation: "Fb5+ donne échec et impose une réponse aux Noirs." },
+        { side: "book", uci: "c7c6", explanation: "…c6 bloque l’échec et attaque le fou b5." },
+        { side: "user", uci: "b5f1", explanation: "Ff1 met le fou à l’abri après vérification de la diagonale." },
+      ],
+    },
+  );
+
   const LEVEL_ORDER = { "Débutant": 0, "Intermédiaire": 1, "Avancé": 2, "Expert": 3 };
   LESSONS.sort((a, b) => (LEVEL_ORDER[a.level] ?? 99) - (LEVEL_ORDER[b.level] ?? 99));
 
