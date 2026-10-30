@@ -34,6 +34,10 @@ function isLevelDiagnosticActive() {
   const diagnostic = readLevelDiagnostic();
   return Boolean(diagnostic && diagnostic.active);
 }
+let correctionExerciseModeActive = false;
+function isDiagnosticControlLockActive() {
+  return isLevelDiagnosticActive() && !correctionExerciseModeActive;
+}
 function ensureDefaultLevelDiagnostic() {
   const existing = readLevelDiagnostic();
   if (existing) return existing;
@@ -70,7 +74,7 @@ if (new URLSearchParams(window.location.search).get("start-diagnostic") === "1")
   launchUrl.searchParams.delete("start-diagnostic");
   window.history.replaceState(window.history.state, "", launchUrl);
 }
-let levelDiagnosticLockWasActive = isLevelDiagnosticActive();
+let levelDiagnosticLockWasActive = isDiagnosticControlLockActive();
 function countCompletedDiagnosticGames(diagnostic) {
   const start = Date.parse(diagnostic && diagnostic.startedAt || "");
   if (!Number.isFinite(start)) return 0;
@@ -120,7 +124,11 @@ function syncLevelDiagnosticBanner() {
     banner.textContent = "Diagnostic de niveau activé par défaut : termine 10 parties contre Stockfish. Coaching, bulles candidates et points de coups sont désactivés pendant ce bilan.";
     return;
   }
-  if (diagnostic.active) {
+  if (diagnostic.active && correctionExerciseModeActive) {
+    setAbandonVisible(false);
+    banner.hidden = false;
+    banner.textContent = "Diagnostic en pause pendant la correction. Il reprendra à la fin de l’exercice.";
+  } else if (diagnostic.active) {
     setAbandonVisible(true);
     const count = countCompletedDiagnosticGames(diagnostic);
     banner.hidden = false;
@@ -159,30 +167,31 @@ boardUI.showMoveDots = levelDiagnosticLockWasActive ? false : localStorage.getIt
 function syncDotsButton() {
   const button = $("btn-dots");
   if (!button) return;
-  const locked = isLevelDiagnosticActive();
+  const diagnosticLocked = isDiagnosticControlLockActive();
+  const correctionLocked = correctionExerciseModeActive;
   const candidatesPanel = $("candidates-panel");
   if (candidatesPanel) {
-    candidatesPanel.hidden = locked;
-    candidatesPanel.setAttribute("aria-hidden", String(locked));
+    candidatesPanel.hidden = diagnosticLocked;
+    candidatesPanel.setAttribute("aria-hidden", String(diagnosticLocked));
   }
-  button.disabled = locked;
-  button.title = locked ? "Bloqué pendant le diagnostic de niveau" : "Afficher ou masquer les bulles candidates";
-  button.textContent = locked ? "Bulles candidates : bloquées" : "Bulles candidates : " + (boardUI.showDots ? "ON" : "OFF");
-  button.setAttribute("aria-pressed", String(!locked && boardUI.showDots));
+  button.disabled = diagnosticLocked || correctionLocked;
+  button.title = diagnosticLocked ? "Bloqué pendant le diagnostic de niveau" : correctionLocked ? "Masquées pendant l’exercice pour ne pas révéler la réponse" : "Afficher ou masquer les bulles candidates";
+  button.textContent = diagnosticLocked ? "Bulles candidates : bloquées pendant le diagnostic" : correctionLocked ? "Bulles candidates : masquées pendant la correction" : "Bulles candidates : " + (boardUI.showDots ? "ON" : "OFF");
+  button.setAttribute("aria-pressed", String(!diagnosticLocked && !correctionLocked && boardUI.showDots));
   syncLevelDiagnosticBanner();
 }
 function syncMoveDotsButton() {
   const button = $("btn-move-dots");
   if (!button) return;
-  const locked = isLevelDiagnosticActive();
+  const locked = isDiagnosticControlLockActive();
   button.disabled = locked;
   button.title = locked ? "Bloqué pendant le diagnostic de niveau" : "Afficher ou masquer les points de coups possibles";
-  button.textContent = locked ? "Points chauds/froids : bloqués" : "Points chauds/froids : " + (boardUI.showMoveDots ? "ON" : "OFF");
+  button.textContent = locked ? "Points chauds/froids : bloqués pendant le diagnostic" : "Points chauds/froids : " + (boardUI.showMoveDots ? "ON" : "OFF");
   button.setAttribute("aria-pressed", String(!locked && boardUI.showMoveDots));
 }
 function applyLevelDiagnosticLock() {
   const diagnostic = readLevelDiagnostic();
-  const active = Boolean(diagnostic && diagnostic.active);
+  const active = Boolean(diagnostic && diagnostic.active) && !correctionExerciseModeActive;
   if (active) {
     boardUI.showDots = false;
     boardUI.showMoveDots = false;
@@ -207,9 +216,13 @@ function applyLevelDiagnosticLock() {
 }
 window.addEventListener("supachess:level-diagnostic-change", applyLevelDiagnosticLock);
 window.applyLevelDiagnosticLock = applyLevelDiagnosticLock;
+window.setSupaCorrectionExerciseMode = function(active) {
+  correctionExerciseModeActive = Boolean(active);
+  applyLevelDiagnosticLock();
+};
 window.addEventListener("storage", (event) => {
   if (event.key !== LEVEL_DIAGNOSTIC_KEY) return;
-  const active = isLevelDiagnosticActive();
+  const active = isDiagnosticControlLockActive();
   if (!active && levelDiagnosticLockWasActive) {
     const diagnostic = readLevelDiagnostic();
     boardUI.showDots = typeof diagnostic?.restoreDots === "boolean" ? diagnostic.restoreDots : localStorage.getItem(DOTS_STORAGE_KEY) !== "false";
@@ -1038,14 +1051,14 @@ syncDotsButton();
 syncMoveDotsButton();
 $("btn-abandon-diagnostic")?.addEventListener("click", abandonLevelDiagnostic);
 $("btn-dots").addEventListener("click", () => {
-  if (isLevelDiagnosticActive()) return;
+  if (isDiagnosticControlLockActive() || correctionExerciseModeActive) return;
   boardUI.showDots = !boardUI.showDots;
   localStorage.setItem(DOTS_STORAGE_KEY, String(boardUI.showDots));
   syncDotsButton();
   renderBoard();
 });
 $("btn-move-dots").addEventListener("click", () => {
-  if (isLevelDiagnosticActive()) return;
+  if (isDiagnosticControlLockActive()) return;
   boardUI.showMoveDots = !boardUI.showMoveDots;
   localStorage.setItem(MOVE_DOTS_STORAGE_KEY, String(boardUI.showMoveDots));
   syncMoveDotsButton();
