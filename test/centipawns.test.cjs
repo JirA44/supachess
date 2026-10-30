@@ -52,3 +52,22 @@ test("illegal UCI refused",()=>{
     uci:"e2e5",bestBefore:null,bestAfter:null});
   assert.equal(r.status,"INVALID_MOVE");
 });
+
+test("explains a checking reply found in the engine line and exposes the cause catalog",()=>{
+  const before="7k/4q3/8/8/8/8/8/2K5 w - - 0 1";
+  const c=new Chess(before);assert.ok(c.move("Kb1"));
+  const r=explain({fenBefore:before,fenAfter:c.fen(),uci:"c1b1",
+    bestBefore:{scoreCp:50,mate:null,depth:12,pv:["c1b1"]},
+    bestAfter:{scoreCp:100,mate:null,depth:14,pv:["e7e1"]}});
+  assert.ok(r.observations.some(x=>x.code==="OPPONENT_CHECK"));
+  assert.ok(r.causeCatalog.length>=20);
+});
+
+test("explains an engine-preferred attack with a three-to-one pressure count",()=>{
+  const before="8/8/4k3/Q3r3/2N5/8/8/4R2K w - - 0 1";
+  const played=new Chess(before);assert.ok(played.move("Qb5"));
+  const r=explain({fenBefore:before,fenAfter:played.fen(),uci:"a5b5",
+    bestBefore:{scoreCp:500,mate:null,depth:18,pv:["h1g1"]},
+    bestAfter:{scoreCp:-100,mate:null,depth:18,pv:["e6e7"]}});
+  assert.ok(r.observations.some(x=>x.code==="BEST_MOVE_OUTNUMBERED_ATTACK"&&/3 attaquants contre 1 défenseur/.test(x.text)));
+});
