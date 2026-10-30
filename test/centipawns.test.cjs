@@ -2,6 +2,7 @@ const test=require("node:test");
 const assert=require("node:assert/strict");
 const {Chess}=require("chess.js");
 global.Chess=Chess;
+global.ChessBlindspots=require("../js/blindspots.js");
 const {explain}=require("../js/centipawn-explanations.js");
 
 test("a normal move can be +0 cp loss even when raw white evaluation shifts",()=>{
