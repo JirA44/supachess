@@ -100,9 +100,10 @@ const SupaChessCentipawns = (() => {
     for(const fact of pressure) {
       const attackers=(fact.enemyAttackers||[]).map(p=>p.square).join(", ")||"aucun compté";
       const defenders=(fact.defenders||[]).map(p=>p.square).join(", ")||"aucun compté";
+      const attackerCount=fact.enemyAttackers?.length||0, defenderCount=fact.defenders?.length||0;
       observations.push({code:fact.outnumbered?"OUTNUMBERED_ATTACK":"DEFENDER_CHANGE",
         evidence:"GEOMETRIC_ATTACK_DEFENDER_COUNT",
-        text:`Pression sur le ${pieceNames[fact.piece]||fact.piece} en ${fact.square} : ${fact.enemyAttackers?.length||0} attaquant(s) (${attackers}) contre ${fact.defenders?.length||0} défenseur(s) (${defenders}) après le coup; avant, ${fact.previousEnemyAttackers} attaquant(s) et ${fact.previousDefenders} défenseur(s).`});
+        text:`Pression sur le ${pieceNames[fact.piece]||fact.piece} en ${fact.square} : ${attackerCount} attaquant${attackerCount>1?"s":""} (${attackers}) contre ${defenderCount} défenseur${defenderCount>1?"s":""} (${defenders}) après le coup; avant, ${fact.previousEnemyAttackers} attaquant(s) et ${fact.previousDefenders} défenseur(s).`});
     }
     const opponentReply=bestAfter?.pv?.[0]?playedMove(fenAfter,bestAfter.pv[0]):null;
     if(opponentReply && opponentReply.san.includes("+")) observations.push({
@@ -120,8 +121,12 @@ const SupaChessCentipawns = (() => {
     if(bestCandidate&&loss!==null&&loss>=30&&typeof ChessBlindspots!=="undefined"&&typeof ChessBlindspots.pressureTargets==="function") {
       const targets=ChessBlindspots.pressureTargets(candidatePosition,mover);
       const target=targets[0];
-      if(target) observations.push({code:"BEST_MOVE_OUTNUMBERED_ATTACK",evidence:"ENGINE_LINE_AND_GEOMETRIC_COUNT",
-        text:`Avec ${bestCandidate.san}, le meilleur coup calculé, Stockfish met la ${pieceNames[target.piece]||target.piece} adverse en ${target.square} sous une pression de ${target.attackers.length} attaquants contre ${target.defenders.length} défenseur(s). C’est un motif candidat à vérifier dans la variante.`});
+      if(target) {
+        const attackers=target.attackers.map(p=>`${pieceNames[p.type]||p.type} en ${p.square}`).join(", ");
+        const defenders=target.defenders.map(p=>`${pieceNames[p.type]||p.type} en ${p.square}`).join(", ");
+        observations.push({code:"BEST_MOVE_OUTNUMBERED_ATTACK",evidence:"ENGINE_LINE_AND_GEOMETRIC_COUNT",
+          text:`Avec ${bestCandidate.san}, le meilleur coup calculé, Stockfish met la ${pieceNames[target.piece]||target.piece} adverse en ${target.square} sous une pression de ${target.attackers.length} attaquants (${attackers}) contre ${target.defenders.length} défenseur${target.defenders.length>1?"s":""} (${defenders}). C’est un motif candidat à vérifier dans la variante.`});
+      }
     }
     if(mate(bestBefore)!==null || mate(bestAfter)!==null || after.in_checkmate()) {
       return {
