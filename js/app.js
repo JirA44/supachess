@@ -276,6 +276,8 @@ async function analyzeForUser() {
     const turnLabel = state.chess.turn() === "w" ? "Blancs" : "Noirs";
     const isOpp = state.chess.turn() !== state.userColor;
     setStatus(`Mode manuel — au trait: ${turnLabel}${isOpp ? " (coup adverse: pas d'interception)" : ""}.`);
+  } else if (isLevelDiagnosticActive()) {
+    setStatus("À vous de jouer — diagnostic actif, sans aide du coach.");
   } else {
     setStatus("À vous de jouer — les points indiquent les coups candidats.");
   }
@@ -549,7 +551,7 @@ async function attemptUserMove(moveObj) {
 
   // Mode manuel : pas d'interception pour le camp adverse (réplication d'une
   // partie jouée ailleurs — on rentre le coup tel quel, l'analyse reste affichée).
-  const skipIntercept = isManualMode() && state.chess.turn() !== state.userColor;
+  const skipIntercept = isLevelDiagnosticActive() || (isManualMode() && state.chess.turn() !== state.userColor);
   if (!skipIntercept && cand.deltaCp > thresholdCp()) {
     interceptMove(moveObj, cand);
   } else {
