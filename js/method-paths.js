@@ -12,15 +12,24 @@
     const originalLessons = lessons.filter((lesson) => lesson.kind !== "anticipation");
     for (const path of paths) {
       const program = path.dataset.methodPath;
+      const programLessons = originalLessons.filter((lesson) => lesson.program === program);
+      const anticipationExercises = lessons.filter((lesson) => lesson.program === program && lesson.kind === "anticipation");
       const count = program === "Stockfish · comparer et vérifier"
         ? originalLessons.length
-        : originalLessons.filter((lesson) => lesson.program === program).length;
+        : programLessons.length;
       const label = path.querySelector("[data-method-count]");
       if (label) {
-        const subject = program === "Stockfish · comparer et vérifier" ? "positions de leçons analysables" : "leçons du parcours";
-        label.textContent = count + " " + subject;
+        if (program === "Calcul · meilleure réponse adverse") {
+          label.textContent = count + " leçons · " + anticipationExercises.length + " exercices d’anticipation";
+        } else {
+          const subject = program === "Stockfish · comparer et vérifier" ? "positions de leçons analysables" : "leçons du parcours";
+          label.textContent = count + " " + subject;
+        }
       }
-      path.setAttribute("aria-label", path.querySelector("h3").textContent + " · " + count + " leçons");
+      const pathSummary = program === "Calcul · meilleure réponse adverse"
+        ? count + " leçons et " + anticipationExercises.length + " exercices"
+        : count + " leçons";
+      path.setAttribute("aria-label", path.querySelector("h3").textContent + " · " + pathSummary);
     }
   }
 
