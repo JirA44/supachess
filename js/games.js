@@ -151,8 +151,9 @@ function gamesRenderPanel() {
       d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
     const acc = (g.accuracyW != null ? g.accuracyW + "%" : "—") + " / " +
       (g.accuracyB != null ? g.accuracyB + "%" : "—");
+    const resultLabel = g.abandoned ? "Défaite par abandon" : g.stopped ? "Arrêtée — sans résultat" : g.result;
     return `<div class="game-row" data-id="${esc(g.id)}">
-      <span class="game-meta">${esc(when)} · <strong>${esc(g.result)}</strong> · préc. B/N ${esc(acc)}</span>
+      <span class="game-meta">${esc(when)} · <strong>${esc(resultLabel)}</strong> · préc. B/N ${esc(acc)}</span>
       <span class="game-actions">
         <button class="btn mini" data-act="correct" title="Aller à la première erreur à corriger">Corriger</button>
         <button class="btn mini" data-act="dl" title="Télécharger le PGN">⬇ PGN</button>
