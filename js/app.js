@@ -1073,7 +1073,7 @@ syncDotsButton();
 syncMoveDotsButton();
 $("btn-abandon-diagnostic")?.addEventListener("click", abandonLevelDiagnostic);
 $("btn-dots").addEventListener("click", () => {
-  if (isDiagnosticControlLockActive() || correctionExerciseModeActive) return;
+  if (isDiagnosticControlLockActive()) return;
   boardUI.showDots = !boardUI.showDots;
   localStorage.setItem(DOTS_STORAGE_KEY, String(boardUI.showDots));
   syncDotsButton();
