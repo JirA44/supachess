@@ -90,6 +90,7 @@ function gamesAutoSave() {
     accuracyW: gamesRound1(avgAccuracy(state.accuracy.w)),
     accuracyB: gamesRound1(avgAccuracy(state.accuracy.b)),
     stats: { ...state.stats },
+    moveGrades: Array.isArray(state.moveGradeHistory) ? state.moveGradeHistory.map((grade) => ({ ...grade })) : [],
     ...currentGameMetadata,
   };
   const arr = gamesLoad();
