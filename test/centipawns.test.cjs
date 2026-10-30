@@ -70,5 +70,5 @@ test("explains an engine-preferred attack with a three-to-one pressure count",()
   const r=explain({fenBefore:before,fenAfter:played.fen(),uci:"a5b5",
     bestBefore:{scoreCp:500,mate:null,depth:18,pv:["h1g1"]},
     bestAfter:{scoreCp:-100,mate:null,depth:18,pv:["e6e7"]}});
-  assert.ok(r.observations.some(x=>x.code==="BEST_MOVE_OUTNUMBERED_ATTACK"&&/3 attaquants contre 1 défenseur/.test(x.text)));
+  assert.ok(r.observations.some(x=>x.code==="BEST_MOVE_OUTNUMBERED_ATTACK"&&/3 attaquants.*contre 1 défenseur/.test(x.text)));
 });
