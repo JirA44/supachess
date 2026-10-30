@@ -736,7 +736,7 @@ function reviewCorrectionPv(fen,pv){
   const game=new Chess(fen), tokens=[];
   for(const uci of pv.slice(0,10)){
     if(typeof uci!=="string"||uci.length<4)break;
-    const color=game.turn(), number=Number(game.fen().split(/\\s+/)[5])||1;
+    const color=game.turn(), number=Number(game.fen().split(/\s+/)[5])||1;
     const move=game.move({from:uci.slice(0,2),to:uci.slice(2,4),promotion:uci[4]});
     if(!move)break;
     tokens.push((color==="w"?number+".":tokens.length===0?number+"...":"")+move.san);
