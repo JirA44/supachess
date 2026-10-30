@@ -97,7 +97,1001 @@
     {"id":"intermezzo-check","title":"L’échec intermédiaire","category":"Tactique · Coup intermédiaire","level":"Avancé","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Avancé","setup":["e4","e5","Nf3","Nc6","Bc4","Nf6","Ng5","d5","exd5","Na5"],"color":"w","question":"Avant de reprendre une pièce, quel coup force une réponse ?","choices":[{"text":"Donner échec par Fb5+","correct":true},{"text":"Reprendre immédiatement en c6","correct":false},{"text":"Déplacer la dame sans menace","correct":false}],"principle":"Fb5+ exploite la diagonale libérée par le cavalier qui a quitté c6. Après …c6, le pion d5 peut reprendre en c6.","transfer":"Dans une séquence de prises, cherche un échec ou une menace intermédiaire qui change l’ordre des échanges.","hints":["Le fou c4 peut aller en b5.","Le cavalier noir a quitté c6, libérant la diagonale vers le roi e8."],"sequence":[{"side":"user","uci":"c4b5","explanation":"Le fou donne échec sur la diagonale désormais ouverte."},{"side":"book","uci":"c7c6","explanation":"Le pion bloque l’échec et attaque le fou."},{"side":"user","uci":"d5c6","explanation":"Le pion reprend en c6 pendant que le fou est encore attaqué."}]},
     {"id":"rook-file","title":"Placer la tour sur la colonne utile","category":"Plan · Coordination des pièces","level":"Avancé","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Avancé","setup":["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","O-O","Be7"],"color":"w","question":"Quel coup relie le roi à la tour et prépare la colonne e ?","choices":[{"text":"Jouer Te1","correct":true},{"text":"Pousser h4 immédiatement","correct":false},{"text":"Reculer le cavalier en g1","correct":false}],"principle":"Te1 place la tour derrière le pion e et prépare son soutien si le centre s’ouvre.","transfer":"Après le roque, cherche une colonne où la tour peut soutenir un pion ou une pièce active.","hints":["La tour f1 peut aller en e1.","La tour peut soutenir le pion e4."],"sequence":[{"side":"user","uci":"f1e1","explanation":"La tour soutient le pion e4 et se place sur une colonne centrale."},{"side":"book","uci":"e8g8","explanation":"Le roi noir roque et met la tour h8 en jeu."},{"side":"user","uci":"b1c3","explanation":"Le cavalier rejoint le centre pour renforcer e4 et d5."}]},
     {"id":"improve-piece","title":"Améliorer la pièce la moins active","category":"Plan · Repositionnement","level":"Avancé","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Avancé","setup":["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","O-O","Be7","Re1","b5"],"color":"w","question":"Comment garder le fou tout en choisissant une diagonale durable ?","choices":[{"text":"Le replier en b3","correct":true},{"text":"L’échanger contre le cavalier c6","correct":false},{"text":"Le ramener en c2 sans nécessité","correct":false}],"principle":"Bb3 conserve le fou et le place sur une diagonale qui regarde le roi et le centre.","transfer":"Dans une position calme, repère ta pièce la moins active et cherche une case plus utile sans affaiblir ton roi.","hints":["Le fou a4 peut reculer sur la diagonale vers b3.","Le pion b5 attaque le fou."],"sequence":[{"side":"user","uci":"a4b3","explanation":"Le fou se retire sur une diagonale active."},{"side":"book","uci":"d7d6","explanation":"Le pion renforce e5 et ouvre la diagonale du fou c8."},{"side":"user","uci":"c2c3","explanation":"Le pion prépare un centre stable et libère la case c2 pour une pièce."}]},
-    {"id":"calculate-before-capture","title":"Calculer avant de capturer","category":"Calcul · Sécurité tactique","level":"Expert","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Expert","setup":["e4","e5","Nf3","Nc6","Bc4","Nf6","Ng5","d5","exd5","Nxd5"],"color":"w","question":"Après …Cxd5, que faut-il vérifier avant de prendre f7 ?","choices":[{"text":"Les réponses forcées du roi et les menaces sur les pièces lourdes","correct":true},{"text":"Uniquement la valeur du pion","correct":false},{"text":"Le nombre de pièces déjà développées","correct":false}],"principle":"Nxf7 crée une fourchette, mais …Kxf7 reprend le cavalier. La valeur du motif dépend des suites calculées, pas du seul coup spectaculaire.","transfer":"Avant toute combinaison, calcule les réponses forcées jusqu’à une position que tu peux évaluer; ne t’arrête pas à la première menace.","hints":["Le cavalier g5 peut prendre f7.","Calcule la reprise du roi puis cherche un échec utile."],"sequence":[{"side":"user","uci":"g5f7","explanation":"Le cavalier attaque la dame et la tour, mais il peut être repris."},{"side":"book","uci":"e8f7","explanation":"Le roi prend le cavalier: cette réponse doit être prévue."},{"side":"user","uci":"d1f3","explanation":"La dame donne échec au roi f7; évalue alors la suite et le matériel."}]}
+    {"id":"calculate-before-capture","title":"Calculer avant de capturer","category":"Calcul · Sécurité tactique","level":"Expert","author":"SupaChess Académie","book":"Parcours original SupaChess","reference":"Leçon originale · Expert","setup":["e4","e5","Nf3","Nc6","Bc4","Nf6","Ng5","d5","exd5","Nxd5"],"color":"w","question":"Après …Cxd5, que faut-il vérifier avant de prendre f7 ?","choices":[{"text":"Les réponses forcées du roi et les menaces sur les pièces lourdes","correct":true},{"text":"Uniquement la valeur du pion","correct":false},{"text":"Le nombre de pièces déjà développées","correct":false}],"principle":"Nxf7 crée une fourchette, mais …Kxf7 reprend le cavalier. La valeur du motif dépend des suites calculées, pas du seul coup spectaculaire.","transfer":"Avant toute combinaison, calcule les réponses forcées jusqu’à une position que tu peux évaluer; ne t’arrête pas à la première menace.","hints":["Le cavalier g5 peut prendre f7.","Calcule la reprise du roi puis cherche un échec utile."],"sequence":[{"side":"user","uci":"g5f7","explanation":"Le cavalier attaque la dame et la tour, mais il peut être repris."},{"side":"book","uci":"e8f7","explanation":"Le roi prend le cavalier: cette réponse doit être prévue."},{"side":"user","uci":"d1f3","explanation":"La dame donne échec au roi f7; évalue alors la suite et le matériel."}]},
+    {
+      "id": "pgn-queen-capture-knight",
+      "kind": "reinforcement",
+      "level": "Débutant",
+      "title": "La dame laissée en prise",
+      "category": "PGN d’entraînement · pièces en prise",
+      "author": "SupaChess Académie",
+      "program": "Anti-erreurs · anticiper l’adversaire",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "PGN SupaChess–Stockfish · 29 janvier 2026 · fichier game_20260129_172220.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "game_20260129_172220.pgn",
+      "fen": "rnbqkb1r/pppppppp/5n2/8/6Q1/4P3/PPPP1PPP/RNB1KBNR b KQkq - 2 2",
+      "color": "b",
+      "question": "Dans cette partie, quelle capture noire prend la dame blanche en g4 ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer Cxg4",
+          "correct": true
+        },
+        {
+          "text": "Jouer Cc6",
+          "correct": false
+        },
+        {
+          "text": "Jouer Ca6",
+          "correct": false
+        }
+      ],
+      "principle": "Après 2. Dg4, la dame blanche se trouve sur une case attaquable par le cavalier noir f6. Le coup du PGN gagne la dame : avant chaque demi-coup, contrôler les pièces adverses qui peuvent capturer une pièce de grande valeur.",
+      "transfer": "Repérer immédiatement la pièce adverse capable de prendre la dame.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. Après 2. Dg4, la dame blanche se trouve sur une case attaquable par le cavalier noir f6. Le coup du PGN gagne la dame : avant chaque demi-coup, contrôler les pièces adverses qui peuvent capturer une pièce de grande valeur.",
+      "hints": [
+        "La dame blanche est restée en g4 : regarde les coups de cavalier noirs.",
+        "Cherche une capture du cavalier f6 sur la case g4."
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "f6g4",
+          "explanation": "Le cavalier f6 capture la dame en g4. Ce coup gagne la pièce la plus précieuse sans détour."
+        }
+      ]
+    },
+    {
+      "id": "pgn-win-queen-bishop",
+      "kind": "reinforcement",
+      "level": "Débutant",
+      "title": "Prendre la dame après un échec",
+      "category": "PGN d’entraînement · diagonales",
+      "author": "SupaChess Académie",
+      "program": "Anti-erreurs · anticiper l’adversaire",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "PGN SupaChess–Stockfish · 29 janvier 2026 · fichier game_20260129_172151.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "game_20260129_172151.pgn",
+      "fen": "rnbqkbnr/pp3ppp/2p1Q3/1B1pp3/8/4P3/PPPP1PPP/RNB1K1NR b KQkq - 1 4",
+      "color": "b",
+      "question": "La dame blanche vient en e6 avec échec. Quel coup noir la capture ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer Fxe6",
+          "correct": true
+        },
+        {
+          "text": "Jouer De7",
+          "correct": false
+        },
+        {
+          "text": "Jouer Fe7",
+          "correct": false
+        }
+      ],
+      "principle": "Le pion d7 a quitté sa case pour aller en d5, ce qui ouvre la diagonale du fou c8 vers e6. Le fait de donner échec ne rend pas la dame intouchable : calcule les captures adverses après tout coup forcing.",
+      "transfer": "Vérifier si une pièce qui donne échec peut être capturée.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. Le pion d7 a quitté sa case pour aller en d5, ce qui ouvre la diagonale du fou c8 vers e6. Le fait de donner échec ne rend pas la dame intouchable : calcule les captures adverses après tout coup forcing.",
+      "hints": [
+        "L’échec ne protège pas automatiquement la pièce qui le donne.",
+        "Vérifie la diagonale du fou c8, libérée par le pion d7."
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "c8e6",
+          "explanation": "Le fou c8 suit la diagonale d7–e6 et capture la dame."
+        }
+      ]
+    },
+    {
+      "id": "pgn-knight-fork-rook-king",
+      "kind": "reinforcement",
+      "level": "Intermédiaire",
+      "title": "La fourchette du cavalier en c2",
+      "category": "PGN d’entraînement · fourchette",
+      "author": "SupaChess Académie",
+      "program": "Anti-erreurs · anticiper l’adversaire",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "PGN SupaChess–Stockfish · 29 janvier 2026 · fichier game_20260129_172151.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "game_20260129_172151.pgn",
+      "fen": "r2q1bnr/pp1k1ppp/4b3/1N1pp3/Pn6/4P3/1PPP1PPP/R1B1K1NR b KQ - 4 8",
+      "color": "b",
+      "question": "Après 8. Cb5, quel échec de cavalier attaque le roi e1 et la tour a1 ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer Cxc2+",
+          "correct": true
+        },
+        {
+          "text": "Jouer Tb8",
+          "correct": false
+        },
+        {
+          "text": "Jouer Tc8",
+          "correct": false
+        }
+      ],
+      "principle": "Le cavalier noir b4 peut sauter en c2 avec échec. Depuis c2, il attaque aussi la tour a1 : si le roi répond, le cavalier peut ensuite prendre la tour. C’est une fourchette royale, préparée par le coup précédent ...Cb4.",
+      "transfer": "Calculer un échec de cavalier qui attaque aussi une tour.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. Le cavalier noir b4 peut sauter en c2 avec échec. Depuis c2, il attaque aussi la tour a1 : si le roi répond, le cavalier peut ensuite prendre la tour. C’est une fourchette royale, préparée par le coup précédent ...Cb4.",
+      "hints": [
+        "Le cavalier noir b4 a une entrée qui donne échec.",
+        "Après l’échec, vérifie quelles pièces le cavalier attaque depuis c2."
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "b4c2",
+          "explanation": "Le cavalier b4 prend le pion c2 avec échec et attaque simultanément la tour a1."
+        },
+        {
+          "side": "book",
+          "uci": "e1e2",
+          "explanation": "Le roi doit répondre à l’échec; la tour a1 reste attaquée."
+        },
+        {
+          "side": "user",
+          "uci": "c2a1",
+          "explanation": "Le cavalier prend la tour a1 et matérialise la fourchette."
+        }
+      ]
+    },
+    {
+      "id": "pgn-mate-after-g6",
+      "kind": "reinforcement",
+      "level": "Débutant",
+      "title": "Punir le pion qui ouvre le roi",
+      "category": "PGN d’entraînement · mat en un",
+      "author": "SupaChess Académie",
+      "program": "Anti-erreurs · anticiper l’adversaire",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "PGN Stockfish–SupaChess · 29 janvier 2026 · fichier game_20260129_172154.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "game_20260129_172154.pgn",
+      "fen": "rnbqkbnr/ppppp3/6pp/5P1Q/8/8/PPPP1PPP/RNB1KBNR w KQkq - 0 4",
+      "color": "w",
+      "question": "Après 3…g6, quel coup de dame termine la partie ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer Dxg6#",
+          "correct": true
+        },
+        {
+          "text": "Jouer f6",
+          "correct": false
+        },
+        {
+          "text": "Jouer fxg6",
+          "correct": false
+        }
+      ],
+      "principle": "Le pion g6 bloque la diagonale de la dame vers le roi, mais il devient une cible et ne crée pas de case de fuite. La dame prend le pion avec échec et mat. Après chaque réponse à un échec, cherche les coups de mat adverses.",
+      "transfer": "Repérer le mat immédiat après une défense qui bloque la diagonale.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. Le pion g6 bloque la diagonale de la dame vers le roi, mais il devient une cible et ne crée pas de case de fuite. La dame prend le pion avec échec et mat. Après chaque réponse à un échec, cherche les coups de mat adverses.",
+      "hints": [
+        "Le pion qui vient de bloquer la diagonale est-il défendu ?",
+        "Cherche une capture de dame qui donne échec, puis vérifie toutes les cases du roi."
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "h5g6",
+          "explanation": "La dame prend le pion g6 et fait mat : le roi noir n’a aucune case de fuite ni pièce capable de capturer la dame."
+        }
+      ]
+    },
+    {
+      "id": "pgn-capture-unprotected-bishop",
+      "kind": "reinforcement",
+      "level": "Débutant",
+      "title": "Reprendre le fou arrivé en h6",
+      "category": "PGN d’entraînement · pièce en prise",
+      "author": "SupaChess Académie",
+      "program": "Anti-erreurs · anticiper l’adversaire",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "PGN SupaChess–Stockfish · 29 janvier 2026 · fichier game_20260129_172204.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "game_20260129_172204.pgn",
+      "fen": "rnbq1b1r/pp1pnkpp/4p2B/1B6/3pP3/8/PPP2PPP/RN2K1NR b KQ - 1 6",
+      "color": "b",
+      "question": "Le fou blanc vient en h6 sans protection. Quel pion noir le capture ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer gxh6",
+          "correct": true
+        },
+        {
+          "text": "Jouer Cbc6",
+          "correct": false
+        },
+        {
+          "text": "Jouer Ca6",
+          "correct": false
+        }
+      ],
+      "principle": "Le pion noir g7 peut prendre le fou en h6. Avant de répondre à une menace ou de poursuivre son plan, faire le contrôle des pièces laissées en prise sur la dernière destination.",
+      "transfer": "Contrôler les prises possibles après un coup adverse.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. Le pion noir g7 peut prendre le fou en h6. Avant de répondre à une menace ou de poursuivre son plan, faire le contrôle des pièces laissées en prise sur la dernière destination.",
+      "hints": [
+        "Le fou blanc a quitté sa diagonale pour se placer en h6.",
+        "Vérifie si le pion g7 peut capturer sur h6."
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "g7h6",
+          "explanation": "Le pion g7 prend le fou en h6. La pièce blanche n’est pas protégée par une autre pièce."
+        }
+      ]
+    },
+    {
+      "id": "pgn-open-file-mating-attack",
+      "kind": "reinforcement",
+      "level": "Intermédiaire",
+      "title": "Ouvrir la colonne devant le roi",
+      "category": "PGN d’entraînement · attaque du roi",
+      "author": "SupaChess Académie",
+      "program": "Anti-erreurs · anticiper l’adversaire",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "PGN Stockfish–SupaChess · 29 janvier 2026 · fichier game_20260129_172208.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "game_20260129_172208.pgn",
+      "fen": "r1bqkbnr/p1ppp2p/np4p1/5P1Q/3P4/2N5/PPP2PPP/R1B1KBNR w KQkq - 0 6",
+      "color": "w",
+      "question": "Dans la partie, quel coup de pion blanc prend g6 et prépare l’attaque sur h7 ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer fxg6",
+          "correct": true
+        },
+        {
+          "text": "Jouer f6",
+          "correct": false
+        },
+        {
+          "text": "Jouer Dxg6+",
+          "correct": false
+        }
+      ],
+      "principle": "Le pion f5 prend le pion g6 et libère l’avancée vers h7. Après ...Rb8, le PGN se termine par gxh7#. Leçon : ne pas regarder seulement l’échec actuel; repérer la menace concrète créée au demi-coup suivant.",
+      "transfer": "Reconnaître comment une prise de pion prépare une menace de mat.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. Le pion f5 prend le pion g6 et libère l’avancée vers h7. Après ...Rb8, le PGN se termine par gxh7#. Leçon : ne pas regarder seulement l’échec actuel; repérer la menace concrète créée au demi-coup suivant.",
+      "hints": [
+        "La dame blanche est déjà en h5; repère le pion avancé en f5.",
+        "Quel coup du pion f5 capture g6 et menace ensuite h7 ?"
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "f5g6",
+          "explanation": "Le pion f5 prend g6 et ouvre la voie à la menace sur h7."
+        },
+        {
+          "side": "book",
+          "uci": "a8b8",
+          "explanation": "Les Noirs jouent ...Rb8 et ne répondent pas à la menace directe."
+        },
+        {
+          "side": "user",
+          "uci": "g6h7",
+          "explanation": "Le pion prend h7 et fait mat."
+        }
+      ]
+    },
+    {
+      "id": "pgn-diagonal-mate-h5",
+      "kind": "reinforcement",
+      "level": "Débutant",
+      "title": "La diagonale vers le roi sans abri",
+      "category": "PGN d’entraînement · mat en un",
+      "author": "SupaChess Académie",
+      "program": "Anti-erreurs · anticiper l’adversaire",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "PGN Stockfish–SupaChess · 29 janvier 2026 · fichier game_20260129_172225.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "game_20260129_172225.pgn",
+      "fen": "rnbqkbnr/2ppp3/p4p1p/1p4p1/P2PP2P/4B3/1PP2PP1/RN1QKBNR w KQkq - 0 6",
+      "color": "w",
+      "question": "Après 5…f6, quel coup de dame donne mat ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer Dh5#",
+          "correct": true
+        },
+        {
+          "text": "Jouer a5",
+          "correct": false
+        },
+        {
+          "text": "Jouer axb5",
+          "correct": false
+        }
+      ],
+      "principle": "La poussée ...f6 n’empêche pas l’échec sur la diagonale et ne crée aucune fuite pour le roi noir. La dame va en h5 et fait mat. Avant de pousser un pion devant son roi, contrôler les diagonales ouvertes et les cases de fuite.",
+      "transfer": "Repérer une diagonale devenue mortelle après une poussée de pion.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. La poussée ...f6 n’empêche pas l’échec sur la diagonale et ne crée aucune fuite pour le roi noir. La dame va en h5 et fait mat. Avant de pousser un pion devant son roi, contrôler les diagonales ouvertes et les cases de fuite.",
+      "hints": [
+        "Le pion f6 ne ferme pas la diagonale h5–e8.",
+        "Cherche un échec de dame sur cette diagonale et confirme le mat."
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "d1h5",
+          "explanation": "La dame vient en h5 et fait mat le long de la diagonale vers le roi e8."
+        }
+      ]
+    },
+    {
+      "id": "pgn-carlsen-central-capture",
+      "kind": "reinforcement",
+      "level": "Intermédiaire",
+      "title": "Carlsen : calculer la reprise au centre",
+      "category": "PGN Carlsen · calcul de captures",
+      "author": "SupaChess Académie",
+      "program": "Carlsen · amélioration et conversion",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "Magnus Carlsen–Deepan Chakkravarthy · Dubai, 2004 · coup joué · fichier carlsen_vs_deepan_2004.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "carlsen_vs_deepan_2004.pgn",
+      "fen": "r1bqkb1r/pp3ppp/2p2n2/2p1p3/4P3/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 0 6",
+      "color": "w",
+      "question": "Dans la partie Carlsen–Deepan, quel cavalier prend le pion e5 ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer Cxe5",
+          "correct": true
+        },
+        {
+          "text": "Jouer Ca4",
+          "correct": false
+        },
+        {
+          "text": "Jouer Cb5",
+          "correct": false
+        }
+      ],
+      "principle": "Carlsen joue Cxe5. La partie continue par ...Cxe4 puis Cxe4 : il faut calculer la reprise adverse et sa propre reprise avant de conclure que la capture est sûre. Cette leçon étudie la séquence jouée, sans prétendre que le coup est l’unique meilleur choix moteur.",
+      "transfer": "Calculer les reprises avant de prendre un pion central.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. Carlsen joue Cxe5. La partie continue par ...Cxe4 puis Cxe4 : il faut calculer la reprise adverse et sa propre reprise avant de conclure que la capture est sûre. Cette leçon étudie la séquence jouée, sans prétendre que le coup est l’unique meilleur choix moteur.",
+      "hints": [
+        "Le pion e5 est attaqué; calcule la réponse noire sur e4.",
+        "Vérifie si les Blancs peuvent reprendre après ...Cxe4."
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "f3e5",
+          "explanation": "Le cavalier f3 prend le pion e5."
+        },
+        {
+          "side": "book",
+          "uci": "f6e4",
+          "explanation": "Le cavalier noir prend le pion e4 et crée du contre-jeu."
+        },
+        {
+          "side": "user",
+          "uci": "c3e4",
+          "explanation": "Le cavalier c3 reprend le cavalier noir en e4."
+        }
+      ]
+    },
+    {
+      "id": "pgn-nezhmetdinov-forcing-combination",
+      "kind": "reinforcement",
+      "level": "Expert",
+      "title": "Nezhmetdinov : calculer la combinaison forcing",
+      "category": "PGN Nezhmetdinov · sacrifices et échecs",
+      "author": "SupaChess Académie",
+      "program": "Tal · tactique et sacrifices à calculer",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "Nezhmetdinov–Chernikov · championnat de la RSFSR, 1962 · coup joué · fichier nezhmetdinov_vs_chernikov_1962.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "nezhmetdinov_vs_chernikov_1962.pgn",
+      "fen": "3q2k1/p1r2p2/3p2p1/1p2r1N1/3BPP2/1B5R/PPP3PP/5K2 w - - 2 28",
+      "color": "w",
+      "question": "Dans la partie Nezhmetdinov–Chernikov, quel échec lance la combinaison ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer Fxf7+",
+          "correct": true
+        },
+        {
+          "text": "Jouer Ce6",
+          "correct": false
+        },
+        {
+          "text": "Jouer Cxf7",
+          "correct": false
+        }
+      ],
+      "principle": "Fxf7+ lance une suite d’échecs et de sacrifices calculée jusqu’à Nxd8, qui prend la dame noire. Il faut vérifier chaque réponse forcée du roi et ne pas juger le premier sacrifice isolément. C’est la combinaison réellement jouée dans le PGN.",
+      "transfer": "Suivre une suite forcing sans s’arrêter au premier sacrifice.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. Fxf7+ lance une suite d’échecs et de sacrifices calculée jusqu’à Nxd8, qui prend la dame noire. Il faut vérifier chaque réponse forcée du roi et ne pas juger le premier sacrifice isolément. C’est la combinaison réellement jouée dans le PGN.",
+      "hints": [
+        "Cherche un échec qui attire la tour noire sur une case calculée.",
+        "La combinaison doit se terminer par un échec de cavalier qui attaque la dame d8."
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "b3f7",
+          "explanation": "Le fou prend f7 avec échec et force la réponse de la tour."
+        },
+        {
+          "side": "book",
+          "uci": "c7f7",
+          "explanation": "La tour prend le fou en f7."
+        },
+        {
+          "side": "user",
+          "uci": "h3h8",
+          "explanation": "La tour arrive en h8 avec échec, forçant le roi à la capturer."
+        },
+        {
+          "side": "book",
+          "uci": "g8h8",
+          "explanation": "Le roi prend la tour en h8."
+        },
+        {
+          "side": "user",
+          "uci": "g5f7",
+          "explanation": "Le cavalier prend la tour en f7 avec échec."
+        },
+        {
+          "side": "book",
+          "uci": "h8h7",
+          "explanation": "Le roi se déplace vers h7."
+        },
+        {
+          "side": "user",
+          "uci": "f7d8",
+          "explanation": "Le cavalier prend la dame noire en d8."
+        }
+      ]
+    },
+    {
+      "id": "pgn-tarrasch-recapture-sequence",
+      "kind": "reinforcement",
+      "level": "Avancé",
+      "title": "Tarrasch : calculer une reprise en chaîne",
+      "category": "PGN Tarrasch · calcul des échanges",
+      "author": "SupaChess Académie",
+      "program": "Anti-erreurs · anticiper l’adversaire",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "Tarrasch–Marco · Dresde, 1892 · coup joué · fichier tarrasch_vs_marco_1892.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "tarrasch_vs_marco_1892.pgn",
+      "fen": "3r1rk1/ppp1bppp/5n2/4N3/4b3/2N5/PPP2PPP/R1B1R1K1 w - - 0 12",
+      "color": "w",
+      "question": "Dans la partie Tarrasch–Marco, quel cavalier prend le fou noir en e4 ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer Cxe4",
+          "correct": true
+        },
+        {
+          "text": "Jouer Cc6",
+          "correct": false
+        },
+        {
+          "text": "Jouer Cd7",
+          "correct": false
+        }
+      ],
+      "principle": "Tarrasch reprend le fou avec le cavalier, puis Marco reprend ce cavalier avec le sien. Nd3 termine la séquence et met le cavalier à l’abri. La leçon porte sur le calcul de la chaîne de reprises effectivement jouée.",
+      "transfer": "Calculer une séquence de reprises avant de choisir une capture.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. Tarrasch reprend le fou avec le cavalier, puis Marco reprend ce cavalier avec le sien. Nd3 termine la séquence et met le cavalier à l’abri. La leçon porte sur le calcul de la chaîne de reprises effectivement jouée.",
+      "hints": [
+        "Le fou noir en e4 est attaqué par plusieurs pièces.",
+        "Calcule les deux reprises possibles avant de déplacer le cavalier restant."
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "c3e4",
+          "explanation": "Le cavalier prend le fou noir en e4."
+        },
+        {
+          "side": "book",
+          "uci": "f6e4",
+          "explanation": "Le cavalier noir reprend la pièce en e4."
+        },
+        {
+          "side": "user",
+          "uci": "e5d3",
+          "explanation": "Le cavalier blanc se retire en d3 après les échanges."
+        }
+      ]
+    },
+    {
+      "id": "pgn-alphazero-bishop-sacrifice",
+      "kind": "reinforcement",
+      "level": "Expert",
+      "title": "AlphaZero : le sacrifice ouvre le roi",
+      "category": "PGN AlphaZero · sacrifice et attaque",
+      "author": "SupaChess Académie",
+      "program": "Stockfish · comparer et vérifier",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "AlphaZero–Stockfish 8 · partie 2017 · coup joué · fichier alphazero_vs_stockfish8_sacrificial_masterpiece.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "alphazero_vs_stockfish8_sacrificial_masterpiece.pgn",
+      "fen": "2rr2k1/3q3p/p2p1bpP/1p1P4/4B1Q1/1N3P2/PPP5/1K1R3R w - - 0 25",
+      "color": "w",
+      "question": "Dans la partie AlphaZero–Stockfish 8, quel sacrifice de fou commence l’attaque ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer Fxg6",
+          "correct": true
+        },
+        {
+          "text": "Jouer Ff5",
+          "correct": false
+        },
+        {
+          "text": "Jouer Fd3",
+          "correct": false
+        }
+      ],
+      "principle": "Le fou prend g6 et attire le pion h7 sur g6. La dame blanche entre ensuite avec échec, puis poursuit l’attaque. Le sacrifice se comprend par la suite forcing, pas par sa valeur matérielle isolée; ces coups sont ceux du PGN étudié.",
+      "transfer": "Évaluer un sacrifice de fou en suivant les échecs qui l’accompagnent.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. Le fou prend g6 et attire le pion h7 sur g6. La dame blanche entre ensuite avec échec, puis poursuit l’attaque. Le sacrifice se comprend par la suite forcing, pas par sa valeur matérielle isolée; ces coups sont ceux du PGN étudié.",
+      "hints": [
+        "Le roi noir est défendu par des pions avancés; cherche une prise de fou qui les attire.",
+        "Calcule la reprise du pion h7 puis l’entrée de la dame avec échec."
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "e4g6",
+          "explanation": "Le fou prend le pion g6 et provoque une ouverture devant le roi."
+        },
+        {
+          "side": "book",
+          "uci": "h7g6",
+          "explanation": "Le pion h7 reprend le fou en g6."
+        },
+        {
+          "side": "user",
+          "uci": "g4g6",
+          "explanation": "La dame prend g6 avec échec."
+        },
+        {
+          "side": "book",
+          "uci": "g8f8",
+          "explanation": "Le roi se déplace en f8."
+        },
+        {
+          "side": "user",
+          "uci": "g6f6",
+          "explanation": "La dame prend le fou en f6 avec échec."
+        }
+      ]
+    },
+    {
+      "id": "pgn-nakamura-rook-sacrifice-check",
+      "kind": "reinforcement",
+      "level": "Avancé",
+      "title": "Nakamura : forcer une réponse par l’échec",
+      "category": "PGN Nakamura · initiative",
+      "author": "SupaChess Académie",
+      "program": "Anti-erreurs · anticiper l’adversaire",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "Nakamura–Van Wely · Tata Steel, 2010 · coup joué · fichier nakamura_vs_van_wely_2010.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "nakamura_vs_van_wely_2010.pgn",
+      "fen": "1rb1k2r/2q2pp1/p1N2b2/1p1Pp2p/1P6/P2B1Q2/2P4P/1K2R2R w k h6 0 22",
+      "color": "w",
+      "question": "Dans la partie Nakamura–Van Wely, quel coup de tour donne échec en e5 ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer Txe5+",
+          "correct": true
+        },
+        {
+          "text": "Jouer Ca7",
+          "correct": false
+        },
+        {
+          "text": "Jouer Cxb8",
+          "correct": false
+        }
+      ],
+      "principle": "Txe5+ est le coup de la partie. La réponse ...Fxe5 est suivie de Te1, qui maintient l’initiative et continue l’attaque. On étudie ici le calcul de la séquence réelle; le coup est présenté comme le coup joué, pas comme une certification Stockfish.",
+      "transfer": "Examiner un coup de tour avec échec et calculer la reprise adverse.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. Txe5+ est le coup de la partie. La réponse ...Fxe5 est suivie de Te1, qui maintient l’initiative et continue l’attaque. On étudie ici le calcul de la séquence réelle; le coup est présenté comme le coup joué, pas comme une certification Stockfish.",
+      "hints": [
+        "Cherche d’abord les coups donnant échec; la tour peut capturer en e5.",
+        "Après la reprise du fou, identifie la seconde tour qui peut rejoindre la colonne e."
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "e1e5",
+          "explanation": "La tour prend en e5 avec échec."
+        },
+        {
+          "side": "book",
+          "uci": "f6e5",
+          "explanation": "Le fou noir reprend la tour."
+        },
+        {
+          "side": "user",
+          "uci": "h1e1",
+          "explanation": "La seconde tour revient sur la colonne e pour poursuivre la partie."
+        },
+        {
+          "side": "book",
+          "uci": "c8g4",
+          "explanation": "Le fou se développe en g4 et attaque la dame blanche."
+        }
+      ]
+    },
+    {
+      "id": "pgn-ding-gukesh-defend-draw-repetition",
+      "kind": "reinforcement",
+      "level": "Expert",
+      "title": "Ding–Gukesh : sauver la partie par répétition",
+      "category": "PGN championnat du monde · répétition",
+      "author": "SupaChess Académie",
+      "program": "Anti-erreurs · anticiper l’adversaire",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "Ding Liren–Gukesh · championnat du monde, partie 4 · 2024 · coup joué · fichier ding_liren_vs_gukesh_wcc_2024_game4.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "ding_liren_vs_gukesh_wcc_2024_game4.pgn",
+      "fen": "8/p5p1/6kp/P1pr4/4K3/6PP/5P2/2R5 b - - 3 37",
+      "color": "b",
+      "question": "Dans cette finale, quel échec de tour commence la répétition ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer Td4+",
+          "correct": true
+        },
+        {
+          "text": "Jouer a6",
+          "correct": false
+        },
+        {
+          "text": "Jouer Rf7",
+          "correct": false
+        }
+      ],
+      "principle": "Gukesh joue Td4+ puis répète les échecs et les retours de tour. La séquence reproduit la position et mène à la nulle inscrite dans le PGN. En finale, savoir reconnaître la répétition permet de défendre une position difficile et d’éviter de forcer une victoire inexistante.",
+      "transfer": "Reconnaître une série d’échecs qui sécurise la nulle en finale.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. Gukesh joue Td4+ puis répète les échecs et les retours de tour. La séquence reproduit la position et mène à la nulle inscrite dans le PGN. En finale, savoir reconnaître la répétition permet de défendre une position difficile et d’éviter de forcer une victoire inexistante.",
+      "hints": [
+        "La position est une finale de tours et le roi blanc est exposé aux échecs.",
+        "Cherche une série d’échecs qui ramène le roi sur e3 puis e4."
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "d5d4",
+          "explanation": "La tour donne échec en d4 et force le roi à répondre."
+        },
+        {
+          "side": "book",
+          "uci": "e4e3",
+          "explanation": "Le roi se place en e3."
+        },
+        {
+          "side": "user",
+          "uci": "d4d5",
+          "explanation": "La tour revient en d5, sans abandonner la défense des pions."
+        },
+        {
+          "side": "book",
+          "uci": "e3e4",
+          "explanation": "Le roi revient en e4."
+        },
+        {
+          "side": "user",
+          "uci": "d5d4",
+          "explanation": "La tour donne à nouveau échec en d4."
+        },
+        {
+          "side": "book",
+          "uci": "e4e3",
+          "explanation": "Le roi répète son déplacement en e3."
+        },
+        {
+          "side": "user",
+          "uci": "d4d5",
+          "explanation": "La tour revient en d5."
+        },
+        {
+          "side": "book",
+          "uci": "e3e4",
+          "explanation": "Le roi revient en e4; la répétition de la position conduit à la nulle du PGN."
+        }
+      ]
+    },
+    {
+      "id": "pgn-anand-block-check",
+      "kind": "reinforcement",
+      "level": "Débutant",
+      "title": "Anand : interposer une pièce contre l’échec",
+      "category": "PGN championnat du monde · parade à l’échec",
+      "author": "SupaChess Académie",
+      "program": "Carlsen · amélioration et conversion",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "Anand–Carlsen · championnat du monde, 2013 · coup joué · fichier lichess_study_2013-world-championship-anand-carlsen_by_Lichess_2021.11.29.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "lichess_study_2013-world-championship-anand-carlsen_by_Lichess_2021.11.29.pgn",
+      "fen": "rnbqkbnr/pp2pppp/3p4/1Bp5/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 1 3",
+      "color": "b",
+      "question": "Dans la partie Anand–Carlsen, quel coup noir interpose le cavalier pour parer l’échec ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer Cd7",
+          "correct": true
+        },
+        {
+          "text": "Jouer Cc6",
+          "correct": false
+        },
+        {
+          "text": "Jouer Fd7",
+          "correct": false
+        }
+      ],
+      "principle": "Le cavalier d7 s’interpose sur la diagonale du fou b5 et répond à l’échec sans déplacer le roi. Il rejoint ensuite le jeu. En défense, compare les interpositions légales et vérifie si la pièce reste attaquée après avoir paré l’échec.",
+      "transfer": "Trouver une interposition légale qui développe une pièce.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. Le cavalier d7 s’interpose sur la diagonale du fou b5 et répond à l’échec sans déplacer le roi. Il rejoint ensuite le jeu. En défense, compare les interpositions légales et vérifie si la pièce reste attaquée après avoir paré l’échec.",
+      "hints": [
+        "Tu peux répondre à l’échec en bloquant la diagonale avec une pièce.",
+        "Cherche l’interposition jouée par le cavalier noir en d7."
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "b8d7",
+          "explanation": "Le cavalier va en d7 et bloque la diagonale du fou qui donne échec."
+        }
+      ]
+    },
+    {
+      "id": "pgn-carlsen-centralize-knight",
+      "kind": "reinforcement",
+      "level": "Intermédiaire",
+      "title": "Carlsen : installer le cavalier en d5",
+      "category": "PGN championnat du monde · case forte",
+      "author": "SupaChess Académie",
+      "program": "Carlsen · amélioration et conversion",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "Carlsen–Anand · championnat du monde, 2014 · coup joué · fichier lichess_study_2014-world-championship-anand-vs-carlsen-ii_by_Lichess_2021.11.29.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "lichess_study_2014-world-championship-anand-vs-carlsen-ii_by_Lichess_2021.11.29.pgn",
+      "fen": "r1k2b1r/p1p2pp1/1p2b2p/2p1Pn2/8/1PN2N1P/PBP2PP1/3RR1K1 w - - 2 15",
+      "color": "w",
+      "question": "Quel coup joué par Carlsen place son cavalier sur la case centrale d5 ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer Cd5",
+          "correct": true
+        },
+        {
+          "text": "Jouer b4",
+          "correct": false
+        },
+        {
+          "text": "Jouer Ca4",
+          "correct": false
+        }
+      ],
+      "principle": "Le cavalier rejoint d5, une case avancée qui organise le jeu blanc. Le PGN montre ensuite ...g5 et c4. Cette position sert à étudier une pièce centralisée et les décisions prises autour d’elle; l’exercice identifie le coup joué dans la partie.",
+      "transfer": "Reconnaître l’installation d’une pièce sur une case centrale avancée.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. Le cavalier rejoint d5, une case avancée qui organise le jeu blanc. Le PGN montre ensuite ...g5 et c4. Cette position sert à étudier une pièce centralisée et les décisions prises autour d’elle; l’exercice identifie le coup joué dans la partie.",
+      "hints": [
+        "Repère le cavalier blanc placé près du centre et cherche sa case avancée.",
+        "Quel coup amène le cavalier sur d5 ?"
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "c3d5",
+          "explanation": "Le cavalier f4 se centralise en d5."
+        },
+        {
+          "side": "book",
+          "uci": "g7g5",
+          "explanation": "Les Noirs jouent ...g5 pour contester les pièces et les cases de l’aile roi."
+        },
+        {
+          "side": "user",
+          "uci": "c2c4",
+          "explanation": "Les Blancs poursuivent avec c4 et renforcent leur espace."
+        },
+        {
+          "side": "book",
+          "uci": "c8b7",
+          "explanation": "Le roi noir se déplace en b7."
+        }
+      ]
+    },
+    {
+      "id": "pgn-carlsen-calculate-central-capture",
+      "kind": "reinforcement",
+      "level": "Avancé",
+      "title": "Carlsen : calculer la prise en e5",
+      "category": "PGN championnat du monde · calcul de reprises",
+      "author": "SupaChess Académie",
+      "program": "Carlsen · amélioration et conversion",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "Carlsen–Karjakin · championnat du monde, 2016 · coup joué · fichier lichess_study_2016-chess-world-championship-carlsen-vs-karjakin_by_Lichess_2021.11.29.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "lichess_study_2016-chess-world-championship-carlsen-vs-karjakin_by_Lichess_2021.11.29.pgn",
+      "fen": "r1bqkb1r/pppp1ppp/2nn4/1B2p3/8/5N2/PPPP1PPP/RNBQR1K1 w kq - 2 6",
+      "color": "w",
+      "question": "Quel coup de Carlsen prend le pion e5 et lance la suite de reprises ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer Cxe5",
+          "correct": true
+        },
+        {
+          "text": "Jouer Fa6",
+          "correct": false
+        },
+        {
+          "text": "Jouer Fxc6",
+          "correct": false
+        }
+      ],
+      "principle": "Carlsen prend le pion e5. Les Noirs jouent ...Fe7, le fou blanc recule en f1, puis ...Cxe5 est repris par la tour. Il faut suivre toute la chaîne de coups avant de juger la capture. Ce cours reprend la suite effectivement jouée dans la partie.",
+      "transfer": "Calculer les réponses et les reprises après une capture centrale.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. Carlsen prend le pion e5. Les Noirs jouent ...Fe7, le fou blanc recule en f1, puis ...Cxe5 est repris par la tour. Il faut suivre toute la chaîne de coups avant de juger la capture. Ce cours reprend la suite effectivement jouée dans la partie.",
+      "hints": [
+        "Le pion e5 est accessible au cavalier; calcule la réponse noire.",
+        "Si les Noirs reprennent en e5, cherche si une tour blanche peut répondre."
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "f3e5",
+          "explanation": "Le cavalier blanc prend le pion e5."
+        },
+        {
+          "side": "book",
+          "uci": "f8e7",
+          "explanation": "Le fou noir se développe en e7."
+        },
+        {
+          "side": "user",
+          "uci": "b5f1",
+          "explanation": "Le fou blanc recule en f1, hors de la diagonale attaquée."
+        },
+        {
+          "side": "book",
+          "uci": "c6e5",
+          "explanation": "Le cavalier noir prend e5."
+        },
+        {
+          "side": "user",
+          "uci": "e1e5",
+          "explanation": "La tour blanche reprend ensuite le cavalier en e5."
+        }
+      ]
+    },
+    {
+      "id": "pgn-carlsen-bishop-manoeuvre",
+      "kind": "reinforcement",
+      "level": "Avancé",
+      "title": "Carlsen : manœuvrer le fou avec la dame",
+      "category": "PGN championnat du monde · manœuvre",
+      "author": "SupaChess Académie",
+      "program": "Carlsen · amélioration et conversion",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "Caruana–Carlsen · championnat du monde, 2018 · coup joué · fichier lichess_study_2018-chess-world-championship-carlsen-caruana_by_Lichess_2021.11.29.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "lichess_study_2018-chess-world-championship-carlsen-caruana_by_Lichess_2021.11.29.pgn",
+      "fen": "r2qkb1r/pp1b1ppp/3p2n1/1N1Pp3/1QP5/8/PP3PPP/R1B1KB1R b KQkq - 4 11",
+      "color": "b",
+      "question": "Dans cette séquence, quel coup Carlsen joue pour placer son fou en f5 ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer Ff5",
+          "correct": true
+        },
+        {
+          "text": "Jouer Tb8",
+          "correct": false
+        },
+        {
+          "text": "Jouer Tc8",
+          "correct": false
+        }
+      ],
+      "principle": "Le fou va en f5, puis la partie continue par h4, ...h5 et les retours de dame et de fou. La séquence montre une manœuvre et une lutte pour les cases, pas une combinaison forcée. Le coup demandé est celui réellement joué par Carlsen.",
+      "transfer": "Suivre une répétition de manœuvres et comprendre les changements d’aile.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. Le fou va en f5, puis la partie continue par h4, ...h5 et les retours de dame et de fou. La séquence montre une manœuvre et une lutte pour les cases, pas une combinaison forcée. Le coup demandé est celui réellement joué par Carlsen.",
+      "hints": [
+        "C’est le fou noir qui manœuvre entre d7 et f5.",
+        "Repère le coup joué par le fou de d7 vers f5."
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "d7f5",
+          "explanation": "Le fou noir se place en f5 et contrôle des cases utiles autour du roi blanc."
+        },
+        {
+          "side": "book",
+          "uci": "h2h4",
+          "explanation": "Les Blancs avancent leur pion h."
+        },
+        {
+          "side": "user",
+          "uci": "h7h5",
+          "explanation": "Les Noirs répondent par ...h5 et verrouillent la structure."
+        },
+        {
+          "side": "book",
+          "uci": "b4a4",
+          "explanation": "La dame blanche revient en a4."
+        },
+        {
+          "side": "user",
+          "uci": "f5d7",
+          "explanation": "Le fou noir revient en d7."
+        },
+        {
+          "side": "book",
+          "uci": "a4b4",
+          "explanation": "La dame reprend la case b4."
+        },
+        {
+          "side": "user",
+          "uci": "d7f5",
+          "explanation": "Le fou retourne en f5; les pièces répètent leur manœuvre."
+        }
+      ]
+    },
+    {
+      "id": "pgn-carlsen-recapture-knight",
+      "kind": "reinforcement",
+      "level": "Intermédiaire",
+      "title": "Carlsen–Nepo : reprendre le cavalier",
+      "category": "PGN championnat du monde · reprise",
+      "author": "SupaChess Académie",
+      "program": "Carlsen · amélioration et conversion",
+      "book": "Partie PGN · explication pédagogique originale",
+      "reference": "Nepomniachtchi–Carlsen · championnat du monde, 2021 · coup joué · fichier lichess_study_2021-world-chess-championship-carlsen-nepo_2021.12.10.pgn · exercice sur un coup joué, pas un verdict Stockfish",
+      "sourcePgn": "lichess_study_2021-world-chess-championship-carlsen-nepo_2021.12.10.pgn",
+      "fen": "3r2k1/2pqnpp1/1p1pr2p/p3p3/P3P1n1/1QPPN2P/1P3PP1/3RR1K1 w - - 0 19",
+      "color": "w",
+      "question": "Après 18…C x g4, quel pion blanc reprend le cavalier dans la partie ? Ici, retrouve le coup réellement joué dans le PGN.",
+      "choices": [
+        {
+          "text": "Jouer hxg4",
+          "correct": true
+        },
+        {
+          "text": "Jouer Db4",
+          "correct": false
+        },
+        {
+          "text": "Jouer Db5",
+          "correct": false
+        }
+      ],
+      "principle": "Le pion h3 reprend le cavalier en g4. La partie continue par ...d5 puis d4 : les deux camps jouent ensuite au centre. La leçon vérifie d’abord la reprise matérielle avant de passer à l’évaluation du contre-jeu.",
+      "transfer": "Reprendre une pièce attaquante avant de calculer la rupture centrale.",
+      "pitfall": "Ne suppose pas que le coup de la partie est automatiquement le meilleur. Après l’avoir trouvé, vérifie les menaces adverses, les prises et les réponses forcées dans la suite. Le pion h3 reprend le cavalier en g4. La partie continue par ...d5 puis d4 : les deux camps jouent ensuite au centre. La leçon vérifie d’abord la reprise matérielle avant de passer à l’évaluation du contre-jeu.",
+      "hints": [
+        "Le cavalier noir vient de prendre en g4; cherche quelle pièce blanche peut le reprendre.",
+        "Le pion h3 peut-il capturer le cavalier placé en g4 ?"
+      ],
+      "sequence": [
+        {
+          "side": "user",
+          "uci": "h3g4",
+          "explanation": "Le pion h3 capture le cavalier noir en g4."
+        },
+        {
+          "side": "book",
+          "uci": "d6d5",
+          "explanation": "Les Noirs jouent ...d5 et contestent le centre."
+        },
+        {
+          "side": "user",
+          "uci": "d3d4",
+          "explanation": "Les Blancs avancent d4 pour répondre au changement de structure."
+        },
+        {
+          "side": "book",
+          "uci": "e5d4",
+          "explanation": "Les Noirs capturent le pion d4 avec leur pion e5."
+        }
+      ]
+    }
   ];
 
   // New, original SupaChess exercises covering the recurring themes taught in classic chess manuals.

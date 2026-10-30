@@ -35,10 +35,10 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 139, "the academy contains 139 guided lessons");
-  assert.equal(LESSONS.filter((lesson) => lesson.kind === "reinforcement").length, 53, "53 legal application lessons reinforce the four methods");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 157, "the academy contains 157 guided lessons");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind === "reinforcement").length, 71, "71 PGN and application lessons reinforce the four methods");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 79, "opponent-reply drills remain counted separately");
-  assert.equal(LESSONS.length, 218, "guided lessons and anticipation drills are separate catalog entries");
+  assert.equal(LESSONS.length, 236, "guided lessons and anticipation drills are separate catalog entries");
   assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
 });
 
@@ -190,4 +190,14 @@ test("move hints describe observable chess facts without claiming Stockfish's pr
   assert.match(engineHintForMove({ flags: "n" }, "r"), /colonnes ouvertes/);
   assert.match(engineHintForMove({ flags: "c" }, "n"), /recaptures/);
   assert.match(engineHintForMove({ flags: "p" }, "p"), /promotion/);
+});
+
+
+test("PGN-derived lessons cite their source games and keep move-play separate from engine judgment", () => {
+  const lessons = LESSONS.filter((entry) => entry.sourcePgn);
+  assert.equal(lessons.length, 18);
+  assert.equal(new Set(lessons.map((entry) => entry.sourcePgn)).size, 17);
+  assert.ok(lessons.every((entry) => entry.kind === "reinforcement"));
+  assert.ok(lessons.every((entry) => entry.author === "SupaChess Académie"));
+  assert.ok(lessons.every((entry) => entry.reference.includes("pas un verdict Stockfish")));
 });

@@ -60,7 +60,7 @@ test("catalog completion count ignores stale lesson IDs from an older catalog", 
 
   await page.goto("/book-lessons.html");
   await expect(page.locator("#lesson-catalog-count")).toContainText("1 terminés.");
-  await expect(page.locator("#lesson-catalog-count")).toContainText("218 entrées au total");
+  await expect(page.locator("#lesson-catalog-count")).toContainText("236 entrées au total");
 });
 
 
@@ -279,4 +279,21 @@ test("Stockfish path opens its beginner lesson and accepts a legal board move", 
   await page.locator('.sq[data-square="c4"]').click();
   await expect(page.locator("#lesson-move-list")).toContainText("Toi : Bc4");
   await expect(page.locator("#lesson-move-list")).toContainText("Ligne du livre : Nf6");
+});
+
+
+test("PGN-derived lesson shows its source and accepts the move on the board", async ({ page }) => {
+  const { LESSONS } = require("../../js/book-lessons.js");
+  const lesson = LESSONS.find((entry) => entry.id === "pgn-queen-capture-knight");
+  expect(lesson).toBeTruthy();
+  await page.goto("/book-lessons.html");
+  await page.locator(".lesson-catalog-button:not(.anticipation-exercise)")
+    .filter({ hasText: lesson.title }).first().click();
+  await expect(page.locator("#lesson-title")).toHaveText(lesson.title);
+  await expect(page.locator("#lesson-source")).toContainText("game_20260129_172220.pgn");
+  await page.getByRole("button", { name: "Jouer Cxg4" }).click();
+  await page.locator('.sq[data-square="f6"]').click();
+  await page.locator('.sq[data-square="g4"]').click();
+  await expect(page.locator("#lesson-move-list")).toContainText("Toi : Cxg4");
+  await expect(page.locator("#lesson-feedback")).toBeVisible();
 });
