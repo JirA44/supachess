@@ -641,7 +641,9 @@ async function reviewAnalyzeCorrectionCandidates(exercise,index){
   if(list)list.innerHTML="<em>Stockfish analyse les coups candidats…</em>";
   try{
     const result=await state.engine.analyze({fen,multipv:Math.min(12,legalMoveCount),movetime:1200,elo:0});
-    if(reviewState.exercise!==exercise||exercise.index!==index||state.gen!==generation||state.chess.fen()!==fen)return;
+    if(reviewState.exercise!==exercise||exercise.index!==index||state.gen!==generation)return;
+    exercise.candidateLines=result.lines||[];
+    if(state.chess.fen()!==fen)return;
     if(typeof buildCandidates==="function")buildCandidates(result.lines||[],fen);
     if(!state.candidates.length){
       reviewClearCorrectionCandidates("Stockfish n’a pas fourni de coup candidat pour cette position.");
@@ -671,6 +673,11 @@ function reviewShowCorrectionExercise(index){
   exercise.index=index;
   exercise.solved=false;
   exercise.awaitingRetry=false;
+  exercise.candidateLines=[];
+  const explanationPanel=document.getElementById("review-exercise-analysis");
+  if(explanationPanel)explanationPanel.hidden=true;
+  const explanationContent=document.getElementById("review-exercise-analysis-content");
+  if(explanationContent)explanationContent.replaceChildren();
   document.getElementById("btn-review-exercise-retry")?.classList.add("hidden");
   const item=exercise.items[index];
   reviewSetMoveGradeHistory(reviewState.moveGrades, Math.max(0, (Number(item.ply) || 1) - 1));
@@ -713,6 +720,113 @@ function reviewShowCorrectionExercise(index){
       mate:Number.isFinite(item.bestMate)?item.bestMate:null,pv:[item.bestUci]});
   }else document.getElementById("evalbar-label").textContent="—";
   reviewAnalyzeCorrectionCandidates(exercise,index);
+}
+
+function reviewAppendCorrectionExplanation(parent,label,text){
+  if(!text)return;
+  const row=document.createElement("p");
+  const strong=document.createElement("strong");
+  strong.textContent=label+" : ";
+  row.append(strong,document.createTextNode(text));
+  parent.appendChild(row);
+}
+
+function reviewCorrectionPv(fen,pv){
+  if(!Array.isArray(pv)||!pv.length)return "Variante Stockfish indisponible.";
+  const game=new Chess(fen), tokens=[];
+  for(const uci of pv.slice(0,10)){
+    if(typeof uci!=="string"||uci.length<4)break;
+    const color=game.turn(), number=Number(game.fen().split(/\s+/)[5])||1;
+    const move=game.move({from:uci.slice(0,2),to:uci.slice(2,4),promotion:uci[4]});
+    if(!move)break;
+    tokens.push((color==="w"?number+".":tokens.length===0?number+"...":"")+move.san);
+  }
+  return tokens.length?tokens.join(" "):"Variante Stockfish indisponible.";
+}
+
+async function reviewRenderCorrectionExplanation(exercise,index,item){
+  const panel=document.getElementById("review-exercise-analysis");
+  const content=document.getElementById("review-exercise-analysis-content");
+  if(!panel||!content)return;
+  panel.hidden=false;
+  content.replaceChildren();
+  const loading=document.createElement("p");
+  loading.textContent="Stockfish compare le coup joué, la meilleure réponse adverse et leurs variantes…";
+  content.appendChild(loading);
+  try{
+    let rootLines=exercise.candidateLines||[];
+    if(!rootLines.length){
+      const rootResult=await state.engine.analyze({fen:item.fen,multipv:1,movetime:1400,elo:0});
+      rootLines=rootResult.lines||[];
+    }
+    const rootLine=rootLines.find(line=>line.pv&&line.pv[0]===item.bestUci)||null;
+    const root=new Chess(item.fen);
+    const playedMove=item.playedSan?root.move(item.playedSan):null;
+    if(!playedMove)throw new Error("Le demi-coup joué n’est pas disponible dans l’exercice.");
+    const playedUci=playedMove.from+playedMove.to+(playedMove.promotion||"");
+    const afterPlayedFen=root.fen();
+    const afterResult=await state.engine.analyze({fen:afterPlayedFen,multipv:1,movetime:1400,elo:0});
+    if(reviewState.exercise!==exercise||exercise.index!==index||!exercise.solved)return;
+    const afterLine=afterResult.lines&&afterResult.lines[0];
+    content.replaceChildren();
+
+    const heading=document.createElement("h3");
+    heading.id="review-exercise-analysis-title";
+    heading.textContent="Pourquoi "+item.playedSan+" était moins bon";
+    content.appendChild(heading);
+
+    const bestPosition=new Chess(item.fen);
+    const bestMove=bestPosition.move({from:item.bestUci.slice(0,2),to:item.bestUci.slice(2,4),promotion:item.bestUci[4]});
+    reviewAppendCorrectionExplanation(content,"Écart relevé dans l’analyse de la partie",
+      reviewCorrectionLossText(item.lossCp)+" par rapport au meilleur coup retenu.");
+    reviewAppendCorrectionExplanation(content,"Meilleur coup et suite calculée",
+      bestMove?(rootLine?reviewCorrectionPv(item.fen,rootLine.pv):"Meilleur coup retenu : "+(bestMove?bestMove.san:item.bestUci)+"; variante détaillée indisponible."):"Meilleur coup légal confirmé; variante détaillée indisponible.");
+    reviewAppendCorrectionExplanation(content,"Réponse adverse après le coup joué",
+      afterLine?reviewCorrectionPv(afterPlayedFen,afterLine.pv):"Stockfish n’a pas fourni de variante après le coup joué.");
+
+    const facts=typeof ChessBlindspots!=="undefined"
+      ?ChessBlindspots.tacticalMisses(item.fen,playedUci,{lossCp:item.lossCp}):null;
+    const evidence=typeof SupaChessCentipawns!=="undefined"&&afterLine
+      ?SupaChessCentipawns.explain({fenBefore:item.fen,fenAfter:afterPlayedFen,uci:playedUci,
+        bestBefore:rootLine,bestAfter:afterLine,captureFacts:facts&&facts.status==="OK"?facts.facts:[]}):null;
+    if(evidence&&evidence.principles&&evidence.principles.length){
+      for(const principle of evidence.principles)
+        reviewAppendCorrectionExplanation(content,"Cause détectée · "+principle.label,principle.text+" "+(principle.caveat||""));
+    }
+    const immediate=facts&&facts.status==="OK"?(facts.facts||[]).filter(f=>f.newlyExposed):[];
+    if(immediate.length){
+      reviewAppendCorrectionExplanation(content,"Conséquence tactique vérifiée",
+        "Après "+item.playedSan+", l’adversaire avait une prise légale immédiate : "+immediate.slice(0,4).map(f=>f.captureSan).join(", ")+". Une prise légale ne garantit pas seule un gain net de matériel.");
+    }
+    if(evidence&&evidence.observations)
+      for(const observation of evidence.observations)
+        reviewAppendCorrectionExplanation(content,"Observation Stockfish",observation.text);
+    if(evidence&&evidence.explanation)
+      reviewAppendCorrectionExplanation(content,"Comparaison Stockfish",evidence.explanation);
+    if(!((evidence&&evidence.principles&&evidence.principles.length)||immediate.length)){
+      reviewAppendCorrectionExplanation(content,"Cause précise",
+        "Aucune cause tactique ponctuelle n’est confirmée par les détecteurs disponibles. La perte est mesurée par Stockfish; les deux variantes ci-dessus montrent les réponses calculées, mais ne prouvent pas à elles seules toutes les raisons positionnelles.");
+    }
+    if(rootLine&&afterLine&&Number.isFinite(rootLine.scoreCp)&&Number.isFinite(afterLine.scoreCp)){
+      const beforeWhite=rootLine.scoreCp*(new Chess(item.fen).turn()==="w"?1:-1);
+      const afterWhite=afterLine.scoreCp*(new Chess(afterPlayedFen).turn()==="w"?1:-1);
+      const beforeMover=beforeWhite*(new Chess(item.fen).turn()==="w"?1:-1);
+      const afterMover=afterWhite*(new Chess(item.fen).turn()==="w"?1:-1);
+      reviewAppendCorrectionExplanation(content,"Évaluation recalculée",
+        "Position après le coup joué : "+formatScore(afterLine,new Chess(afterPlayedFen).turn()==="w")+
+        " du point de vue des Blancs; perte réestimée "+reviewCorrectionLossText(Math.max(0,beforeMover-afterMover))+
+        ". Cette comparaison peut varier avec la profondeur et le temps de recherche.");
+    }
+    const caveat=document.createElement("small");
+    caveat.textContent="Les variantes sont les meilleures lignes trouvées pendant cette recherche locale; elles ne constituent pas une preuve exhaustive de toutes les suites possibles.";
+    content.appendChild(caveat);
+  }catch(error){
+    if(reviewState.exercise!==exercise||exercise.index!==index||!exercise.solved)return;
+    content.replaceChildren();
+    const message=document.createElement("p");
+    message.textContent="L’explication détaillée Stockfish n’a pas pu être calculée. Le coup joué, le meilleur coup et la perte relevée restent affichés.";
+    content.appendChild(message);
+  }
 }
 
 function reviewHandleExerciseSquareClick(square){
@@ -759,6 +873,7 @@ function reviewHandleExerciseSquareClick(square){
       document.getElementById("btn-review-exercise-next").disabled=false;
       setStatus("Position corrigée.");
       renderAll();
+      reviewRenderCorrectionExplanation(exercise,exercise.index,item);
       reviewClearCorrectionCandidates("Correction trouvée. Passe à l’exercice suivant quand tu es prêt.");
       return true;
     }
