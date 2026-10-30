@@ -294,6 +294,6 @@ test("PGN-derived lesson shows its source and accepts the move on the board", as
   await page.getByRole("button", { name: "Jouer Cxg4" }).click();
   await page.locator('.sq[data-square="f6"]').click();
   await page.locator('.sq[data-square="g4"]').click();
-  await expect(page.locator("#lesson-move-list")).toContainText("Toi : Cxg4");
-  await expect(page.locator("#lesson-feedback")).toBeVisible();
+  await expect(page.locator("#lesson-move-list")).toContainText("Toi : Nxg4");
+  await expect(page.locator("#lesson-feedback")).toContainText("Le cavalier f6 capture la dame");
 });
