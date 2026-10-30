@@ -907,7 +907,7 @@ async function reviewRenderCorrectionExplanation(exercise,index,item){
     const bestPosition=new Chess(item.fen);
     const bestMove=bestPosition.move({from:item.bestUci.slice(0,2),to:item.bestUci.slice(2,4),promotion:item.bestUci[4]});
     reviewAppendCorrectionExplanation(content,"Écart relevé dans l’analyse de la partie",
-      reviewCorrectionLossText(item.lossCp)+" par rapport au meilleur coup retenu.");
+      (Number.isFinite(item.lossCp)?`-${Math.abs(item.lossCp).toLocaleString("fr-FR",{maximumFractionDigits:1})} centipions`:"écart non chiffré")+" par rapport au meilleur coup retenu.");
     reviewAppendCorrectionExplanation(content,"Meilleur coup et suite calculée",
       bestMove?(rootLine?reviewCorrectionPv(item.fen,rootLine.pv):"Meilleur coup retenu : "+(bestMove?bestMove.san:item.bestUci)+"; variante détaillée indisponible."):"Meilleur coup légal confirmé; variante détaillée indisponible.");
     reviewAppendCorrectionExplanation(content,"Réponse adverse après le coup joué",
