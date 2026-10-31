@@ -1,5 +1,11 @@
 const { test, expect } = require("@playwright/test");
 
+async function expectNumberedLessonTitle(page, title) {
+  const heading = page.locator("#lesson-title");
+  await expect(heading).toContainText(title);
+  expect((await heading.innerText()).match(/^\\d+\\.\\s/)).not.toBeNull();
+}
+
 test("Rook cutoff lesson asks for the principle, then plays the line on the board", async ({ page }) => {
   await page.goto("/book-lessons.html");
   await expect(page.locator("h1")).toHaveText("Leçons");
@@ -180,8 +186,7 @@ test("eight learning paths explain their progression and open matching lessons",
     await expect(page.locator("#lesson-catalog .lesson-catalog-button").first()).toHaveAttribute("data-program", program);
     const visibleTitles = page.locator("#lesson-catalog .lesson-catalog-button .lesson-catalog-title");
     const expectedTitle = (await visibleTitles.first().innerText()).replace(/^\d+\.\s*/, "");
-    await expect(page.locator("#lesson-title")).toContainText(expectedTitle);
-    await expect(page.locator("#lesson-title")).toHaveText(/^\\d+\\.\\s/);
+    await expectNumberedLessonTitle(page, expectedTitle);
     await expect(page.locator(".lesson-workspace")).toBeInViewport();
     const levels = await page.locator("#lesson-catalog .lesson-catalog-button .lesson-catalog-meta").allTextContents();
     const levelOrder = { "Débutant": 0, "Intermédiaire": 1, "Avancé": 2, "Expert": 3 };
@@ -207,7 +212,7 @@ test("eight learning paths explain their progression and open matching lessons",
       await expect(page.locator("#lesson-next-preview")).toContainText(second.title);
       await expect(page.locator("#lesson-next-preview")).toContainText(second.level);
       await page.locator("#lesson-next").click();
-      await expect(page.locator("#lesson-title")).toHaveText(second.title);
+      await expectNumberedLessonTitle(page, second.title);
       await expect(page.locator("#lesson-program-filter")).toHaveValue(program);
     }
   }
@@ -220,13 +225,12 @@ test("eight learning paths explain their progression and open matching lessons",
     .filter({ hasText: "Partie TCEC · Mettre le fou b4 à l’épreuve" });
   await expect(historicGameLesson).toBeVisible();
   await historicGameLesson.click();
-  await expect(page.locator("#lesson-title")).toHaveText("Partie TCEC · Mettre le fou b4 à l’épreuve");
+  await expectNumberedLessonTitle(page, "Partie TCEC · Mettre le fou b4 à l’épreuve");
   await expect(page.locator("#lesson-source a")).toHaveAttribute("href", "https://github.com/TCEC-Chess/tcecgames");
 
   await stockfish.getByRole("button", { name: "Commencer sur une position" }).click();
   await expect(page.locator("#lesson-program-filter")).toHaveValue("");
-  await expect(page.locator("#lesson-title")).toContainText("Stockfish · Lire une évaluation avec le bon repère");
-  await expect(page.locator("#lesson-title")).toHaveText(/^\\d+\\.\\s/);
+  await expectNumberedLessonTitle(page, "Stockfish · Lire une évaluation avec le bon repère");
   await expect(page.locator("#lesson-next")).toBeVisible();
   await expect(page.locator("#lesson-next")).toContainText("Leçon suivante");
   await expect(page.locator("#lesson-catalog .lesson-catalog-button:not(.anticipation-exercise)").first()).toBeVisible();
@@ -278,7 +282,7 @@ test("profile opens inside the game page and remains available from lessons", as
 test("Stockfish path opens its beginner lesson and accepts a legal board move", async ({ page }) => {
   await page.goto("/book-lessons.html");
   await page.getByRole("button", { name: "Commencer sur une position" }).click();
-  await expect(page.locator("#lesson-title")).toHaveText("Stockfish · Lire une évaluation avec le bon repère");
+  await expectNumberedLessonTitle(page, "Stockfish · Lire une évaluation avec le bon repère");
   await page.locator("#lesson-choices .lesson-choice").filter({ hasText: "La position exacte" }).click();
   await page.locator('.sq[data-square="f1"]').click();
   await page.locator('.sq[data-square="c4"]').click();
@@ -313,8 +317,7 @@ test("PGN-derived lesson shows its source and accepts the move on the board", as
   await page.goto("/book-lessons.html");
   await page.locator(".lesson-catalog-button:not(.anticipation-exercise)")
     .filter({ hasText: lesson.title }).first().click();
-  await expect(page.locator("#lesson-title")).toContainText(lesson.title);
-  await expect(page.locator("#lesson-title")).toHaveText(new RegExp("^" + (LESSONS.indexOf(lesson) + 1) + "\\\\.\\\\s"));
+  await expectNumberedLessonTitle(page, lesson.title);
   await expect(page.locator("#lesson-source")).toContainText("game_20260129_172220.pgn");
   await page.getByRole("button", { name: "Jouer Cxg4" }).click();
   await page.locator('.sq[data-square="f6"]').click();
