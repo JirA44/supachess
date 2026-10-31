@@ -328,6 +328,32 @@ function renderDiagnosticProfile(){
   var labelsSvg=metrics.map(function(metric,index){var p=point(index,1.22);var anchor=p.x<center.x-8?'end':p.x>center.x+8?'start':'middle';var y=p.y+(p.y<center.y?0:12);return '<text x="'+p.x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+anchor+'" fill="#f4f7fb" font-size="10">'+metric.label+' '+metric.value+'%</text>';}).join('');
   html+='<h5>Radar du jeu mesuré</h5><svg viewBox="0 0 300 264" role="img" aria-label="Radar du diagnostic : '+metrics.map(function(metric){return metric.label+' '+metric.value+' pour cent';}).join(', ')+'" style="display:block;width:min(100%,420px);height:auto;margin:0 auto">'+rings+axes+'<polygon points="'+polygon+'" fill="rgba(91,190,255,.28)" stroke="#68c5ff" stroke-width="2"/>'+labelsSvg+'</svg>'+
     '<p>« Coups solides » regroupe les coups brillants, meilleurs, très bons, bons et OK. Les trois axes suivants indiquent la part des coups notés qui ne sont pas classés dans cette catégorie d’erreur. « Régularité » mesure la stabilité du taux de coups sans erreur classée d’une partie à l’autre; ces indicateurs sont descriptifs, pas des compétences tactiques déduites.</p>';
+
+  var categoryData=[
+    {key:'solid',label:'Coups solides',count:counts.solid,color:'#51d98d'},
+    {key:'inaccuracy',label:'Imprécisions',count:counts.inaccuracy,color:'#f2ca58'},
+    {key:'mistake',label:'Erreurs',count:counts.mistake,color:'#f28d58'},
+    {key:'blunder',label:'Gaffes',count:counts.blunder,color:'#f06478'}
+  ].map(function(item){item.rate=100*item.count/rated.length;return item;});
+  var chartGrid=[0,25,50,75,100].map(function(value){var y=170-value*1.2;return '<line x1="46" y1="'+y+'" x2="500" y2="'+y+'" stroke="#53647b" stroke-width="1"/><text x="39" y="'+(y+4)+'" text-anchor="end" fill="#dce6f2" font-size="10">'+value+'%</text>';}).join('');
+  var bars=categoryData.map(function(item,index){
+    var x=75+index*108;var height=item.rate*1.2;var y=170-height;
+    return '<g><title>'+item.label+': '+item.count+' sur '+rated.length+' ('+Math.round(item.rate)+'%)</title><rect x="'+x+'" y="'+y.toFixed(1)+'" width="48" height="'+height.toFixed(1)+'" rx="4" fill="'+item.color+'"/><text x="'+(x+24)+'" y="'+Math.max(16,y-7).toFixed(1)+'" text-anchor="middle" fill="#fff" font-size="11">'+Math.round(item.rate)+'%</text><text x="'+(x+24)+'" y="188" text-anchor="middle" fill="#f4f7fb" font-size="10">'+item.label+'</text><text x="'+(x+24)+'" y="204" text-anchor="middle" fill="#c8d2e0" font-size="10">'+item.count+' coups</text></g>';
+  }).join('');
+  html+='<h5>Répartition des coups notés</h5><svg viewBox="0 0 520 215" role="img" aria-label="Répartition des coups notés parmi '+rated.length+' demi-coups" style="display:block;width:100%;max-width:560px;height:auto;margin:8px auto">'+chartGrid+bars+'</svg>';
+  var trendPoints=gameRates.map(function(value,index){var x=42+(gameRates.length===1?0:index*436/(gameRates.length-1));var y=166-value*1.25;return {x:x,y:y,value:value,index:index};});
+  var trendGrid=[0,25,50,75,100].map(function(value){var y=166-value*1.25;return '<line x1="42" y1="'+y+'" x2="478" y2="'+y+'" stroke="#53647b"/><text x="35" y="'+(y+4)+'" text-anchor="end" fill="#dce6f2" font-size="10">'+value+'%</text>';}).join('');
+  var trendLine=trendPoints.map(function(point){return point.x.toFixed(1)+','+point.y.toFixed(1);}).join(' ');
+  var trendDots=trendPoints.map(function(point){return '<circle cx="'+point.x.toFixed(1)+'" cy="'+point.y.toFixed(1)+'" r="4" fill="#68c5ff"><title>Partie '+(point.index+1)+': '+Math.round(point.value)+'% de coups sans erreur classée</title></circle>';}).join('');
+  html+='<h5>Évolution partie par partie</h5><svg viewBox="0 0 520 205" role="img" aria-label="Évolution du taux de coups sans erreur classée sur '+gameRates.length+' parties" style="display:block;width:100%;max-width:560px;height:auto;margin:8px auto">'+trendGrid+'<polyline points="'+trendLine+'" fill="none" stroke="#68c5ff" stroke-width="3" stroke-linejoin="round"/>'+trendDots+'<text x="260" y="198" text-anchor="middle" fill="#f4f7fb" font-size="11">Parties chronologiques · coups sans erreur classée</text></svg>';
+  var depthBars=categoryData.map(function(item,index){
+    var x=82+index*104;var base=180;var h=item.rate*1.12;var y=base-h;var depth=14;
+    var top=(x+','+y.toFixed(1))+' '+(x+48+','+y.toFixed(1))+' '+(x+48+depth+','+(y-depth*.55).toFixed(1))+' '+(x+depth+','+(y-depth*.55).toFixed(1));
+    var side=(x+48+','+y.toFixed(1))+' '+(x+48+','+base)+' '+(x+48+depth+','+(base-depth*.55).toFixed(1))+' '+(x+48+depth+','+(y-depth*.55).toFixed(1));
+    var front=(x+','+y.toFixed(1))+' '+(x+48+','+y.toFixed(1))+' '+(x+48+','+base)+' '+x+','+base;
+    return '<g><title>'+item.label+': '+item.count+' sur '+rated.length+' ('+Math.round(item.rate)+'%)</title><polygon points="'+side+'" fill="#26384d"/><polygon points="'+top+'" fill="#a8c7e4"/><polygon points="'+front+'" fill="'+item.color+'"/><text x="'+(x+24)+'" y="'+Math.max(28,y-8).toFixed(1)+'" text-anchor="middle" fill="#fff" font-size="11">'+Math.round(item.rate)+'%</text><text x="'+(x+31)+'" y="199" text-anchor="middle" fill="#f4f7fb" font-size="10">'+item.label+'</text></g>';
+  }).join('');
+  html+='<h5>Vue 3D en perspective · mêmes données</h5><svg viewBox="0 0 520 220" role="img" aria-label="Histogramme en perspective des catégories de coups, calculé sur '+rated.length+' demi-coups" style="display:block;width:100%;max-width:560px;height:auto;margin:8px auto"><line x1="55" y1="180" x2="500" y2="180" stroke="#c8d2e0"/>'+depthBars+'</svg><p>La vue 3D est une projection en perspective du graphique de répartition, pas une mesure supplémentaire.</p>';
   var phaseLabels={opening:'ouverture',middlegame:'milieu de jeu',endgame:'finale'};
   var phaseRows=Object.keys(phaseCounts).map(function(key){var value=phaseCounts[key];return {key:key,moves:value.moves,issues:value.issues,rate:value.moves?value.issues/value.moves:0};}).filter(function(item){return item.moves>=3;}).sort(function(a,b){return b.rate-a.rate;});
   if(phaseRows.length){
@@ -337,6 +363,18 @@ function renderDiagnosticProfile(){
   }else{
     html+='<p>Phases de jeu : pas assez de demi-coups classés par phase (minimum 3 par phase) pour désigner une force ou une lacune fiable.</p>';
   }
+  var phaseRadar=[
+    {key:'opening',label:'Ouverture',value:Math.round(100*phaseCounts.opening.moves/rated.length)},
+    {key:'middlegame',label:'Milieu de jeu',value:Math.round(100*phaseCounts.middlegame.moves/rated.length)},
+    {key:'endgame',label:'Finale',value:Math.round(100*phaseCounts.endgame.moves/rated.length)}
+  ];
+  var phaseCenter={x:170,y:112},phaseRadius=70;
+  function phasePoint(index,scale){var angle=(-Math.PI/2)+(Math.PI*2*index/phaseRadar.length);return {x:phaseCenter.x+Math.cos(angle)*phaseRadius*scale,y:phaseCenter.y+Math.sin(angle)*phaseRadius*scale};}
+  var phaseRings=[.25,.5,.75,1].map(function(scale){return phaseRadar.map(function(_metric,index){var p=phasePoint(index,scale);return p.x.toFixed(1)+','+p.y.toFixed(1);}).join(' ');}).map(function(points){return '<polygon points="'+points+'" fill="none" stroke="#53647b"/>';}).join('');
+  var phaseAxes=phaseRadar.map(function(metric,index){var p=phasePoint(index,1);return '<line x1="'+phaseCenter.x+'" y1="'+phaseCenter.y+'" x2="'+p.x.toFixed(1)+'" y2="'+p.y.toFixed(1)+'" stroke="#53647b"/>';}).join('');
+  var phaseShape=phaseRadar.map(function(metric,index){var p=phasePoint(index,metric.value/100);return p.x.toFixed(1)+','+p.y.toFixed(1);}).join(' ');
+  var phaseText=phaseRadar.map(function(metric,index){var p=phasePoint(index,1.2);return '<text x="'+p.x.toFixed(1)+'" y="'+(p.y+(p.y<phaseCenter.y?0:12)).toFixed(1)+'" text-anchor="'+(p.x<phaseCenter.x-8?'end':p.x>phaseCenter.x+8?'start':'middle')+'" fill="#f4f7fb" font-size="10">'+metric.label+' '+metric.value+'%</text>';}).join('');
+  html+='<h5>Radar des phases · volume observé</h5><svg viewBox="0 0 340 230" role="img" aria-label="Part des demi-coups notés par phase : '+phaseRadar.map(function(metric){return metric.label+' '+metric.value+' pour cent';}).join(', ')+'" style="display:block;width:min(100%,420px);height:auto;margin:8px auto">'+phaseRings+phaseAxes+'<polygon points="'+phaseShape+'" fill="rgba(81,217,141,.22)" stroke="#51d98d" stroke-width="2"/>'+phaseText+'</svg><p>Ce radar indique la part des coups notés attribuée à chaque phase, pas ton niveau dans cette phase. La phase sans coup attribué reste à zéro ou peut être sous-représentée si le PGN n’a pas pu être rejoué.</p>';
   var ranked=categories.map(function(key){return {key:key,count:counts[key],rate:Math.round(100*counts[key]/rated.length)};}).filter(function(item){return item.count>0;}).sort(function(a,b){return b.rate-a.rate||categories.indexOf(a.key)-categories.indexOf(b.key);});
   html+='<h5>Priorités de travail observées</h5>';
   if(ranked.length){
