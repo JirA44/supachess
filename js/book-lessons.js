@@ -2706,6 +2706,30 @@
     return (currentIndex + 1) % LESSONS.length;
   }
 
+  function lessonNumberForTitle(index) {
+    const lesson = LESSONS[index];
+    const selectedProgram = $("lesson-program-filter").value;
+    if (selectedProgram && lesson && lesson.program === selectedProgram) {
+      const path = methodPathLessonIndices(selectedProgram);
+      const position = path.indexOf(index);
+      if (position >= 0) return position + 1;
+    }
+    return index + 1;
+  }
+
+  function renderNextLessonPrompt() {
+    const nextIndex = nextLessonIndex(lessonIndex);
+    const nextLesson = LESSONS[nextIndex];
+    const selectedProgram = $("lesson-program-filter").value;
+    const followsPath = Boolean(selectedProgram && LESSONS[lessonIndex].program === selectedProgram);
+    $("lesson-next-preview").textContent =
+      (followsPath ? "Étape suivante du parcours : " : "À découvrir ensuite : ") +
+      nextLesson.title + " — " + nextLesson.category + ".";
+    $("lesson-next-preview").hidden = false;
+    $("lesson-next").textContent = followsPath ? "Étape suivante du parcours" : "Leçon suivante";
+    $("lesson-next").hidden = false;
+  }
+
   function loadLesson(index, options = {}) {
     if (bookReplyTimer !== null) {
       root.clearTimeout(bookReplyTimer);
@@ -2750,7 +2774,7 @@
     boardUI.selected = null;
     boardUI.legalTargets = [];
     boardUI.lastMove = null;
-    $("lesson-title").textContent = surpriseMode ? "Exercice au hasard" : lesson.title;
+    $("lesson-title").textContent = surpriseMode ? "Exercice au hasard" : lessonNumberForTitle(lessonIndex) + ". " + lesson.title;
     $("lesson-goal").textContent = surpriseMode
       ? "Analyse la position sans regarder le thème. Choisis un coup, puis vérifie la réponse adverse sur l’échiquier."
       : "Observe la position. Choisis d’abord le principe qui s’applique, puis joue les coups sur l’échiquier.";
@@ -2760,8 +2784,7 @@
     $("lesson-explanation").hidden = true;
     $("lesson-explanation").textContent = "";
     $("lesson-move-list").textContent = "";
-    $("lesson-next").hidden = true;
-    $("lesson-next-preview").hidden = true;
+    $("lesson-next").hidden = false;
     $("lesson-next-preview").textContent = "";
     $("lesson-hint").disabled = false;
     $("lesson-flip").setAttribute("aria-pressed", String(flipped));
@@ -2769,6 +2792,7 @@
     if (surpriseMode) $("lesson-source").textContent = "Exercice au hasard · thème révélé après la résolution";
     renderChoices(lesson);
     renderCatalog();
+    renderNextLessonPrompt();
     renderBoard();
     updateProgressLabel();
     $("lesson-status").textContent = "À toi de jouer les " + (lesson.color === "w" ? "Blancs" : "Noirs") + ".";
@@ -3040,7 +3064,7 @@
     clearEvalBar();
     boardUI.lastMove = { from: last.from, to: last.to, san: last.san };
     $("lesson-engine-return").hidden = false;
-    $("lesson-status").textContent = "Aperçu Stockfish : " + choice.sanLine.slice(0, 5).join(" ") + ". Reviens à l’exercice pour continuer à jouer.";
+    $("lesson-status").textContent = "Aperçu Stockfish : " + choice.sanLine.slice(0, 5).join(" ") + ". Clique sur « Continuer la leçon » sous les variantes pour reprendre la séquence.";
     renderBoard();
   }
 
@@ -3202,7 +3226,7 @@
     enginePreview = null;
     boardUI.lastMove = null;
     $("lesson-engine-return").hidden = true;
-    $("lesson-status").textContent = "Retour à la position de l’exercice. À toi de jouer.";
+    $("lesson-status").textContent = "Leçon reprise à la position de l’exercice. Continue la séquence.";
     renderBoard();
   });
   $("lesson-flip").addEventListener("click", () => {
