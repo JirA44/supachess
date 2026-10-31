@@ -87,7 +87,12 @@ test("completed diagnostic profile renders labeled charts and legends in Chromiu
   });
 
   const report = page.locator(".profile-diagnostic-report");
-  await expect(report.locator("svg")).toHaveCount(5);
+  await expect(report.locator("svg")).toHaveCount(6);
+  await expect(report).toContainText("Moyenne par partie selon le type de coup");
+  const perGameTable = report.locator('table[aria-label="Moyenne par partie en pourcentage par type de coup"]');
+  await expect(perGameTable).toHaveCount(1);
+  await expect(perGameTable).toContainText("Gaffes");
+  await expect(perGameTable).toContainText("10,0%");
   await expect(report).toContainText("Catégorie de coup");
   await expect(report).toContainText("Part des demi-coups notés (%)");
   await expect(report).toContainText("Numéro de partie · ordre chronologique");
