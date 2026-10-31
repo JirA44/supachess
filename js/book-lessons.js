@@ -2651,9 +2651,10 @@
     const anticipationCount = LESSONS.length - originalLessonCount;
     const completedOriginal = LESSONS.filter((lesson) => lesson.kind !== "anticipation" && completionCount(progress[lesson.id]) > 0).length;
     const completedAnticipation = LESSONS.filter((lesson) => lesson.kind === "anticipation" && completionCount(progress[lesson.id]) > 0).length;
+    const completedEntries = LESSONS.filter((lesson) => completionCount(progress[lesson.id]) > 0).length;
     $("lesson-catalog-count").textContent = visibleLessons.length + " affiché(s) · " + originalLessonCount +
       " leçons originales + " + anticipationCount + " exercices d’anticipation · " + LESSONS.length +
-      " entrées au total · Leçons terminées : " + completedOriginal + "/" + originalLessonCount +
+      " entrées au total · " + completedEntries + " terminés. · Leçons terminées : " + completedOriginal + "/" + originalLessonCount +
       " · Exercices terminés : " + completedAnticipation + "/" + anticipationCount + ".";
     if (!visibleLessons.length) {
       const empty = document.createElement("p");
@@ -2678,7 +2679,7 @@
       state.className = "lesson-catalog-state";
       const timesCompleted = completionCount(progress[lesson.id]);
       state.textContent = timesCompleted
-        ? "Terminée · faite " + timesCompleted + " fois · à revoir quand tu veux"
+        ? "Terminée · à revoir quand tu veux · faite " + timesCompleted + " fois"
         : lesson.kind === "anticipation" ? "Défi de réponse adverse" : "À découvrir";
       button.append(title, meta, state);
       button.addEventListener("click", () => {
