@@ -292,10 +292,10 @@ function renderDiagnosticProfile(){
       if(categories.includes(move.category))phaseCounts[move.phase].issues++;
     }
   });
-  var eligible=diagnostic.completed===true;
+  var eligible=diagnostic.completed===true||report.gameCount>=10;
   var html='<section class="profile-diagnostic-report" aria-labelledby="profile-diagnostic-report-title" style="margin:18px 0;padding:16px;border:1px solid #4facfe;border-radius:14px;background:#202b3d;color:#f4f7fb">'+
     '<h4 id="profile-diagnostic-report-title" style="margin-top:0">Bilan de ton diagnostic</h4>';
-  if(diagnostic.active){
+  if(diagnostic.active&&report.gameCount<10){
     var completed=report.gameCount;
     return html+'<p>Diagnostic en cours : '+completed+'/10 parties terminées contre Stockfish. Le bilan apparaîtra ici après le seuil.</p></section>';
   }
