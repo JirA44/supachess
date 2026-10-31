@@ -60,7 +60,8 @@ test("catalog completion count ignores stale lesson IDs from an older catalog", 
 
   await page.goto("/book-lessons.html");
   await expect(page.locator("#lesson-catalog-count")).toContainText("1 terminés.");
-  await expect(page.locator("#lesson-catalog-count")).toContainText("274 entrées au total");
+  const catalogTotal = await page.evaluate(() => window.SupaChessLessons.length);
+  await expect(page.locator("#lesson-catalog-count")).toContainText(`${catalogTotal} entrées au total`);
 });
 
 
