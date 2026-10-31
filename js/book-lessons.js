@@ -2706,6 +2706,27 @@
     return (currentIndex + 1) % LESSONS.length;
   }
 
+  function previousLessonIndex(currentIndex) {
+    const program = $("lesson-program-filter").value;
+    if (program && LESSONS[currentIndex]?.program === program) {
+      const path = methodPathLessonIndices(program);
+      const position = path.indexOf(currentIndex);
+      return position > 0 ? path[position - 1] : null;
+    }
+    return currentIndex > 0 ? currentIndex - 1 : null;
+  }
+
+  function syncPreviousLessonButton() {
+    const button = $("lesson-previous");
+    if (!button) return;
+    const previous = previousLessonIndex(lessonIndex);
+    button.hidden = false;
+    button.disabled = previous === null;
+    button.textContent = "← Leçon précédente";
+    button.title = previous === null ? "Tu es au début de ce parcours." : "Revenir à la leçon précédente";
+    button.setAttribute("aria-disabled", String(previous === null));
+  }
+
   function lessonNumberForTitle(index) {
     const lesson = LESSONS[index];
     const selectedProgram = $("lesson-program-filter").value;
@@ -2718,6 +2739,7 @@
   }
 
   function renderNextLessonPrompt() {
+    syncPreviousLessonButton();
     const nextIndex = nextLessonIndex(lessonIndex);
     const nextLesson = LESSONS[nextIndex];
     const selectedProgram = $("lesson-program-filter").value;
@@ -2755,6 +2777,7 @@
     $("lesson-engine-status").textContent = "";
     $("lesson-engine-lines").textContent = "";
     lessonIndex = index;
+    syncPreviousLessonButton();
     clearEvalBar();
     surpriseMode = Boolean(options.surprise);
     anticipationPractice = Boolean(options.anticipate);
@@ -3238,7 +3261,11 @@
   });
   $("lesson-hint").addEventListener("click", showHint);
   $("lesson-restart").addEventListener("click", () => loadLesson(lessonIndex));
-  $("lesson-next").addEventListener("click", () => loadLesson(nextLessonIndex(lessonIndex)));
+  $("lesson-previous").addEventListener("click", () => {
+    const previous = previousLessonIndex(lessonIndex);
+    if (previous !== null) loadLesson(previous);
+  });
+    $("lesson-next").addEventListener("click", () => loadLesson(nextLessonIndex(lessonIndex)));
   function renderStockfishReviewQueue() {
     const target = $("lesson-review-queue");
     if (!target) return;
