@@ -961,6 +961,43 @@ async function reviewRenderCorrectionExplanation(exercise,index,item){
   }
 }
 
+window.reviewUndoCorrectionExercise = function(){
+  const exercise=reviewState.exercise;
+  if(!exercise||!state.chess.history().length)return false;
+  const item=exercise.items[exercise.index];
+  state.gen++;
+  state.chess.undo();
+  state.fenHistory=[fenKey(state.chess.fen())];
+  state.positionFenHistory=[state.chess.fen()];
+  state.evalHistory=[];
+  state.candidates=[];
+  state.pendingMove=null;
+  state.phase="userTurn";
+  state.userColor=state.chess.turn();
+  exercise.solved=false;
+  exercise.awaitingRetry=false;
+  exercise.candidateLines=[];
+  boardUI.selected=null;
+  boardUI.legalTargets=[];
+  boardUI.legalTargetHints={};
+  boardUI.dots=[];
+  boardUI.lastMove=null;
+  document.getElementById("btn-review-exercise-next").disabled=true;
+  document.getElementById("btn-review-exercise-retry")?.classList.add("hidden");
+  const explanation=document.getElementById("review-exercise-analysis");
+  if(explanation)explanation.hidden=true;
+  const explanationContent=document.getElementById("review-exercise-analysis-content");
+  if(explanationContent)explanationContent.replaceChildren();
+  document.getElementById("review-exercise-feedback").textContent="Coup annulé. À toi de jouer : clique une pièce puis sa case cible.";
+  reviewSetMoveGradeHistory(reviewState.moveGrades,Math.max(0,(Number(item.ply)||1)-1));
+  hideCoach();
+  moveFeedback.clear();
+  setStatus("Demi-coup annulé — rejoue la position.");
+  renderAll();
+  reviewAnalyzeCorrectionCandidates(exercise,exercise.index);
+  return true;
+};
+
 function reviewHandleExerciseSquareClick(square){
   const exercise=reviewState.exercise;
   if(!exercise)return false;
