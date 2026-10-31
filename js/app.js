@@ -1167,6 +1167,7 @@ $("btn-cancel").addEventListener("click", () => {
   setStatus("À vous de jouer.");
 });
 $("btn-undo").addEventListener("click", () => {
+  if (typeof window.reviewUndoCorrectionExercise === "function" && window.reviewUndoCorrectionExercise()) return;
   if (state.phase === "engineThinking" || state.phase === "analyzing") return;
   hideCoach();
   state.gen++;
