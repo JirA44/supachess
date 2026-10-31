@@ -166,6 +166,8 @@
           <p id="lesson-review-status" role="status" aria-live="polite"></p>
           <div id="lesson-review-queue" aria-live="polite"></div>
         </div>
+        <p class="lesson-next-preview" id="lesson-next-preview" hidden></p>
+        <button class="btn lesson-next" id="lesson-next" type="button" hidden>Leçon suivante</button>
         <p class="lesson-feedback" id="lesson-feedback" role="status" aria-live="polite"></p>
         <div class="lesson-engine-actions">
           <button class="btn" id="lesson-engine-analyze" type="button">Comparer tous les coups avec Stockfish</button>
@@ -176,15 +178,13 @@
           <p class="lesson-engine-note">Stockfish classe les coups et donne une suite calculée. Sa force moteur n’est pas un Elo FIDE humain. Il n’explique pas lui-même les principes : les indices ci-dessous sont des questions à vérifier sur l’échiquier, pas la pensée interne du moteur.</p>
           <ol class="lesson-engine-lines" id="lesson-engine-lines"></ol>
           <div class="lesson-engine-actions lesson-engine-continuation">
-            <button class="btn" id="lesson-engine-return" type="button" hidden>Continuer l’exercice</button>
+            <button class="btn" id="lesson-engine-return" type="button" hidden>Continuer la leçon</button>
           </div>
         </section>
         <div class="lesson-explanation" id="lesson-explanation" hidden></div>
         <h3>Suite jouée</h3>
         <ol class="lesson-move-list" id="lesson-move-list"></ol>
         <p class="lesson-progress" id="lesson-progress"></p>
-        <p class="lesson-next-preview" id="lesson-next-preview" hidden></p>
-        <button class="btn lesson-next" id="lesson-next" type="button" hidden>Leçon suivante</button>
       </article>
     </section>
     <p class="lesson-note">Les exercices sont rédigés pour SupaChess. Chaque FEN et chaque demi-coup des lignes étudiées sont vérifiés par les tests; les variantes Stockfish restent dépendantes du temps de recherche.</p>
@@ -194,7 +194,7 @@
   <script src="js/engine.js"></script>
   <script src="js/board.js"></script>
   <script src="js/curriculum.js?v=strategy-plans-course-20261031-v6"></script>
-  <script src="js/book-lessons.js?v=ordered-player-method-paths-20261030"></script>
+  <script src="js/book-lessons.js?v=numbered-continuation-next-20261031"></script>
   <script src="js/method-paths.js?v=ordered-player-method-paths-20261030"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
