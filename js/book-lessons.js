@@ -2628,6 +2628,11 @@
     catch (_) { /* Lessons still work when browser storage is unavailable. */ }
   }
 
+  function completionCount(record) {
+    const savedCount = Number(record && record.completions);
+    return Math.max(Number.isFinite(savedCount) ? savedCount : 0, record && record.completed ? 1 : 0);
+  }
+
   function renderCatalog() {
     const catalog = $("lesson-catalog");
     const search = ($("lesson-search").value || "").trim().toLocaleLowerCase("fr");
@@ -2644,9 +2649,12 @@
     }
     const originalLessonCount = LESSONS.filter((lesson) => lesson.kind !== "anticipation").length;
     const anticipationCount = LESSONS.length - originalLessonCount;
+    const completedOriginal = LESSONS.filter((lesson) => lesson.kind !== "anticipation" && completionCount(progress[lesson.id]) > 0).length;
+    const completedAnticipation = LESSONS.filter((lesson) => lesson.kind === "anticipation" && completionCount(progress[lesson.id]) > 0).length;
     $("lesson-catalog-count").textContent = visibleLessons.length + " affiché(s) · " + originalLessonCount +
       " leçons originales + " + anticipationCount + " exercices d’anticipation · " + LESSONS.length +
-      " entrées au total · " + LESSONS.filter((lesson) => progress[lesson.id] && progress[lesson.id].completed).length + " terminés.";
+      " entrées au total · Leçons terminées : " + completedOriginal + "/" + originalLessonCount +
+      " · Exercices terminés : " + completedAnticipation + "/" + anticipationCount + ".";
     if (!visibleLessons.length) {
       const empty = document.createElement("p");
       empty.className = "lesson-catalog-empty";
@@ -2668,8 +2676,10 @@
       meta.textContent = lesson.level + " · " + lesson.program + " · " + lesson.author;
       const state = document.createElement("span");
       state.className = "lesson-catalog-state";
-      state.textContent = progress[lesson.id] && progress[lesson.id].completed
-        ? "Terminée · à revoir quand tu veux" : lesson.kind === "anticipation" ? "Défi de réponse adverse" : "À découvrir";
+      const timesCompleted = completionCount(progress[lesson.id]);
+      state.textContent = timesCompleted
+        ? "Terminée · faite " + timesCompleted + " fois · à revoir quand tu veux"
+        : lesson.kind === "anticipation" ? "Défi de réponse adverse" : "À découvrir";
       button.append(title, meta, state);
       button.addEventListener("click", () => {
         loadLesson(index);
@@ -2961,6 +2971,7 @@
     const previous = progress[lesson.id] || {};
     progress[lesson.id] = {
       completed: true,
+      completions: completionCount(previous) + 1,
       attempts: attempts,
       hintsUsed: hintsUsed,
       completedAt: new Date().toISOString(),
@@ -3062,7 +3073,12 @@
       ? methodPathLessonIndices(selectedProgram) : [];
     const position = path.indexOf(lessonIndex);
     const step = position >= 0 ? "Étape " + (position + 1) + "/" + path.length + " · " : "";
-    $("lesson-progress").textContent = step + "Essais : " + attempts + " · Indices utilisés : " + hintsUsed;
+    const timesCompleted = completionCount(progress[lesson.id]);
+    $("lesson-progress").textContent = step + "Leçons terminées : " +
+      LESSONS.filter((item) => item.kind !== "anticipation" && completionCount(progress[item.id]) > 0).length +
+      "/" + LESSONS.filter((item) => item.kind !== "anticipation").length +
+      " · Cet exercice terminé " + timesCompleted + " fois · Essais cette séance : " + attempts +
+      " · Indices utilisés : " + hintsUsed;
   }
 
   function clearSelection() {
