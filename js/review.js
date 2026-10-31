@@ -961,7 +961,7 @@ async function reviewRenderCorrectionExplanation(exercise,index,item){
   }
 }
 
-window.reviewUndoCorrectionExercise = function(){
+globalThis.reviewUndoCorrectionExercise = function(){
   const exercise=reviewState.exercise;
   if(!exercise||!state.chess.history().length)return false;
   const item=exercise.items[exercise.index];
