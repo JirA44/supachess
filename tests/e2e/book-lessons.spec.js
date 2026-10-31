@@ -161,7 +161,7 @@ test("eight learning paths explain their progression and open matching lessons",
   await expect(page.locator("#lesson-catalog-count")).toContainText("exercices d’anticipation");
   await expect(page.locator("#lesson-catalog-count")).toContainText("entrées au total");
   const cards = page.locator(".method-path");
-  await expect(cards).toHaveCount(8);
+  await expect(cards).toHaveCount(9);
 
   const paths = [
     ["Carlsen · amélioration et conversion", "Explorer les leçons Carlsen"],
