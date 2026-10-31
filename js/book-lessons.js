@@ -3312,8 +3312,11 @@
   };
 
   renderCatalog();
-  const requestedNext = new URLSearchParams(location.search).get("next") === "1";
+  const searchParams = new URLSearchParams(location.search);
+  const requestedLesson = searchParams.get("lesson");
+  const requestedLessonIndex = requestedLesson ? LESSONS.findIndex((lesson) => lesson.id === requestedLesson) : -1;
+  const requestedNext = searchParams.get("next") === "1";
   const firstIncomplete = LESSONS.findIndex((lesson) => !(progress[lesson.id] && progress[lesson.id].completed));
-  loadLesson(requestedNext && firstIncomplete >= 0 ? firstIncomplete : 0);
+  loadLesson(requestedLessonIndex >= 0 ? requestedLessonIndex : (requestedNext && firstIncomplete >= 0 ? firstIncomplete : 0));
   renderPersonalizedPgnPath();
 })(typeof window !== "undefined" ? window : globalThis);
