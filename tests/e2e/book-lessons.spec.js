@@ -246,7 +246,7 @@ test("eight learning paths explain their progression and open matching lessons",
   await page.setViewportSize({ width: 390, height: 844 });
   const cardBox = await page.locator(".method-path-grid").boundingBox();
   expect(cardBox.x + cardBox.width).toBeLessThanOrEqual(390);
-  await expect(cards).toHaveCount(8);
+  await expect(cards).toHaveCount(9);
 });
 
 
