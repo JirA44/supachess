@@ -308,6 +308,12 @@ test("Stockfish board preview returns to a playable lesson and keeps next-step n
   await page.locator('.sq[data-square="f3"]').click();
   await expect(page.locator("#lesson-move-list")).toContainText("Toi : Nf3");
   await expect(page.locator("#lesson-move-list")).toContainText("Ligne du livre : Nc6");
+
+  const { LESSONS } = require("../../js/book-lessons.js");
+  const current = LESSONS.findIndex((lesson) => lesson.id === "develop-before-attack");
+  const next = LESSONS[(current + 1) % LESSONS.length];
+  await page.locator("#lesson-next").click();
+  await expectNumberedLessonTitle(page, next.title);
 });
 
 test("PGN-derived lesson shows its source and accepts the move on the board", async ({ page }) => {
