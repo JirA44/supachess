@@ -4,6 +4,18 @@ const path = require("node:path");
 const test = require("node:test");
 const vm = require("node:vm");
 
+test("pawn glyph uses text presentation and white CSS fill for iOS Safari", () => {
+  const context = vm.createContext({});
+  const source = fs.readFileSync(path.join(__dirname, "../js/board.js"), "utf8");
+  vm.runInContext(source + "\nglobalThis.UNICODE_PIECES = UNICODE_PIECES;", context);
+  const pawnTextGlyph = "♟\uFE0E";
+  assert.equal(context.UNICODE_PIECES.w.p, pawnTextGlyph);
+  assert.equal(context.UNICODE_PIECES.b.p, pawnTextGlyph);
+  const css = fs.readFileSync(path.join(__dirname, "../css/style.css"), "utf8");
+  assert.match(css, /\.sq \.piece\.w\s*\{[^}]*color:\s*#fff/);
+  assert.match(css, /\.sq \.piece\.w\s*\{[^}]*-webkit-text-fill-color:\s*#fff/);
+});
+
 function makeElement(tagName) {
   const element = {
     tagName,
