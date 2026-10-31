@@ -227,6 +227,89 @@ function profileNextLevelXP(xp,level){
   var thresholds=[0,100,250,500,800,1200,1800,2500,3500,5000];
   return level>0&&level<thresholds.length-1?thresholds[level]:null;
 }
+function readDiagnosticProfile(){
+  function read(key,fallback){try{return JSON.parse(localStorage.getItem(key)||'');}catch(_e){return fallback;}}
+  var diagnostic=read('supachess-level-diagnostic',null);
+  var games=read('supachess_games',[]);
+  if(!diagnostic||!Array.isArray(games))return {diagnostic:diagnostic,games:[],ratedMoves:[],gameCount:0};
+  var start=Date.parse(diagnostic.startedAt||'');
+  var selected=games.filter(function(game){
+    var started=Number.parseInt(String(game&&game.id||''),10);
+    return game&&Number.isFinite(start)&&Number.isFinite(started)&&started>=start&&
+      /stockfish/i.test(String(game.engineName||''))&&
+      ['1-0','0-1','1/2-1/2'].includes(game.result)&&
+      !game.abandoned&&!game.stopped&&game.termination!=='abandoned'&&game.termination!=='unterminated'&&
+      Number(game.stats&&game.stats.moves)>0&&Array.isArray(game.moveGrades);
+  }).sort(function(a,b){return Number.parseInt(String(a.id),10)-Number.parseInt(String(b.id),10);});
+  var diagnosticGames=selected.slice(0,Math.max(10,Number(diagnostic.analyzedGamesAtCompletion)||10));
+  var ratedMoves=[];
+  diagnosticGames.forEach(function(game){
+    (game.moveGrades||[]).forEach(function(move){
+      if(move&&move.color===game.userColor&&move.category&&move.category!=='unrated'){
+        var category=move.category==='error'?'mistake':move.category;
+        if(['brilliant','best','very-good','good','ok','inaccuracy','mistake','blunder'].includes(category)){
+          ratedMoves.push({category:category,gameId:String(game.id)});
+        }
+      }
+    });
+  });
+  return {diagnostic:diagnostic,games:diagnosticGames,ratedMoves:ratedMoves,gameCount:diagnosticGames.length};
+}
+function renderDiagnosticProfile(){
+  var report=readDiagnosticProfile();
+  var diagnostic=report.diagnostic;
+  if(!diagnostic)return '';
+  var labels={'inaccuracy':'Imprécisions','mistake':'Erreurs','blunder':'Gaffes'};
+  var categories=['inaccuracy','mistake','blunder'];
+  var rated=report.ratedMoves;
+  var counts={inaccuracy:0,mistake:0,blunder:0,solid:0};
+  rated.forEach(function(move){
+    if(categories.indexOf(move.category)>=0)counts[move.category]++;
+    else counts.solid++;
+  });
+  var eligible=diagnostic.completed===true;
+  var html='<section class="profile-diagnostic-report" aria-labelledby="profile-diagnostic-report-title" style="margin:18px 0;padding:16px;border:1px solid #4facfe;border-radius:14px;background:#202b3d;color:#f4f7fb">'+
+    '<h4 id="profile-diagnostic-report-title" style="margin-top:0">Bilan de ton diagnostic</h4>';
+  if(diagnostic.active){
+    var completed=report.gameCount;
+    return html+'<p>Diagnostic en cours : '+completed+'/10 parties terminées contre Stockfish. Le bilan apparaîtra ici après le seuil.</p></section>';
+  }
+  if(!eligible){
+    return html+'<p>Diagnostic non terminé : '+Number(diagnostic.gamesCompletedBeforeEnd||diagnostic.analyzedGamesAtEnd||0)+'/10 parties admissibles. Termine un nouveau diagnostic pour établir ton profil.</p></section>';
+  }
+  html+='<p>Échantillon : '+report.gameCount+' partie(s) terminée(s), '+rated.length+' demi-coup(s) de ton camp évalué(s) par Stockfish. Les résultats décrivent cet échantillon et ne constituent pas un Elo FIDE.</p>';
+  if(!rated.length){
+    return html+'<p>Les parties sont comptées, mais aucune note de demi-coup exploitable n’a été sauvegardée pour ton camp. Le radar ne peut pas être calculé à partir de ces données.</p></section>';
+  }
+  var rate=function(predicate){return rated.length?Math.round(100*rated.filter(predicate).length/rated.length):0;};
+  var metrics=[
+    {label:'Coups solides',value:rate(function(move){return ['brilliant','best','very-good','good','ok'].includes(move.category);})},
+    {label:'Imprécisions évitées',value:rate(function(move){return move.category!=='inaccuracy';})},
+    {label:'Erreurs évitées',value:rate(function(move){return move.category!=='mistake';})},
+    {label:'Gaffes évitées',value:rate(function(move){return move.category!=='blunder';})}
+  ];
+  var gameRates=report.games.map(function(game){
+    var moves=(game.moveGrades||[]).filter(function(move){return move&&move.color===game.userColor&&move.category&&move.category!=='unrated';});
+    return moves.length?100*moves.filter(function(move){return !['inaccuracy','error','mistake','blunder'].includes(move.category);}).length/moves.length:null;
+  }).filter(function(value){return Number.isFinite(value);});
+  var average=gameRates.length?gameRates.reduce(function(sum,value){return sum+value;},0)/gameRates.length:0;
+  var variance=gameRates.length?gameRates.reduce(function(sum,value){return sum+Math.pow(value-average,2);},0)/gameRates.length:0;
+  metrics.push({label:'Régularité',value:Math.max(0,Math.round(100-Math.sqrt(variance)*2))});
+  var center={x:150,y:132},radius=74;
+  function point(index,scale){var angle=(-Math.PI/2)+(Math.PI*2*index/metrics.length);return {x:center.x+Math.cos(angle)*radius*scale,y:center.y+Math.sin(angle)*radius*scale};}
+  var rings=[.25,.5,.75,1].map(function(scale){return metrics.map(function(_metric,index){var p=point(index,scale);return p.x.toFixed(1)+','+p.y.toFixed(1);}).join(' ');}).map(function(points){return '<polygon points="'+points+'" fill="none" stroke="#53647b" stroke-width="1"/>';}).join('');
+  var axes=metrics.map(function(metric,index){var p=point(index,1);return '<line x1="'+center.x+'" y1="'+center.y+'" x2="'+p.x.toFixed(1)+'" y2="'+p.y.toFixed(1)+'" stroke="#53647b"/>';}).join('');
+  var polygon=metrics.map(function(metric,index){var p=point(index,metric.value/100);return p.x.toFixed(1)+','+p.y.toFixed(1);}).join(' ');
+  var labelsSvg=metrics.map(function(metric,index){var p=point(index,1.22);var anchor=p.x<center.x-8?'end':p.x>center.x+8?'start':'middle';var y=p.y+(p.y<center.y?0:12);return '<text x="'+p.x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+anchor+'" fill="#f4f7fb" font-size="10">'+metric.label+' '+metric.value+'%</text>';}).join('');
+  html+='<h5>Radar du jeu mesuré</h5><svg viewBox="0 0 300 264" role="img" aria-label="Radar du diagnostic : '+metrics.map(function(metric){return metric.label+' '+metric.value+' pour cent';}).join(', ')+'" style="display:block;width:min(100%,420px);height:auto;margin:0 auto">'+rings+axes+'<polygon points="'+polygon+'" fill="rgba(91,190,255,.28)" stroke="#68c5ff" stroke-width="2"/>'+labelsSvg+'</svg>'+
+    '<p>« Coups solides » regroupe les coups brillants, meilleurs, très bons, bons et OK. Les trois axes suivants indiquent la part des coups notés qui ne sont pas classés dans cette catégorie d’erreur. « Régularité » mesure la stabilité du taux de coups sans erreur classée d’une partie à l’autre; ces indicateurs sont descriptifs, pas des compétences tactiques déduites.</p>';
+  var ranked=categories.map(function(key){return {key:key,count:counts[key],rate:Math.round(100*counts[key]/rated.length)};}).filter(function(item){return item.count>0;}).sort(function(a,b){return b.rate-a.rate||categories.indexOf(a.key)-categories.indexOf(b.key);});
+  html+='<h5>Priorités de travail observées</h5>';
+  if(ranked.length){
+    html+='<ol>'+ranked.map(function(item){return '<li><strong>'+labels[item.key]+'</strong> : '+item.count+' coup(s), '+item.rate+'% des demi-coups notés dans cet échantillon.</li>';}).join('')+'</ol><p>Commence par la première catégorie, puis revois les positions concernées dans l’analyse de tes parties.</p>';
+  }else html+='<p>Aucune imprécision, erreur ou gaffe classée dans les notes disponibles. Cela ne prouve pas l’absence de lacunes tactiques ou stratégiques.</p>';
+  return html+'</section>';
+}
 function renderLocalLearningPanel(data){
   var local=readLocalLearningProgress(data);
   var labels={brilliant:profileText('profile_category_brilliant','Brillant'),best:profileText('profile_category_best','Meilleurs coups'),'very-good':profileText('profile_category_very_good','Très bons coups'),good:profileText('profile_category_good','Bons coups'),ok:profileText('profile_category_ok','Coups corrects'),inaccuracy:profileText('profile_category_inaccuracy','Imprécisions'),mistake:profileText('profile_category_mistake','Erreurs'),blunder:profileText('profile_category_blunder','Gaffes'),unrated:profileText('profile_category_unrated','Non évalués')};
@@ -272,6 +355,7 @@ function renderLocalLearningPanel(data){
     '<small>'+escapeProfileText(profileText('profile_xp_to_next','Progression vers le niveau suivant'))+': '+Math.round(xpPercent)+'%'+(nextXP!==null?' · '+profileText('profile_next_level_at','prochain niveau à')+' '+Number(nextXP).toLocaleString('fr-FR')+' XP · '+profileText('profile_xp_remaining','XP restantes pour atteindre le niveau suivant')+' : '+xpRemaining+' XP':'')+'</small></div>'+
     '<div class="profile-learning-stats"><div><strong>'+local.completed.length+' / '+local.attempted.length+'</strong><span>'+profileText('profile_lessons_mastered_attempted','leçons maîtrisées / commencées')+'</span></div><div><strong>'+local.moveExercises+'</strong><span>'+profileText('profile_correction_moves','demi-coups à revoir')+'</span></div><div><strong>'+local.puzzlesSolved+'</strong><span>'+profileText('profile_puzzles_solved','problèmes résolus')+'</span></div><div><strong>'+local.practiceSessions+'</strong><span>'+profileText('profile_practice_sessions','séances d’entraînement')+'</span></div></div>'+
     renderPlayerAccuracyPanel(local.accuracySummary)+
+    renderDiagnosticProfile()+
     '<h4>'+profileText('profile_mastery_title','Maîtrise et progression')+'</h4><ul class="profile-mastery-list">'+training.map(function(item){var label=escapeProfileText(item.label);var value='<strong>'+item.value+'</strong>';return '<li>'+(item.href?'<a class="profile-mastery-link" href="'+item.href+'" aria-label="'+label+' : '+item.value+'">'+label+value+'</a>':'<div class="profile-mastery-entry">'+label+value+'</div>')+'</li>';}).join('')+'</ul>'+
     '<div class="profile-learning-actions"><div class="profile-resume-card"><a class="profile-resume-link" href="'+weaknessesUrl+'"><span>🎯 Travailler mes plus grandes lacunes<small style="display:block;font-weight:500;opacity:.82;margin-top:3px">'+escapeProfileText(weaknessFocusText)+'</small></span><span aria-hidden="true">›</span></a></div><a class="profile-diagnostic-button" role="button" href="index.html?start-diagnostic=1#level-diagnostic-banner">🧭 Passer le diagnostic de niveau</a><small class="profile-diagnostic-help">Relance un bilan de 10 parties analysées par Stockfish.</small><div class="profile-resume-card"><a class="profile-resume-link" href="'+exercisesUrl+'"><span>'+profileText('profile_resume_exercises','Reprendre mes exercices')+'</span><span aria-hidden="true">›</span></a></div><div class="profile-resume-card"><a class="profile-resume-link" href="https://jira44.github.io/supachess/book-lessons.html?next=1"><span>'+profileText('profile_resume_lessons','Reprendre mes leçons')+'</span><span aria-hidden="true">›</span></a></div><div class="profile-resume-card"><a class="profile-resume-link" href="https://jira44.github.io/supachess-web/TRAINING_OPENINGS.html"><span>'+profileText('profile_resume_mastery','Reprendre l’entraînement de maîtrise')+'</span><span aria-hidden="true">›</span></a></div></div>';
   if(weaknessRanks.length){
