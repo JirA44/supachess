@@ -2,9 +2,9 @@
 "use strict";
 
 const UNICODE_PIECES = {
-  // Filled glyph silhouettes let CSS paint the white pieces white on every font.
-  w: { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" },
-  b: { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" },
+  // VS15 forces the pawn glyph into text presentation so iOS Safari honors the white-piece CSS.
+  w: { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟\uFE0E" },
+  b: { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟\uFE0E" },
 };
 
 class BoardUI {
