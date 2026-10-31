@@ -798,8 +798,6 @@ function reviewShowCorrectionExercise(index){
   boardUI.legalTargets=[];
   boardUI.legalTargetHints={};
   boardUI.dots=[];
-  boardUI.showDots=true;
-  boardUI.showMoveDots=true;
   boardUI.lastMove=null;
   hideCoach();
   moveFeedback.clear();
