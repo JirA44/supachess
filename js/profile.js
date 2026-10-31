@@ -244,11 +244,31 @@ function readDiagnosticProfile(){
   var diagnosticGames=selected.slice(0,Math.max(10,Number(diagnostic.analyzedGamesAtCompletion)||10));
   var ratedMoves=[];
   diagnosticGames.forEach(function(game){
+    var phaseByPly={};
+    try{
+      if(typeof Chess==='function'&&game.pgn){
+        var board=new Chess();
+        var loadPgn=board.load_pgn||board.loadPgn;
+        if(typeof loadPgn==='function'){
+          loadPgn.call(board,game.pgn);
+          var history=board.history();
+          for(var ply=history.length;ply>0;ply--){
+            board.undo();
+            var fen=board.fen();
+            var moveNumber=Math.ceil(ply/2);
+            var phase=globalThis.ReviewInsights&&typeof globalThis.ReviewInsights.phaseOf==='function'
+              ? globalThis.ReviewInsights.phaseOf(fen,moveNumber)
+              : moveNumber<=10?'opening':(!/[Qq]/.test((fen.split(' ')[0]||''))&&((fen.match(/[QRBNqrbn]/g)||[]).length<=6)?'endgame':'middlegame');
+            phaseByPly[ply]=phase;
+          }
+        }
+      }
+    }catch(_e){}
     (game.moveGrades||[]).forEach(function(move){
       if(move&&move.color===game.userColor&&move.category&&move.category!=='unrated'){
         var category=move.category==='error'?'mistake':move.category;
         if(['brilliant','best','very-good','good','ok','inaccuracy','mistake','blunder'].includes(category)){
-          ratedMoves.push({category:category,gameId:String(game.id)});
+          ratedMoves.push({category:category,gameId:String(game.id),phase:phaseByPly[Number(move.ply)]||null});
         }
       }
     });
@@ -263,9 +283,14 @@ function renderDiagnosticProfile(){
   var categories=['inaccuracy','mistake','blunder'];
   var rated=report.ratedMoves;
   var counts={inaccuracy:0,mistake:0,blunder:0,solid:0};
+  var phaseCounts={opening:{moves:0,issues:0},middlegame:{moves:0,issues:0},endgame:{moves:0,issues:0}};
   rated.forEach(function(move){
     if(categories.indexOf(move.category)>=0)counts[move.category]++;
     else counts.solid++;
+    if(move.phase&&phaseCounts[move.phase]){
+      phaseCounts[move.phase].moves++;
+      if(categories.includes(move.category))phaseCounts[move.phase].issues++;
+    }
   });
   var eligible=diagnostic.completed===true;
   var html='<section class="profile-diagnostic-report" aria-labelledby="profile-diagnostic-report-title" style="margin:18px 0;padding:16px;border:1px solid #4facfe;border-radius:14px;background:#202b3d;color:#f4f7fb">'+
@@ -303,6 +328,15 @@ function renderDiagnosticProfile(){
   var labelsSvg=metrics.map(function(metric,index){var p=point(index,1.22);var anchor=p.x<center.x-8?'end':p.x>center.x+8?'start':'middle';var y=p.y+(p.y<center.y?0:12);return '<text x="'+p.x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+anchor+'" fill="#f4f7fb" font-size="10">'+metric.label+' '+metric.value+'%</text>';}).join('');
   html+='<h5>Radar du jeu mesuré</h5><svg viewBox="0 0 300 264" role="img" aria-label="Radar du diagnostic : '+metrics.map(function(metric){return metric.label+' '+metric.value+' pour cent';}).join(', ')+'" style="display:block;width:min(100%,420px);height:auto;margin:0 auto">'+rings+axes+'<polygon points="'+polygon+'" fill="rgba(91,190,255,.28)" stroke="#68c5ff" stroke-width="2"/>'+labelsSvg+'</svg>'+
     '<p>« Coups solides » regroupe les coups brillants, meilleurs, très bons, bons et OK. Les trois axes suivants indiquent la part des coups notés qui ne sont pas classés dans cette catégorie d’erreur. « Régularité » mesure la stabilité du taux de coups sans erreur classée d’une partie à l’autre; ces indicateurs sont descriptifs, pas des compétences tactiques déduites.</p>';
+  var phaseLabels={opening:'ouverture',middlegame:'milieu de jeu',endgame:'finale'};
+  var phaseRows=Object.keys(phaseCounts).map(function(key){var value=phaseCounts[key];return {key:key,moves:value.moves,issues:value.issues,rate:value.moves?value.issues/value.moves:0};}).filter(function(item){return item.moves>=3;}).sort(function(a,b){return b.rate-a.rate;});
+  if(phaseRows.length){
+    var weakestPhase=phaseRows[0];
+    var strongestPhase=phaseRows[phaseRows.length-1];
+    html+='<h5>Phases de jeu observées</h5><p>Phase la plus fragile de cet échantillon : <strong>'+phaseLabels[weakestPhase.key]+'</strong>, '+weakestPhase.issues+'/'+weakestPhase.moves+' demi-coup(s) classé(s) en imprécision, erreur ou gaffe. Phase la plus régulière : <strong>'+phaseLabels[strongestPhase.key]+'</strong>, '+(strongestPhase.moves-strongestPhase.issues)+'/'+strongestPhase.moves+' coups sans erreur classée.</p>';
+  }else{
+    html+='<p>Phases de jeu : pas assez de demi-coups classés par phase (minimum 3 par phase) pour désigner une force ou une lacune fiable.</p>';
+  }
   var ranked=categories.map(function(key){return {key:key,count:counts[key],rate:Math.round(100*counts[key]/rated.length)};}).filter(function(item){return item.count>0;}).sort(function(a,b){return b.rate-a.rate||categories.indexOf(a.key)-categories.indexOf(b.key);});
   html+='<h5>Priorités de travail observées</h5>';
   if(ranked.length){
