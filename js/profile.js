@@ -337,6 +337,52 @@ function renderDiagnosticProfile(){
     {key:'mistake',label:'Erreurs',count:counts.mistake,color:'#f28d58'},
     {key:'blunder',label:'Gaffes',count:counts.blunder,color:'#f06478'}
   ].map(function(item){item.rate=100*item.count/rated.length;return item;});
+  var moveTypeDefinitions=[
+    {key:'brilliant',label:'Coups brillants',color:'#c16cff'},
+    {key:'best',label:'Meilleurs coups',color:'#55b9ff'},
+    {key:'very-good',label:'Très bons coups',color:'#22b66b'},
+    {key:'good',label:'Bons coups',color:'#8bdc8b'},
+    {key:'ok',label:'Coups OK',color:'#f2ca58'},
+    {key:'inaccuracy',label:'Imprécisions',color:'#f2a45a'},
+    {key:'mistake',label:'Erreurs',color:'#f07864'},
+    {key:'blunder',label:'Gaffes',color:'#ef596b'}
+  ];
+  var perGameTypeCounts=report.games.map(function(game){
+    var countsByType={brilliant:0,best:0,'very-good':0,good:0,ok:0,inaccuracy:0,mistake:0,blunder:0};
+    var gameMoves=(game.moveGrades||[]).filter(function(move){
+      var key=move&&move.category==='error'?'mistake':move&&move.category;
+      return move&&move.color===game.userColor&&Object.prototype.hasOwnProperty.call(countsByType,key);
+    });
+    gameMoves.forEach(function(move){
+      var key=move.category==='error'?'mistake':move.category;
+      countsByType[key]++;
+    });
+    return gameMoves.length?{total:gameMoves.length,counts:countsByType}:null;
+  }).filter(function(game){return !!game;});
+  var typeAverageData=moveTypeDefinitions.map(function(type){
+    var average=perGameTypeCounts.length
+      ?perGameTypeCounts.reduce(function(sum,game){return sum+100*game.counts[type.key]/game.total;},0)/perGameTypeCounts.length
+      :0;
+    return {key:type.key,label:type.label,color:type.color,average:average};
+  });
+  var typeLegend='<ul aria-label="Légende des types de coup pour la moyenne par partie" style="display:flex;flex-wrap:wrap;gap:6px 14px;list-style:none;padding:0;margin:6px 0">'+typeAverageData.map(function(type){return '<li style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#f4f7fb"><span aria-hidden="true" style="display:inline-block;width:11px;height:11px;border-radius:2px;background:'+type.color+'"></span>'+type.label+'</li>';}).join('')+'</ul>';
+  var typeChartStart=160,typeChartWidth=420,typeRowTop=48,typeRowHeight=27;
+  var typeGrid=[0,25,50,75,100].map(function(value){
+    var x=typeChartStart+typeChartWidth*value/100;
+    return '<line x1="'+x+'" y1="38" x2="'+x+'" y2="270" stroke="#53647b"/><text x="'+x+'" y="288" text-anchor="middle" fill="#dce6f2" font-size="10">'+value+'%</text>';
+  }).join('');
+  var typeBars=typeAverageData.map(function(type,index){
+    var y=typeRowTop+index*typeRowHeight;
+    var width=typeChartWidth*type.average/100;
+    var value=type.average.toFixed(1).replace('.',',');
+    return '<g><title>'+type.label+' : '+value+'% en moyenne sur '+perGameTypeCounts.length+' parties</title><text x="150" y="'+(y+12)+'" text-anchor="end" fill="#f4f7fb" font-size="11">'+type.label+'</text><rect x="'+typeChartStart+'" y="'+y+'" width="'+width.toFixed(1)+'" height="16" rx="3" fill="'+type.color+'"/><text x="'+Math.min(typeChartStart+width+7,615).toFixed(1)+'" y="'+(y+12)+'" fill="#fff" font-size="11">'+value+'%</text></g>';
+  }).join('');
+  var typeAverageRows=typeAverageData.map(function(type){
+    return '<tr><th scope="row" style="text-align:left;padding:5px 8px;border-bottom:1px solid #53647b;color:#f4f7fb">'+type.label+'</th><td style="text-align:right;padding:5px 8px;border-bottom:1px solid #53647b;color:#f4f7fb">'+type.average.toFixed(1).replace('.',',')+'%</td></tr>';
+  }).join('');
+  html+='<h5>Moyenne par partie selon le type de coup</h5><p>Dans chaque partie, chaque type est calculé en pourcentage des demi-coups évalués de ton camp. Le graphique affiche ensuite la moyenne des parties, avec le même poids pour chaque partie ('+perGameTypeCounts.length+' partie(s) avec coups évalués).</p>'+typeLegend+
+    '<svg viewBox="0 0 640 315" role="img" aria-label="Moyenne par partie en pourcentage des demi-coups évalués, par type de coup, sur '+perGameTypeCounts.length+' parties" style="display:block;width:100%;max-width:660px;height:auto;margin:8px auto">'+typeGrid+typeBars+'<line x1="'+typeChartStart+'" y1="270" x2="'+(typeChartStart+typeChartWidth)+'" y2="270" stroke="#dce6f2"/><text x="370" y="310" text-anchor="middle" fill="#f4f7fb" font-size="11">Moyenne des demi-coups évalués par partie (%)</text></svg>'+
+    '<table aria-label="Moyenne par partie en pourcentage par type de coup" style="width:100%;border-collapse:collapse;margin:8px 0 16px"><thead><tr><th scope="col" style="text-align:left;padding:5px 8px;border-bottom:2px solid #789;color:#dce6f2">Type de coup</th><th scope="col" style="text-align:right;padding:5px 8px;border-bottom:2px solid #789;color:#dce6f2">Moyenne par partie</th></tr></thead><tbody>'+typeAverageRows+'</tbody></table>';
   var categoryLegend='<ul aria-label="Légende des catégories" style="display:flex;flex-wrap:wrap;gap:6px 14px;list-style:none;padding:0;margin:6px 0 0">'+categoryData.map(function(item){return '<li style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#f4f7fb"><span aria-hidden="true" style="display:inline-block;width:11px;height:11px;border-radius:2px;background:'+item.color+'"></span>'+item.label+' · '+item.count+' ('+Math.round(item.rate)+'%)</li>';}).join('')+'</ul>';
   var chartGrid=[0,25,50,75,100].map(function(value){var y=170-value*1.2;return '<line x1="60" y1="'+y+'" x2="510" y2="'+y+'" stroke="#53647b" stroke-width="1"/><text x="53" y="'+(y+4)+'" text-anchor="end" fill="#dce6f2" font-size="10">'+value+'%</text>';}).join('');
   var chartAxes='<line x1="60" y1="50" x2="60" y2="170" stroke="#dce6f2"/><line x1="60" y1="170" x2="510" y2="170" stroke="#dce6f2"/><text x="14" y="112" transform="rotate(-90 14 112)" text-anchor="middle" fill="#f4f7fb" font-size="11">Part des demi-coups notés (%)</text><text x="285" y="236" text-anchor="middle" fill="#f4f7fb" font-size="11">Catégorie de coup</text>';
