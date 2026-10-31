@@ -5,11 +5,11 @@ const {levels,lessons} = require('../js/curriculum.js');
 
 const engineSan = san => san.replace(/([CFDRT])(?=x?[a-h])/g, letter => ({C:'N',F:'B',D:'Q',R:'K',T:'R'})[letter]);
 
-test('curriculum contains 13 original lessons across four levels', () => {
+test('curriculum contains 21 original lessons across four levels', () => {
   assert.equal(levels.length,4);
-  assert.equal(lessons.length,13);
+  assert.equal(lessons.length,21);
   assert.equal(new Set(lessons.map(lesson=>lesson.id)).size,lessons.length);
-  for(const level of levels) assert.equal(lessons.filter(lesson=>lesson.level===level).length,level==="Avancé"?4:3,level);
+  for(const level of levels) assert.equal(lessons.filter(lesson=>lesson.level===level).length,({Débutant:5,Intermédiaire:5,Avancé:6,Expert:5})[level],level);
 });
 
 test('every exercise position is a legal FEN and every answer is a legal move', () => {
