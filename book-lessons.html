@@ -168,13 +168,15 @@
         </div>
         <div class="lesson-engine-actions">
           <button class="btn" id="lesson-engine-analyze" type="button">Comparer tous les coups avec Stockfish</button>
-          <button class="btn" id="lesson-engine-return" type="button" hidden>Revenir à la position de l’exercice</button>
         </div>
         <section class="lesson-engine-analysis" id="lesson-engine-analysis" aria-labelledby="lesson-engine-title" hidden>
           <h3 id="lesson-engine-title">Comparer les coups légaux</h3>
           <p class="lesson-engine-status" id="lesson-engine-status" role="status" aria-live="polite"></p>
           <p class="lesson-engine-note">Stockfish classe les coups et donne une suite calculée. Sa force moteur n’est pas un Elo FIDE humain. Il n’explique pas lui-même les principes : les indices ci-dessous sont des questions à vérifier sur l’échiquier, pas la pensée interne du moteur.</p>
           <ol class="lesson-engine-lines" id="lesson-engine-lines"></ol>
+          <div class="lesson-engine-actions lesson-engine-continuation">
+            <button class="btn" id="lesson-engine-return" type="button" hidden>Continuer l’exercice</button>
+          </div>
         </section>
         <p class="lesson-feedback" id="lesson-feedback" role="status" aria-live="polite"></p>
         <div class="lesson-explanation" id="lesson-explanation" hidden></div>
