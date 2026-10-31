@@ -133,3 +133,16 @@ test("mastery summary renders five spaced, labelled rows with clickable lesson a
   assert.match(html, /class="profile-resume-link" href="https:\/\/jira44\.github\.io\/supachess\/book-lessons\.html\?next=1"/);
   assert.match(html, /class="profile-resume-link" href="https:\/\/jira44\.github\.io\/supachess-web\/TRAINING_OPENINGS\.html"/);
 });
+
+test("profile shows exercise charts from saved correction data without a completed diagnostic", () => {
+  values.set("supachess_reviewed_pgns", JSON.stringify([{
+    correctionExercises: Array.from({ length: 42 }, () => ({ classification: "inaccuracy" })),
+  }]));
+  values.delete("supachess-level-diagnostic");
+  const html = window.SupaProfiles.renderLocalLearningPanel({});
+  assert.match(html, /Graphiques de mes exercices/);
+  assert.match(html, /42 exercices de correction enregistrés/);
+  assert.equal((html.match(/class="profile-exercise-chart"/g) || []).length, 3);
+  assert.match(html, /Radar · part des exercices/);
+  assert.match(html, /Vue 3D · mêmes nombres/);
+});
