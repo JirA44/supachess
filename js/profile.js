@@ -393,6 +393,47 @@ function renderDiagnosticProfile(){
   }else html+='<p>Aucune imprécision, erreur ou gaffe classée dans les notes disponibles. Cela ne prouve pas l’absence de lacunes tactiques ou stratégiques.</p>';
   return html+'</section>';
 }
+function renderExerciseCharts(local){
+  var categories=[
+    {key:'inaccuracy',label:'Imprécisions',color:'#f2ca58'},
+    {key:'mistake',label:'Erreurs',color:'#f28d58'},
+    {key:'blunder',label:'Gaffes',color:'#f06478'}
+  ].map(function(item){item.count=Number(local.categoryCounts[item.key])||0;return item;});
+  var total=categories.reduce(function(sum,item){return sum+item.count;},0);
+  if(!total)return '';
+  var max=Math.max.apply(null,categories.map(function(item){return item.count;}));
+  var ticks=[0,Math.ceil(max/2),max].filter(function(value,index,array){return array.indexOf(value)===index;});
+  var barGrid=ticks.map(function(value){
+    var x=150+330*value/(max||1);
+    return '<line x1="'+x.toFixed(1)+'" y1="36" x2="'+x.toFixed(1)+'" y2="174" stroke="#53647b"/><text x="'+x.toFixed(1)+'" y="194" text-anchor="middle" fill="#dce6f2" font-size="12">'+value+'</text>';
+  }).join('');
+  var bars=categories.map(function(item,index){
+    var y=50+index*45;var width=330*item.count/(max||1);
+    return '<text x="140" y="'+(y+16)+'" text-anchor="end" fill="#f4f7fb" font-size="13">'+item.label+'</text><rect x="150" y="'+y+'" width="'+width.toFixed(1)+'" height="22" rx="4" fill="'+item.color+'"/><text x="'+(160+width).toFixed(1)+'" y="'+(y+16)+'" fill="#fff" font-size="12">'+item.count+'</text>';
+  }).join('');
+  var barChart='<svg class="profile-exercise-chart" viewBox="0 0 540 220" role="img" aria-label="Nombre d’exercices de correction enregistrés par catégorie; axe horizontal : nombre d’exercices; catégories : imprécisions, erreurs et gaffes" style="display:block;width:100%;height:auto">'+barGrid+bars+'<line x1="150" y1="36" x2="150" y2="174" stroke="#dce6f2"/><text x="315" y="216" text-anchor="middle" fill="#f4f7fb" font-size="13">Nombre d’exercices enregistrés</text></svg>';
+  var center={x:170,y:112},radius=64;
+  function point(index,scale){var angle=(-Math.PI/2)+(Math.PI*2*index/categories.length);return {x:center.x+Math.cos(angle)*radius*scale,y:center.y+Math.sin(angle)*radius*scale};}
+  var rings=[.25,.5,.75,1].map(function(scale){
+    return '<polygon points="'+categories.map(function(_item,index){var p=point(index,scale);return p.x.toFixed(1)+','+p.y.toFixed(1);}).join(' ')+'" fill="none" stroke="#53647b"/>';
+  }).join('');
+  var ringLabels=[25,50,75,100].map(function(value){var y=center.y-radius*value/100+3;return '<text x="'+(center.x+4)+'" y="'+y.toFixed(1)+'" fill="#dce6f2" font-size="9">'+value+'%</text>';}).join('');
+  var axes=categories.map(function(_item,index){var p=point(index,1);return '<line x1="'+center.x+'" y1="'+center.y+'" x2="'+p.x.toFixed(1)+'" y2="'+p.y.toFixed(1)+'" stroke="#53647b"/>';}).join('');
+  var shape=categories.map(function(item,index){var p=point(index,item.count/total);return p.x.toFixed(1)+','+p.y.toFixed(1);}).join(' ');
+  var radarLabels=categories.map(function(item,index){var p=point(index,1.2);return '<text x="'+p.x.toFixed(1)+'" y="'+(p.y+(p.y<center.y?0:12)).toFixed(1)+'" text-anchor="'+(p.x<center.x-8?'end':p.x>center.x+8?'start':'middle')+'" fill="#f4f7fb" font-size="10">'+item.label+' '+Math.round(100*item.count/total)+'%</text>';}).join('');
+  var radar='<svg class="profile-exercise-chart" viewBox="0 0 340 220" role="img" aria-label="Radar de la part de chaque catégorie dans les '+total+' exercices de correction enregistrés" style="display:block;width:100%;height:auto">'+rings+axes+ringLabels+'<polygon points="'+shape+'" fill="rgba(104,181,255,.25)" stroke="#68b5ff" stroke-width="2"/>'+radarLabels+'</svg>';
+  var depthBars=categories.map(function(item,index){
+    var x=62+index*142,base=170,height=100*item.count/(max||1),y=base-height,depth=12;
+    var top=x+','+y.toFixed(1)+' '+(x+54)+','+y.toFixed(1)+' '+(x+54+depth)+','+(y-depth*.55).toFixed(1)+' '+(x+depth)+','+(y-depth*.55).toFixed(1);
+    var side=(x+54)+','+y.toFixed(1)+' '+(x+54)+','+base+' '+(x+54+depth)+','+(base-depth*.55).toFixed(1)+' '+(x+54+depth)+','+(y-depth*.55).toFixed(1);
+    var front=x+','+y.toFixed(1)+' '+(x+54)+','+y.toFixed(1)+' '+(x+54)+','+base+' '+x+','+base;
+    return '<polygon points="'+side+'" fill="#26384d"/><polygon points="'+top+'" fill="#a8c7e4"/><polygon points="'+front+'" fill="'+item.color+'"/><text x="'+(x+27)+'" y="'+Math.max(18,y-7).toFixed(1)+'" text-anchor="middle" fill="#fff" font-size="12">'+item.count+'</text><text x="'+(x+32)+'" y="188" text-anchor="middle" fill="#f4f7fb" font-size="10">'+item.label+'</text>';
+  }).join('');
+  var depthGrid=ticks.map(function(value){var y=170-100*value/(max||1);return '<line x1="48" y1="'+y.toFixed(1)+'" x2="500" y2="'+y.toFixed(1)+'" stroke="#53647b"/><text x="42" y="'+(y+4).toFixed(1)+'" text-anchor="end" fill="#dce6f2" font-size="10">'+value+'</text>';}).join('');
+  var depth='<svg class="profile-exercise-chart" viewBox="0 0 520 220" role="img" aria-label="Vue 3D des nombres d’exercices par catégorie; axe vertical : nombre d’exercices; profondeur décorative" style="display:block;width:100%;height:auto">'+depthGrid+depthBars+'<line x1="48" y1="70" x2="48" y2="170" stroke="#dce6f2"/><line x1="48" y1="170" x2="500" y2="170" stroke="#dce6f2"/><text x="20" y="122" transform="rotate(-90 20 122)" text-anchor="middle" fill="#f4f7fb" font-size="10">Nombre d’exercices</text></svg>';
+  var card='border:1px solid #53647b;border-radius:12px;padding:12px;background:rgba(12,20,32,.55);min-width:0';
+  return '<section class="profile-exercise-charts" aria-labelledby="profile-exercise-charts-title" style="margin:18px 0;padding:16px;border:1px solid #53647b;border-radius:14px;background:#202b3d;color:#f4f7fb"><h4 id="profile-exercise-charts-title" style="margin-top:0">Graphiques de mes exercices</h4><p>'+total+' exercices de correction enregistrés. Les graphiques décrivent leur répartition par catégorie; ils ne mesurent pas un niveau de jeu.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;align-items:start"><article style="'+card+'"><h5>Répartition par catégorie</h5>'+barChart+'</article><article style="'+card+'"><h5>Radar · part des exercices</h5>'+radar+'<p>Chaque axe indique la part de cette catégorie dans les exercices enregistrés.</p></article><article style="'+card+'"><h5>Vue 3D · mêmes nombres</h5>'+depth+'<p>La hauteur représente le nombre d’exercices; la profondeur est décorative.</p></article></div></section>';
+}
 function renderLocalLearningPanel(data){
   var local=readLocalLearningProgress(data);
   var labels={brilliant:profileText('profile_category_brilliant','Brillant'),best:profileText('profile_category_best','Meilleurs coups'),'very-good':profileText('profile_category_very_good','Très bons coups'),good:profileText('profile_category_good','Bons coups'),ok:profileText('profile_category_ok','Coups corrects'),inaccuracy:profileText('profile_category_inaccuracy','Imprécisions'),mistake:profileText('profile_category_mistake','Erreurs'),blunder:profileText('profile_category_blunder','Gaffes'),unrated:profileText('profile_category_unrated','Non évalués')};
@@ -438,7 +479,7 @@ function renderLocalLearningPanel(data){
     '<small>'+escapeProfileText(profileText('profile_xp_to_next','Progression vers le niveau suivant'))+': '+Math.round(xpPercent)+'%'+(nextXP!==null?' · '+profileText('profile_next_level_at','prochain niveau à')+' '+Number(nextXP).toLocaleString('fr-FR')+' XP · '+profileText('profile_xp_remaining','XP restantes pour atteindre le niveau suivant')+' : '+xpRemaining+' XP':'')+'</small></div>'+
     '<div class="profile-learning-stats"><div><strong>'+local.completed.length+' / '+local.attempted.length+'</strong><span>'+profileText('profile_lessons_mastered_attempted','leçons maîtrisées / commencées')+'</span></div><div><strong>'+local.moveExercises+'</strong><span>'+profileText('profile_correction_moves','demi-coups à revoir')+'</span></div><div><strong>'+local.puzzlesSolved+'</strong><span>'+profileText('profile_puzzles_solved','problèmes résolus')+'</span></div><div><strong>'+local.practiceSessions+'</strong><span>'+profileText('profile_practice_sessions','séances d’entraînement')+'</span></div></div>'+
     renderPlayerAccuracyPanel(local.accuracySummary)+
-    renderDiagnosticProfile()+
+    renderExerciseCharts(local)+renderDiagnosticProfile()+
     '<h4>'+profileText('profile_mastery_title','Maîtrise et progression')+'</h4><ul class="profile-mastery-list">'+training.map(function(item){var label=escapeProfileText(item.label);var value='<strong>'+item.value+'</strong>';return '<li>'+(item.href?'<a class="profile-mastery-link" href="'+item.href+'" aria-label="'+label+' : '+item.value+'">'+label+value+'</a>':'<div class="profile-mastery-entry">'+label+value+'</div>')+'</li>';}).join('')+'</ul>'+
     '<div class="profile-learning-actions"><div class="profile-resume-card"><a class="profile-resume-link" href="'+weaknessesUrl+'"><span>🎯 Travailler mes plus grandes lacunes<small style="display:block;font-weight:500;opacity:.82;margin-top:3px">'+escapeProfileText(weaknessFocusText)+'</small></span><span aria-hidden="true">›</span></a></div><a class="profile-diagnostic-button" role="button" href="index.html?start-diagnostic=1#level-diagnostic-banner">🧭 Passer le diagnostic de niveau</a><small class="profile-diagnostic-help">Relance un bilan de 10 parties analysées par Stockfish.</small><div class="profile-resume-card"><a class="profile-resume-link" href="'+exercisesUrl+'"><span>'+profileText('profile_resume_exercises','Reprendre mes exercices')+'</span><span aria-hidden="true">›</span></a></div><div class="profile-resume-card"><a class="profile-resume-link" href="https://jira44.github.io/supachess/book-lessons.html?next=1"><span>'+profileText('profile_resume_lessons','Reprendre mes leçons')+'</span><span aria-hidden="true">›</span></a></div><div class="profile-resume-card"><a class="profile-resume-link" href="https://jira44.github.io/supachess-web/TRAINING_OPENINGS.html"><span>'+profileText('profile_resume_mastery','Reprendre l’entraînement de maîtrise')+'</span><span aria-hidden="true">›</span></a></div></div>';
   if(weaknessRanks.length){
@@ -462,7 +503,7 @@ function renderProfileModal(data){
     overlay=document.createElement('div');
     overlay.id='profile-modal';
     overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;overflow:auto;';
-    overlay.innerHTML='<div id="profile-box" style="background:#1a1f2e;border:1px solid #4facfe;border-radius:16px;padding:24px;width:min(680px,100%);max-height:90vh;overflow:auto;position:relative;"><button id="profile-close" type="button" style="position:absolute;top:8px;right:12px;background:none;border:none;color:#aaa;font-size:22px;cursor:pointer;" aria-label="'+profileText('profile_close','Fermer le profil')+'">×</button><div id="profile-content"></div></div>';
+    overlay.innerHTML='<div id="profile-box" style="background:#1a1f2e;border:1px solid #4facfe;border-radius:16px;padding:24px;width:min(1040px,100%);max-height:90vh;overflow:auto;position:relative;"><button id="profile-close" type="button" style="position:absolute;top:8px;right:12px;background:none;border:none;color:#aaa;font-size:22px;cursor:pointer;" aria-label="'+profileText('profile_close','Fermer le profil')+'">×</button><div id="profile-content"></div></div>';
     overlay.querySelector("#profile-close").addEventListener('click', function(){ overlay.remove(); });
     overlay.addEventListener('click', function(e){ if(e.target===overlay) overlay.remove(); });
     document.body.appendChild(overlay);
