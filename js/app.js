@@ -94,6 +94,24 @@ function countCompletedDiagnosticGames(diagnostic) {
     return counted.size;
   } catch (_) { return 0; }
 }
+function countEligibleStockfishGames() {
+  try {
+    const games = JSON.parse(localStorage.getItem("supachess_games") || "[]");
+    if (!Array.isArray(games)) return 0;
+    const counted = new Set();
+    for (const game of games) {
+      const rating = Number(game && game.stockfishRatingEstimate);
+      const eligible = game && game.id &&
+        /stockfish/i.test(String(game.engineName || "")) &&
+        game.stockfishRatingSource === "supachess-engine-setting-v1" &&
+        ["w", "b"].includes(game.userColor) &&
+        ["1-0", "0-1", "1/2-1/2"].includes(game.result) &&
+        Number.isFinite(rating) && rating >= 800 && rating <= 3500;
+      if (eligible) counted.add(String(game.id));
+    }
+    return counted.size;
+  } catch (_) { return 0; }
+}
 function refreshLevelDiagnosticProgress() {
   const diagnostic = readLevelDiagnostic();
   if (!diagnostic || !diagnostic.active) {
@@ -134,7 +152,9 @@ function syncLevelDiagnosticBanner() {
     const count = countCompletedDiagnosticGames(diagnostic);
     banner.hidden = false;
     const prefix = diagnostic.defaultActivation ? "Diagnostic de niveau activé par défaut : " : "Diagnostic actif : ";
-    banner.textContent = prefix + count + "/10 parties terminées contre Stockfish depuis son activation. Coaching, bulles candidates et points de coups sont désactivés pendant le diagnostic.";
+    const totalEligible = countEligibleStockfishGames();
+    const earlierOrUncounted = Math.max(0, totalEligible - count);
+    banner.textContent = prefix + count + "/10 parties terminées contre Stockfish depuis son activation. Repère global : " + totalEligible + " partie(s) admissible(s) dans l’historique; " + earlierOrUncounted + " ne sont pas retenues dans ce diagnostic. Coaching, bulles candidates et points de coups sont désactivés pendant le diagnostic.";
   } else if (diagnostic.completed) {
     setAbandonVisible(false);
     banner.hidden = false;
