@@ -3,7 +3,7 @@ const { test, expect } = require("@playwright/test");
 async function expectNumberedLessonTitle(page, title) {
   const heading = page.locator("#lesson-title");
   await expect(heading).toContainText(title);
-  expect((await heading.innerText()).match(/^\\d+\\.\\s/)).not.toBeNull();
+  expect(await heading.innerText()).toMatch(/^[0-9]+[.] /);
 }
 
 test("Rook cutoff lesson asks for the principle, then plays the line on the board", async ({ page }) => {
