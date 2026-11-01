@@ -1382,7 +1382,7 @@ document.getElementById("btn-replay-quit").addEventListener("click", reviewResto
 if (typeof document.addEventListener === "function") document.addEventListener("keydown", (event) => {
   const shortcutApi=window.SupaKeyboardShortcuts;
   const target=event.target;
-  const editableTarget=target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+  const editableTarget=target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)||target.closest("[data-shortcut-capture]"));
   if(!event.altKey&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&!editableTarget){
     const correctionIndex=shortcutApi
       ? shortcutApi.getBindings().corrections.findIndex((token)=>shortcutApi.matchesEvent(event,token))
