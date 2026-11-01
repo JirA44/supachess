@@ -221,7 +221,7 @@
       var record={name:playerName,gamesAnalyzed:totalGames,candidateGames:candidates.length,ratedMoves:totalRated,
         accuracy:accuracySum/totalRated,acpl:lossSum/totalRated,engine:currentEngine.engineName||"Stockfish",movetime:movetime,
         averageDepth:depthSum/totalRated,gradeCounts:gradeCounts,gradedMoves:totalRated,sourceFile:file?file.name:"PGN collé",completedAt:new Date().toISOString()};
-      var results=readResults();results[key]=record;
+      var results=readResults();var recordKey=key==="custom"?"custom:"+normalizeName(playerName):key;results[recordKey]=record;
       if(!saveResults(results))throw new Error("Le stockage local du navigateur est indisponible; exporte ou capture le résultat avant de quitter.");
       var protocolSelect=document.getElementById("champion-ranking-protocol");
       if(protocolSelect)protocolSelect.value=String(record.engine||"Stockfish")+"|"+String(record.movetime||0);
