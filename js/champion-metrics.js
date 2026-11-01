@@ -100,11 +100,24 @@
     var selected=protocolSelect.value;
     var rows=all.filter(function(row){return String(row.engine||"Stockfish")+"|"+String(row.movetime||0)===selected;});
     var metric=metricSelect.value;
-    var labels={accuracy:"Précision moyenne",acpl:"ACPL",gamesAnalyzed:"Parties analysées",ratedMoves:"Demi-coups évalués",averageDepth:"Profondeur moyenne"};
+    var labels={accuracy:"Précision moyenne",acpl:"ACPL",gamesAnalyzed:"Parties analysées",ratedMoves:"Demi-coups évalués",averageDepth:"Profondeur moyenne",
+      "grade:best":"Meilleur coup","grade:very-good":"Très bon coup","grade:good":"Bon coup","grade:ok":"Coup OK",
+      "grade:inaccuracy":"Imprécisions","grade:error":"Erreurs","grade:blunder":"Gaffes"};
+    var gradeKey=metric.indexOf("grade:")===0?metric.slice(6):"";
+    if(gradeKey)rows=rows.filter(function(row){return row.gradeCounts&&Number(row.gradedMoves)>0;});
     var values={accuracy:function(row){return Number(row.accuracy);},acpl:function(row){return Number(row.acpl);},gamesAnalyzed:function(row){return Number(row.gamesAnalyzed)||0;},ratedMoves:function(row){return Number(row.ratedMoves)||0;},averageDepth:function(row){return Number(row.averageDepth)||0;}};
-    rows.sort(function(a,b){var diff=values[metric](a)-values[metric](b);return metric==="acpl"?diff: -diff;});
+    if(gradeKey)values[metric]=function(row){return (Number(row.gradeCounts[gradeKey])||0)/Number(row.gradedMoves)*100;};
+    var lowerIsBetter=metric==="acpl"||metric==="grade:inaccuracy"||metric==="grade:error"||metric==="grade:blunder";
+    rows.sort(function(a,b){var diff=values[metric](a)-values[metric](b);return (lowerIsBetter?diff:-diff)||a.name.localeCompare(b.name,"fr");});
+    if(!rows.length){
+      body.innerHTML='<tr><td colspan="6">Pas encore de décompte par qualité; relance une analyse PGN sur cet appareil.</td></tr>';
+      status.textContent="Aucune analyse compatible avec cet indicateur. Les anciennes lignes sans catégories devront être recalculées.";
+      if(caption)caption.textContent=labels[metric]||"Classement local";
+      return;
+    }
     body.innerHTML=rows.map(function(row,index){
-      var score=metric==="accuracy"?Number(row.accuracy).toFixed(1).replace(".",",")+" %":
+      var score=gradeKey?values[metric](row).toFixed(1).replace(".",",")+" % ("+(Number(row.gradeCounts[gradeKey])||0)+")":
+        metric==="accuracy"?Number(row.accuracy).toFixed(1).replace(".",",")+" %":
         metric==="acpl"?Number(row.acpl).toFixed(1).replace(".",",")+" cp":
         metric==="averageDepth"?Number(row.averageDepth).toFixed(1)+" ply":String(values[metric](row));
       return "<tr><td>"+(index+1)+"</td><th scope=\"row\">"+escapeHtml(row.name)+"</th><td>"+score+"</td><td>"+(Number(row.gamesAnalyzed)||0)+" / "+(Number(row.candidateGames)||0)+"</td><td>"+(Number(row.ratedMoves)||0)+"</td><td>"+(Number(row.averageDepth)||0).toFixed(1)+" ply</td></tr>";
@@ -132,7 +145,7 @@
     var color=matchesPlayer(white,player)? "w":matchesPlayer(black,player)?"b":null;
     if(!color)return null;
     var initial=headers.FEN?new Chess(headers.FEN):new Chess();
-    var measured=0,lossSum=0,accuracySum=0,depthSum=0;
+    var measured=0,lossSum=0,accuracySum=0,depthSum=0,gradeCounts={};
     for(var i=0;i<game.moves.length;i++){
       var move=game.moves[i],beforeFen=initial.fen();
       if(move.color===color){
@@ -148,6 +161,10 @@
         var afterCp=cpScore(afterLine);
         if(beforeCp!==null&&afterCp!==null){
           var loss=moveLoss(beforeCp,afterCp);
+          var bestUci=beforeLine.pv&&beforeLine.pv[0]||"";
+          var playedUci=move.from+move.to+(move.promotion||"");
+          var grade=moveGrade(loss,false,bestUci===playedUci);
+          gradeCounts[grade.category]=(gradeCounts[grade.category]||0)+1;
           lossSum+=loss;
           accuracySum+=moveAccuracy(beforeCp,-afterCp);
           depthSum+=(Number(beforeLine.depth)||0)+(Number(afterLine.depth)||0);
@@ -159,7 +176,7 @@
       }
     }
     if(!measured)return null;
-    return {moves:measured,loss:lossSum,accuracy:accuracySum,depth:depthSum/(2*measured)};
+    return {moves:measured,loss:lossSum,accuracy:accuracySum,depth:depthSum/(2*measured),gradeCounts:gradeCounts};
   }
   async function runAnalysis(){
     var status=document.getElementById("champion-analysis-status");
@@ -190,20 +207,20 @@
     try{
       if(!currentEngine)currentEngine=new StockfishEngine("vendor/stockfish-19-lite-single.js");
       await currentEngine.ready;
-      var totalGames=0,totalRated=0,lossSum=0,accuracySum=0,depthSum=0;
+      var totalGames=0,totalRated=0,lossSum=0,accuracySum=0,depthSum=0,gradeCounts={};
       for(var i=0;i<selected.length;i++){
         if(cancelRequested)throw new Error("ANALYSIS_CANCELLED");
         var result=await analyzeGame(player,selected[i],movetime,function(){
           progressBar.value=Math.min(totalMoves,progressBar.value+1);
           status.textContent="Analyse Stockfish · partie "+(i+1)+"/"+selected.length+" · "+progressBar.value+"/"+totalMoves+" demi-coups comptés.";
         });
-        if(result){totalGames++;totalRated+=result.moves;lossSum+=result.loss;accuracySum+=result.accuracy;depthSum+=result.depth*result.moves;}
+        if(result){totalGames++;totalRated+=result.moves;lossSum+=result.loss;accuracySum+=result.accuracy;depthSum+=result.depth*result.moves;Object.keys(result.gradeCounts||{}).forEach(function(category){gradeCounts[category]=(gradeCounts[category]||0)+result.gradeCounts[category];});}
       }
       if(cancelRequested)throw new Error("ANALYSIS_CANCELLED");
       if(!totalRated)throw new Error("Aucune évaluation comparable obtenue. Les positions de mat et les évaluations manquantes sont exclues.");
       var record={name:playerName,gamesAnalyzed:totalGames,candidateGames:candidates.length,ratedMoves:totalRated,
         accuracy:accuracySum/totalRated,acpl:lossSum/totalRated,engine:currentEngine.engineName||"Stockfish",movetime:movetime,
-        averageDepth:depthSum/totalRated,sourceFile:file?file.name:"PGN collé",completedAt:new Date().toISOString()};
+        averageDepth:depthSum/totalRated,gradeCounts:gradeCounts,gradedMoves:totalRated,sourceFile:file?file.name:"PGN collé",completedAt:new Date().toISOString()};
       var results=readResults();results[key]=record;
       if(!saveResults(results))throw new Error("Le stockage local du navigateur est indisponible; exporte ou capture le résultat avant de quitter.");
       var protocolSelect=document.getElementById("champion-ranking-protocol");
