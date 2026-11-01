@@ -488,7 +488,10 @@ async function reviewRun(options = {}) {
     return { deltaCp: eligible ? cand.deltaCp : null, mateAwareLoss: row.mateAwareLoss, brilliant, category, evaluation };
   });
   rows.forEach((row, i) => { row.evaluation = reviewState.grades[i].evaluation; row.classification = reviewClassOf(row, reviewState.grades[i]); });
-  reviewState.moveGrades = reviewState.grades.map((grade, index) => ({ ply: index + 1, color: moves[index].color, category: grade.category || "unrated" }));
+  reviewState.moveGrades = reviewState.grades.map((grade, index) => ({
+    ply: index + 1, color: moves[index].color, category: grade.category || "unrated",
+    lossCp: Number.isFinite(grade.deltaCp) ? grade.deltaCp : null,
+  }));
   reviewState.correctionExercises = reviewBuildCorrectionExercises(rows, fens, moves, positionLines);
   reviewSetProgress("Analyse Stockfish terminée — bilan en cours…");
   reviewRenderLocal(rows, accW, accB, headers);
