@@ -94,7 +94,7 @@
     for (const lesson of root.SupaChessLessons) {
       if (!lesson || lesson.kind === "engine-derived") continue;
       try {
-        const position = new root.Chess(lesson.fen);
+        const position = new Chess(lesson.fen);
         for (const san of lesson.setup || []) {
           if (!position.move(san)) throw new Error("setup illégal");
         }
@@ -187,13 +187,13 @@
       setStatus("Corpus chargé : " + lessons.length + " leçons/exercices et " + puzzles.length +
         " puzzles. Positions distinctes à analyser maintenant : " + work.length + ".");
       if (!engine) {
-        engine = new root.StockfishEngine("vendor/stockfish-19-lite-single.js");
+        engine = new StockfishEngine("vendor/stockfish-19-lite-single.js");
         await engine.ready;
       }
       let doneEntries = 0;
       for (const [fen, entries] of work) {
         if (paused) break;
-        const position = new root.Chess(fen);
+        const position = new Chess(fen);
         const legalCount = position.moves({ verbose: true }).length;
         const response = await engine.analyze({ fen: fen, multipv: Math.min(4, legalCount), movetime: MOVE_TIME, elo: 0 });
         const result = root.SupaChessAcademy.buildEngineChoices(fen, response.lines);
@@ -248,7 +248,7 @@
     const base = record.key.replace(/[^a-z0-9-]+/gi, "-").replace(/^-|-$/g, "").toLowerCase();
     const id = "engine-derived-" + base.slice(-90);
     if (root.SupaChessLessons.some((lesson) => lesson.id === id)) return null;
-    const play = new root.Chess(record.fen);
+    const play = new Chess(record.fen);
     const sequence = [];
     for (const [index, uci] of (candidates[0].pv || []).slice(0, 7).entries()) {
       const move = play.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.slice(4) || "q" });
