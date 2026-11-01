@@ -496,7 +496,7 @@ function renderCentipawnLossRatePanel(games,range){
     '<h4 id="profile-cp-loss-title" style="margin-top:0">Demi-coups avec perte en centipions · '+selectedRange.aria+'</h4>';
   if(summary.average===null)return heading+'<p>Pas encore de données CP suffisantes. Une partie terminée doit avoir été évaluée coup par coup pour calculer cette moyenne.</p><small>Les anciens demi-coups sans perte en centipions enregistrée sont exclus.</small></section>';
   return heading+'<strong style="font-size:1.35em">'+summary.average.toFixed(1).replace('.',',')+' %</strong>'+
-    '<p>Part moyenne des demi-coups joués par partie qui ont fait perdre des centipions : '+summary.losingMoves+' sur '+summary.moves+' demi-coups mesurés, dans '+summary.games+' partie'+(summary.games>1?'s':'')+'.</p>'+
+    '<p>Moyenne par partie des demi-coups joués qui ont fait perdre des centipions : '+summary.average.toFixed(1).replace('.',',')+' %. Échantillon cumulé : '+summary.losingMoves+' demi-coups avec perte sur '+summary.moves+' demi-coups mesurés, répartis sur '+summary.games+' partie'+(summary.games>1?'s':'')+'.</p>'+
     '<small>Un demi-coup est compté en perte si Stockfish mesure une perte strictement supérieure à 0 cp par rapport au meilleur coup de la position. Chaque partie pèse autant dans la moyenne; les coups non évalués, mates et parties inachevées sont exclus.</small></section>';
 }
 function renderProfilePerformancePanel(games){
