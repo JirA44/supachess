@@ -12,6 +12,7 @@
 .lesson-catalog-button[aria-current="true"] { border: 2px solid var(--accent); }
 .lesson-catalog-title { display: block; margin-bottom: 4px; font-weight: 800; }
 .lesson-catalog-meta, .lesson-catalog-state { display: block; color: var(--text-dim); font-size: .83rem; line-height: 1.35; }
+.lesson-catalog-state.is-completed { color: #54e28d; font-weight: 800; }
 .lesson-workspace { display: grid; grid-template-columns: minmax(300px, 1.05fr) minmax(320px, .95fr); gap: 20px; align-items: start; }
 .lesson-board-column { min-width: 0; }
 .lesson-status { min-height: 2.6em; margin-bottom: 8px; color: var(--accent); font-weight: 700; line-height: 1.4; }
