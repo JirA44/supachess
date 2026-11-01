@@ -27,6 +27,8 @@ test("Rook cutoff lesson asks for the principle, then plays the line on the boar
   await expect(page.locator("#lesson-explanation")).toContainText("À réutiliser dans tes parties");
   await expect(page.locator("#lesson-next-preview")).toBeVisible();
   await expect(page.locator("#lesson-next")).toBeVisible();
+  await expect(page.locator("#lesson-status")).toContainText("✓ Leçon terminée");
+  await expect(page.locator(".lesson-catalog-button").filter({ hasText: "Couper le roi avec la tour" })).toContainText("✓ Passée");
 });
 
 
