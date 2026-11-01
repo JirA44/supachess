@@ -11,7 +11,7 @@ function ensureUserProfile(user){
   if(!db||!user||!user.uid) return Promise.resolve();
   var ref=db.collection('users').doc(user.uid);
   return ref.get().then(function(doc){
-    if(doc.exists) return;
+    if(doc.exists) return null;
     var data={
       uid:user.uid,
       email:user.email||'',
@@ -26,6 +26,8 @@ function ensureUserProfile(user){
       totalGames:0
     };
     return ref.set(data);
+  }).then(function(){
+    return publishLearningLevel(user.uid);
   }).catch(function(){});
 }
 function updateStats(uid, gameType, result, delta){
@@ -69,6 +71,31 @@ function getTopRanking(gameType, limit){
     });
     return out;
   }).catch(function(){ return []; });
+}
+function publishLearningLevel(uid){
+  if(!db||!uid) return Promise.resolve(false);
+  var progress=readLocalLearningProgress(null);
+  var xp=Math.max(0,Number(progress.xp)||0);
+  var level=Math.max(1,Number(progress.level)||1);
+  return db.collection('users').doc(uid).set({
+    learningLevel:level,
+    learningXP:xp,
+    learningLevelName:profileRankName(level)
+  },{merge:true}).then(function(){return true;}).catch(function(){return false;});
+}
+function getTopLevelRanking(limit){
+  limit=Math.max(1,Math.min(50,Number(limit)||10));
+  if(!db) return Promise.resolve([]);
+  return db.collection('users').orderBy('learningLevel','desc').limit(limit).get().then(function(snap){
+    var out=[];
+    snap.forEach(function(doc){
+      var data=doc.data()||{};
+      var level=Number(data.learningLevel);
+      if(!Number.isFinite(level)||level<1) return;
+      out.push({uid:doc.id,displayName:data.displayName||profileText('profile_guest','Joueur'),level:level,xp:Math.max(0,Number(data.learningXP)||0),rankName:data.learningLevelName||profileRankName(level)});
+    });
+    return out.sort(function(a,b){return b.level-a.level||b.xp-a.xp||String(a.displayName).localeCompare(String(b.displayName));}).slice(0,limit);
+  }).catch(function(){return [];});
 }
 function getProfile(uid){
   if(!db||!uid) return Promise.resolve(null);
@@ -874,13 +901,25 @@ function initRankingSection(){
   var sec=document.createElement('section');
   sec.id='ranking-section';
   sec.style.cssText='margin:40px 0;padding:24px;background:rgba(0,0,0,.35);border-radius:16px;border:1px solid rgba(255,255,255,.1)';
-  sec.innerHTML='<h2 style="text-align:center;color:#ffd700;margin-bottom:16px">🏆 Classements Top — par type de jeu</h2><div style="display:flex;justify-content:center;gap:10px;margin-bottom:16px"><button class="rank-tab" data-type="puzzle" style="padding:8px 16px;border-radius:20px;border:1px solid #4facfe;background:#4facfe;color:#fff;cursor:pointer">🧩 Puzzle</button><button class="rank-tab" data-type="classic3s" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">⚡ Classic 3s</button><button class="rank-tab" data-type="classic5s" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">⏱️ Classic 5s</button><button class="rank-tab" data-type="champions" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">♟ Champions · précision &amp; ACPL</button></div><div id="ranking-list" style="display:grid;gap:8px"></div>';
+  sec.innerHTML='<h2 style="text-align:center;color:#ffd700;margin-bottom:16px">🏆 Classements Top — par type de jeu</h2><div style="display:flex;justify-content:center;gap:10px;margin-bottom:16px"><button class="rank-tab" data-type="puzzle" style="padding:8px 16px;border-radius:20px;border:1px solid #4facfe;background:#4facfe;color:#fff;cursor:pointer">🧩 Puzzle</button><button class="rank-tab" data-type="classic3s" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">⚡ Classic 3s</button><button class="rank-tab" data-type="classic5s" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">⏱️ Classic 5s</button><button class="rank-tab" data-type="champions" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">♟ Champions · précision &amp; ACPL</button><button class="rank-tab" data-type="levels" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">🏅 Niveau atteint</button></div><div id="ranking-list" style="display:grid;gap:8px"></div>';
   var footer=document.querySelector('.footer');
   if(footer) container.insertBefore(sec, footer);
   else container.appendChild(sec);
   function load(type){
     sec.querySelectorAll('.rank-tab').forEach(function(b){ b.style.background=b.getAttribute('data-type')===type?'#4facfe':'transparent'; b.style.borderColor=b.getAttribute('data-type')===type?'#4facfe':'#666'; });
     var list=document.getElementById('ranking-list');
+    if(type==='levels'){
+      list.innerHTML='<div style="text-align:center;opacity:.6">Chargement du classement des niveaux…</div>';
+      getTopLevelRanking(50).then(function(top){
+        if(!top.length){list.innerHTML='<div style="padding:16px;background:rgba(255,255,255,.06);border-radius:10px;text-align:center"><p>Aucun niveau communiqué au classement pour le moment.</p><p style="opacity:.75">Connecte-toi et ouvre ton profil pour publier ton niveau actuel. Le classement affiche seulement les niveaux réellement enregistrés.</p></div>';return;}
+        list.innerHTML='<p style="margin:0;color:#d4dfeb">Classement mondial par niveau SupaChess atteint. À niveau égal, les XP totaux départagent les joueurs. Le niveau est illimité; les données viennent des profils qui l’ont publié.</p>'+top.map(function(u,i){
+          var medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1+'.');
+          return '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:rgba(255,255,255,.06);border-radius:10px;cursor:pointer" data-uid="'+escapeProfileText(u.uid)+'" class="rank-row"><span style="width:28px;text-align:center">'+medal+'</span><span style="flex:1">'+escapeProfileText(u.displayName)+'</span><span style="font-weight:bold;color:#ffd700">Niveau '+u.level+' · '+escapeProfileText(u.rankName)+'</span></div>';
+        }).join('');
+        list.querySelectorAll('.rank-row').forEach(function(el){el.addEventListener('click',function(){getProfile(el.getAttribute('data-uid')).then(renderProfileModal);});});
+      });
+      return;
+    }
     if(type==='champions'){
       var saved={};
       try{saved=JSON.parse(localStorage.getItem('supachess-champion-metrics-v1')||'{}')||{};}catch(_error){saved={};}
@@ -911,5 +950,5 @@ function initRankingSection(){
   sec.querySelectorAll('.rank-tab').forEach(function(b){ b.addEventListener('click', function(){ load(b.getAttribute('data-type')); }); });
   load('puzzle');
 }
-window.SupaProfiles={init:init, ensureUserProfile:ensureUserProfile, updateStats:updateStats, searchUsers:searchUsers, getTopRanking:getTopRanking, getProfile:getProfile, renderProfileModal:renderProfileModal, readLocalLearningProgress:readLocalLearningProgress, summarizeAccuracyGames:summarizeAccuracyGames, renderLocalLearningPanel:renderLocalLearningPanel, renderOwnProfileFallback:renderOwnProfileFallback, lessonProgressSeries:lessonProgressSeries, renderLessonProgressRangeChart:renderLessonProgressRangeChart, bindLessonProgressRangeControls:bindLessonProgressRangeControls, initSearchBar:initSearchBar, initRankingSection:initRankingSection, GAME_TYPES:GAME_TYPES};
+window.SupaProfiles={init:init, ensureUserProfile:ensureUserProfile, updateStats:updateStats, searchUsers:searchUsers, getTopRanking:getTopRanking, getTopLevelRanking:getTopLevelRanking, publishLearningLevel:publishLearningLevel, getProfile:getProfile, renderProfileModal:renderProfileModal, readLocalLearningProgress:readLocalLearningProgress, summarizeAccuracyGames:summarizeAccuracyGames, renderLocalLearningPanel:renderLocalLearningPanel, renderOwnProfileFallback:renderOwnProfileFallback, lessonProgressSeries:lessonProgressSeries, renderLessonProgressRangeChart:renderLessonProgressRangeChart, bindLessonProgressRangeControls:bindLessonProgressRangeControls, initSearchBar:initSearchBar, initRankingSection:initRankingSection, GAME_TYPES:GAME_TYPES};
 })();
