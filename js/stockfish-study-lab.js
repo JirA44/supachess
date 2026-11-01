@@ -6,7 +6,7 @@
 
   const AUDIT_KEY = "supachess-stockfish-study-audit-v1";
   const DERIVED_KEY = "supachess-stockfish-derived-lessons-v1";
-  const PUZZLE_URL = "../supachess-web/TRAINING_TACTICS.html";
+  const PUZZLE_URL = "data/stockfish-tactics-audit.json";
   const MOVE_TIME = 500;
   const MIN_GAP_CP = 35;
   let engine = null;
@@ -137,12 +137,14 @@
       else if (c === "]" && --depth === 0) { end = i + 1; break; }
     }
     if (end < 0) throw new Error("Impossible de lire la banque de puzzles.");
-    const puzzles = JSON.parse(source.slice(start, end));
+    const data = JSON.parse(source);
+    const puzzles = Array.isArray(data) ? data : data.puzzles;
+    if (!Array.isArray(puzzles)) throw new Error("Format de banque de puzzles non reconnu.");
     return puzzles.map((puzzle) => {
-      const fen = puzzle.board + " " + puzzle.turn + " - - 0 1";
+      const fen = puzzle.fen || (puzzle.board + " " + puzzle.turn + " - - 0 1");
       return { key: "puzzle:" + puzzle.id + ":" + fen, id: puzzle.id, kind: "puzzle",
         title: puzzle.title, theme: "Puzzle tactique · " + puzzle.theme,
-        level: levelFromRating(puzzle.rating), fen, answerUci: puzzle.answer || "" };
+        level: levelFromRating(puzzle.rating), fen, answerUci: puzzle.answerUci || puzzle.answer || "" };
     });
   }
 
