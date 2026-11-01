@@ -206,6 +206,8 @@
         averageDepth:depthSum/totalRated,sourceFile:file?file.name:"PGN collé",completedAt:new Date().toISOString()};
       var results=readResults();results[key]=record;
       if(!saveResults(results))throw new Error("Le stockage local du navigateur est indisponible; exporte ou capture le résultat avant de quitter.");
+      var protocolSelect=document.getElementById("champion-ranking-protocol");
+      if(protocolSelect)protocolSelect.value=String(record.engine||"Stockfish")+"|"+String(record.movetime||0);
       renderResults();
       status.dataset.state="success";
       status.textContent="Terminé : "+totalGames+" partie(s), "+totalRated+" demi-coups comparables · "+record.accuracy.toFixed(1)+" % de précision moyenne · "+record.acpl.toFixed(1)+" cp d’ACPL · profondeur moyenne observée "+record.averageDepth.toFixed(1)+".";
