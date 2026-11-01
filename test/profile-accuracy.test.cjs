@@ -240,3 +240,39 @@ test("profile lesson progression renders the six period buttons when completion 
   assert.match(html, /Derniers 12 mois/);
   assert.match(html, /Tout l’historique/);
 });
+
+test("centipawn-loss rate averages the percentage of measured player half-moves per completed game", () => {
+  const summary = window.SupaProfiles.summarizeCentipawnLossGames([
+    { ...game(1, 80, 70, "w", "1-0"), moveGrades: [
+      { ply: 1, color: "w", lossCp: 12 },
+      { ply: 2, color: "b", lossCp: 40 },
+      { ply: 3, color: "w", lossCp: 0 },
+    ] },
+    { ...game(2, 80, 70, "w", "0-1"), moveGrades: [
+      { ply: 1, color: "w", lossCp: 5 },
+      { ply: 2, color: "w", lossCp: 0 },
+      { ply: 3, color: "w", lossCp: 0 },
+    ] },
+    { ...game(1, 80, 70, "w", "*"), moveGrades: [{ ply: 1, color: "w", lossCp: 20 }] },
+    { ...game(1, 80, 70, "w", "1-0"), moveGrades: [{ ply: 1, color: "w", category: "best" }] },
+  ], "all", now);
+
+  assert.equal(summary.games, 2);
+  assert.equal(summary.moves, 5);
+  assert.equal(summary.losingMoves, 2);
+  assert.equal(summary.average, (50 + 100 / 3) / 2);
+});
+
+test("duplicate played and reviewed PGNs merge measured centipawn losses without double-counting", () => {
+  const merged = window.SupaProfiles.mergeProfileAnalysisGames([
+    { id: "played-1", pgn: '[Event "Live"]\n1. e4 e5 1-0', result: "1-0", userColor: "w",
+      moveGrades: [{ ply: 1, color: "w", category: "best", lossCp: 4 }] },
+  ], [
+    { id: "review-1", pgn: '[Event "Imported"]\n1. e4 e5 1-0', result: "1-0", userColor: "w",
+      moveGrades: [{ ply: 1, color: "w", category: "best", lossCp: null }, { ply: 2, color: "b", lossCp: null }] },
+  ]);
+
+  assert.equal(merged.length, 1);
+  assert.equal(merged[0].moveGrades.length, 2);
+  assert.equal(merged[0].moveGrades[0].lossCp, 4);
+});
