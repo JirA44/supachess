@@ -46,3 +46,12 @@
 .champion-footer { padding:10px 0; text-align:center; }
 @media(max-width:650px){ .champion-header,.champion-main{padding-left:14px;padding-right:14px}.metric-definitions,.champion-form-grid,.archive-list{grid-template-columns:1fr}.champion-results-heading{display:grid}.champion-secondary{width:100%} }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+
+
+.champion-ranking { margin-top:20px; padding:16px; border:1px solid rgba(123,211,148,.38); border-radius:12px; background:rgba(0,0,0,.14); }
+.champion-ranking h3 { margin:0 0 8px; color:#a8f0bb; font-size:1.15rem; }
+.champion-ranking p { color:#d8e2ec; }
+.ranking-controls { margin:12px 0; }
+#champion-ranking-body tr:first-child { background:rgba(123,211,148,.14); }
+#champion-ranking-body tr:first-child td:first-child { color:#a8f0bb; font-weight:900; }
+#champion-ranking-status { margin:10px 0; }
