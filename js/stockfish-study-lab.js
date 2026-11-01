@@ -190,7 +190,7 @@
         engine = new root.StockfishEngine("vendor/stockfish-19-lite-single.js");
         await engine.ready;
       }
-      let done = 0;
+      let doneEntries = 0;
       for (const [fen, entries] of work) {
         if (paused) break;
         const position = new root.Chess(fen);
@@ -207,14 +207,17 @@
           };
         }
         saveAudit();
-        done++;
-        renderProgress(processedStart + done, valid.length);
-        if (done % 5 === 0) setStatus("Stockfish analyse " + Math.min(processedStart + done, valid.length) +
-          "/" + valid.length + " positions distinctes du corpus…");
+        doneEntries += entries.length;
+        renderProgress(processedStart + doneEntries, valid.length);
+        if (doneEntries % 5 === 0) setStatus("Stockfish a terminé " + Math.min(processedStart + doneEntries, valid.length) +
+          "/" + valid.length + " entrée(s) du corpus…");
       }
       if (paused) setStatus("Audit mis en pause : " + Object.keys(audit).length + " position(s) enregistrée(s). Relance pour reprendre.");
-      else setStatus("Audit terminé : " + valid.length + " entrée(s), " + Object.keys(audit).length +
-        " positions analysées et sauvegardées localement.");
+      else {
+        renderProgress(valid.length, valid.length);
+        setStatus("Audit terminé : " + work.length + " position(s) distincte(s) analysée(s), " +
+          valid.length + " entrée(s) vérifiée(s) et sauvegardée(s) localement.");
+      }
       renderResults();
     } catch (error) {
       setStatus("Audit interrompu : " + (error && error.message ? error.message : "Stockfish n’a pas répondu."));
@@ -331,6 +334,20 @@
         checked.textContent = "Solution enregistrée : " + record.puzzleAnswer +
           (best && best.uci.slice(0, 4) === record.puzzleAnswer.slice(0, 4) ? " · conforme au premier coup" : " · à contrôler");
         card.appendChild(checked);
+      } else if (record.kind === "lesson" && record.expectedUci && best &&
+          best.uci.slice(0, 4) !== record.expectedUci.slice(0, 4)) {
+        const checked = document.createElement("p");
+        checked.textContent = "À revoir : le premier coup de la séquence (" + record.expectedUci +
+          ") diffère du premier choix de cette recherche Stockfish (" + best.san + ").";
+        card.appendChild(checked);
+      }
+      if (record.kind === "lesson" && root.SupaChessAcademy.openLesson) {
+        const sourceButton = document.createElement("button");
+        sourceButton.type = "button";
+        sourceButton.className = "btn";
+        sourceButton.textContent = "Ouvrir la leçon source";
+        sourceButton.addEventListener("click", () => root.SupaChessAcademy.openLesson(record.id));
+        card.appendChild(sourceButton);
       }
       const lesson = buildDerivedLesson(record);
       if (lesson) {
