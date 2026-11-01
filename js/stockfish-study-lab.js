@@ -295,7 +295,14 @@
 
   function autoUseAuditResults() {
     const records = Object.values(audit).filter((record) => record && Array.isArray(record.choices))
-      .sort((a,b) => (b.choices[0]?.deltaCp || 0) - (a.choices[0]?.deltaCp || 0));
+      .sort((a,b) => {
+        const rank = (record) => { const e=resultEligibility(record); return e.ok?0:e.analysisOnly?1:2; };
+        const priority = rank(a) - rank(b);
+        if (priority) return priority;
+        const gapA = a.choices[1] && Number.isFinite(a.choices[1].deltaCp) ? a.choices[1].deltaCp : -1;
+        const gapB = b.choices[1] && Number.isFinite(b.choices[1].deltaCp) ? b.choices[1].deltaCp : -1;
+        return gapB - gapA;
+      });
     if (!records.length) return;
     const signature = records.length + ":" + records.reduce((latest, record) => {
       const time = Date.parse(record.analyzedAt || "") || 0;
