@@ -2851,13 +2851,26 @@
       return true;
     },
     addDerivedLesson: function (lesson) {
-      if (!lesson || typeof lesson.id !== "string" || !lesson.id.startsWith("engine-derived-") ||
-          LESSONS.some((item) => item.id === lesson.id)) return false;
-      LESSONS.push(lesson);
+      return this.addDerivedLessons([lesson], lesson && lesson.id);
+    },
+    addDerivedLessons: function (lessons, openId) {
+      if (!Array.isArray(lessons)) return false;
+      const known = new Set(LESSONS.map((item) => item.id));
+      let added = 0;
+      lessons.forEach((lesson) => {
+        if (!lesson || typeof lesson.id !== "string" || !lesson.id.startsWith("engine-derived-") || known.has(lesson.id)) return;
+        if (typeof lesson.fen !== "string" || !Array.isArray(lesson.sequence) || !Array.isArray(lesson.choices)) return;
+        known.add(lesson.id); LESSONS.push(lesson); added++;
+      });
+      if (!added && !openId) return false;
       renderCatalog();
-      loadLesson(LESSONS.length - 1);
-      document.querySelector(".lesson-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      return true;
+      const index = openId ? LESSONS.findIndex((lesson) => lesson.id === openId) : -1;
+      if (index >= 0) {
+        loadLesson(index);
+        document.querySelector(".lesson-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return true;
+      }
+      return added > 0;
     }
   });
 
