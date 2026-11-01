@@ -203,6 +203,7 @@
           valid.length + " entrée(s) vérifiée(s) et sauvegardée(s) localement.");
       }
       renderResults();
+      autoUseAuditResults();
     } catch (error) {
       setStatus("Audit interrompu : " + (error && error.message ? error.message : "Stockfish n’a pas répondu."));
       renderResults();
@@ -219,14 +220,16 @@
     if (!best || !second) return { ok: false, reason: "Lignes insuffisantes pour créer un choix comparatif." };
     if (record.kind === "puzzle" && record.puzzleAnswer && best.uci.slice(0, 4) !== record.puzzleAnswer.slice(0, 4))
       return { ok: false, reason: "À vérifier : réponse publiée différente du premier coup Stockfish." };
+    if (record.kind === "lesson" && record.expectedUci && best.uci.slice(0, 4) !== record.expectedUci.slice(0, 4))
+      return { ok: false, reason: "À revoir : le premier coup de la leçon diffère du premier choix Stockfish." };
     if (!Number.isFinite(second.deltaCp) || second.deltaCp < MIN_GAP_CP)
-      return { ok: false, reason: "Pas de meilleur coup assez distinct dans cette recherche; aucun choix forcé ne sera créé." };
+      return { ok: false, analysisOnly: true, reason: "Écart trop faible pour un coup forcé : proposé comme exercice d’analyse comparative, pas comme solution unique." };
     return { ok: true, reason: "Écart moteur " + (second.deltaCp / 100).toFixed(2) + " pion(s), profondeur " + record.depth + "." };
   }
 
   function buildDerivedLesson(record) {
     const eligibility = resultEligibility(record);
-    if (!eligibility.ok) return null;
+    if (!eligibility.ok && !eligibility.analysisOnly) return null;
     const candidates = record.choices.slice(0, 3).filter((choice) => choice && choice.uci && choice.san);
     if (candidates.length < 2) return null;
     const base = record.key.replace(/[^a-z0-9-]+/gi, "-").replace(/^-|-$/g, "").toLowerCase();
@@ -247,19 +250,24 @@
     }
     if (!sequence.length || sequence[0].side !== "user") return null;
     const choices = candidates.map((choice, index) => ({ text: "Jouer " + choice.san, correct: index === 0 }));
+    const analysisOnly = Boolean(eligibility.analysisOnly);
     return {
-      id: id, kind: "engine-derived", level: record.level || "Intermédiaire",
-      title: "Maîtrise moteur · " + record.title,
-      category: "Exercice Stockfish dérivé · " + record.theme,
+      id: id, kind: "engine-derived", exerciseMode: analysisOnly ? "analysis" : "single-best", level: record.level || "Intermédiaire",
+      title: (analysisOnly ? "Analyse comparative · " : "Maîtrise moteur · ") + record.title,
+      category: (analysisOnly ? "Classement de recherche, sans coup forcé · " : "Exercice Stockfish dérivé · ") + record.theme,
       author: "Atelier Stockfish · variantes calculées",
       program: "Stockfish · comparer et vérifier",
       book: "Position analysée localement",
       reference: (record.kind === "puzzle" ? "Puzzle tactique " : "Leçon/exercice ") + record.id +
         " · recherche Stockfish 19 · " + record.depth + " ply · " + MOVE_TIME + " ms par position",
       fen: record.fen, color: record.fen.split(/\s+/)[1] || "w",
-      question: "Quel premier coup Stockfish classe en tête dans cette recherche ?",
+      question: analysisOnly
+        ? "Quel coup Stockfish classe en tête dans cette recherche rapide ? Ce classement ne signifie pas que le coup soit unique ou forcé."
+        : "Quel premier coup Stockfish classe en tête dans cette recherche ?",
       choices: choices,
-      principle: "Routine de maîtrise : établis des coups candidats, anticipe la meilleure réponse adverse, puis compare les variantes jusqu’à une position que tu peux évaluer. Stockfish fournit un classement issu de cette recherche, pas une explication humaine ni une certitude absolue.",
+      principle: analysisOnly
+        ? "Exercice d’analyse comparative : le moteur n’a pas départagé nettement les candidats. Joue la ligne classée première, puis compare-la aux autres choix légaux et explique le plan obtenu; ne traite pas ce classement comme un coup forcé."
+        : "Routine de maîtrise : établis des coups candidats, anticipe la meilleure réponse adverse, puis compare les variantes jusqu’à une position que tu peux évaluer. Stockfish fournit un classement issu de cette recherche, pas une explication humaine ni une certitude absolue.",
       transfer: "Refais cette position sans moteur. Note deux coups candidats, la meilleure réponse adverse à chacun, puis compare la position finale.",
       hints: [
         "Vérifie d’abord échecs, captures, menaces, pièces attaquées et pièces non protégées.",
@@ -283,6 +291,55 @@
     }
     setStatus("Exercice ajouté à ton Académie locale. Sa validation et ses révisions suivent ensuite le parcours habituel.");
     return true;
+  }
+
+  function autoUseAuditResults() {
+    const records = Object.values(audit).filter((record) => record && Array.isArray(record.choices))
+      .sort((a,b) => (b.choices[0]?.deltaCp || 0) - (a.choices[0]?.deltaCp || 0));
+    if (!records.length) return;
+    const signature = records.length + ":" + records.reduce((latest, record) => {
+      const time = Date.parse(record.analyzedAt || "") || 0;
+      return Math.max(latest, time);
+    }, 0);
+    const marker = "supachess-stockfish-auto-used-v1";
+    if (localStorage.getItem(marker) === signature) return;
+    const stored = (() => { try { const x=JSON.parse(localStorage.getItem(DERIVED_KEY)||"[]"); return Array.isArray(x)?x:[]; } catch (_) { return []; } })();
+    const known = new Set(stored.map((lesson) => lesson && lesson.id).filter(Boolean));
+    root.SupaChessLessons.forEach((lesson) => known.add(lesson.id));
+    const generated = [];
+    const limit = 40;
+    for (const record of records) {
+      const lesson = buildDerivedLesson(record);
+      if (!lesson || known.has(lesson.id)) continue;
+      known.add(lesson.id); generated.push(lesson);
+      if (generated.length >= limit) break;
+    }
+    try {
+      const next = stored.concat(generated);
+      localStorage.setItem(DERIVED_KEY, JSON.stringify(next));
+    } catch (_) {
+      setStatus("Audit conservé, mais le stockage des exercices est saturé; aucun lot n’a été ajouté.");
+      return;
+    }
+    localStorage.setItem(marker, signature);
+    if (!generated.length) {
+      const previouslyAvailable = stored.find((lesson) => lesson && lesson.id && root.SupaChessLessons.some((x) => x.id === lesson.id));
+      if (previouslyAvailable && root.SupaChessAcademy.openLesson) {
+        root.SupaChessAcademy.openLesson(previouslyAvailable.id);
+        setStatus("Les analyses sauvegardées ont déjà été converties. Le premier exercice est ouvert dans l’Académie.");
+      } else {
+        setStatus("Audit sauvegardé. Aucun exercice automatique n’est possible : les entrées restantes ont un désaccord ou des lignes moteur insuffisantes.");
+      }
+      return;
+    }
+    const opened = root.SupaChessAcademy.addDerivedLessons
+      ? root.SupaChessAcademy.addDerivedLessons(generated, generated[0].id)
+      : root.SupaChessAcademy.addDerivedLesson(generated[0]);
+    setStatus((opened ? generated.length + " exercice(s) créé(s) depuis les analyses; le premier s’ouvre maintenant dans l’Académie. " :
+      generated.length + " exercice(s) sauvegardé(s); ouvre l’Académie pour les jouer. ") +
+      (generated.filter((lesson) => lesson.exerciseMode === "analysis").length
+        ? "Les exercices à candidats proches sont des comparaisons, pas des coups forcés."
+        : ""));
   }
 
   function renderResults() {
@@ -338,7 +395,7 @@
         const button = document.createElement("button");
         button.type = "button";
         button.className = "btn";
-        button.textContent = "Créer et jouer cet exercice";
+        button.textContent = lesson.exerciseMode === "analysis" ? "Analyser et jouer cette position" : "Créer et jouer cet exercice";
         button.addEventListener("click", () => saveGenerated(lesson));
         card.appendChild(button);
       }
@@ -350,4 +407,5 @@
 
   ui.querySelector("[data-sf-search]").addEventListener("input", () => { visibleCount = 25; renderResults(); });
   renderResults();
+  autoUseAuditResults();
 })(window);
