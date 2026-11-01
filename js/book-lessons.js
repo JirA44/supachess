@@ -2910,8 +2910,13 @@
     };
   }
 
+  function lessonHeadingText(number, title, completed, surpriseMode) {
+    if (surpriseMode) return "Exercice au hasard";
+    return (completed ? "✓ " : "") + number + ". " + title;
+  }
+
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord };
+    module.exports = { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonHeadingText };
   }
 
   if (typeof document === "undefined") return;
@@ -3191,7 +3196,9 @@
     boardUI.selected = null;
     boardUI.legalTargets = [];
     boardUI.lastMove = null;
-    $("lesson-title").textContent = surpriseMode ? "Exercice au hasard" : lessonNumberForTitle(lessonIndex) + ". " + lesson.title;
+    const titleCompleted = !surpriseMode && completionCount(progress[lesson.id]) > 0;
+    $("lesson-title").textContent = lessonHeadingText(lessonNumberForTitle(lessonIndex), lesson.title, titleCompleted, surpriseMode);
+    $("lesson-title").classList.toggle("is-completed", titleCompleted);
     $("lesson-goal").textContent = surpriseMode
       ? "Analyse la position sans regarder le thème. Choisis un coup, puis vérifie la réponse adverse sur l’échiquier."
       : "Observe la position. Choisis d’abord le principe qui s’applique, puis joue les coups sur l’échiquier.";
@@ -3359,7 +3366,8 @@
 
     surpriseMode = false;
     anticipatingBook = false;
-    $("lesson-title").textContent = lesson.title;
+    $("lesson-title").textContent = lessonHeadingText(lessonNumberForTitle(lessonIndex), lesson.title, true, false);
+    $("lesson-title").classList.add("is-completed");
     renderSource(lesson);
     $("lesson-status").textContent = saveSucceeded
       ? "✓ Leçon validée : " + lesson.title + "."
