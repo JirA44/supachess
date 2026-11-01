@@ -209,7 +209,7 @@ function reviewCorrectionButtons(){
 }
 
 function reviewRefreshCorrectionHotkeys(){
-  const api=window.SupaKeyboardShortcuts;
+  const api=typeof window!=="undefined"?window.SupaKeyboardShortcuts:null;
   const bindings=api&&api.getBindings();
   const correctionKeys=bindings&&bindings.corrections||["Numpad1","Numpad2","Numpad3","Numpad4","Numpad5","Numpad6","Numpad7","Numpad8","Numpad9","Numpad0"];
   reviewCorrectionButtons().forEach((button,index)=>{
@@ -1380,7 +1380,7 @@ document.getElementById("btn-replay-prev").addEventListener("click", () => repla
 document.getElementById("btn-replay-next").addEventListener("click", () => replayGoto((state.replayIdx || 0) + 1).catch(console.error));
 document.getElementById("btn-replay-quit").addEventListener("click", reviewRestoreAfterReplay);
 if (typeof document.addEventListener === "function") document.addEventListener("keydown", (event) => {
-  const shortcutApi=window.SupaKeyboardShortcuts;
+  const shortcutApi=typeof window!=="undefined"?window.SupaKeyboardShortcuts:null;
   const target=event.target;
   const editableTarget=target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)||target.closest("[data-shortcut-capture]"));
   if(!event.altKey&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&!editableTarget){
