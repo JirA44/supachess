@@ -177,3 +177,66 @@ test("profile reports move-type percentages averaged equally across completed ga
   assert.match(html, /Gaffes/);
   assert.match(html, /45,0 %/);
 });
+
+test("lesson progression filters retain cumulative counts across six time ranges", () => {
+  const now = Date.UTC(2026, 10, 1, 12);
+  const day = 86400000;
+  const timestamps = [now - 364 * day, now - 89 * day, now - 29 * day, now - 6 * day, now - 3600000, now + day];
+  const expected = { day: [1, 4], week: [2, 3], month: [3, 2], quarter: [4, 1], year: [5, 0], all: [5, 0] };
+  for (const [range, [visible, baseline]] of Object.entries(expected)) {
+    const series = window.SupaProfiles.lessonProgressSeries(timestamps, range, now);
+    assert.equal(series.points.length, visible, range + " visible lessons");
+    assert.equal(series.baseline, baseline, range + " cumulative baseline");
+    assert.equal(series.total, 5, range + " total completed lessons");
+  }
+});
+
+test("lesson progression range buttons redraw the graph and update their pressed state", () => {
+  const now = Date.now();
+  const chart = { innerHTML: "" };
+  const makeButton = (range) => ({
+    attrs: { "data-lesson-range": range, "aria-pressed": String(range === "all") },
+    style: {},
+    listeners: {},
+    getAttribute(name) { return this.attrs[name] || null; },
+    setAttribute(name, value) { this.attrs[name] = String(value); },
+    addEventListener(name, handler) { this.listeners[name] = handler; },
+  });
+  const buttons = [makeButton("day"), makeButton("all")];
+  const section = {
+    getAttribute(name) { return name === "data-lesson-timestamps" ? String(now - 100 * 86400000) : null; },
+    querySelectorAll() { return buttons; },
+    querySelector() { return chart; },
+  };
+  window.SupaProfiles.bindLessonProgressRangeControls({ querySelectorAll() { return [section]; } });
+
+  buttons[0].listeners.click();
+  assert.equal(buttons[0].attrs["aria-pressed"], "true");
+  assert.equal(buttons[1].attrs["aria-pressed"], "false");
+  assert.equal(buttons[0].style.background, "#214b38");
+  assert.equal(buttons[0].style.borderColor, "#69e7a1");
+  assert.equal(buttons[1].style.background, "#202b3d");
+  assert.equal(buttons[1].style.borderColor, "#52657d");
+  assert.match(chart.innerHTML, /Aucune leçon validée dans cette période/);
+
+  buttons[1].listeners.click();
+  assert.equal(buttons[0].attrs["aria-pressed"], "false");
+  assert.equal(buttons[1].attrs["aria-pressed"], "true");
+  assert.equal(buttons[1].style.background, "#214b38");
+  assert.equal(buttons[1].style.borderColor, "#69e7a1");
+  assert.match(chart.innerHTML, /<svg class="profile-learning-chart"/);
+});
+
+test("profile lesson progression renders the six period buttons when completion history exists", () => {
+  values.set("supachess-book-lessons-v1", JSON.stringify({
+    "lesson-one": { completed: true, completedAt: new Date(Date.now() - 86400000).toISOString() },
+  }));
+  const html = window.SupaProfiles.renderLocalLearningPanel({});
+  assert.equal((html.match(/data-lesson-range=/g) || []).length, 6);
+  assert.match(html, /Dernières 24 heures/);
+  assert.match(html, /Derniers 7 jours/);
+  assert.match(html, /Derniers 30 jours/);
+  assert.match(html, /Derniers 3 mois/);
+  assert.match(html, /Derniers 12 mois/);
+  assert.match(html, /Tout l’historique/);
+});
