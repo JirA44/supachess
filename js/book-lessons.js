@@ -2921,14 +2921,19 @@
     return String(lesson && lesson.category || "").replace(/^Anticipation\s*·\s*/i, "").trim().toLocaleLowerCase("fr");
   }
 
+  function lessonReviewPositionKey(fen) {
+    const value = typeof fen === "string" ? fen : fen && fen.fen;
+    return String(value || "").trim().split(/\s+/).slice(0, 4).join(" ");
+  }
+
   function lessonReviewPartnerIndices(targetIndex, lessons = LESSONS) {
     const target = lessons[targetIndex];
     const key = lessonReviewKey(target);
-    const fen = String(target && target.fen || "").trim();
-    if (!target || !key || !fen) return [];
+    const position = lessonReviewPositionKey(target);
+    if (!target || !key || !position) return [];
     return lessons.map((lesson, index) => ({ lesson, index })).filter(({ lesson, index }) =>
       index !== targetIndex && lessonReviewKey(lesson) === key &&
-      String(lesson.fen || "").trim() && String(lesson.fen).trim() !== fen
+      lessonReviewPositionKey(lesson) && lessonReviewPositionKey(lesson) !== position
     ).map(({ index }) => index);
   }
 
@@ -2980,7 +2985,8 @@
     const due = !Number.isFinite(priorDue) || now >= priorDue;
     const positionFen = String(attempt && attempt.positionFen || "").trim();
     const targetFen = String(attempt && attempt.targetFen || "").trim();
-    const differentPosition = Boolean(positionFen && targetFen && positionFen !== targetFen);
+    const differentPosition = Boolean(positionFen && targetFen &&
+      lessonReviewPositionKey(positionFen) !== lessonReviewPositionKey(targetFen));
     const unassisted = Number(attempt && attempt.attempts || 0) === 0 && Number(attempt && attempt.hintsUsed || 0) === 0;
     const success = Boolean(attempt && attempt.solved && unassisted && differentPosition);
     let streak = Math.max(0, Math.min(3, Number(prior.streak) || 0));
@@ -3016,7 +3022,7 @@
   }
 
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPartnerIndices, lessonReviewDifficultyOptions, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText };
+    module.exports = { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPositionKey, lessonReviewPartnerIndices, lessonReviewDifficultyOptions, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText };
   }
 
   if (typeof document === "undefined") return;
@@ -3302,6 +3308,7 @@
     reviewSession = options.review && options.reviewTargetId
       ? { targetId: options.reviewTargetId, exerciseId: LESSONS[index].id, exerciseLevel: LESSONS[index].level }
       : null;
+    $("lesson-engine-analyze").hidden = stockfishCoachMode || Boolean(reviewSession);
     reviewJustFinished = false;
     syncPreviousLessonButton();
     clearEvalBar();
@@ -3340,6 +3347,7 @@
     $("lesson-next").hidden = false;
     $("lesson-next-preview").textContent = "";
     $("lesson-hint").disabled = false;
+    $("lesson-hint").hidden = Boolean(reviewSession);
     $("lesson-flip").setAttribute("aria-pressed", String(flipped));
     renderSource(lesson);
     if (reviewSession) $("lesson-source").textContent = "Test de rétention · position différente · complexité " + reviewSession.exerciseLevel + " · thème révélé après la résolution";
@@ -3624,7 +3632,7 @@
   }
 
   function showHint() {
-    if (!game) return;
+    if (!game || reviewSession) return;
     const lesson = LESSONS[lessonIndex];
     const hint = lesson.hints[Math.min(hintsUsed, lesson.hints.length - 1)];
     hintsUsed++;
@@ -3710,7 +3718,7 @@
   }
 
   async function runEngineComparison(automatic) {
-    if (!game) return;
+    if (!game || reviewSession) return;
     const fen = game.fen();
     const token = ++analysisToken;
     const panel = $("lesson-engine-analysis");
