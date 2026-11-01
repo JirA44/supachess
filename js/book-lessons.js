@@ -2907,6 +2907,7 @@
     const savedCount = Number(prior.completions);
     const priorCompletions = Math.max(Number.isFinite(savedCount) ? savedCount : 0, prior.completed ? 1 : 0);
     return {
+      ...prior,
       completed: true,
       completions: priorCompletions + 1,
       attempts: attempts,
@@ -2916,13 +2917,80 @@
     };
   }
 
+  function lessonReviewKey(lesson) {
+    return String(lesson && lesson.category || "").replace(/^Anticipation\s*·\s*/i, "").trim().toLocaleLowerCase("fr");
+  }
+
+  function lessonReviewPartnerIndices(targetIndex, lessons = LESSONS) {
+    const target = lessons[targetIndex];
+    const key = lessonReviewKey(target);
+    const fen = String(target && target.fen || "").trim();
+    if (!target || !key || !fen) return [];
+    return lessons.map((lesson, index) => ({ lesson, index })).filter(({ lesson, index }) =>
+      index !== targetIndex && lessonReviewKey(lesson) === key &&
+      String(lesson.fen || "").trim() && String(lesson.fen).trim() !== fen
+    ).map(({ index }) => index);
+  }
+
+  function lessonReviewProgressSummary(lessons, progress, nowValue = Date.now()) {
+    const now = typeof nowValue === "number" ? nowValue : Date.parse(nowValue);
+    const passed = lessons.filter((lesson) => {
+      const record = progress && progress[lesson.id];
+      return Boolean(record && (record.completed || Number(record.completions) > 0));
+    });
+    const reviewable = passed.filter((lesson) => lessonReviewPartnerIndices(lessons.indexOf(lesson), lessons).length > 0);
+    const due = reviewable.filter((lesson) => {
+      const dueAt = Date.parse(progress[lesson.id] && progress[lesson.id].review && progress[lesson.id].review.dueAt || "");
+      return !Number.isFinite(dueAt) || dueAt <= now;
+    });
+    const integrated = reviewable.filter((lesson) => Number(progress[lesson.id] && progress[lesson.id].review && progress[lesson.id].review.streak) >= 3);
+    return { passed: passed.length, reviewable: reviewable.length, due: due.length, integrated: integrated.length, withoutPartner: passed.length - reviewable.length };
+  }
+
+  function createLessonReviewRecord(previous, attempt) {
+    const prior = previous && typeof previous === "object" ? previous : {};
+    const reviewedAt = attempt && attempt.reviewedAt || new Date().toISOString();
+    const now = Date.parse(reviewedAt);
+    const priorDue = Date.parse(prior.dueAt || "");
+    const due = !Number.isFinite(priorDue) || now >= priorDue;
+    const positionFen = String(attempt && attempt.positionFen || "").trim();
+    const targetFen = String(attempt && attempt.targetFen || "").trim();
+    const differentPosition = Boolean(positionFen && targetFen && positionFen !== targetFen);
+    const unassisted = Number(attempt && attempt.attempts || 0) === 0 && Number(attempt && attempt.hintsUsed || 0) === 0;
+    const success = Boolean(attempt && attempt.solved && unassisted && differentPosition);
+    let streak = Math.max(0, Math.min(3, Number(prior.streak) || 0));
+    let dueAt = prior.dueAt || "";
+    let lastOutcome = "needs-work";
+    let advanced = false;
+    if (!success) {
+      streak = 0;
+      dueAt = new Date(now + 60 * 60 * 1000).toISOString();
+    } else if (!due) {
+      lastOutcome = "too-soon";
+    } else {
+      streak = Math.min(3, streak + 1);
+      const days = streak === 1 ? 1 : streak === 2 ? 3 : 7;
+      dueAt = new Date(now + days * 86400000).toISOString();
+      lastOutcome = "passed";
+      advanced = true;
+    }
+    return {
+      ...prior, streak, mastered: streak >= 3,
+      reviews: (Number(prior.reviews) || 0) + 1,
+      successfulReviews: (Number(prior.successfulReviews) || 0) + (advanced ? 1 : 0),
+      failedReviews: (Number(prior.failedReviews) || 0) + (success ? 0 : 1),
+      lastReviewAt: reviewedAt, lastPositionFen: positionFen || prior.lastPositionFen || "",
+      dueAt, lastOutcome,
+    };
+  }
+
   function lessonHeadingText(number, title, completed, surpriseMode) {
     if (surpriseMode) return "Exercice au hasard";
     return (completed ? "✓ " : "") + number + ". " + title;
   }
 
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonHeadingText };
+    module.exports = { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPartnerIndices, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText };
   }
 
   if (typeof document === "undefined") return;
@@ -2946,6 +3014,8 @@
   let flipped = false;
   let bookReplyTimer = null;
   let progress = readProgress();
+  let reviewSession = null;
+  let reviewJustFinished = false;
   let lessonEngine = null;
   let enginePreview = null;
   let analysisToken = 0;
@@ -3008,6 +3078,21 @@
     return Math.max(Number.isFinite(savedCount) ? savedCount : 0, record && record.completed ? 1 : 0);
   }
 
+  function renderReviewDashboard() {
+    const summaryNode = $("lesson-review-summary");
+    const button = $("lesson-review-start");
+    if (!summaryNode || !button) return;
+    const summary = lessonReviewProgressSummary(LESSONS, progress);
+    summaryNode.textContent = summary.passed === 0
+      ? "Passe au moins une leçon pour commencer les tests de rétention."
+      : summary.reviewable + " leçon(s) passée(s) testable(s) sur une position différente du même thème · " +
+        summary.due + " à réviser maintenant · " + summary.integrated + " maîtrise(s) confirmée(s) sur 3 réussites sans aide · " +
+        summary.withoutPartner + " leçon(s) passée(s) sans position sœur liée pour l’instant.";
+    button.disabled = summary.reviewable === 0;
+    button.title = summary.reviewable === 0 ? "Il faut une leçon passée avec une autre position du même thème." :
+      "Tester un acquis sur une position différente, sans afficher le thème avant ta résolution.";
+  }
+
   function renderCatalog() {
     const catalog = $("lesson-catalog");
     const search = ($("lesson-search").value || "").trim().toLocaleLowerCase("fr");
@@ -3031,6 +3116,7 @@
       " leçons originales + " + anticipationCount + " exercices d’anticipation · " + LESSONS.length +
       " entrées au total · " + completedEntries + " terminés. · Leçons terminées : " + completedOriginal + "/" + originalLessonCount +
       " · Exercices terminés : " + completedAnticipation + "/" + anticipationCount + ".";
+    renderReviewDashboard();
     if (!visibleLessons.length) {
       const empty = document.createElement("p");
       empty.className = "lesson-catalog-empty";
@@ -3053,8 +3139,12 @@
       const state = document.createElement("span");
       const timesCompleted = completionCount(progress[lesson.id]);
       state.className = "lesson-catalog-state" + (timesCompleted ? " is-completed" : "");
+      const reviewRecord = progress[lesson.id] && progress[lesson.id].review;
+      const reviewStreak = Math.max(0, Math.min(3, Number(reviewRecord && reviewRecord.streak) || 0));
       state.textContent = timesCompleted
-        ? "✓ Terminée · à revoir quand tu veux · faite " + timesCompleted + " fois"
+        ? reviewStreak >= 3
+          ? "✓ Passée · maîtrise vérifiée par 3 révisions sans aide · faite " + timesCompleted + " fois"
+          : "✓ Passée · intégration " + reviewStreak + "/3 · faite " + timesCompleted + " fois"
         : lesson.kind === "anticipation" ? "Défi de réponse adverse" : "À découvrir";
       button.append(title, meta, state);
       button.addEventListener("click", () => {
@@ -3182,6 +3272,10 @@
     $("lesson-engine-status").textContent = "";
     $("lesson-engine-lines").textContent = "";
     lessonIndex = index;
+    reviewSession = options.review && options.reviewTargetId
+      ? { targetId: options.reviewTargetId, exerciseId: LESSONS[index].id }
+      : null;
+    reviewJustFinished = false;
     syncPreviousLessonButton();
     clearEvalBar();
     surpriseMode = Boolean(options.surprise);
@@ -3203,7 +3297,9 @@
     boardUI.legalTargets = [];
     boardUI.lastMove = null;
     const titleCompleted = !surpriseMode && completionCount(progress[lesson.id]) > 0;
-    $("lesson-title").textContent = lessonHeadingText(lessonNumberForTitle(lessonIndex), lesson.title, titleCompleted, surpriseMode);
+    $("lesson-title").textContent = reviewSession
+      ? "Révision · Position différente"
+      : lessonHeadingText(lessonNumberForTitle(lessonIndex), lesson.title, titleCompleted, surpriseMode);
     $("lesson-title").classList.toggle("is-completed", titleCompleted);
     $("lesson-goal").textContent = surpriseMode
       ? "Analyse la position sans regarder le thème. Choisis un coup, puis vérifie la réponse adverse sur l’échiquier."
@@ -3219,7 +3315,8 @@
     $("lesson-hint").disabled = false;
     $("lesson-flip").setAttribute("aria-pressed", String(flipped));
     renderSource(lesson);
-    if (surpriseMode) $("lesson-source").textContent = "Exercice au hasard · thème révélé après la résolution";
+    if (reviewSession) $("lesson-source").textContent = "Test de rétention · position différente · thème révélé après la résolution";
+    else if (surpriseMode) $("lesson-source").textContent = "Exercice au hasard · thème révélé après la résolution";
     renderChoices(lesson);
     renderCatalog();
     renderNextLessonPrompt();
@@ -3365,19 +3462,53 @@
 
   function finishLesson() {
     const lesson = LESSONS[lessonIndex];
-    const previous = progress[lesson.id] || {};
-    progress[lesson.id] = createCompletedLessonRecord(previous, attempts, hintsUsed, new Date().toISOString());
-    const saveSucceeded = saveProgress();
+    const reviewAttempt = reviewSession;
+    let reviewResult = null;
+    let saveSucceeded;
+    if (reviewAttempt) {
+      const targetIndex = LESSONS.findIndex((item) => item.id === reviewAttempt.targetId);
+      const target = LESSONS[targetIndex];
+      const priorTarget = progress[reviewAttempt.targetId] || {};
+      reviewResult = createLessonReviewRecord(priorTarget.review, {
+        solved: true, attempts, hintsUsed, positionFen: lesson.fen, targetFen: target && target.fen,
+        reviewedAt: new Date().toISOString(),
+      });
+      progress[reviewAttempt.targetId] = { ...priorTarget, review: reviewResult };
+      reviewSession = null;
+      reviewJustFinished = true;
+      saveSucceeded = saveProgress();
+    } else {
+      const previous = progress[lesson.id] || {};
+      progress[lesson.id] = createCompletedLessonRecord(previous, attempts, hintsUsed, new Date().toISOString());
+      reviewJustFinished = false;
+      saveSucceeded = saveProgress();
+    }
     renderCatalog();
 
     surpriseMode = false;
     anticipatingBook = false;
-    $("lesson-title").textContent = lessonHeadingText(lessonNumberForTitle(lessonIndex), lesson.title, true, false);
-    $("lesson-title").classList.add("is-completed");
+    $("lesson-title").textContent = reviewAttempt
+      ? "Révision · " + lesson.title
+      : lessonHeadingText(lessonNumberForTitle(lessonIndex), lesson.title, true, false);
+    $("lesson-title").classList.toggle("is-completed", !reviewAttempt);
     renderSource(lesson);
-    $("lesson-status").textContent = saveSucceeded
-      ? "✓ Leçon validée : " + lesson.title + "."
-      : "✓ Leçon réussie, mais la progression n’a pas pu être sauvegardée dans ce navigateur.";
+    if (reviewAttempt) {
+      const dueDate = reviewResult.dueAt ? new Date(reviewResult.dueAt).toLocaleDateString("fr-FR") : "";
+      if (reviewResult.lastOutcome === "passed") {
+        $("lesson-status").textContent = reviewResult.mastered
+          ? "Maîtrise démontrée : 3 révisions espacées réussies sans erreur ni indice, sur une position différente. Révision d’entretien prévue le " + dueDate + "."
+          : "Révision " + reviewResult.streak + "/3 validée sans erreur ni indice sur une position différente. Prochaine révision prévue le " + dueDate + ".";
+      } else if (reviewResult.lastOutcome === "too-soon") {
+        $("lesson-status").textContent = "Bonne résolution sans aide, mais le rappel était trop rapproché pour valider une nouvelle étape. Reviens après la date prévue : " + dueDate + ".";
+      } else {
+        $("lesson-status").textContent = "Position résolue, mais une erreur, un indice ou l’absence de position différente empêche de confirmer l’intégration. La série repart à zéro; nouvel essai possible après " + dueDate + ".";
+      }
+      if (!saveSucceeded) $("lesson-status").textContent += " La progression n’a pas pu être sauvegardée dans ce navigateur.";
+    } else {
+      $("lesson-status").textContent = saveSucceeded
+        ? "✓ Leçon validée : " + lesson.title + ". Réussir cette étape la marque comme passée; la maîtrise sera confirmée par des révisions sans aide."
+        : "✓ Leçon réussie, mais la progression n’a pas pu être sauvegardée dans ce navigateur.";
+    }
     const explanation = $("lesson-explanation");
     explanation.replaceChildren();
 
@@ -3419,6 +3550,13 @@
     transfer.textContent = lesson.transfer || lesson.principle;
     explanation.append(transferHeading, transfer);
 
+    if (reviewAttempt) {
+      $("lesson-next-preview").textContent = "Un autre test peut vérifier un autre acquis sur une position différente.";
+      $("lesson-next").textContent = "Réviser un autre acquis";
+      updateProgressLabel();
+      explanation.hidden = false;
+      return;
+    }
     const nextIndex = recommendedNextLessonIndex();
     const nextLesson = LESSONS[nextIndex];
     $("lesson-next-preview").hidden = false;
@@ -3595,6 +3733,46 @@
       ? "Mode anticipation actif : tu joueras chaque réponse de la ligne adverse."
       : "Mode anticipation désactivé : les réponses de la ligne seront jouées automatiquement.";
   });
+  function startLessonReview() {
+    const summary = lessonReviewProgressSummary(LESSONS, progress);
+    if (!summary.reviewable) {
+      $("lesson-review-summary").textContent = summary.passed
+        ? "Tes leçons terminées n’ont pas encore de position sœur liée. Continue les parcours pour débloquer ces tests de transfert."
+        : "Termine une leçon; elle apparaîtra ensuite ici pour un test sur une position sœur.";
+      return;
+    }
+    const now = Date.now();
+    let targets = LESSONS.map((lesson, index) => ({ lesson, index, record: progress[lesson.id] || {} }))
+      .filter(({ record, index }) => completionCount(record) > 0 && lessonReviewPartnerIndices(index).length > 0);
+    const dueTargets = targets.filter(({ record }) => {
+      const dueAt = Date.parse(record.review && record.review.dueAt || "");
+      return !Number.isFinite(dueAt) || dueAt <= now;
+    });
+    if (dueTargets.length) targets = dueTargets;
+    targets.sort((a, b) =>
+      (Number(a.record.review && a.record.review.streak) || 0) - (Number(b.record.review && b.record.review.streak) || 0) ||
+      (Date.parse(a.record.review && a.record.review.dueAt || "") || 0) - (Date.parse(b.record.review && b.record.review.dueAt || "") || 0));
+    const lowest = Number(targets[0].record.review && targets[0].record.review.streak) || 0;
+    const priority = targets.filter(({ record }) => (Number(record.review && record.review.streak) || 0) === lowest);
+    const target = priority[Math.floor(Math.random() * priority.length)];
+    const partners = lessonReviewPartnerIndices(target.index);
+    const previousFen = target.record.review && target.record.review.lastPositionFen;
+    const fresh = partners.filter((index) => LESSONS[index].fen !== previousFen);
+    const choices = fresh.length ? fresh : partners;
+    if (!choices.length) {
+      $("lesson-review-summary").textContent = "Aucune position différente disponible pour ce thème.";
+      return;
+    }
+    const exerciseIndex = choices[Math.floor(Math.random() * choices.length)];
+    $("lesson-search").value = "";
+    $("lesson-level-filter").value = "";
+    $("lesson-program-filter").value = "";
+    loadLesson(exerciseIndex, { surprise: true, review: true, reviewTargetId: target.lesson.id });
+    $("lesson-goal").textContent = "Montre que tu as retenu l’idée : joue la ligne sans indice. Le thème sera révélé après la résolution.";
+    document.querySelector(".lesson-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  $("lesson-review-start").addEventListener("click", startLessonReview);
   $("lesson-surprise").addEventListener("click", () => {
     const candidates = LESSONS.map((lesson, index) => ({ lesson, index }))
       .filter(({ lesson }) => lesson.kind === "anticipation");
@@ -3677,12 +3855,26 @@
     renderBoard();
   });
   $("lesson-hint").addEventListener("click", showHint);
-  $("lesson-restart").addEventListener("click", () => loadLesson(lessonIndex));
+  $("lesson-restart").addEventListener("click", () => {
+    if (!reviewSession) {
+      loadLesson(lessonIndex);
+      return;
+    }
+    loadLesson(lessonIndex, { surprise: true, review: true, reviewTargetId: reviewSession.targetId });
+  });
   $("lesson-previous").addEventListener("click", () => {
     const previous = previousLessonIndex(lessonIndex);
     if (previous !== null) loadLesson(previous);
   });
     $("lesson-next").addEventListener("click", () => {
+      if (reviewSession) {
+        $("lesson-status").textContent = "Termine cette position pour enregistrer la révision.";
+        return;
+      }
+      if (reviewJustFinished) {
+        startLessonReview();
+        return;
+      }
       const nextIndex = nextLessonIndex(lessonIndex);
       const currentProgram = $("lesson-program-filter").value;
       const nextProgram = LESSONS[nextIndex] && LESSONS[nextIndex].program;
