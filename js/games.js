@@ -23,7 +23,8 @@ function gamesNewEntry() {
   const manual = typeof isManualMode === "function" && isManualMode();
   const setting = !manual && typeof opponentElo === "function" ? opponentElo() : null;
   const thinkTime = !manual && typeof opponentThinkTime === "function" ? opponentThinkTime() : null;
-  const estimate = Number.isFinite(setting) && setting > 0 && typeof estimateOpponentFideLikeElo === "function"
+  const hasEngineSetting = !manual && Number.isFinite(setting);
+  const estimate = hasEngineSetting && typeof estimateOpponentFideLikeElo === "function"
     ? estimateOpponentFideLikeElo(setting, thinkTime)
     : null;
   currentGameMetadata = {
@@ -31,12 +32,96 @@ function gamesNewEntry() {
     userColor: state.userColor,
     stockfishRatingEstimate: Number.isFinite(estimate) ? estimate : null,
     stockfishRatingSource: Number.isFinite(estimate) ? "supachess-engine-setting-v1" : null,
-    stockfishSettingElo: Number.isFinite(setting) && setting > 0 ? setting : null,
+    stockfishSettingElo: hasEngineSetting ? setting : null,
     engineThinkTimeMs: Number.isFinite(thinkTime) ? thinkTime : null,
   };
 }
 
 function gamesRound1(v) { return v === null || v === undefined ? null : Math.round(v * 10) / 10; }
+
+function gamesPgnTag(game, name) {
+  const pgn = String(game && game.pgn || "");
+  const match = pgn.match(new RegExp("^\\[" + name + '\\s+"([^"]*)"\\]', "m"));
+  return match ? match[1] : "";
+}
+
+function gamesNumericValue(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function gamesGameSettings(game) {
+  const setting = gamesNumericValue(game && game.stockfishSettingElo) ??
+    gamesNumericValue(gamesPgnTag(game, "SupaChessEngineSetting"));
+  const thinkTime = gamesNumericValue(game && game.engineThinkTimeMs) ??
+    gamesNumericValue(gamesPgnTag(game, "SupaChessEngineThinkTimeMs"));
+  return { setting, thinkTime };
+}
+
+function gamesOpponentColor(game) {
+  let userColor = game && game.userColor;
+  if (!["w", "b"].includes(userColor)) userColor = gamesPgnTag(game, "SupaChessUserColor");
+  if (!["w", "b"].includes(userColor)) {
+    const white = gamesPgnTag(game, "White");
+    const black = gamesPgnTag(game, "Black");
+    if (/joueur|player/i.test(white)) userColor = "w";
+    else if (/joueur|player/i.test(black)) userColor = "b";
+  }
+  return userColor === "w" ? "b" : userColor === "b" ? "w" : null;
+}
+
+function gamesIsCompleted(game) {
+  return Boolean(game && !game.stopped && game.result && ["1-0", "0-1", "1/2-1/2"].includes(game.result));
+}
+
+function gamesOpponentAccuracySummary(games, setting, thinkTime) {
+  const values = (Array.isArray(games) ? games : []).filter((game) => {
+    if (!gamesIsCompleted(game) || !/stockfish/i.test(String(game.engineName || gamesPgnTag(game, "SupaChessOpponent")))) return false;
+    const config = gamesGameSettings(game);
+    return config.setting === setting && config.thinkTime === thinkTime;
+  }).map((game) => {
+    const color = gamesOpponentColor(game);
+    return color === "w" ? gamesNumericValue(game.accuracyW) : color === "b" ? gamesNumericValue(game.accuracyB) : null;
+  }).filter((value) => value !== null && value >= 0 && value <= 100);
+  if (!values.length) return null;
+  const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+  return {
+    games: values.length,
+    average,
+    min: Math.min(...values),
+    max: Math.max(...values),
+    meanAbsoluteDeviation: values.reduce((sum, value) => sum + Math.abs(value - average), 0) / values.length,
+  };
+}
+
+function gamesEngineRowDetails(game) {
+  const name = String(game && (game.engineName || gamesPgnTag(game, "SupaChessOpponent")) || "");
+  if (!/stockfish/i.test(name)) return "";
+  const color = gamesOpponentColor(game);
+  const config = gamesGameSettings(game);
+  const storedEstimate = gamesNumericValue(game.stockfishRatingEstimate) ??
+    gamesNumericValue(gamesPgnTag(game, "SupaChessOpponentRatingEstimate"));
+  const thinkLabel = config.thinkTime !== null
+    ? (config.thinkTime / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " s"
+    : "";
+  const engineAccuracy = color === "w" ? gamesNumericValue(game.accuracyW) : color === "b" ? gamesNumericValue(game.accuracyB) : null;
+  const ratingLabel = storedEstimate !== null
+    ? "≈ " + storedEstimate.toLocaleString("fr-FR") + " Elo-like"
+    : config.setting !== null
+      ? "réglage moteur UCI " + (config.setting === 0 ? "pleine puissance" : config.setting.toLocaleString("fr-FR"))
+      : "";
+  const details = [
+    "Moteur " + (color === "w" ? "B" : color === "b" ? "N" : "?"),
+    name,
+    ratingLabel,
+    config.setting !== null ? "réglage UCI " + (config.setting === 0 ? "pleine puissance" : config.setting.toLocaleString("fr-FR")) : "",
+    thinkLabel,
+    engineAccuracy !== null ? "précision " + engineAccuracy.toLocaleString("fr-FR") + "%" : "",
+  ].filter(Boolean);
+  return details.join(" · ");
+}
+
 
 function gamesResult() {
   if (state.abandoned) return state.userColor === "w" ? "0-1" : "1-0";
@@ -153,8 +238,9 @@ function gamesRenderPanel() {
     const acc = (g.accuracyW != null ? g.accuracyW + "%" : "—") + " / " +
       (g.accuracyB != null ? g.accuracyB + "%" : "—");
     const resultLabel = g.abandoned ? "Défaite par abandon" : g.stopped ? "Arrêtée — sans résultat" : g.result;
+    const engineDetails = gamesEngineRowDetails(g);
     return `<div class="game-row" data-id="${esc(g.id)}">
-      <span class="game-meta">${esc(when)} · <strong>${esc(resultLabel)}</strong> · préc. B/N ${esc(acc)}</span>
+      <span class="game-meta">${esc(when)} · <strong>${esc(resultLabel)}</strong> · préc. B/N ${esc(acc)}${engineDetails ? `<small class="game-engine-details">${esc(engineDetails)}</small>` : ""}</span>
       <span class="game-actions">
         <button class="btn mini" data-act="correct" title="Aller à la première erreur à corriger">Corriger</button>
         <button class="btn mini" data-act="dl" title="Télécharger le PGN">⬇ PGN</button>
