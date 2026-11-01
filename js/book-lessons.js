@@ -2842,6 +2842,14 @@
   root.SupaChessAcademy = Object.assign(root.SupaChessAcademy || {}, {
     buildEngineChoices: function (fen, lines) { return buildEngineChoices(fen, lines, Chess); },
     refreshCatalog: function () { renderCatalog(); },
+    openLesson: function (id) {
+      const index = LESSONS.findIndex((lesson) => lesson.id === id);
+      if (index < 0) return false;
+      renderCatalog();
+      loadLesson(index);
+      document.querySelector(".lesson-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return true;
+    },
     addDerivedLesson: function (lesson) {
       if (!lesson || typeof lesson.id !== "string" || !lesson.id.startsWith("engine-derived-") ||
           LESSONS.some((item) => item.id === lesson.id)) return false;
