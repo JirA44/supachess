@@ -194,9 +194,11 @@
     const panel = document.createElement("section");
     panel.dataset.keyboardShortcutOpener = "true";
     panel.style.cssText = "margin-top:20px;padding:16px;border:1px solid #52657d;border-radius:12px;background:#111827;color:#f5f7fa";
-    panel.innerHTML = '<h3 style="margin:0 0 6px;color:#fff">Raccourcis clavier</h3><p style="margin:0 0 12px;color:#d5deea">Consulte et personnalise tous les raccourcis depuis une fenêtre dédiée.</p><button type="button" data-open-shortcuts style="min-height:42px;padding:9px 14px;border:1px solid #8ba5c2;border-radius:8px;background:#26364a;color:#fff;font-weight:800;cursor:pointer">Afficher et configurer les raccourcis</button>';
+    panel.innerHTML = '<h3 style="margin:0 0 6px;color:#fff">Configurer les raccourcis clavier</h3><p style="margin:0 0 12px;color:#d5deea">Choisis une grille AZERTY, QWERTY ou QWERTZ, puis personnalise chaque touche. Les réglages restent sur cet appareil.</p><button type="button" data-open-shortcuts aria-label="Ouvrir les raccourcis et les grilles de clavier" style="min-height:42px;padding:9px 14px;border:1px solid #8ba5c2;border-radius:8px;background:#26364a;color:#fff;font-weight:800;cursor:pointer">Ouvrir les raccourcis et grilles</button>';
     panel.querySelector("[data-open-shortcuts]").addEventListener("click", () => openSettingsWindow(panel.querySelector("[data-open-shortcuts]")));
-    container.appendChild(panel);
+    const profileHeader = container.firstElementChild;
+    if (profileHeader && profileHeader.nextSibling) container.insertBefore(panel, profileHeader.nextSibling);
+    else container.appendChild(panel);
   }
 
   function openSettingsWindow(returnFocus) {
