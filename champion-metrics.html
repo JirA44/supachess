@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17211a">
+  <title>Champions · précision et ACPL | SupaChess</title>
+  <link rel="stylesheet" href="css/style.css?v=profile-stats-ranges-20261101">
+  <link rel="stylesheet" href="css/champion-metrics.css?v=champion-metrics-20261101">
+</head>
+<body class="champion-metrics-page">
+  <header class="champion-header">
+    <a href="index.html" class="champion-back">← SupaChess</a>
+    <p class="eyebrow">SupaChess · Archives et analyse reproductible</p>
+    <h1>La précision des champions</h1>
+    <p class="champion-lead">Compare les parties de Fischer, Tal, Kasparov, Carlsen et d’autres joueurs avec une analyse Stockfish identique.</p>
+  </header>
+
+  <main class="champion-main">
+    <section class="champion-card" aria-labelledby="method-title">
+      <h2 id="method-title">Des mesures calculées, pas des chiffres devinés</h2>
+      <p>Les archives fournissent des parties PGN, mais pas des scores de précision ou d’ACPL calculés de façon uniforme. Choisis un joueur, importe son PGN, puis lance l’analyse locale. Les résultats seront enregistrés dans ce navigateur; les parties ne sont pas envoyées à un serveur.</p>
+      <div class="metric-definitions">
+        <article><h3>Précision moyenne</h3><p>Moyenne des précisions estimées demi-coup par demi-coup avec la formule décrite par <a href="https://lichess.org/page/accuracy" target="_blank" rel="noopener noreferrer">Lichess ↗</a>. Ce n’est pas le score global d’une partie Lichess, dont l’agrégation est différente.</p></article>
+        <article><h3>ACPL</h3><p>Perte moyenne en centipions : évaluation du meilleur coup trouvé par le moteur moins l’évaluation après le coup joué. Plus l’ACPL est bas, mieux c’est dans cet échantillon.</p></article>
+      </div>
+      <p class="method-note"><strong>Comparaison équitable :</strong> conserve le même moteur, le même temps par position et le même nombre de parties pour chaque joueur. Les résultats dépendent du corpus, de la profondeur effectivement atteinte et des positions; ils ne sont ni un Elo ni une mesure officielle.</p>
+    </section>
+
+    <section class="champion-card" aria-labelledby="analyze-title">
+      <h2 id="analyze-title">Analyser un corpus PGN</h2>
+      <div class="champion-form-grid">
+        <label>Joueur analysé
+          <select id="champion-player">
+            <option value="carlsen">Magnus Carlsen</option>
+            <option value="fischer">Robert James Fischer (Bobby Fischer)</option>
+            <option value="kasparov">Garry Kasparov</option>
+            <option value="tal">Mikhail Tal</option>
+            <option value="capablanca">José Raúl Capablanca</option>
+            <option value="anand">Viswanathan Anand</option>
+            <option value="karpov">Anatoly Karpov</option>
+            <option value="lasker">Emanuel Lasker</option>
+            <option value="custom">Autre joueur (saisir son nom)</option>
+          </select>
+        </label>
+        <label id="custom-player-wrap" hidden>Nom tel qu’il apparaît dans l’en-tête PGN
+          <input id="custom-player-name" type="text" maxlength="100" placeholder="Ex. Judit Polgar">
+        </label>
+        <label>Nombre maximal de parties à analyser
+          <select id="champion-game-limit">
+            <option value="5">5 parties · aperçu</option>
+            <option value="10" selected>10 parties</option>
+            <option value="20">20 parties</option>
+            <option value="50">50 parties</option>
+          </select>
+        </label>
+        <label>Temps Stockfish par position
+          <select id="champion-movetime">
+            <option value="150">150 ms · plus rapide</option>
+            <option value="300" selected>300 ms · équilibré</option>
+            <option value="600">600 ms · recherche plus longue</option>
+          </select>
+        </label>
+      </div>
+      <label class="file-picker">Fichier PGN décompressé
+        <input id="champion-pgn-file" type="file" accept=".pgn,.txt,text/plain">
+      </label>
+      <label for="champion-pgn">Ou colle un ou plusieurs PGN</label>
+      <textarea id="champion-pgn" rows="8" spellcheck="false" placeholder='[Event "Exemple"]
+[White "Magnus Carlsen"]
+[Black "Adversaire"]
+[Result "1-0"]
+
+1. e4 e5 2. Nf3 Nc6 1-0'></textarea>
+      <div class="champion-actions">
+        <button id="champion-analyze" type="button" class="champion-primary">Analyser avec Stockfish local</button>
+        <button id="champion-cancel" type="button" disabled>Arrêter</button>
+        <a href="https://pgnmentor.com/files.html" target="_blank" rel="noopener noreferrer">Trouver des archives PGN gratuites ↗</a>
+      </div>
+      <p class="champion-source-help">Sur PGN Mentor, ouvre « Players », télécharge l’archive du joueur, décompresse le ZIP, puis sélectionne le fichier .pgn. L’échantillon utilise les premières parties valides du fichier contenant ce joueur.</p>
+      <div id="champion-analysis-status" class="champion-status" role="status" aria-live="polite">Sélectionne un PGN pour commencer. Stockfish tourne sur ton appareil.</div>
+      <progress id="champion-progress" max="1" value="0" hidden></progress>
+    </section>
+
+    <section class="champion-card" aria-labelledby="results-title">
+      <div class="champion-results-heading">
+        <div><h2 id="results-title">Mes résultats de comparaison</h2><p>Chaque ligne indique l’échantillon réellement analysé et les réglages utilisés.</p></div>
+        <button id="champion-clear" type="button" class="champion-secondary">Effacer les résultats locaux</button>
+      </div>
+      <div class="champion-table-scroll">
+        <table>
+          <thead><tr><th>Joueur</th><th>Parties</th><th>Demi-coups évalués</th><th>Précision moyenne</th><th>ACPL</th><th>Profondeur moy.</th><th>Réglages</th><th>Dernière analyse</th></tr></thead>
+          <tbody id="champion-results-body"><tr><td colspan="7">Aucune analyse enregistrée sur cet appareil.</td></tr></tbody>
+        </table>
+      </div>
+      <p class="champion-local-note">Les résultats restent dans le stockage local du navigateur. Ils ne contiennent ni PGN ni compte utilisateur.</p>
+    </section>
+
+    <section class="champion-card archive-card" aria-labelledby="archive-title">
+      <h2 id="archive-title">Joueurs historiques présents dans l’archive</h2>
+      <p>Nombre de parties annoncé par PGN Mentor pour ses fichiers joueurs; ce ne sont pas des résultats d’analyse moteur. Catalogue consulté le 1 novembre 2026, page indiquée comme mise à jour en juillet 2026.</p>
+      <ul class="archive-list">
+        <li>Magnus Carlsen <strong>6 615 parties</strong></li>
+        <li>Viswanathan Anand <strong>4 204 parties</strong></li>
+        <li>Mikhail Tal <strong>2 431 parties</strong></li>
+        <li>Garry Kasparov <strong>2 128 parties</strong></li>
+        <li>Robert James Fischer <strong>827 parties</strong></li>
+        <li>José Raúl Capablanca <strong>597 parties</strong></li>
+        <li>Anatoly Karpov <strong>3 529 parties</strong></li>
+        <li>Emanuel Lasker <strong>900 parties</strong></li>
+      </ul>
+      <p>Source : <a href="https://pgnmentor.com/files.html" target="_blank" rel="noopener noreferrer">PGN Mentor · téléchargements PGN gratuits ↗</a>. Les corpus peuvent contenir des parties de périodes, cadences et niveaux d’adversaires différents.</p>
+    </section>
+    <footer class="champion-footer">SupaChess · Comparaison indicative, corpus et méthode toujours visibles</footer>
+  </main>
+
+  <script src="vendor/chess.js"></script>
+  <script src="js/engine.js?v=stockfish-worker-recovery-20261029"></script>
+  <script src="js/champion-metrics.js?v=champion-metrics-20261101"></script>
+</body>
+</html>
