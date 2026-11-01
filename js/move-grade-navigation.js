@@ -89,48 +89,20 @@
     const wrap = document.getElementById("move-grade-summary");
     if (!wrap || typeof state === "undefined") return;
     const entries = currentGradeEntries();
-    for (const row of wrap.querySelectorAll(".move-grade-count-row")) {
-      const side = row.closest(".move-grade-side");
-      const color = side && side.dataset.color;
+    for (const row of wrap.querySelectorAll(".move-grade-table-row")) {
       const category = normalizeCategory(row.dataset.grade);
-      if (!color || row.dataset.navigationReady === "true") continue;
-      row.dataset.navigationReady = "true";
-      row.dataset.color = color;
-      const movesOfType = entries.filter((entry) => entry && entry.color === color && normalizeCategory(entry.category) === category).length;
       const name = row.querySelector(".move-grade-count-name")?.textContent || category;
-      const count = row.querySelector("[data-grade-count]");
-      const children = Array.from(row.childNodes).filter((child) => child !== count);
-      const main = document.createElement("button");
-      main.type = "button";
-      main.className = "move-grade-count-main";
-      main.disabled = movesOfType === 0;
-      main.setAttribute("aria-label", movesOfType
-        ? "Aller au premier demi-coup " + name + " des " + side.querySelector("h3").textContent
-        : "Aucun demi-coup " + name + " disponible dans cette partie");
-      for (const child of children) main.appendChild(child);
-      main.addEventListener("click", () => moveGradeNavigate(color, category, "first"));
-      row.appendChild(main);
-      const countButton = document.createElement("button");
-      countButton.type = "button";
-      countButton.className = "move-grade-count-value";
-      countButton.disabled = movesOfType === 0;
-      countButton.setAttribute("aria-label", movesOfType
-        ? "Aller au premier demi-coup " + name + " des " + side.querySelector("h3").textContent
-        : "Aucun demi-coup " + name + " disponible dans cette partie");
-      if (count) countButton.appendChild(count);
-      countButton.addEventListener("click", () => moveGradeNavigate(color, category, "first"));
-      row.appendChild(countButton);
-      for (let index = 0; index < 2; index++) {
-        const direction = index === 0 ? "previous" : "next";
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "move-grade-step";
+      for (const button of row.querySelectorAll("[data-move-grade-color]")) {
+        if (button.dataset.navigationReady === "true") continue;
+        button.dataset.navigationReady = "true";
+        const color = button.dataset.moveGradeColor;
+        const sideName = color === "w" ? "Blancs" : "Noirs";
+        const movesOfType = entries.filter((entry) => entry && entry.color === color && normalizeCategory(entry.category) === category).length;
         button.disabled = movesOfType === 0;
-        button.title = direction === "previous" ? "Demi-coup précédent de ce type" : "Demi-coup suivant de ce type";
-        button.setAttribute("aria-label", button.title);
-        button.textContent = index === 0 ? "‹" : "›";
-        button.addEventListener("click", () => moveGradeNavigate(color, category, direction));
-        row.appendChild(button);
+        button.setAttribute("aria-label", movesOfType
+          ? "Aller au premier demi-coup " + name + " des " + sideName
+          : "Aucun demi-coup " + name + " des " + sideName + " dans cette partie");
+        button.addEventListener("click", () => moveGradeNavigate(color, category, "first"));
       }
     }
   }
