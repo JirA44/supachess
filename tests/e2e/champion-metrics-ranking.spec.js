@@ -19,7 +19,7 @@ test("champion page ranks analyzed players for every comparable metric", async (
 
   await expect(page.locator("#champion-ranking-status")).toContainText("2 joueur(s) classé(s)");
   await expect(page.locator("#champion-ranking-body tr")).toHaveCount(2);
-  for (const metric of ["accuracy", "acpl", "gamesAnalyzed", "ratedMoves", "averageDepth"]) {
+  for (const metric of ["accuracy", "acpl", "gamesAnalyzed", "ratedMoves", "averageDepth", "grade:best", "grade:very-good", "grade:good", "grade:ok", "grade:inaccuracy", "grade:error", "grade:blunder"]) {
     await page.locator("#champion-ranking-metric").selectOption(metric);
     await expect(page.locator("#champion-ranking-body tr")).toHaveCount(2);
     await expect(page.locator("#champion-ranking-caption")).toContainText(await page.locator("#champion-ranking-metric option:checked").textContent().then(t => t.split(" · ")[0]));
