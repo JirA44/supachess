@@ -572,23 +572,35 @@ function renderMoveGradeSummary() {
     unrated: "Demi-coup pas encore évalué par Stockfish.",
   };
   wrap.replaceChildren();
-  for (const [color, label] of [["w", "Blancs"], ["b", "Noirs"]]) {
-    const side = document.createElement("section");
-    side.className = "move-grade-side";
-    side.dataset.color = color;
-    const heading = document.createElement("h3");
-    heading.textContent = label;
-    side.appendChild(heading);
-    for (const [key, symbol, name] of categories) {
+  const table = document.createElement("div");
+  table.className = "move-grade-table";
+  table.setAttribute("role", "table");
+  table.setAttribute("aria-label", "Qualité des demi-coups par joueur");
+  const header = document.createElement("div");
+  header.className = "move-grade-table-header";
+  header.setAttribute("role", "row");
+  header.innerHTML = '<span role="columnheader">Type de coup</span><span role="columnheader">Blancs</span><span role="columnheader">Noirs</span>';
+  table.appendChild(header);
+  for (const [key, symbol, name] of categories) {
+    const row = document.createElement("div");
+    row.className = "move-grade-table-row grade-" + key;
+    row.dataset.grade = key;
+    row.setAttribute("role", "row");
+    row.innerHTML = '<span class="move-grade-table-label" role="rowheader"><span class="move-grade-count-dot" aria-hidden="true"></span><span class="move-grade-count-symbol" aria-hidden="true">' + symbol + '</span><span class="move-grade-count-name">' + name + '</span></span>';
+    for (const color of ["w", "b"]) {
       const count = state.moveGradeHistory.filter((entry) => entry.color === color && entry.category === key).length;
-      const row = document.createElement("div");
-      row.className = "move-grade-count-row grade-" + key;
-      row.dataset.grade = key;
-      row.innerHTML = `<span class="move-grade-count-dot" aria-hidden="true"></span><span class="move-grade-count-symbol" aria-hidden="true">${symbol}</span><span class="move-grade-count-name">${name}</span><strong data-grade-count>${count ? "+" + count : "0"}</strong>`;
-      side.appendChild(row);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "move-grade-count-value";
+      button.dataset.moveGradeColor = color;
+      button.disabled = count === 0;
+      button.setAttribute("role", "cell");
+      button.innerHTML = '<strong data-grade-count>' + (count ? "+" + count : "0") + '</strong>';
+      row.appendChild(button);
     }
-    wrap.appendChild(side);
+    table.appendChild(row);
   }
+  wrap.appendChild(table);
 
   const legend = $("move-grade-legend");
   if (!legend) return;
