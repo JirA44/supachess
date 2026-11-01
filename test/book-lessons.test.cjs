@@ -35,10 +35,10 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 165, "the academy contains 165 guided lessons");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 192, "the academy contains 192 guided lessons after the Gutenberg additions");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "reinforcement").length, 71, "71 PGN and application lessons reinforce the four methods");
-  assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 103, "the PGN lessons add 24 opponent-reply drills");
-  assert.equal(LESSONS.length, 268, "guided lessons and anticipation drills are separate catalog entries");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 114, "the academy retains 114 opponent-reply drills");
+  assert.equal(LESSONS.length, 306, "guided lessons and anticipation drills are separate catalog entries");
   assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
 });
 
@@ -56,6 +56,33 @@ test("Stockfish curriculum adds progressive original lessons about its observabl
     assert.equal(lesson.author, "SupaChess Académie");
     assert.ok(methodPathLessonIndices(lesson.program).includes(LESSONS.indexOf(lesson)));
   }
+});
+
+test("Project Gutenberg path adds 24 progressively leveled original, source-linked lessons", () => {
+  const program = "Manuels classiques · principes et technique";
+  const lessons = LESSONS.filter((lesson) => lesson.program === program);
+  const expectedSources = [
+    ["J. R. Capablanca", "Chess Fundamentals", "https://www.gutenberg.org/ebooks/33870"],
+    ["Edward Lasker", "Chess Strategy", "https://www.gutenberg.org/ebooks/5614"],
+    ["Howard Staunton", "The Blue Book of Chess", "https://www.gutenberg.org/ebooks/16377"],
+  ];
+  assert.equal(lessons.length, 24);
+  for (const [author, book, url] of expectedSources) {
+    const sourceLessons = lessons.filter((lesson) => lesson.author === author);
+    assert.equal(sourceLessons.length, 8, author + " should contribute eight original lessons");
+    assert.ok(sourceLessons.every((lesson) => lesson.book === book && lesson.url === url));
+    assert.deepEqual(
+      ["Débutant", "Intermédiaire", "Avancé", "Expert"].map((level) => sourceLessons.filter((lesson) => lesson.level === level).length),
+      [2, 2, 2, 2],
+      author + " lessons should progress evenly through the four levels",
+    );
+  }
+  assert.ok(lessons.every((lesson) =>
+    lesson.kind === "method" && lesson.sourceUrl && lesson.reference.includes("original") &&
+    lesson.principle && lesson.transfer && lesson.pitfall &&
+    lesson.sequence.every((action) => action.explanation),
+  ));
+  assert.equal(methodPathLessonIndices(program).length, 24);
 });
 
 test("method paths include all their lessons in progressive level order", () => {
