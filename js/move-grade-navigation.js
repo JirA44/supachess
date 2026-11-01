@@ -98,7 +98,8 @@
       row.dataset.color = color;
       const movesOfType = entries.filter((entry) => entry && entry.color === color && normalizeCategory(entry.category) === category).length;
       const name = row.querySelector(".move-grade-count-name")?.textContent || category;
-      const children = Array.from(row.childNodes);
+      const count = row.querySelector("[data-grade-count]");
+      const children = Array.from(row.childNodes).filter((child) => child !== count);
       const main = document.createElement("button");
       main.type = "button";
       main.className = "move-grade-count-main";
@@ -109,6 +110,16 @@
       for (const child of children) main.appendChild(child);
       main.addEventListener("click", () => moveGradeNavigate(color, category, "first"));
       row.appendChild(main);
+      const countButton = document.createElement("button");
+      countButton.type = "button";
+      countButton.className = "move-grade-count-value";
+      countButton.disabled = movesOfType === 0;
+      countButton.setAttribute("aria-label", movesOfType
+        ? "Aller au premier demi-coup " + name + " des " + side.querySelector("h3").textContent
+        : "Aucun demi-coup " + name + " disponible dans cette partie");
+      if (count) countButton.appendChild(count);
+      countButton.addEventListener("click", () => moveGradeNavigate(color, category, "first"));
+      row.appendChild(countButton);
       const shortcuts = MOVE_GRADE_SHORTCUTS[color] && MOVE_GRADE_SHORTCUTS[color][category];
       for (let index = 0; index < 2; index++) {
         const direction = index === 0 ? "previous" : "next";
