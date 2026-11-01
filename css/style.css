@@ -397,3 +397,14 @@ body {
 .legal-dot-swatch { display: inline-block; width: 12px; height: 12px; flex: 0 0 12px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.4); }
 .legal-dot-unknown { background: #9fb1c4; }
 .legal-dot-rated { background: linear-gradient(135deg,#c084fc 0 15%,#38bdf8 15% 30%,#22c55e 30% 48%,#86efac 48% 64%,#facc15 64% 78%,#fb923c 78% 89%,#ef4444 89%); }
+
+/* XP level progress is visible at a glance and remains readable on mobile. */
+.profile-xp-card { display: grid; gap: 9px; margin: 12px 0; padding: 14px; border: 1px solid rgba(123,211,148,.48); border-radius: 10px; background: rgba(0,0,0,.2); color: #f5f7fa; }
+.profile-xp-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.profile-xp-heading > div { display: grid; gap: 3px; }
+.profile-xp-heading > div > strong { font-size: 1.15rem; }
+.profile-xp-heading > div > span, .profile-xp-card > small { color: #e8e9f0; line-height: 1.45; }
+.profile-xp-track { display: block; width: 100%; height: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,.28); border-radius: 999px; background: #18211e; box-shadow: inset 0 1px 3px rgba(0,0,0,.55); }
+.profile-xp-track > span { display: block; height: 100%; min-width: 0; border-radius: inherit; background: linear-gradient(90deg,#2ea85b,#7bd394); box-shadow: 0 0 10px rgba(123,211,148,.35); transition: width .35s ease; }
+.profile-xp-level-count { color: #9bf0b4; font-size: 1rem; font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .profile-xp-track > span { transition: none; } }
