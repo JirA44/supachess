@@ -831,6 +831,7 @@ function renderProfileModal(data){
   box.innerHTML=html;
   bindLessonProgressRangeControls(box);
   bindProfilePerformanceRangeControls(box);
+  if(auth&&auth.currentUser&&auth.currentUser.uid===data.uid&&window.SupaKeyboardShortcuts)window.SupaKeyboardShortcuts.renderSettings(box);
 }
 function renderOwnProfileFallback(user){
   if(!user||!user.uid)return;
