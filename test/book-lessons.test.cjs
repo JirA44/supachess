@@ -35,10 +35,10 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 210, "the academy contains 210 guided lessons after the complex-game lessons");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 225, "the academy contains 225 guided lessons after the precision routine");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "reinforcement").length, 71, "71 PGN and application lessons reinforce the methods");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 114, "the academy retains 114 opponent-reply drills");
-  assert.equal(LESSONS.length, 324, "guided lessons and anticipation drills are separate catalog entries");
+  assert.equal(LESSONS.length, 339, "guided lessons and anticipation drills are separate catalog entries");
   assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
 });
 
@@ -96,6 +96,7 @@ test("method paths include all their lessons in progressive level order", () => 
     "Kasparov · coups candidats et calcul",
     "Stockfish · comparer et vérifier",
     "Calcul profond · parties maîtresses",
+    "Précision · jouer juste et vérifier",
   ];
   const ranks = { Débutant: 0, Intermédiaire: 1, Avancé: 2, Expert: 3 };
   for (const program of programs) {
@@ -282,4 +283,19 @@ test("18 deep-calculation lessons use legal, sourced historical positions from t
       assert.ok(action.explanation, lesson.id + " needs a half-move explanation");
     }
   }
+});
+
+test("15 original precision lessons progress from habit-building to independent review", () => {
+  const program = "Précision · jouer juste et vérifier";
+  const lessons = LESSONS.filter((lesson) => lesson.program === program);
+  assert.equal(lessons.length, 15);
+  assert.deepEqual(
+    ["Débutant", "Intermédiaire", "Avancé", "Expert"].map((level) => lessons.filter((lesson) => lesson.level === level).length),
+    [3, 4, 3, 5],
+  );
+  assert.ok(lessons.every((lesson) => lesson.kind === "method" && lesson.choices.filter((choice) => choice.correct).length === 1));
+  assert.ok(lessons.some((lesson) => /100 %|100%/.test(lesson.principle + " " + lesson.question)));
+  assert.ok(lessons.some((lesson) => /Stockfish/.test(lesson.transfer)));
+  assert.ok(lessons.some((lesson) => /indice/.test(lesson.pitfall)));
+  assert.ok(lessons.every((lesson) => lesson.sequence.length >= 3));
 });
