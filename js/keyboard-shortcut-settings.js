@@ -66,7 +66,7 @@
 
   function readBindings() {
     let saved = null;
-    try { saved = JSON.parse(root.localStorage.getItem(STORAGE_KEY) || "null"); } catch (_) {}
+    try { saved = JSON.parse(root.localStorage.getItem(STORAGE_KEY) || root.localStorage.getItem("supachess.moveGradeShortcuts.v1") || "null"); } catch (_) {}
     const result = cloneDefaults();
     for (const side of ["w", "b"]) for (const [category, pair] of Object.entries(result[side])) {
       const candidate = saved && saved[side] && saved[side][category];
