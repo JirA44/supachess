@@ -95,7 +95,7 @@ function getTopLevelRanking(limit){
       out.push({uid:doc.id,displayName:data.displayName||profileText('profile_guest','Joueur'),level:level,xp:Math.max(0,Number(data.learningXP)||0),rankName:data.learningLevelName||profileRankName(level)});
     });
     return out.sort(function(a,b){return b.level-a.level||b.xp-a.xp||String(a.displayName).localeCompare(String(b.displayName));}).slice(0,limit);
-  }).catch(function(){return [];});
+  });
 }
 function getProfile(uid){
   if(!db||!uid) return Promise.resolve(null);
@@ -901,7 +901,7 @@ function initRankingSection(){
   var sec=document.createElement('section');
   sec.id='ranking-section';
   sec.style.cssText='margin:40px 0;padding:24px;background:rgba(0,0,0,.35);border-radius:16px;border:1px solid rgba(255,255,255,.1)';
-  sec.innerHTML='<h2 style="text-align:center;color:#ffd700;margin-bottom:16px">🏆 Classements Top — par type de jeu</h2><div style="display:flex;justify-content:center;gap:10px;margin-bottom:16px"><button class="rank-tab" data-type="puzzle" style="padding:8px 16px;border-radius:20px;border:1px solid #4facfe;background:#4facfe;color:#fff;cursor:pointer">🧩 Puzzle</button><button class="rank-tab" data-type="classic3s" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">⚡ Classic 3s</button><button class="rank-tab" data-type="classic5s" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">⏱️ Classic 5s</button><button class="rank-tab" data-type="champions" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">♟ Champions · précision &amp; ACPL</button><button class="rank-tab" data-type="levels" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">🏅 Niveau atteint</button></div><div id="ranking-list" style="display:grid;gap:8px"></div>';
+  sec.innerHTML='<h2 style="text-align:center;color:#ffd700;margin-bottom:16px">🏆 Classements Top — par type de jeu</h2><div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:16px"><button class="rank-tab" data-type="puzzle" style="padding:8px 16px;border-radius:20px;border:1px solid #4facfe;background:#4facfe;color:#fff;cursor:pointer">🧩 Puzzle</button><button class="rank-tab" data-type="classic3s" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">⚡ Classic 3s</button><button class="rank-tab" data-type="classic5s" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">⏱️ Classic 5s</button><button class="rank-tab" data-type="champions" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">♟ Champions · précision &amp; ACPL</button><button class="rank-tab" data-type="levels" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">🏅 Niveau atteint</button></div><div id="ranking-list" style="display:grid;gap:8px"></div>';
   var footer=document.querySelector('.footer');
   if(footer) container.insertBefore(sec, footer);
   else container.appendChild(sec);
@@ -912,11 +912,13 @@ function initRankingSection(){
       list.innerHTML='<div style="text-align:center;opacity:.6">Chargement du classement des niveaux…</div>';
       getTopLevelRanking(50).then(function(top){
         if(!top.length){list.innerHTML='<div style="padding:16px;background:rgba(255,255,255,.06);border-radius:10px;text-align:center"><p>Aucun niveau communiqué au classement pour le moment.</p><p style="opacity:.75">Connecte-toi et ouvre ton profil pour publier ton niveau actuel. Le classement affiche seulement les niveaux réellement enregistrés.</p></div>';return;}
-        list.innerHTML='<p style="margin:0;color:#d4dfeb">Classement mondial par niveau SupaChess atteint. À niveau égal, les XP totaux départagent les joueurs. Le niveau est illimité; les données viennent des profils qui l’ont publié.</p>'+top.map(function(u,i){
+        list.innerHTML='<p style="margin:0;color:#d4dfeb">Classement des joueurs SupaChess ayant publié leur niveau. À niveau égal, les XP totaux départagent les joueurs. Niveau illimité; XP enregistrés côté navigateur, classement indicatif et non vérifié côté serveur.</p>'+top.map(function(u,i){
           var medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1+'.');
           return '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:rgba(255,255,255,.06);border-radius:10px;cursor:pointer" data-uid="'+escapeProfileText(u.uid)+'" class="rank-row"><span style="width:28px;text-align:center">'+medal+'</span><span style="flex:1">'+escapeProfileText(u.displayName)+'</span><span style="font-weight:bold;color:#ffd700">Niveau '+u.level+' · '+escapeProfileText(u.rankName)+'</span></div>';
         }).join('');
         list.querySelectorAll('.rank-row').forEach(function(el){el.addEventListener('click',function(){getProfile(el.getAttribute('data-uid')).then(renderProfileModal);});});
+      }).catch(function(){
+        list.innerHTML='<div role="status" style="padding:16px;background:rgba(255,255,255,.06);border-radius:10px;text-align:center">Classement indisponible pour le moment. Réessaie après vérification de la connexion.</div>';
       });
       return;
     }
