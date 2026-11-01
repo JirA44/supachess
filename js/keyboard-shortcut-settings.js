@@ -209,6 +209,7 @@
         button.focus();
       });
       button.addEventListener("keydown", (event) => {
+        if (button.dataset.waiting !== "true") return;
         if (event.key === "Tab") {
           button.dataset.waiting = "false";
           refreshWindow(button.closest("[data-shortcut-window]"));
