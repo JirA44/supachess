@@ -4,10 +4,11 @@ const path = require("node:path");
 const vm = require("node:vm");
 const test = require("node:test");
 
-function createShortcuts() {
+function createShortcuts(navigator = {}) {
   const values = new Map();
   const events = [];
   const window = {
+    navigator,
     localStorage: {
       getItem(key) { return values.has(key) ? values.get(key) : null; },
       setItem(key, value) { values.set(key, String(value)); },
@@ -62,4 +63,26 @@ test("custom edits are marked, duplicate keys are rejected, and reset restores t
   assert.equal(api.resetBindings(), true);
   assert.equal(api.currentLayout(), "azerty");
   assert.deepEqual(JSON.parse(JSON.stringify(api.getBindings().w.brilliant)), ["a", "z"]);
+});
+
+test("layout detection identifies AZERTY, QWERTY and QWERTZ from physical key mappings", () => {
+  const { api } = createShortcuts();
+  const map = (entries) => new Map(Object.entries(entries));
+  assert.equal(api.detectLayoutFromMap(map({ KeyA: "q", KeyQ: "a", KeyY: "y", KeyZ: "w" })), "azerty");
+  assert.equal(api.detectLayoutFromMap(map({ KeyA: "a", KeyQ: "q", KeyY: "y", KeyZ: "z" })), "qwerty");
+  assert.equal(api.detectLayoutFromMap(map({ KeyA: "a", KeyQ: "q", KeyY: "z", KeyZ: "y" })), "qwertz");
+  assert.equal(api.detectLayoutFromMap(new Map()), null);
+});
+
+test("first visit applies the detected keyboard grid, while a manual choice made during detection is preserved", async () => {
+  const qwertyMap = new Map([["KeyA", "a"], ["KeyQ", "q"], ["KeyY", "y"], ["KeyZ", "z"]]);
+  const { api, values } = createShortcuts({ language: "fr-FR", keyboard: { getLayoutMap: () => Promise.resolve(qwertyMap) } });
+  await api.ready;
+  assert.equal(api.currentLayout(), "qwerty");
+  assert.deepEqual(JSON.parse(values.get(api.STORAGE_KEY)).w.brilliant, ["q", "w"]);
+
+  const delayed = createShortcuts({ language: "en-US", keyboard: { getLayoutMap: () => new Promise((resolve) => setTimeout(() => resolve(qwertyMap), 10)) } });
+  assert.equal(delayed.api.applyPreset("qwertz").ok, true);
+  await delayed.api.ready;
+  assert.equal(delayed.api.currentLayout(), "qwertz");
 });
