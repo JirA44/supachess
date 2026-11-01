@@ -81,6 +81,7 @@ test("completed diagnostic profile renders labeled charts and legends in Chromiu
     function parseInfoLine() { return null; }`,
   }));
 
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/index.html");
   await page.evaluate(() => {
     document.body.insertAdjacentHTML("beforeend", window.SupaProfiles.renderLocalLearningPanel({}));
@@ -88,6 +89,8 @@ test("completed diagnostic profile renders labeled charts and legends in Chromiu
 
   const report = page.locator(".profile-diagnostic-report");
   await expect(report.locator("svg")).toHaveCount(6);
+  const chartFontSizes = await report.locator("svg text").evaluateAll((nodes) => nodes.map((node) => Number(node.getAttribute("font-size"))));
+  expect(Math.min(...chartFontSizes)).toBeGreaterThanOrEqual(12);
   await expect(report).toContainText("Moyenne par partie selon le type de coup");
   const perGameTable = report.locator('table[aria-label="Moyenne par partie en pourcentage par type de coup"]');
   await expect(perGameTable).toHaveCount(1);
