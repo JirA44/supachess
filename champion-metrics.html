@@ -163,6 +163,7 @@
       <section class="champion-ranking" aria-labelledby="ranking-title">
         <h3 id="ranking-title">Top ranking · chaque indicateur calculé</h3>
         <p>Le classement compare uniquement les analyses ayant le même moteur et le même temps par position. Les parties et positions restent des échantillons différents; lis toujours les colonnes de contexte avant de comparer.</p>
+        <p class="method-note">Les catégories reprennent les seuils de SupaChess; « brillant » n’est pas classé ici, car il faut confirmer le sacrifice dans une variante complète.</p>
         <div class="champion-form-grid ranking-controls">
           <label for="champion-ranking-metric">Indicateur à classer
             <select id="champion-ranking-metric">
@@ -171,6 +172,15 @@
               <option value="gamesAnalyzed">Parties analysées · plus haut</option>
               <option value="ratedMoves">Demi-coups évalués · plus haut</option>
               <option value="averageDepth">Profondeur moyenne · plus haut</option>
+              <optgroup label="Part des demi-coups">
+                <option value="grade:best">Meilleur coup · plus haut</option>
+                <option value="grade:very-good">Très bon coup · plus haut</option>
+                <option value="grade:good">Bon coup · plus haut</option>
+                <option value="grade:ok">Coup OK · plus haut</option>
+                <option value="grade:inaccuracy">Imprécision · plus bas</option>
+                <option value="grade:error">Erreur · plus bas</option>
+                <option value="grade:blunder">Gaffe · plus bas</option>
+              </optgroup>
             </select>
           </label>
           <label for="champion-ranking-protocol">Protocole Stockfish
@@ -208,6 +218,7 @@
   </main>
 
   <script src="vendor/chess.js"></script>
+  <script src="js/move-feedback.js?v=move-grade-shared-20261101"></script>
   <script src="js/engine.js?v=stockfish-worker-recovery-20261029"></script>
   <script src="js/champion-metrics.js?v=champion-ranking-categories-20261101"></script>
 </body>
