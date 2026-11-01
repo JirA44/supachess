@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { Chess } = require("chess.js");
-const { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPartnerIndices, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText } = require("../js/book-lessons.js");
+const { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPartnerIndices, lessonReviewDifficultyOptions, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText } = require("../js/book-lessons.js");
 
 test("book lesson setups and user/book move sequences are legal", () => {
   for (const lesson of LESSONS) {
@@ -322,7 +322,7 @@ test("review progress distinguishes passed lessons, due reviews, and demonstrate
     a: { completed: true },
     c: { completed: true },
   }, Date.parse("2026-11-01T12:00:00.000Z"));
-  assert.deepEqual(summary, { passed: 2, reviewable: 1, due: 1, integrated: 0, withoutPartner: 1 });
+  assert.deepEqual(summary, { passed: 2, reviewable: 1, due: 1, integrated: 0, withoutPartner: 1, differentComplexity: 0 });
 });
 
 test("mastery requires three unassisted reviews spaced at one- and three-day intervals", () => {
@@ -359,4 +359,39 @@ test("errors or hints reset the retention streak, while completing a lesson pres
   assert.equal(afterHint.lastOutcome, "needs-work");
   const completedAgain = createCompletedLessonRecord({ completed: true, completions: 1, review: first }, 1, 0, "2026-11-02T13:00:00.000Z");
   assert.deepEqual(completedAgain.review, first);
+});
+
+
+test("review exercises increase complexity by level when the same theme has harder positions", () => {
+  const lessons = [
+    { id: "base", category: "Calcul · Variante forcée", level: "Débutant", fen: "fen-base" },
+    { id: "same-level", category: "Calcul · Variante forcée", level: "Débutant", fen: "fen-1" },
+    { id: "intermediate", category: "Calcul · Variante forcée", level: "Intermédiaire", fen: "fen-2" },
+    { id: "advanced", category: "Calcul · Variante forcée", level: "Avancé", fen: "fen-3" },
+    { id: "expert", category: "Calcul · Variante forcée", level: "Expert", fen: "fen-4" },
+  ];
+  assert.deepEqual(lessonReviewDifficultyOptions(0, 0, "", lessons), { desiredLevel: "Débutant", candidateIndices: [1] });
+  assert.deepEqual(lessonReviewDifficultyOptions(0, 1, "", lessons), { desiredLevel: "Intermédiaire", candidateIndices: [2] });
+  assert.deepEqual(lessonReviewDifficultyOptions(0, 2, "", lessons), { desiredLevel: "Avancé", candidateIndices: [3] });
+  assert.deepEqual(lessonReviewDifficultyOptions(0, 3, "", lessons), { desiredLevel: "Expert", candidateIndices: [4] });
+  assert.deepEqual(lessonReviewDifficultyOptions(0, 2, "fen-3", lessons), { desiredLevel: "Avancé", candidateIndices: [4] });
+});
+
+test("review difficulty falls back to the closest available same-theme position", () => {
+  const lessons = [
+    { id: "expert-target", category: "Calcul · Variante forcée", level: "Expert", fen: "fen-a" },
+    { id: "advanced-only", category: "Calcul · Variante forcée", level: "Avancé", fen: "fen-b" },
+  ];
+  assert.deepEqual(lessonReviewDifficultyOptions(0, 0, "", lessons), { desiredLevel: "Expert", candidateIndices: [1] });
+});
+
+test("the current lesson corpus includes multiple levels and different-complexity review positions", () => {
+  const levels = new Set(LESSONS.map((lesson) => lesson.level));
+  assert.deepEqual([...levels].sort(), ["Avancé", "Débutant", "Expert", "Intermédiaire"]);
+  const differentLevelTargets = LESSONS.filter((lesson, index) =>
+    lessonReviewPartnerIndices(index).some((partner) => LESSONS[partner].level !== lesson.level));
+  assert.ok(differentLevelTargets.length >= 100);
+  assert.ok(lessonReviewProgressSummary(LESSONS, Object.fromEntries(
+    differentLevelTargets.map((lesson) => [lesson.id, { completed: true }])
+  )).differentComplexity >= 100);
 });
