@@ -35,10 +35,10 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 192, "the academy contains 192 guided lessons after the Gutenberg additions");
-  assert.equal(LESSONS.filter((lesson) => lesson.kind === "reinforcement").length, 71, "71 PGN and application lessons reinforce the four methods");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 210, "the academy contains 210 guided lessons after the complex-game lessons");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind === "reinforcement").length, 71, "71 PGN and application lessons reinforce the methods");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 114, "the academy retains 114 opponent-reply drills");
-  assert.equal(LESSONS.length, 306, "guided lessons and anticipation drills are separate catalog entries");
+  assert.equal(LESSONS.length, 324, "guided lessons and anticipation drills are separate catalog entries");
   assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
 });
 
@@ -95,6 +95,7 @@ test("method paths include all their lessons in progressive level order", () => 
     "Tal · tactique et sacrifices à calculer",
     "Kasparov · coups candidats et calcul",
     "Stockfish · comparer et vérifier",
+    "Calcul profond · parties maîtresses",
   ];
   const ranks = { Débutant: 0, Intermédiaire: 1, Avancé: 2, Expert: 3 };
   for (const program of programs) {
@@ -262,4 +263,23 @@ test("lesson title shows a green checkmark once validated", () => {
   assert.equal(lessonHeadingText(1, "Activer son roi", true, false), "✓ 1. Activer son roi");
   assert.equal(lessonHeadingText(1, "Activer son roi", false, false), "1. Activer son roi");
   assert.equal(lessonHeadingText(1, "Activer son roi", true, true), "Exercice au hasard");
+});
+
+test("18 deep-calculation lessons use legal, sourced historical positions from three master games", () => {
+  const program = "Calcul profond · parties maîtresses";
+  const lessons = LESSONS.filter((lesson) => lesson.program === program);
+  assert.equal(lessons.length, 18);
+  assert.equal(new Set(lessons.map((lesson) => lesson.sourceGame)).size, 3);
+  assert.ok(lessons.every((lesson) => lesson.kind === "method" && (lesson.level === "Expert" || lesson.level === "Avancé")));
+  assert.ok(lessons.every((lesson) => lesson.sequence.length >= 3 && lesson.sequence[0].side === "user"));
+  assert.ok(lessons.every((lesson) => lesson.reference.includes("pas un verdict Stockfish")));
+  assert.ok(lessons.every((lesson) => lesson.sourceUrl));
+  for (const lesson of lessons) {
+    const game = setupGame(lesson, Chess);
+    for (const action of lesson.sequence) {
+      const move = game.move({ from: action.uci.slice(0, 2), to: action.uci.slice(2, 4), promotion: action.uci.slice(4) || "q" });
+      assert.ok(move, lesson.id + " line must be legal");
+      assert.ok(action.explanation, lesson.id + " needs a half-move explanation");
+    }
+  }
 });
