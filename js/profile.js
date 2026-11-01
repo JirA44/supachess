@@ -231,26 +231,38 @@ function profileXPProgress(xp,level){
 function formatAccuracyPercent(value){
   return value===null||value===undefined||!Number.isFinite(Number(value))?'—':Number(value).toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1})+' %';
 }
-function renderPlayerAccuracyPanel(summary){
-  summary=summary||{};
-  function changeText(period){
-    if(period.delta===null||period.delta===undefined)return 'Évolution indisponible : pas encore assez de parties dans les deux périodes.';
-    var sign=period.delta>0?'+':period.delta<0?'−':'±';
-    return sign+' '+Math.abs(period.delta).toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1})+' points par rapport à la période précédente';
-  }
-  function card(title,record,change){
-    var count=record&&Number(record.games)||0;
-    var detail=count+' partie'+(count>1?'s':'')+' analysée'+(count>1?'s':'');
-    return '<article class="profile-accuracy-card"><h4>'+title+'</h4><strong class="profile-accuracy-value">'+formatAccuracyPercent(record&&record.average)+'</strong><span class="profile-accuracy-count">'+detail+'</span>'+(change?'<span class="profile-accuracy-change">'+change+'</span>':'')+'</article>';
-  }
-  var hasAny=summary.all&&summary.all.average!==null;
-  return '<section class="profile-accuracy-panel" aria-labelledby="profile-accuracy-title"><h4 id="profile-accuracy-title">Précision moyenne du joueur</h4>'+
-    (hasAny?'<div class="profile-accuracy-grid">'+
-      card('Toutes les parties',summary.all,'')+
-      card('7 derniers jours',summary.week&&summary.week.current,changeText(summary.week||{}))+
-      card('30 derniers jours',summary.month&&summary.month.current,changeText(summary.month||{}))+
-    '</div><p class="profile-accuracy-note">Moyenne pondérée par le nombre de demi-coups analysés. Les évolutions comparent chaque période à la période précédente de même durée.</p>':
-    '<p class="profile-accuracy-note">Aucune partie terminée avec précision disponible.</p>')+'</section>';
+function profilePerformanceRanges(){
+  return [
+    {key:'day',label:'1 j',days:1,aria:'Dernières 24 heures'},
+    {key:'week',label:'1 sem.',days:7,aria:'Derniers 7 jours'},
+    {key:'month',label:'1 mois',days:30,aria:'Derniers 30 jours'},
+    {key:'quarter',label:'3 mois',days:90,aria:'Derniers 3 mois'},
+    {key:'year',label:'1 an',days:365,aria:'Derniers 12 mois'},
+    {key:'all',label:'Tout',days:null,aria:'Tout l’historique'}
+  ];
+}
+var profilePerformanceRange='all';
+var profilePerformanceGames=[];
+function profileGamesForRange(games,range,now){
+  var items=Array.isArray(games)?games:[];
+  var definition=profilePerformanceRanges().find(function(item){return item.key===range;});
+  if(!definition||definition.days===null)return items;
+  var end=Number.isFinite(Number(now))?Number(now):Date.now();
+  var start=end-definition.days*24*60*60*1000;
+  return items.filter(function(game){
+    var timestamp=game&&game.date?new Date(game.date).getTime():NaN;
+    return Number.isFinite(timestamp)&&timestamp>start&&timestamp<=end;
+  });
+}
+function renderPlayerAccuracyPanel(games,range){
+  var summary=summarizeAccuracyGames(profileGamesForRange(games,range,Date.now()));
+  var selectedRange=profilePerformanceRanges().find(function(item){return item.key===range;})||profilePerformanceRanges()[5];
+  var record=summary.all;
+  var hasAny=record&&record.average!==null;
+  var count=record&&Number(record.games)||0;
+  return '<section class="profile-accuracy-panel" aria-labelledby="profile-accuracy-title"><h4 id="profile-accuracy-title">Précision moyenne · '+selectedRange.aria+'</h4>'+
+    (hasAny?'<div class="profile-accuracy-grid"><article class="profile-accuracy-card"><h4>'+selectedRange.aria+'</h4><strong class="profile-accuracy-value">'+formatAccuracyPercent(record.average)+'</strong><span class="profile-accuracy-count">'+count+' partie'+(count>1?'s':'')+' analysée'+(count>1?'s':'')+' · '+Number(record.moves||0)+' demi-coups</span></article></div><p class="profile-accuracy-note">Moyenne pondérée par le nombre de demi-coups évalués. Les parties sans date sont incluses uniquement dans « Tout l’historique ».</p>':
+    '<p class="profile-accuracy-note">Aucune partie datée avec une précision disponible pour cette période.</p>')+'</section>';
 }
 function profileNextLevelXP(xp,level){
   var api=window.ChessNovaProgress;
@@ -328,7 +340,7 @@ function readDiagnosticProfile(){
   return {diagnostic:diagnostic,games:diagnosticGames,ratedMoves:ratedMoves,gameCount:diagnosticGames.length};
 }
 
-function renderMoveTypeAveragePanel(games){
+function renderMoveTypeAveragePanel(games,range){
   var definitions=[
     {key:'brilliant',label:'Coups brillants',color:'#c16cff'},
     {key:'best',label:'Meilleurs coups',color:'#55b9ff'},
@@ -339,8 +351,9 @@ function renderMoveTypeAveragePanel(games){
     {key:'mistake',label:'Erreurs',color:'#f07864'},
     {key:'blunder',label:'Gaffes',color:'#ef596b'}
   ];
+  var selectedRange=profilePerformanceRanges().find(function(item){return item.key===range;})||profilePerformanceRanges()[5];
   var perGame=[];
-  (Array.isArray(games)?games:[]).forEach(function(game){
+  profileGamesForRange(games,range,Date.now()).forEach(function(game){
     if(!game||!['1-0','0-1','1/2-1/2'].includes(String(game.result||''))||
       game.abandoned||game.stopped||game.termination==='abandoned'||game.termination==='unterminated')return;
     var color=game.userColor;
@@ -366,15 +379,42 @@ function renderMoveTypeAveragePanel(games){
     perGame.push({total:rated.length,counts:counts});
   });
   var heading='<section class="profile-move-type-average" aria-labelledby="profile-move-type-average-title" style="margin:16px 0;padding:16px;border:1px solid #52657d;border-radius:14px;background:#1b2638;color:#f4f7fb">'+
-    '<h4 id="profile-move-type-average-title" style="margin-top:0">Pourcentage moyen des types de coups par partie</h4>';
-  if(!perGame.length)return heading+'<p>Aucune partie terminée avec des demi-coups évalués disponibles.</p></section>';
+    '<h4 id="profile-move-type-average-title" style="margin-top:0">Répartition des types de demi-coups · '+selectedRange.aria+'</h4>';
+  if(!perGame.length)return heading+'<p>Aucune partie terminée avec des demi-coups évalués disponibles pour cette période.</p></section>';
   var rows=definitions.map(function(type){
     var totalCount=perGame.reduce(function(sum,game){return sum+game.counts[type.key];},0);
     var average=perGame.reduce(function(sum,game){return sum+100*game.counts[type.key]/game.total;},0)/perGame.length;
     return '<tr><th scope="row" style="text-align:left;padding:7px 9px;border-bottom:1px solid #52657d;color:'+type.color+'">'+type.label+'</th><td style="text-align:right;padding:7px 9px;border-bottom:1px solid #52657d">'+totalCount+'</td><td style="text-align:right;padding:7px 9px;border-bottom:1px solid #52657d;font-weight:700">'+average.toFixed(1).replace('.',',')+' %</td></tr>';
   }).join('');
   return heading+'<p>Moyenne calculée sur '+perGame.length+' parties terminées avec coups classés. Pour chaque partie, le pourcentage de chaque type est rapporté aux demi-coups évalués de ton camp; les parties ont ensuite le même poids. Les demi-coups non évalués sont exclus.</p>'+
-    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><caption style="text-align:left;padding:4px 8px;color:#dce6f2">Total des coups et part moyenne par partie</caption><thead><tr><th scope="col" style="text-align:left;padding:7px 9px;border-bottom:2px solid #789">Type de coup</th><th scope="col" style="text-align:right;padding:7px 9px;border-bottom:2px solid #789">Coups total</th><th scope="col" style="text-align:right;padding:7px 9px;border-bottom:2px solid #789">Moyenne / partie</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
+    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><caption style="text-align:left;padding:4px 8px;color:#dce6f2">Total des coups et part moyenne par partie</caption><thead><tr><th scope="col" style="text-align:left;padding:7px 9px;border-bottom:2px solid #789">Type de demi-coup</th><th scope="col" style="text-align:right;padding:7px 9px;border-bottom:2px solid #789">Total</th><th scope="col" style="text-align:right;padding:7px 9px;border-bottom:2px solid #789">Moyenne / partie</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
+}
+function renderProfilePerformancePanel(games){
+  profilePerformanceGames=Array.isArray(games)?games:[];
+  var ranges=profilePerformanceRanges();
+  var buttons=ranges.map(function(range){
+    var selected=range.key===profilePerformanceRange;
+    return '<button type="button" class="profile-performance-range-button" data-profile-performance-range="'+range.key+'" aria-pressed="'+selected+'" aria-label="'+range.aria+'">'+range.label+'</button>';
+  }).join('');
+  return '<section class="profile-performance-section" aria-label="Statistiques de précision et de demi-coups">'+
+    '<div class="profile-performance-range-controls" role="group" aria-label="Choisir la période des statistiques">'+buttons+'</div>'+
+    '<div class="profile-performance-content" aria-live="polite">'+renderPlayerAccuracyPanel(profilePerformanceGames,profilePerformanceRange)+renderMoveTypeAveragePanel(profilePerformanceGames,profilePerformanceRange)+'</div></section>';
+}
+function bindProfilePerformanceRangeControls(container){
+  if(!container||typeof container.querySelectorAll!=='function')return;
+  container.querySelectorAll('.profile-performance-section').forEach(function(section){
+    section.querySelectorAll('[data-profile-performance-range]').forEach(function(button){
+      button.addEventListener('click',function(){
+        profilePerformanceRange=button.getAttribute('data-profile-performance-range')||'all';
+        section.querySelectorAll('[data-profile-performance-range]').forEach(function(item){
+          var selected=item===button;
+          item.setAttribute('aria-pressed',String(selected));
+        });
+        var content=section.querySelector('.profile-performance-content');
+        if(content)content.innerHTML=renderPlayerAccuracyPanel(profilePerformanceGames,profilePerformanceRange)+renderMoveTypeAveragePanel(profilePerformanceGames,profilePerformanceRange);
+      });
+    });
+  });
 }
 
 function renderDiagnosticProfile(){
@@ -726,7 +766,7 @@ function renderLocalLearningPanel(data){
     (xpRange.total!==null?'<strong class="profile-xp-level-count">'+Number(xpRange.current).toLocaleString('fr-FR')+' / '+Number(xpRange.total).toLocaleString('fr-FR')+' XP '+profileText('profile_xp_this_level','dans ce niveau')+'</strong>':'')+
     '<small>'+escapeProfileText(profileText('profile_xp_to_next','Progression vers le niveau suivant'))+': '+Math.round(xpPercent)+'%'+(nextXP!==null?' · '+profileText('profile_next_level_at','prochain niveau à')+' '+Number(nextXP).toLocaleString('fr-FR')+' XP · '+profileText('profile_xp_remaining','XP restantes pour atteindre le niveau suivant')+' : '+xpRemaining+' XP':'')+'</small></div>'+
     '<div class="profile-learning-stats"><div><strong>'+local.completed.length+' / '+local.attempted.length+'</strong><span>'+profileText('profile_lessons_mastered_attempted','leçons maîtrisées / commencées')+'</span></div><div><strong>'+local.moveExercises+'</strong><span>'+profileText('profile_correction_moves','demi-coups à revoir')+'</span></div><div><strong>'+local.puzzlesSolved+'</strong><span>'+profileText('profile_puzzles_solved','problèmes résolus')+'</span></div><div><strong>'+local.practiceSessions+'</strong><span>'+profileText('profile_practice_sessions','séances d’entraînement')+'</span></div></div>'+
-    renderPlayerAccuracyPanel(local.accuracySummary)+renderMoveTypeAveragePanel(local.playedGames)+
+    renderProfilePerformancePanel(local.playedGames)+
     renderExerciseCharts(local)+renderDiagnosticProfile()+renderCorrectionProgressSummary(local)+
     '<h4>'+profileText('profile_mastery_title','Maîtrise et progression')+'</h4><ul class="profile-mastery-list">'+training.map(function(item){var label=escapeProfileText(item.label);var value='<strong>'+item.value+'</strong>';return '<li>'+(item.href?'<a class="profile-mastery-link" href="'+item.href+'" aria-label="'+label+' : '+item.value+'">'+label+value+'</a>':'<div class="profile-mastery-entry">'+label+value+'</div>')+'</li>';}).join('')+'</ul>'+
     '<div class="profile-learning-actions"><div class="profile-resume-card"><a class="profile-resume-link" href="'+weaknessesUrl+'"><span>🎯 Travailler mes plus grandes lacunes<small style="display:block;font-weight:500;opacity:.82;margin-top:3px">'+escapeProfileText(weaknessFocusText)+'</small></span><span aria-hidden="true">›</span></a></div><a class="profile-diagnostic-button" role="button" href="index.html?start-diagnostic=1#level-diagnostic-banner">🧭 Passer le diagnostic de niveau</a><small class="profile-diagnostic-help">Relance un bilan de 10 parties analysées par Stockfish.</small><div class="profile-resume-card"><a class="profile-resume-link" href="'+exercisesUrl+'"><span>'+profileText('profile_resume_exercises','Reprendre mes exercices')+'</span><span aria-hidden="true">›</span></a></div><div class="profile-resume-card"><a class="profile-resume-link" href="https://jira44.github.io/supachess/book-lessons.html?next=1"><span>'+profileText('profile_resume_lessons','Reprendre mes leçons')+'</span><span aria-hidden="true">›</span></a></div><div class="profile-resume-card"><a class="profile-resume-link" href="https://jira44.github.io/supachess-web/TRAINING_OPENINGS.html"><span>'+profileText('profile_resume_mastery','Reprendre l’entraînement de maîtrise')+'</span><span aria-hidden="true">›</span></a></div></div>';
@@ -790,6 +830,7 @@ function renderProfileModal(data){
   if(auth&&auth.currentUser&&auth.currentUser.uid===data.uid)html+=renderLocalLearningPanel(data);
   box.innerHTML=html;
   bindLessonProgressRangeControls(box);
+  bindProfilePerformanceRangeControls(box);
 }
 function renderOwnProfileFallback(user){
   if(!user||!user.uid)return;
