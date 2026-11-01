@@ -2450,10 +2450,46 @@
       .map(({ index }) => index);
   }
 
-  function nextMethodPathLessonIndex(currentIndex, program) {
+  function methodPathProgramOrder() {
+    const ordered = [];
+    if (typeof document !== "undefined") {
+      for (const card of document.querySelectorAll("[data-method-path]")) {
+        const program = card.dataset.methodPath;
+        if (program && !ordered.includes(program)) ordered.push(program);
+      }
+    }
+    for (const lesson of LESSONS) {
+      if (lesson.program && !ordered.includes(lesson.program)) ordered.push(lesson.program);
+    }
+    return ordered.filter((program) => methodPathLessonIndices(program).length > 0);
+  }
+
+  function lessonRecordIsComplete(record) {
+    const savedCount = Number(record && record.completions);
+    return Math.max(Number.isFinite(savedCount) ? savedCount : 0, record && record.completed ? 1 : 0) > 0;
+  }
+
+  function nextIncompleteMethodPathLessonIndex(currentProgram, completionProgress, orderedPrograms) {
+    if (!completionProgress || typeof completionProgress !== "object") return null;
+    const programs = Array.isArray(orderedPrograms) ? orderedPrograms : methodPathProgramOrder();
+    for (const program of programs) {
+      if (!program || program === currentProgram) continue;
+      const candidate = methodPathLessonIndices(program)
+        .find((index) => !lessonRecordIsComplete(completionProgress[LESSONS[index].id]));
+      if (candidate !== undefined) return candidate;
+    }
+    return null;
+  }
+
+  function nextMethodPathLessonIndex(currentIndex, program, completionProgress, orderedPrograms) {
     const path = methodPathLessonIndices(program);
     if (!path.length) return (currentIndex + 1) % LESSONS.length;
     const position = path.indexOf(currentIndex);
+    if (position === path.length - 1 && completionProgress &&
+        path.every((index) => lessonRecordIsComplete(completionProgress[LESSONS[index].id]))) {
+      const nextPathLesson = nextIncompleteMethodPathLessonIndex(program, completionProgress, orderedPrograms);
+      if (nextPathLesson !== null) return nextPathLesson;
+    }
     return path[position < 0 ? 0 : (position + 1) % path.length];
   }
 
@@ -2713,7 +2749,7 @@
 
   function nextLessonIndex(currentIndex) {
     const program = $("lesson-program-filter").value;
-    if (program && LESSONS[currentIndex]?.program === program) return nextMethodPathLessonIndex(currentIndex, program);
+    if (program && LESSONS[currentIndex]?.program === program) return nextMethodPathLessonIndex(currentIndex, program, progress);
     return (currentIndex + 1) % LESSONS.length;
   }
 
