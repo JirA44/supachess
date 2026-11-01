@@ -206,7 +206,7 @@ function readLocalLearningProgress(data){
     endgameMastered:completedCount(endgames,'completed'),
     tacticMastered:Math.max(completedCount(tactics,'completedCategories'),legacyTacticMastered),
     accuracyGames:accuracyGames,
-    accuracySummary:summarizeAccuracyGames(playedGames),
+    accuracySummary:summarizeAccuracyGames(playedGames),playedGames:playedGames,
     correctedStats:correctedStats,
     brilliantWithoutAids:brilliantWithoutAids
   };
@@ -309,6 +309,56 @@ function readDiagnosticProfile(){
   });
   return {diagnostic:diagnostic,games:diagnosticGames,ratedMoves:ratedMoves,gameCount:diagnosticGames.length};
 }
+
+function renderMoveTypeAveragePanel(games){
+  var definitions=[
+    {key:'brilliant',label:'Coups brillants',color:'#c16cff'},
+    {key:'best',label:'Meilleurs coups',color:'#55b9ff'},
+    {key:'very-good',label:'Très bons coups',color:'#22b66b'},
+    {key:'good',label:'Bons coups',color:'#8bdc8b'},
+    {key:'ok',label:'Coups OK',color:'#f2ca58'},
+    {key:'inaccuracy',label:'Imprécisions',color:'#f2a45a'},
+    {key:'mistake',label:'Erreurs',color:'#f07864'},
+    {key:'blunder',label:'Gaffes',color:'#ef596b'}
+  ];
+  var perGame=[];
+  (Array.isArray(games)?games:[]).forEach(function(game){
+    if(!game||!['1-0','0-1','1/2-1/2'].includes(String(game.result||''))||
+      game.abandoned||game.stopped||game.termination==='abandoned'||game.termination==='unterminated')return;
+    var color=game.userColor;
+    if(color!=='w'&&color!=='b'){
+      var pgn=String(game.pgn||'');
+      var colorHeader=pgn.match(/^\[SupaChessUserColor\s+"([wb])"\]/m);
+      if(colorHeader)color=colorHeader[1];
+      else if(/^\[White\s+"Joueur"\]/mi.test(pgn))color='w';
+      else if(/^\[Black\s+"Joueur"\]/mi.test(pgn))color='b';
+    }
+    if(color!=='w'&&color!=='b')return;
+    var counts={};
+    definitions.forEach(function(type){counts[type.key]=0;});
+    var rated=(Array.isArray(game.moveGrades)?game.moveGrades:[]).filter(function(move){
+      var key=move&&move.category==='error'?'mistake':move&&move.category;
+      return move&&move.color===color&&Object.prototype.hasOwnProperty.call(counts,key);
+    });
+    if(!rated.length)return;
+    rated.forEach(function(move){
+      var key=move.category==='error'?'mistake':move.category;
+      counts[key]++;
+    });
+    perGame.push({total:rated.length,counts:counts});
+  });
+  var heading='<section class="profile-move-type-average" aria-labelledby="profile-move-type-average-title" style="margin:16px 0;padding:16px;border:1px solid #52657d;border-radius:14px;background:#1b2638;color:#f4f7fb">'+
+    '<h4 id="profile-move-type-average-title" style="margin-top:0">Pourcentage moyen des types de coups par partie</h4>';
+  if(!perGame.length)return heading+'<p>Aucune partie terminée avec des demi-coups évalués disponibles.</p></section>';
+  var rows=definitions.map(function(type){
+    var totalCount=perGame.reduce(function(sum,game){return sum+game.counts[type.key];},0);
+    var average=perGame.reduce(function(sum,game){return sum+100*game.counts[type.key]/game.total;},0)/perGame.length;
+    return '<tr><th scope="row" style="text-align:left;padding:7px 9px;border-bottom:1px solid #52657d;color:'+type.color+'">'+type.label+'</th><td style="text-align:right;padding:7px 9px;border-bottom:1px solid #52657d">'+totalCount+'</td><td style="text-align:right;padding:7px 9px;border-bottom:1px solid #52657d;font-weight:700">'+average.toFixed(1).replace('.',',')+' %</td></tr>';
+  }).join('');
+  return heading+'<p>Moyenne calculée sur '+perGame.length+' parties terminées avec coups classés. Pour chaque partie, le pourcentage de chaque type est rapporté aux demi-coups évalués de ton camp; les parties ont ensuite le même poids. Les demi-coups non évalués sont exclus.</p>'+
+    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><caption style="text-align:left;padding:4px 8px;color:#dce6f2">Total des coups et part moyenne par partie</caption><thead><tr><th scope="col" style="text-align:left;padding:7px 9px;border-bottom:2px solid #789">Type de coup</th><th scope="col" style="text-align:right;padding:7px 9px;border-bottom:2px solid #789">Coups total</th><th scope="col" style="text-align:right;padding:7px 9px;border-bottom:2px solid #789">Moyenne / partie</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
+}
+
 function renderDiagnosticProfile(){
   var report=readDiagnosticProfile();
   var diagnostic=report.diagnostic;
@@ -582,7 +632,7 @@ function renderLocalLearningPanel(data){
     '<div class="profile-xp-track" role="progressbar" aria-label="'+profileText('profile_xp_progress','Progression des XP')+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(xpPercent)+'"><span style="width:'+xpPercent.toFixed(1)+'%"></span></div>'+
     '<small>'+escapeProfileText(profileText('profile_xp_to_next','Progression vers le niveau suivant'))+': '+Math.round(xpPercent)+'%'+(nextXP!==null?' · '+profileText('profile_next_level_at','prochain niveau à')+' '+Number(nextXP).toLocaleString('fr-FR')+' XP · '+profileText('profile_xp_remaining','XP restantes pour atteindre le niveau suivant')+' : '+xpRemaining+' XP':'')+'</small></div>'+
     '<div class="profile-learning-stats"><div><strong>'+local.completed.length+' / '+local.attempted.length+'</strong><span>'+profileText('profile_lessons_mastered_attempted','leçons maîtrisées / commencées')+'</span></div><div><strong>'+local.moveExercises+'</strong><span>'+profileText('profile_correction_moves','demi-coups à revoir')+'</span></div><div><strong>'+local.puzzlesSolved+'</strong><span>'+profileText('profile_puzzles_solved','problèmes résolus')+'</span></div><div><strong>'+local.practiceSessions+'</strong><span>'+profileText('profile_practice_sessions','séances d’entraînement')+'</span></div></div>'+
-    renderPlayerAccuracyPanel(local.accuracySummary)+
+    renderPlayerAccuracyPanel(local.accuracySummary)+renderMoveTypeAveragePanel(local.playedGames)+
     renderExerciseCharts(local)+renderDiagnosticProfile()+renderCorrectionProgressSummary(local)+
     '<h4>'+profileText('profile_mastery_title','Maîtrise et progression')+'</h4><ul class="profile-mastery-list">'+training.map(function(item){var label=escapeProfileText(item.label);var value='<strong>'+item.value+'</strong>';return '<li>'+(item.href?'<a class="profile-mastery-link" href="'+item.href+'" aria-label="'+label+' : '+item.value+'">'+label+value+'</a>':'<div class="profile-mastery-entry">'+label+value+'</div>')+'</li>';}).join('')+'</ul>'+
     '<div class="profile-learning-actions"><div class="profile-resume-card"><a class="profile-resume-link" href="'+weaknessesUrl+'"><span>🎯 Travailler mes plus grandes lacunes<small style="display:block;font-weight:500;opacity:.82;margin-top:3px">'+escapeProfileText(weaknessFocusText)+'</small></span><span aria-hidden="true">›</span></a></div><a class="profile-diagnostic-button" role="button" href="index.html?start-diagnostic=1#level-diagnostic-banner">🧭 Passer le diagnostic de niveau</a><small class="profile-diagnostic-help">Relance un bilan de 10 parties analysées par Stockfish.</small><div class="profile-resume-card"><a class="profile-resume-link" href="'+exercisesUrl+'"><span>'+profileText('profile_resume_exercises','Reprendre mes exercices')+'</span><span aria-hidden="true">›</span></a></div><div class="profile-resume-card"><a class="profile-resume-link" href="https://jira44.github.io/supachess/book-lessons.html?next=1"><span>'+profileText('profile_resume_lessons','Reprendre mes leçons')+'</span><span aria-hidden="true">›</span></a></div><div class="profile-resume-card"><a class="profile-resume-link" href="https://jira44.github.io/supachess-web/TRAINING_OPENINGS.html"><span>'+profileText('profile_resume_mastery','Reprendre l’entraînement de maîtrise')+'</span><span aria-hidden="true">›</span></a></div></div>';
