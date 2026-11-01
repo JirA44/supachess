@@ -427,7 +427,7 @@ test("competency progress tracks tactics, strategy, plans, calculation, openings
     plan: { completed: true },
   };
   const summary = Object.fromEntries(lessonCompetencySummary(lessons, progress, "2026-11-01T00:00:00.000Z").map((entry) => [entry.id, entry]));
-  assert.equal(summary.tactics.total, 2);
+  assert.equal(summary.tactics.total, 3, "a safety lesson can also train tactical recognition");
   assert.equal(summary.tactics.passed, 2);
   assert.equal(summary.tactics.mastered, 1);
   assert.equal(summary.tactics.due, 1);
