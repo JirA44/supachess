@@ -185,5 +185,8 @@
     window.renderMoveGradeSummary();
   }
   installKeyboardShortcuts();
+  document.addEventListener("supachess:shortcuts-changed", () => {
+    if (typeof root.renderMoveGradeSummary === "function") root.renderMoveGradeSummary();
+  });
   root.moveGradeNavigate = moveGradeNavigate;
 })(typeof window !== "undefined" ? window : globalThis);
