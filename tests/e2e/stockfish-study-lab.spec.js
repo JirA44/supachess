@@ -12,7 +12,9 @@ test("Stockfish audits the tactic puzzles and creates a legal mastery exercise",
   await page.goto("/book-lessons.html");
   await expect(page.getByRole("heading", { name: "Atelier Stockfish · audit et nouvelles maîtrises" })).toBeVisible();
   await page.getByRole("button", { name: "Auditer les puzzles tactiques" }).click();
-  await expect(page.locator("[data-sf-status]")).toContainText("Audit terminé", { timeout: 180000 });
+  const status = page.locator("[data-sf-status]");
+  await expect.poll(async () => status.textContent(), { timeout: 60000 }).toMatch(/Audit (terminé|interrompu)/);
+  await expect(status).toContainText("Audit terminé");
   await expect(page.locator("[data-sf-status]")).toContainText("40 position(s) distincte(s) analysée(s)");
   const createExercise = page.getByRole("button", { name: "Créer et jouer cet exercice" }).first();
   await expect(createExercise).toBeVisible();
