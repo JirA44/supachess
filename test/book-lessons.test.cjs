@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { Chess } = require("chess.js");
-const { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPartnerIndices, lessonReviewDifficultyOptions, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText } = require("../js/book-lessons.js");
+const { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPositionKey, lessonReviewPartnerIndices, lessonReviewDifficultyOptions, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText } = require("../js/book-lessons.js");
 
 test("book lesson setups and user/book move sequences are legal", () => {
   for (const lesson of LESSONS) {
@@ -310,6 +310,26 @@ test("review partners keep the same theme and use a different legal lesson posit
   ];
   assert.equal(lessonReviewKey(lessons[0]), lessonReviewKey(lessons[1]));
   assert.deepEqual(lessonReviewPartnerIndices(0, lessons), [1]);
+});
+
+test("retention compares the board position, not FEN move counters", () => {
+  const category = "Tactique · Fourchette";
+  const base = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+  const sameBoard = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 99 42";
+  const differentTurn = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1";
+  const lessons = [
+    { id: "target", category, fen: base },
+    { id: "same-position-different-counters", category, fen: sameBoard },
+    { id: "different-position", category, fen: differentTurn },
+  ];
+  assert.equal(lessonReviewPositionKey(base), lessonReviewPositionKey(sameBoard));
+  assert.deepEqual(lessonReviewPartnerIndices(0, lessons), [2]);
+  const review = createLessonReviewRecord({}, {
+    solved: true, attempts: 0, hintsUsed: 0, positionFen: sameBoard, targetFen: base,
+    reviewedAt: "2026-11-01T12:00:00.000Z",
+  });
+  assert.equal(review.streak, 0);
+  assert.equal(review.lastOutcome, "needs-work");
 });
 
 test("review progress distinguishes passed lessons, due reviews, and demonstrated mastery", () => {
