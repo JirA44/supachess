@@ -151,16 +151,17 @@
       if (target instanceof HTMLElement &&
         (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
       if (event.ctrlKey || event.metaKey || event.altKey) return;
+      const shortcutApi = root.SupaKeyboardShortcuts;
       const key = String(event.key || "").toLocaleLowerCase("fr");
-      const configured = root.SupaKeyboardShortcuts && root.SupaKeyboardShortcuts.getBindings() || MOVE_GRADE_SHORTCUTS;
+      const configured = shortcutApi && shortcutApi.getBindings() || MOVE_GRADE_SHORTCUTS;
       for (const [color, categories] of Object.entries(configured)) {
         for (const [category, pair] of Object.entries(categories)) {
-          if (pair[0] === key) {
+          if (shortcutApi ? shortcutApi.matchesEvent(event, pair[0]) : pair[0] === key) {
             event.preventDefault();
             moveGradeNavigate(color, category, "previous");
             return;
           }
-          if (pair[1] === key) {
+          if (shortcutApi ? shortcutApi.matchesEvent(event, pair[1]) : pair[1] === key) {
             event.preventDefault();
             moveGradeNavigate(color, category, "next");
             return;
