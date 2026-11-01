@@ -546,9 +546,7 @@ function recordMoveGrade(ply, color, category, metadata = {}) {
   if (existing) {
     existing.color = color;
     existing.category = category;
-    if (Object.prototype.hasOwnProperty.call(metadata, "noTrainingAids")) {
-      existing.noTrainingAids = metadata.noTrainingAids === true;
-    }
+    Object.assign(existing, metadata);
   } else state.moveGradeHistory.push({ ply, color, category, ...metadata });
   renderMoveGradeSummary();
 }
@@ -611,7 +609,7 @@ function finishEngineFeedback(pending, replyLine) {
   const deltaCp = Math.max(0, pending.beforeValue + scoreValue(replyLine));
   const cand = { deltaCp, line: { ...replyLine, pv: [pending.uci, ...replyLine.pv] } };
   const brilliant = isBrilliantCandidate(pending.fen, cand);
-  recordMoveGrade(pending.ply, pending.color, moveGradeCategory(deltaCp, brilliant, pending.uci === pending.beforeBestUci));
+  recordMoveGrade(pending.ply, pending.color, moveGradeCategory(deltaCp, brilliant, pending.uci === pending.beforeBestUci), { lossCp: deltaCp });
   const grade = moveGrade(deltaCp, brilliant, pending.uci === pending.beforeBestUci);
   moveFeedback.show({ san: pending.san, color: pending.color, moveNumber: pending.moveNumber, square: pending.square,
     deltaCp, brilliant, best: pending.uci === pending.beforeBestUci, token: pending.token });
@@ -850,7 +848,7 @@ function commitUserMove(moveObj, cand, forced) {
   const grade = moveGrade(cand ? cand.deltaCp : null, brilliant, cand?.rank === 1);
   recordMoveGrade(state.chess.history().length, userMoveColor,
     moveGradeCategory(cand ? cand.deltaCp : null, brilliant, cand?.rank === 1),
-    { noTrainingAids: !boardUI.showDots && !boardUI.showMoveDots });
+    { noTrainingAids: !boardUI.showDots && !boardUI.showMoveDots, lossCp: cand && Number.isFinite(cand.deltaCp) ? cand.deltaCp : null });
   moveFeedback.show({ san: mv.san, color: mv.color, moveNumber: moveNumberFromFen(fenBefore), square: mv.to,
     deltaCp: cand ? cand.deltaCp : null, brilliant, best: cand?.rank === 1 });
   const evaluation = cand && cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
