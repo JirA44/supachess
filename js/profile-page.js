@@ -64,7 +64,11 @@
   }
 
   function onEscape(event) {
-    if (event.key === "Escape") closeProfileDialog();
+    const shortcuts=window.SupaKeyboardShortcuts;
+    const token=shortcuts?shortcuts.getBindings().closeProfile:"Escape";
+    const target=event.target;
+    if(token.length===1&&target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)))return;
+    if(shortcuts?shortcuts.matchesEvent(event,token):event.key==="Escape")closeProfileDialog();
   }
   document.addEventListener("keydown", onEscape);
 
