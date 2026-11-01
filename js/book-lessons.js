@@ -2896,8 +2896,22 @@
     return { legalCount: legalCount, choices: choices };
   }
 
+  function createCompletedLessonRecord(previous, attempts, hintsUsed, completedAt) {
+    const prior = previous && typeof previous === "object" ? previous : {};
+    const savedCount = Number(prior.completions);
+    const priorCompletions = Math.max(Number.isFinite(savedCount) ? savedCount : 0, prior.completed ? 1 : 0);
+    return {
+      completed: true,
+      completions: priorCompletions + 1,
+      attempts: attempts,
+      hintsUsed: hintsUsed,
+      completedAt: completedAt,
+      bestAttempts: prior.bestAttempts === undefined ? attempts : Math.min(prior.bestAttempts, attempts),
+    };
+  }
+
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex };
+    module.exports = { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord };
   }
 
   if (typeof document === "undefined") return;
@@ -2970,8 +2984,12 @@
   }
 
   function saveProgress() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(progress)); }
-    catch (_) { /* Lessons still work when browser storage is unavailable. */ }
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(progress));
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   function completionCount(record) {
@@ -3101,6 +3119,16 @@
 
   function renderNextLessonPrompt() {
     syncPreviousLessonButton();
+    const currentLesson = LESSONS[lessonIndex];
+    if (!completionCount(progress[currentLesson.id])) {
+      $("lesson-next-preview").textContent =
+        "Cette leçon ne sera validée qu’après la bonne réponse et tous les coups demandés. Tu peux passer, mais elle restera à découvrir.";
+      $("lesson-next-preview").hidden = false;
+      $("lesson-next").textContent = "Passer sans valider";
+      $("lesson-next").setAttribute("aria-label", "Passer sans valider : " + currentLesson.title);
+      $("lesson-next").hidden = false;
+      return;
+    }
     const nextIndex = nextLessonIndex(lessonIndex);
     const nextLesson = LESSONS[nextIndex];
     const selectedProgram = $("lesson-program-filter").value;
@@ -3325,22 +3353,17 @@
   function finishLesson() {
     const lesson = LESSONS[lessonIndex];
     const previous = progress[lesson.id] || {};
-    progress[lesson.id] = {
-      completed: true,
-      completions: completionCount(previous) + 1,
-      attempts: attempts,
-      hintsUsed: hintsUsed,
-      completedAt: new Date().toISOString(),
-      bestAttempts: previous.bestAttempts === undefined ? attempts : Math.min(previous.bestAttempts, attempts),
-    };
-    saveProgress();
+    progress[lesson.id] = createCompletedLessonRecord(previous, attempts, hintsUsed, new Date().toISOString());
+    const saveSucceeded = saveProgress();
     renderCatalog();
 
     surpriseMode = false;
     anticipatingBook = false;
     $("lesson-title").textContent = lesson.title;
     renderSource(lesson);
-    $("lesson-status").textContent = "✓ Leçon terminée : " + lesson.title + ".";
+    $("lesson-status").textContent = saveSucceeded
+      ? "✓ Leçon validée : " + lesson.title + "."
+      : "✓ Leçon réussie, mais la progression n’a pas pu être sauvegardée dans ce navigateur.";
     const explanation = $("lesson-explanation");
     explanation.replaceChildren();
 
