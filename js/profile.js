@@ -297,8 +297,9 @@ function readLocalLearningProgress(data){
     var count=Array.from(new Set(legacyTacticSolved.filter(function(id){return typeof id==='string'&&pattern.test(id);}))).length;
     return count>=tacticThemeSizes[theme];
   }).length;
+  var performanceGames=mergeProfileAnalysisGames(playedGames,games);
   return {
-    completed:completed,attempted:attempted,games:games,moveExercises:moveExercises,latest:latest,
+    completed:completed,attempted:attempted,games:games,performanceGames:performanceGames,moveExercises:moveExercises,latest:latest,
     categoryCounts:categoryCounts,xp:xp,level:level,streak:streak,practiceSessions:practiceSessions,
     puzzlesSolved:Math.max(Number(localProgress.puzzlesSolved)||0,Number(cloudProgress.puzzlesSolved)||0),
     puzzleElo:puzzleElo,
