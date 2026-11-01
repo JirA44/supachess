@@ -185,6 +185,18 @@ function readLocalLearningProgress(data){
   var openings=read('chessnova_training_openings',{});
   var endgames=read('chessnova_training_endgames',{});
   var tactics=read('chessnova_training_tactics',{});
+  var legacyTacticSolved=read('supachess_tactics_v2',[]);
+  if(!Array.isArray(legacyTacticSolved))legacyTacticSolved=[];
+  var tacticThemeSizes={fork:12,pin:4,skewer:4,discovered:4,backrank:4,smothered:4,doublecheck:4,xray:4};
+  var tacticThemePatterns={
+    fork:/-fork-/i,pin:/-pin-/i,skewer:/-skewer-/i,discovered:/^discovered-/i,
+    backrank:/^backrank-/i,smothered:/^smothered-/i,doublecheck:/^double-check-/i,xray:/^xray-/i
+  };
+  var legacyTacticMastered=Object.keys(tacticThemeSizes).filter(function(theme){
+    var pattern=tacticThemePatterns[theme];
+    var count=Array.from(new Set(legacyTacticSolved.filter(function(id){return typeof id==='string'&&pattern.test(id);}))).length;
+    return count>=tacticThemeSizes[theme];
+  }).length;
   return {
     completed:completed,attempted:attempted,games:games,moveExercises:moveExercises,latest:latest,
     categoryCounts:categoryCounts,xp:xp,level:level,streak:streak,practiceSessions:practiceSessions,
@@ -192,7 +204,7 @@ function readLocalLearningProgress(data){
     puzzleElo:puzzleElo,
     openingMastered:completedCount(openings,'completed'),
     endgameMastered:completedCount(endgames,'completed'),
-    tacticMastered:completedCount(tactics,'completedCategories'),
+    tacticMastered:Math.max(completedCount(tactics,'completedCategories'),legacyTacticMastered),
     accuracyGames:accuracyGames,
     accuracySummary:summarizeAccuracyGames(playedGames),
     correctedStats:correctedStats,
