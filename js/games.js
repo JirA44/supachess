@@ -229,6 +229,7 @@ function gamesRenderPanel() {
   if (!arr.length) {
     wrap.innerHTML = "<em>Aucune partie enregistrée.</em>";
     gamesRenderStockfishEstimate();
+    if (typeof updateOpponentFideEstimate === "function") updateOpponentFideEstimate();
     return;
   }
   wrap.innerHTML = arr.map((g) => {
@@ -250,6 +251,7 @@ function gamesRenderPanel() {
   }).join("");
   if (typeof reviewRefreshCorrectionHotkeys === "function") reviewRefreshCorrectionHotkeys();
   gamesRenderStockfishEstimate();
+  if (typeof updateOpponentFideEstimate === "function") updateOpponentFideEstimate();
 }
 
 document.getElementById("games-list").addEventListener("click", (e) => {
