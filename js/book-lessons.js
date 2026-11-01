@@ -2785,17 +2785,26 @@
     return index + 1;
   }
 
+  function shortMethodProgramName(program) {
+    return String(program || "nouveau parcours").split(" · ")[0];
+  }
+
   function renderNextLessonPrompt() {
     syncPreviousLessonButton();
     const nextIndex = nextLessonIndex(lessonIndex);
     const nextLesson = LESSONS[nextIndex];
     const selectedProgram = $("lesson-program-filter").value;
     const followsPath = Boolean(selectedProgram && LESSONS[lessonIndex].program === selectedProgram);
-    $("lesson-next-preview").textContent =
-      (followsPath ? "Étape suivante du parcours : " : "À découvrir ensuite : ") +
-      nextLesson.title + " — " + nextLesson.category + ".";
+    const switchesPath = Boolean(followsPath && nextLesson.program && nextLesson.program !== selectedProgram);
+    $("lesson-next-preview").textContent = switchesPath
+      ? "Parcours terminé. Prochain parcours à découvrir : " + shortMethodProgramName(nextLesson.program) +
+        " · première étape : " + nextLesson.title + " (" + nextLesson.level + ")."
+      : (followsPath ? "Étape suivante du parcours : " : "À découvrir ensuite : ") +
+        nextLesson.title + " — " + nextLesson.category + ".";
     $("lesson-next-preview").hidden = false;
-    $("lesson-next").textContent = followsPath ? "Étape suivante du parcours" : "Leçon suivante";
+    $("lesson-next").textContent = switchesPath
+      ? "Commencer le parcours " + shortMethodProgramName(nextLesson.program)
+      : followsPath ? "Étape suivante du parcours" : "Leçon suivante";
     $("lesson-next").hidden = false;
   }
 
@@ -3065,16 +3074,24 @@
 
     const nextIndex = recommendedNextLessonIndex();
     const nextLesson = LESSONS[nextIndex];
-    $("lesson-next-preview").textContent = (lessonIndex + 1 < LESSONS.length ? "Prochaine étape : " : "Pour revoir le parcours : ") +
-      nextLesson.title + " — " + nextLesson.category + ".";
     $("lesson-next-preview").hidden = false;
     $("lesson-next").hidden = false;
     const pathProgram = $("lesson-program-filter").value;
     const followsPath = Boolean(pathProgram && LESSONS[lessonIndex].program === pathProgram);
-    $("lesson-next").textContent = followsPath ? "Étape suivante du parcours" :
-      (nextIndex === (lessonIndex + 1) % LESSONS.length ? "Leçon suivante" : "Leçon recommandée");
-    if (followsPath) $("lesson-next-preview").textContent = "Prochaine étape du parcours " + pathProgram + " : " +
-      nextLesson.title + " (" + nextLesson.level + ") — " + nextLesson.category + ".";
+    const switchesPath = Boolean(followsPath && nextLesson.program && nextLesson.program !== pathProgram);
+    if (switchesPath) {
+      $("lesson-next-preview").textContent = "Parcours terminé. Prochain parcours à découvrir : " +
+        shortMethodProgramName(nextLesson.program) + " · première étape : " + nextLesson.title +
+        " (" + nextLesson.level + ") — " + nextLesson.category + ".";
+      $("lesson-next").textContent = "Commencer le parcours " + shortMethodProgramName(nextLesson.program);
+    } else {
+      $("lesson-next-preview").textContent = followsPath
+        ? "Prochaine étape du parcours " + pathProgram + " : " + nextLesson.title + " (" + nextLesson.level + ") — " + nextLesson.category + "."
+        : (nextIndex === (lessonIndex + 1) % LESSONS.length ? "Leçon suivante : " : "Leçon recommandée : ") +
+          nextLesson.title + " — " + nextLesson.category + ".";
+      $("lesson-next").textContent = followsPath ? "Étape suivante du parcours" :
+        (nextIndex === (lessonIndex + 1) % LESSONS.length ? "Leçon suivante" : "Leçon recommandée");
+    }
     updateProgressLabel();
     updateProgressLabel();
     explanation.hidden = false;
@@ -3318,7 +3335,16 @@
     const previous = previousLessonIndex(lessonIndex);
     if (previous !== null) loadLesson(previous);
   });
-    $("lesson-next").addEventListener("click", () => loadLesson(nextLessonIndex(lessonIndex)));
+    $("lesson-next").addEventListener("click", () => {
+      const nextIndex = nextLessonIndex(lessonIndex);
+      const currentProgram = $("lesson-program-filter").value;
+      const nextProgram = LESSONS[nextIndex] && LESSONS[nextIndex].program;
+      if (currentProgram && LESSONS[lessonIndex].program === currentProgram && nextProgram && nextProgram !== currentProgram) {
+        $("lesson-program-filter").value = nextProgram;
+        $("lesson-program-filter").dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      loadLesson(nextIndex);
+    });
   function renderStockfishReviewQueue() {
     const target = $("lesson-review-queue");
     if (!target) return;
