@@ -531,10 +531,49 @@ function renderLocalLearningPanel(data){
   if(weaknessRanks.length){
     html+='<h4>Classement de mes lacunes</h4><ol class="profile-learning-list">'+weaknessRanks.map(function(item,index){return '<li><a class="profile-mastery-link" href="'+item.href+'" aria-label="Rang '+(index+1)+' : '+escapeProfileText(labels[item.key]||item.key)+' : '+item.count+' exercices"><span>'+escapeProfileText(labels[item.key]||item.key)+'</span><strong>'+item.count+'</strong></a></li>';}).join('')+'</ol>';
   }else if(local.moveExercises){html+='<p class="profile-learning-note">'+profileText('profile_no_recorded_errors','Aucune imprécision, erreur ou gaffe enregistrée dans les exercices disponibles.')+'</p>';}
-  var points=local.completed.map(function(item){return item.progress.completedAt?new Date(item.progress.completedAt).getTime():null;}).filter(function(time){return Number.isFinite(time);}).sort(function(a,b){return a-b;});
-  if(points.length>1){
-    var coords=points.map(function(_time,index){var x=8+index*164/(points.length-1);var y=54-(index+1)*44/points.length;return x.toFixed(1)+','+y.toFixed(1);}).join(' ');
-    html+='<h4>'+profileText('profile_lesson_progress','Progression des leçons')+'</h4><svg class="profile-learning-chart" viewBox="0 0 180 64" role="img" aria-label="'+profileText('profile_lesson_chart_alt','Cumul des leçons maîtrisées')+'"><polyline points="8,56 '+coords+'" fill="none" stroke="#65d6a6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>';
+  var lessonPoints=local.completed.map(function(item){
+    var time=item.progress.completedAt?new Date(item.progress.completedAt).getTime():null;
+    return Number.isFinite(time)?{time:time}:null;
+  }).filter(Boolean).sort(function(a,b){return a.time-b.time;});
+  if(lessonPoints.length>1){
+    var chart={left:88,right:570,top:42,bottom:252,width:482,height:210};
+    var firstTime=lessonPoints[0].time,lastTime=lessonPoints[lessonPoints.length-1].time;
+    var timeRange=lastTime-firstTime,lessonTotal=lessonPoints.length;
+    var xFor=function(point,index){
+      var progress=timeRange>0?(point.time-firstTime)/timeRange:index/(lessonTotal-1);
+      return chart.left+progress*chart.width;
+    };
+    var yFor=function(count){return chart.bottom-(count/lessonTotal)*chart.height;};
+    var linePoints=lessonPoints.map(function(point,index){
+      return xFor(point,index).toFixed(1)+','+yFor(index+1).toFixed(1);
+    }).join(' ');
+    var midCount=Math.max(1,Math.round(lessonTotal/2));
+    var yTicks=Array.from(new Set([0,midCount,lessonTotal])).map(function(count){
+      var y=yFor(count);
+      return '<line x1="'+chart.left+'" y1="'+y.toFixed(1)+'" x2="'+chart.right+'" y2="'+y.toFixed(1)+'" stroke="#53647b" stroke-width="1"/>'+
+        '<text x="'+(chart.left-12)+'" y="'+(y+5).toFixed(1)+'" text-anchor="end" fill="#f4f7fb" font-size="16">'+count+'</text>';
+    }).join('');
+    var dateLabel=function(time){return new Date(time).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'2-digit'});};
+    var xTicks='<line x1="'+chart.left+'" y1="'+chart.bottom+'" x2="'+chart.right+'" y2="'+chart.bottom+'" stroke="#dce6f2" stroke-width="2"/>'+
+      '<text x="'+chart.left+'" y="279" text-anchor="start" fill="#f4f7fb" font-size="15">'+escapeProfileText(dateLabel(firstTime))+'</text>'+
+      '<text x="'+chart.right+'" y="279" text-anchor="end" fill="#f4f7fb" font-size="15">'+escapeProfileText(dateLabel(lastTime))+'</text>';
+    var dots=lessonPoints.map(function(point,index){
+      var x=xFor(point,index),y=yFor(index+1);
+      return '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="5" fill="#65d6a6" stroke="#10231d" stroke-width="2"><title>'+
+        escapeProfileText(profileText('profile_lesson_point','Leçon maîtrisée')+' '+(index+1)+' · '+dateLabel(point.time))+'</title></circle>';
+    }).join('');
+    html+='<h4>'+profileText('profile_lesson_progress','Progression des leçons')+'</h4>'+
+      '<svg class="profile-learning-chart" viewBox="0 0 600 340" role="img" aria-label="'+
+      profileText('profile_lesson_chart_alt','Nombre cumulé de leçons maîtrisées au fil des dates de validation')+
+      '" style="display:block;width:100%;max-width:850px;height:auto;margin:10px auto;background:#202b3d;border:1px solid #53647b;border-radius:12px;padding:8px;box-sizing:border-box">'+
+      yTicks+
+      '<line x1="'+chart.left+'" y1="'+chart.top+'" x2="'+chart.left+'" y2="'+chart.bottom+'" stroke="#dce6f2" stroke-width="2"/>'+
+      xTicks+
+      '<polyline points="'+linePoints+'" fill="none" stroke="#65d6a6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'+dots+
+      '<text x="27" y="147" transform="rotate(-90 27 147)" text-anchor="middle" fill="#f4f7fb" font-size="17" font-weight="700">'+
+      escapeProfileText(profileText('profile_lesson_axis_y','Leçons maîtrisées (cumul)'))+'</text>'+
+      '<text x="330" y="322" text-anchor="middle" fill="#f4f7fb" font-size="17" font-weight="700">'+
+      escapeProfileText(profileText('profile_lesson_axis_x','Date de validation'))+'</text></svg>';
   }else{html+='<p class="profile-learning-note">'+profileText('profile_chart_empty','Terminez plusieurs leçons pour afficher votre courbe de progression.')+'</p>';}
   if(local.accuracyGames.length>1){
     var accuracyCoords=local.accuracyGames.map(function(value,index){var x=8+index*164/(local.accuracyGames.length-1);var y=56-value*.48;return x.toFixed(1)+','+y.toFixed(1);}).join(' ');
