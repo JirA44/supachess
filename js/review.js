@@ -1314,7 +1314,7 @@ if (reviewHistoryList) reviewHistoryList.addEventListener("click", (event) => {
     reviewHistoryReplayAtPly(item,button.dataset.ply);
 });
 reviewHistoryRender();
-document.addEventListener("supachess:shortcuts-changed",reviewRefreshCorrectionHotkeys);
+if(typeof document!=="undefined"&&typeof document.addEventListener==="function")document.addEventListener("supachess:shortcuts-changed",reviewRefreshCorrectionHotkeys);
 function resumeCorrectionExercisesFromUrl() {
   if (typeof URLSearchParams === "undefined") return;
   const params = new URLSearchParams(location.search);
