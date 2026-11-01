@@ -2712,10 +2712,10 @@
       meta.className = "lesson-catalog-meta";
       meta.textContent = lesson.level + " · " + lesson.program + " · " + lesson.author;
       const state = document.createElement("span");
-      state.className = "lesson-catalog-state";
       const timesCompleted = completionCount(progress[lesson.id]);
+      state.className = "lesson-catalog-state" + (timesCompleted ? " is-completed" : "");
       state.textContent = timesCompleted
-        ? "Terminée · à revoir quand tu veux · faite " + timesCompleted + " fois"
+        ? "✓ Passée · faite " + timesCompleted + " fois · à revoir quand tu veux"
         : lesson.kind === "anticipation" ? "Défi de réponse adverse" : "À découvrir";
       button.append(title, meta, state);
       button.addEventListener("click", () => {
@@ -3030,7 +3030,7 @@
     anticipatingBook = false;
     $("lesson-title").textContent = lesson.title;
     renderSource(lesson);
-    $("lesson-status").textContent = "Leçon terminée : " + lesson.title + ".";
+    $("lesson-status").textContent = "✓ Leçon terminée : " + lesson.title + ".";
     const explanation = $("lesson-explanation");
     explanation.replaceChildren();
 
