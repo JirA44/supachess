@@ -873,13 +873,30 @@ function initRankingSection(){
   var sec=document.createElement('section');
   sec.id='ranking-section';
   sec.style.cssText='margin:40px 0;padding:24px;background:rgba(0,0,0,.35);border-radius:16px;border:1px solid rgba(255,255,255,.1)';
-  sec.innerHTML='<h2 style="text-align:center;color:#ffd700;margin-bottom:16px">🏆 Classements Top — par type de jeu</h2><div style="display:flex;justify-content:center;gap:10px;margin-bottom:16px"><button class="rank-tab" data-type="puzzle" style="padding:8px 16px;border-radius:20px;border:1px solid #4facfe;background:#4facfe;color:#fff;cursor:pointer">🧩 Puzzle</button><button class="rank-tab" data-type="classic3s" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">⚡ Classic 3s</button><button class="rank-tab" data-type="classic5s" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">⏱️ Classic 5s</button></div><div id="ranking-list" style="display:grid;gap:8px"></div>';
+  sec.innerHTML='<h2 style="text-align:center;color:#ffd700;margin-bottom:16px">🏆 Classements Top — par type de jeu</h2><div style="display:flex;justify-content:center;gap:10px;margin-bottom:16px"><button class="rank-tab" data-type="puzzle" style="padding:8px 16px;border-radius:20px;border:1px solid #4facfe;background:#4facfe;color:#fff;cursor:pointer">🧩 Puzzle</button><button class="rank-tab" data-type="classic3s" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">⚡ Classic 3s</button><button class="rank-tab" data-type="classic5s" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">⏱️ Classic 5s</button><button class="rank-tab" data-type="champions" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">♟ Champions · précision &amp; ACPL</button></div><div id="ranking-list" style="display:grid;gap:8px"></div>';
   var footer=document.querySelector('.footer');
   if(footer) container.insertBefore(sec, footer);
   else container.appendChild(sec);
   function load(type){
     sec.querySelectorAll('.rank-tab').forEach(function(b){ b.style.background=b.getAttribute('data-type')===type?'#4facfe':'transparent'; b.style.borderColor=b.getAttribute('data-type')===type?'#4facfe':'#666'; });
     var list=document.getElementById('ranking-list');
+    if(type==='champions'){
+      var saved={};
+      try{saved=JSON.parse(localStorage.getItem('supachess-champion-metrics-v1')||'{}')||{};}catch(_error){saved={};}
+      var champions=Object.keys(saved).map(function(key){return saved[key];}).filter(function(item){
+        return item&&Number.isFinite(Number(item.accuracy))&&Number.isFinite(Number(item.acpl));
+      }).sort(function(a,b){return Number(b.accuracy)-Number(a.accuracy)||Number(a.acpl)-Number(b.acpl);});
+      if(!champions.length){
+        list.innerHTML='<div style="padding:16px;background:rgba(255,255,255,.06);border-radius:10px;text-align:center"><p>Aucune analyse de champion enregistrée sur cet appareil.</p><a href="champion-metrics.html" style="color:#a8eaff;font-weight:800">Analyser les parties de champions →</a></div>';
+        return;
+      }
+      list.innerHTML='<p style="margin:0;color:#d4dfeb">Classement trié par précision moyenne; l’ACPL est affiché à côté. Pour une comparaison sérieuse, utilise le même moteur, le même temps et des échantillons de taille comparable.</p>'+
+        '<div style="overflow-x:auto"><table style="width:100%;min-width:600px;border-collapse:collapse"><thead><tr><th style="padding:9px;text-align:left;border-bottom:2px solid #789">Rang</th><th style="padding:9px;text-align:left;border-bottom:2px solid #789">Joueur</th><th style="padding:9px;text-align:right;border-bottom:2px solid #789">Précision moy.</th><th style="padding:9px;text-align:right;border-bottom:2px solid #789">ACPL</th><th style="padding:9px;text-align:right;border-bottom:2px solid #789">Parties · réglage</th></tr></thead><tbody>'+
+        champions.map(function(item,index){
+          return '<tr><td style="padding:9px;border-bottom:1px solid #52657d">'+(index<3?['🥇','🥈','🥉'][index]:index+1)+'</td><th scope="row" style="padding:9px;text-align:left;border-bottom:1px solid #52657d">'+escapeProfileText(item.name)+'</th><td style="padding:9px;text-align:right;border-bottom:1px solid #52657d;color:#9bf0b4;font-weight:800">'+Number(item.accuracy).toFixed(1).replace('.',',')+' %</td><td style="padding:9px;text-align:right;border-bottom:1px solid #52657d">'+Number(item.acpl).toFixed(1).replace('.',',')+' cp</td><td style="padding:9px;text-align:right;border-bottom:1px solid #52657d">'+Number(item.gamesAnalyzed||0)+' · '+Number(item.movetime||0)+' ms</td></tr>';
+        }).join('')+'</tbody></table></div><a href="champion-metrics.html" style="color:#a8eaff;font-weight:800">Analyser ou actualiser un corpus historique →</a>';
+      return;
+    }
     list.innerHTML='<div style="text-align:center;opacity:.6">Chargement...</div>';
     getTopRanking(type,10).then(function(top){
       if(!top.length){ list.innerHTML='<div style="text-align:center;opacity:.6">Aucun classement — jouez pour apparaître !</div>'; return; }
