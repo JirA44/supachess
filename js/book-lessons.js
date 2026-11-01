@@ -2937,6 +2937,16 @@
     ).map(({ index }) => index);
   }
 
+  const LESSON_COMPETENCIES = [
+    { id: "openings", label: "Ouvertures", pattern: /ouverture|roque|développ|développement|préparation d'ouverture/i },
+    { id: "tactics", label: "Tactiques", pattern: /tactique|fourchette|clouage|enfilade|rayon x|attaque découverte|double échec|sacrifice|combinaison|mat en|mat élémentaire|pièce[s]? en prise/i },
+    { id: "strategyPlans", label: "Stratégies et plans", pattern: /plan|stratég|structure de pion|rupture|positionnel|case forte|case faible|colonne|diagonale|conversion|amélior|échange|simplification|mobilisation|centre/i },
+    { id: "calculation", label: "Calcul et anticipation", pattern: /calcul|anticip|variante|coups candidats|meilleure réponse|réponse adverse|forcing|profondeur/i },
+    { id: "endgames", label: "Finales", pattern: /finale|roi et pion|opposition|promotion|tablebase|syzygy/i },
+    { id: "precision", label: "Précision et prévention des erreurs", pattern: /anti-erreur|précision|erreur|gaffe|imprécision|vérifi|défendre|défense|sécurité du roi|pièce.*prise|protéger|routine|réflexe|menace adverse/i },
+    { id: "engineAnalysis", label: "Analyse critique du moteur", pattern: /stockfish|moteur|évaluation.*moteur|tcec|lc0|lczero/i },
+  ];
+
   const REVIEW_COMPLEXITY_LEVELS = ["Débutant", "Intermédiaire", "Avancé", "Expert"];
 
   function lessonReviewDifficultyOptions(targetIndex, reviewStreak = 0, previousFen = "", lessons = LESSONS) {
@@ -2954,6 +2964,31 @@
     const harder = candidates.filter((index) => REVIEW_COMPLEXITY_LEVELS.indexOf(lessons[index].level) >= desiredRank);
     if (harder.length) candidates = harder;
     return { desiredLevel: REVIEW_COMPLEXITY_LEVELS[desiredRank], candidateIndices: candidates };
+  }
+
+  function lessonCompetencyKeys(lesson) {
+    const text = [lesson && lesson.category, lesson && lesson.title, lesson && lesson.program,
+      lesson && lesson.question, lesson && lesson.principle, lesson && lesson.transfer]
+      .filter(Boolean).join(" ").toLocaleLowerCase("fr");
+    return LESSON_COMPETENCIES.filter((competency) => competency.pattern.test(text)).map((competency) => competency.id);
+  }
+
+  function lessonCompetencySummary(lessons, progress, nowValue = Date.now()) {
+    const now = typeof nowValue === "number" ? nowValue : Date.parse(nowValue);
+    return LESSON_COMPETENCIES.map((competency) => {
+      const entries = lessons.filter((lesson) => lessonCompetencyKeys(lesson).includes(competency.id));
+      const passed = entries.filter((lesson) => {
+        const record = progress && progress[lesson.id];
+        return Boolean(record && (record.completed || Number(record.completions) > 0));
+      });
+      const reviewable = passed.filter((lesson) => lessonReviewPartnerIndices(lessons.indexOf(lesson), lessons).length > 0);
+      const mastered = passed.filter((lesson) => Number(progress[lesson.id] && progress[lesson.id].review && progress[lesson.id].review.streak) >= 3);
+      const due = reviewable.filter((lesson) => {
+        const dueAt = Date.parse(progress[lesson.id] && progress[lesson.id].review && progress[lesson.id].review.dueAt || "");
+        return !Number.isFinite(dueAt) || dueAt <= now;
+      });
+      return { ...competency, total: entries.length, passed: passed.length, reviewable: reviewable.length, mastered: mastered.length, due: due.length };
+    }).filter((competency) => competency.total > 0);
   }
 
   function lessonReviewProgressSummary(lessons, progress, nowValue = Date.now()) {
@@ -3022,7 +3057,7 @@
   }
 
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPositionKey, lessonReviewPartnerIndices, lessonReviewDifficultyOptions, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText };
+    module.exports = { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPositionKey, lessonReviewPartnerIndices, lessonCompetencyKeys, lessonCompetencySummary, lessonReviewDifficultyOptions, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText };
   }
 
   if (typeof document === "undefined") return;
@@ -3047,6 +3082,7 @@
   let bookReplyTimer = null;
   let progress = readProgress();
   let reviewSession = null;
+  let lessonCompetencyFilter = "";
   let reviewJustFinished = false;
   let lessonEngine = null;
   let enginePreview = null;
@@ -3110,6 +3146,46 @@
     return Math.max(Number.isFinite(savedCount) ? savedCount : 0, record && record.completed ? 1 : 0);
   }
 
+  function renderLessonCompetencyCards() {
+    const container = $("lesson-review-competencies");
+    if (!container) return;
+    container.replaceChildren();
+    const domains = lessonCompetencySummary(LESSONS, progress);
+    for (const domain of domains) {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "lesson-review-domain" + (lessonCompetencyFilter === domain.id ? " is-active" : "");
+      card.setAttribute("aria-pressed", String(lessonCompetencyFilter === domain.id));
+      card.disabled = domain.total === 0;
+      const heading = document.createElement("span");
+      heading.className = "lesson-review-domain-title";
+      heading.textContent = domain.label;
+      const mastered = document.createElement("strong");
+      mastered.className = "lesson-review-domain-mastered";
+      mastered.textContent = domain.mastered + " maîtrisée(s)";
+      const details = document.createElement("small");
+      details.textContent = domain.passed + "/" + domain.total + " terminée(s) · " + domain.due + " à réviser";
+      card.append(heading, mastered, details);
+      card.addEventListener("click", () => {
+        lessonCompetencyFilter = lessonCompetencyFilter === domain.id ? "" : domain.id;
+        $("lesson-search").value = "";
+        $("lesson-level-filter").value = "";
+        $("lesson-program-filter").value = "";
+        renderCatalog();
+        $("lesson-review-domain-filter-status").textContent = lessonCompetencyFilter
+          ? "Filtre actif : " + domain.label + ". Clique de nouveau pour l’enlever."
+          : "Tous les domaines sont affichés.";
+        $("lesson-catalog").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      container.append(card);
+    }
+    const active = domains.find((domain) => domain.id === lessonCompetencyFilter);
+    const status = $("lesson-review-domain-filter-status");
+    if (status) status.textContent = active
+      ? "Filtre actif : " + active.label + ". Clique de nouveau sur sa carte pour l’enlever."
+      : "Les domaines se chevauchent : une leçon peut entraîner plusieurs compétences.";
+  }
+
   function renderReviewDashboard() {
     const summaryNode = $("lesson-review-summary");
     const button = $("lesson-review-start");
@@ -3124,6 +3200,7 @@
     button.disabled = summary.reviewable === 0;
     button.title = summary.reviewable === 0 ? "Il faut une leçon passée avec une autre position du même thème." :
       "Tester un acquis sur une position différente, sans afficher le thème avant ta résolution.";
+    renderLessonCompetencyCards();
   }
 
   function renderCatalog() {
@@ -3135,7 +3212,8 @@
     const visibleLessons = LESSONS.map((lesson, index) => ({ lesson, index })).filter(({ lesson }) => {
       const matchesSearch = !search || [lesson.title, lesson.category, lesson.program, lesson.question, lesson.level]
         .some((value) => String(value || "").toLocaleLowerCase("fr").includes(search));
-      return matchesSearch && (!level || lesson.level === level) && (!program || lesson.program === program);
+      return matchesSearch && (!level || lesson.level === level) && (!program || lesson.program === program) &&
+        (!lessonCompetencyFilter || lessonCompetencyKeys(lesson).includes(lessonCompetencyFilter));
     });
     if (program) {
       visibleLessons.sort((a, b) => (LEVEL_ORDER[a.lesson.level] ?? 99) - (LEVEL_ORDER[b.lesson.level] ?? 99) || a.index - b.index);
