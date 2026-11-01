@@ -159,6 +159,79 @@ function summarizeAccuracyGames(games, now){
     month:{current:monthCurrent,previous:monthPrevious,delta:monthCurrent.average!==null&&monthPrevious.average!==null?monthCurrent.average-monthPrevious.average:null}
   };
 }
+function resolveProfileUserColor(game){
+  var color=game&&game.userColor;
+  if(color!=='w'&&color!=='b'){
+    var pgn=String(game&&game.pgn||'');
+    var colorHeader=pgn.match(/^\[SupaChessUserColor\s+"([wb])"\]/m);
+    if(colorHeader)color=colorHeader[1];
+    else if(/^\[White\s+"Joueur"\]/mi.test(pgn))color='w';
+    else if(/^\[Black\s+"Joueur"\]/mi.test(pgn))color='b';
+  }
+  return color==='w'||color==='b'?color:null;
+}
+function profileGameIdentity(game){
+  var pgn=String(game&&game.pgn||'').replace(/\r\n?/g,'\n').trim();
+  if(pgn){
+    var body=pgn.split('\n').filter(function(line){return !/^\s*\[/.test(line);}).join(' ');
+    body=body.replace(/\{[^}]*\}/g,' ').replace(/;[^\n]*/g,' ').replace(/\([^)]*\)/g,' ')
+      .replace(/\$\d+/g,' ').replace(/\d+\.(?:\.\.)?/g,' ')
+      .replace(/\b(?:1-0|0-1|1\/2-1\/2|\*)\b/g,' ')
+      .replace(/\s+/g,' ').trim().toLowerCase();
+    if(body)return 'pgn:'+body;
+  }
+  return game&&game.id?'id:'+String(game.id):null;
+}
+function mergeProfileAnalysisGames(playedGames,reviewedGames){
+  function hasLoss(move){
+    return !!move&&move.lossCp!==null&&move.lossCp!==undefined&&move.lossCp!==''&&Number.isFinite(Number(move.lossCp));
+  }
+  var merged=[],byIdentity=new Map();
+  (Array.isArray(reviewedGames)?reviewedGames:[]).concat(Array.isArray(playedGames)?playedGames:[]).forEach(function(game){
+    if(!game||typeof game!=='object')return;
+    var identity=profileGameIdentity(game);
+    if(!identity){merged.push(game);return;}
+    var index=byIdentity.get(identity);
+    if(index===undefined){byIdentity.set(identity,merged.length);merged.push(game);return;}
+    var previous=merged[index];
+    var combined=Object.assign({},previous,game);
+    var grades=new Map();
+    (Array.isArray(previous.moveGrades)?previous.moveGrades:[]).concat(Array.isArray(game.moveGrades)?game.moveGrades:[]).forEach(function(move){
+      if(!move||!Number.isFinite(Number(move.ply)))return;
+      var key=Number(move.ply),old=grades.get(key);
+      if(!old||(!hasLoss(old)&&hasLoss(move)))grades.set(key,move);
+      else if(!old)grades.set(key,move);
+      else grades.set(key,Object.assign({},old,move,{lossCp:hasLoss(move)?Number(move.lossCp):old.lossCp}));
+    });
+    combined.moveGrades=Array.from(grades.values()).sort(function(a,b){return Number(a.ply)-Number(b.ply);});
+    merged[index]=combined;
+  });
+  return merged;
+}
+function summarizeCentipawnLossGames(games,range,now){
+  var selected=profileGamesForRange(Array.isArray(games)?games:[],range||'all',now);
+  var perGame=selected.map(function(game){
+    if(!game||!['1-0','0-1','1/2-1/2'].includes(String(game.result||''))||
+      game.abandoned||game.stopped||game.termination==='abandoned'||game.termination==='unterminated')return null;
+    var color=resolveProfileUserColor(game);
+    if(!color)return null;
+    var moves=(Array.isArray(game.moveGrades)?game.moveGrades:[]).filter(function(move){
+      if(!move||move.color!==color||move.lossCp===null||move.lossCp===undefined||move.lossCp==='')return false;
+      var loss=Number(move.lossCp);
+      return Number.isFinite(loss)&&loss>=0;
+    });
+    if(!moves.length)return null;
+    return {moves:moves.length,losing:moves.filter(function(move){return Number(move.lossCp)>0;}).length};
+  }).filter(function(item){return !!item;});
+  if(!perGame.length)return {average:null,games:0,moves:0,losingMoves:0};
+  var rates=perGame.map(function(item){return 100*item.losing/item.moves;});
+  return {
+    average:rates.reduce(function(sum,value){return sum+value;},0)/rates.length,
+    games:perGame.length,
+    moves:perGame.reduce(function(sum,item){return sum+item.moves;},0),
+    losingMoves:perGame.reduce(function(sum,item){return sum+item.losing;},0)
+  };
+}
 function readLocalLearningProgress(data){
   function read(key,fallback){try{return JSON.parse(localStorage.getItem(key)||'');}catch(_e){return fallback;}}
   function completedCount(record,key){
@@ -416,6 +489,16 @@ function renderMoveTypeAveragePanel(games,range){
   return heading+'<p>Moyenne calculée sur '+perGame.length+' parties terminées avec coups classés. Pour chaque partie, le pourcentage de chaque type est rapporté aux demi-coups évalués de ton camp; les parties ont ensuite le même poids. Les demi-coups non évalués sont exclus.</p>'+
     '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><caption style="text-align:left;padding:4px 8px;color:#dce6f2">Total des coups et part moyenne par partie</caption><thead><tr><th scope="col" style="text-align:left;padding:7px 9px;border-bottom:2px solid #789">Type de demi-coup</th><th scope="col" style="text-align:right;padding:7px 9px;border-bottom:2px solid #789">Total</th><th scope="col" style="text-align:right;padding:7px 9px;border-bottom:2px solid #789">Moyenne / partie</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
 }
+function renderCentipawnLossRatePanel(games,range){
+  var selectedRange=profilePerformanceRanges().find(function(item){return item.key===range;})||profilePerformanceRanges()[5];
+  var summary=summarizeCentipawnLossGames(games,range,Date.now());
+  var heading='<section class="profile-cp-loss-panel" aria-labelledby="profile-cp-loss-title" style="margin:16px 0;padding:16px;border:1px solid #52657d;border-radius:14px;background:#1b2638;color:#f4f7fb">'+
+    '<h4 id="profile-cp-loss-title" style="margin-top:0">Demi-coups avec perte en centipions · '+selectedRange.aria+'</h4>';
+  if(summary.average===null)return heading+'<p>Pas encore de données CP suffisantes. Une partie terminée doit avoir été évaluée coup par coup pour calculer cette moyenne.</p><small>Les anciens demi-coups sans perte en centipions enregistrée sont exclus.</small></section>';
+  return heading+'<strong style="font-size:1.35em">'+summary.average.toFixed(1).replace('.',',')+' %</strong>'+
+    '<p>Part moyenne des demi-coups joués par partie qui ont fait perdre des centipions : '+summary.losingMoves+' sur '+summary.moves+' demi-coups mesurés, dans '+summary.games+' partie'+(summary.games>1?'s':'')+'.</p>'+
+    '<small>Un demi-coup est compté en perte si Stockfish mesure une perte strictement supérieure à 0 cp par rapport au meilleur coup de la position. Chaque partie pèse autant dans la moyenne; les coups non évalués, mates et parties inachevées sont exclus.</small></section>';
+}
 function renderProfilePerformancePanel(games){
   profilePerformanceGames=Array.isArray(games)?games:[];
   var ranges=profilePerformanceRanges();
@@ -425,7 +508,7 @@ function renderProfilePerformancePanel(games){
   }).join('');
   return '<section class="profile-performance-section" aria-label="Statistiques de précision et de demi-coups">'+
     '<div class="profile-performance-range-controls" role="group" aria-label="Choisir la période des statistiques">'+buttons+'</div>'+
-    '<div class="profile-performance-content" aria-live="polite">'+renderPlayerAccuracyPanel(profilePerformanceGames,profilePerformanceRange)+renderMoveTypeAveragePanel(profilePerformanceGames,profilePerformanceRange)+'</div></section>';
+    '<div class="profile-performance-content" aria-live="polite">'+renderPlayerAccuracyPanel(profilePerformanceGames,profilePerformanceRange)+renderMoveTypeAveragePanel(profilePerformanceGames,profilePerformanceRange)+renderCentipawnLossRatePanel(profilePerformanceGames,profilePerformanceRange)+'</div></section>';
 }
 function bindProfilePerformanceRangeControls(container){
   if(!container||typeof container.querySelectorAll!=='function')return;
@@ -438,7 +521,7 @@ function bindProfilePerformanceRangeControls(container){
           item.setAttribute('aria-pressed',String(selected));
         });
         var content=section.querySelector('.profile-performance-content');
-        if(content)content.innerHTML=renderPlayerAccuracyPanel(profilePerformanceGames,profilePerformanceRange)+renderMoveTypeAveragePanel(profilePerformanceGames,profilePerformanceRange);
+        if(content)content.innerHTML=renderPlayerAccuracyPanel(profilePerformanceGames,profilePerformanceRange)+renderMoveTypeAveragePanel(profilePerformanceGames,profilePerformanceRange)+renderCentipawnLossRatePanel(profilePerformanceGames,profilePerformanceRange);
       });
     });
   });
@@ -793,7 +876,7 @@ function renderLocalLearningPanel(data){
     (xpRange.total!==null?'<strong class="profile-xp-level-count">'+Number(xpRange.current).toLocaleString('fr-FR')+' / '+Number(xpRange.total).toLocaleString('fr-FR')+' XP '+profileText('profile_xp_this_level','dans ce niveau')+'</strong>':'')+
     '<small>'+escapeProfileText(profileText('profile_xp_to_next','Progression vers le niveau suivant'))+': '+Math.round(xpPercent)+'%'+(nextXP!==null?' · '+profileText('profile_next_level_at','prochain niveau à')+' '+Number(nextXP).toLocaleString('fr-FR')+' XP · '+profileText('profile_xp_remaining','XP restantes pour atteindre le niveau suivant')+' : '+xpRemaining+' XP':'')+'</small></div>'+
     '<div class="profile-learning-stats"><div><strong>'+local.completed.length+' / '+local.attempted.length+'</strong><span>'+profileText('profile_lessons_mastered_attempted','leçons maîtrisées / commencées')+'</span></div><div><strong>'+local.moveExercises+'</strong><span>'+profileText('profile_correction_moves','demi-coups à revoir')+'</span></div><div><strong>'+local.puzzlesSolved+'</strong><span>'+profileText('profile_puzzles_solved','problèmes résolus')+'</span></div><div><strong>'+local.practiceSessions+'</strong><span>'+profileText('profile_practice_sessions','séances d’entraînement')+'</span></div></div>'+
-    renderProfilePerformancePanel(local.playedGames)+
+    renderProfilePerformancePanel(local.performanceGames)+
     renderExerciseCharts(local)+renderDiagnosticProfile()+renderCorrectionProgressSummary(local)+
     '<h4>'+profileText('profile_mastery_title','Maîtrise et progression')+'</h4><ul class="profile-mastery-list">'+training.map(function(item){var label=escapeProfileText(item.label);var value='<strong>'+item.value+'</strong>';return '<li>'+(item.href?'<a class="profile-mastery-link" href="'+item.href+'" aria-label="'+label+' : '+item.value+'">'+label+value+'</a>':'<div class="profile-mastery-entry">'+label+value+'</div>')+'</li>';}).join('')+'</ul>'+
     '<div class="profile-learning-actions"><div class="profile-resume-card"><a class="profile-resume-link" href="'+weaknessesUrl+'"><span>🎯 Travailler mes plus grandes lacunes<small style="display:block;font-weight:500;opacity:.82;margin-top:3px">'+escapeProfileText(weaknessFocusText)+'</small></span><span aria-hidden="true">›</span></a></div><a class="profile-diagnostic-button" role="button" href="index.html?start-diagnostic=1#level-diagnostic-banner">🧭 Passer le diagnostic de niveau</a><small class="profile-diagnostic-help">Relance un bilan de 10 parties analysées par Stockfish.</small><div class="profile-resume-card"><a class="profile-resume-link" href="'+exercisesUrl+'"><span>'+profileText('profile_resume_exercises','Reprendre mes exercices')+'</span><span aria-hidden="true">›</span></a></div><div class="profile-resume-card"><a class="profile-resume-link" href="https://jira44.github.io/supachess/book-lessons.html?next=1"><span>'+profileText('profile_resume_lessons','Reprendre mes leçons')+'</span><span aria-hidden="true">›</span></a></div><div class="profile-resume-card"><a class="profile-resume-link" href="https://jira44.github.io/supachess-web/TRAINING_OPENINGS.html"><span>'+profileText('profile_resume_mastery','Reprendre l’entraînement de maîtrise')+'</span><span aria-hidden="true">›</span></a></div></div>';
@@ -952,7 +1035,7 @@ function initRankingSection(){
   sec.querySelectorAll('.rank-tab').forEach(function(b){ b.addEventListener('click', function(){ load(b.getAttribute('data-type')); }); });
   load('puzzle');
 }
-window.SupaProfiles={init:init, ensureUserProfile:ensureUserProfile, updateStats:updateStats, searchUsers:searchUsers, getTopRanking:getTopRanking, getTopLevelRanking:getTopLevelRanking, publishLearningLevel:publishLearningLevel, getProfile:getProfile, renderProfileModal:renderProfileModal, readLocalLearningProgress:readLocalLearningProgress, summarizeAccuracyGames:summarizeAccuracyGames, renderLocalLearningPanel:renderLocalLearningPanel, renderOwnProfileFallback:renderOwnProfileFallback, lessonProgressSeries:lessonProgressSeries, renderLessonProgressRangeChart:renderLessonProgressRangeChart, bindLessonProgressRangeControls:bindLessonProgressRangeControls, initSearchBar:initSearchBar, initRankingSection:initRankingSection, GAME_TYPES:GAME_TYPES};
+window.SupaProfiles={init:init, ensureUserProfile:ensureUserProfile, updateStats:updateStats, searchUsers:searchUsers, getTopRanking:getTopRanking, getTopLevelRanking:getTopLevelRanking, publishLearningLevel:publishLearningLevel, getProfile:getProfile, renderProfileModal:renderProfileModal, readLocalLearningProgress:readLocalLearningProgress, summarizeAccuracyGames:summarizeAccuracyGames, summarizeCentipawnLossGames:summarizeCentipawnLossGames, mergeProfileAnalysisGames:mergeProfileAnalysisGames, renderLocalLearningPanel:renderLocalLearningPanel, renderOwnProfileFallback:renderOwnProfileFallback, lessonProgressSeries:lessonProgressSeries, renderLessonProgressRangeChart:renderLessonProgressRangeChart, bindLessonProgressRangeControls:bindLessonProgressRangeControls, initSearchBar:initSearchBar, initRankingSection:initRankingSection, GAME_TYPES:GAME_TYPES};
 if(document&&typeof document.querySelector==='function'){
   if(document.readyState==='loading'&&typeof document.addEventListener==='function') document.addEventListener('DOMContentLoaded',initRankingSection,{once:true});
   else initRankingSection();
