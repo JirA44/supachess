@@ -427,3 +427,21 @@ body {
 .move-grade-step:disabled { opacity:.42; cursor:not-allowed; }
 .move-grade-step-key { color:#bdc8d9; font-size:.58rem; font-weight:700; }
 @media (max-width:420px) { .move-grade-summary .move-grade-count-row { grid-template-columns:minmax(0,1fr) 32px 32px; gap:3px; } .move-grade-count-main { grid-template-columns:8px 18px minmax(0,1fr) auto; gap:4px; padding:2px; } .move-grade-step { min-width:30px; min-height:32px; } }
+
+/* Keep the quality total in its own cell so it never covers the move label. */
+.move-grade-summary { grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); }
+.move-grade-summary .move-grade-count-row { grid-template-columns: minmax(0,1fr) auto 30px 30px; gap: 3px; }
+.move-grade-count-main { grid-template-columns: 8px 20px minmax(0,1fr); gap: 4px; }
+.move-grade-count-main .move-grade-count-name { min-width: 0; white-space: normal; overflow-wrap: anywhere; line-height: 1.15; }
+.move-grade-count-value { display: inline-flex; align-items: center; justify-content: flex-end; min-width: 30px; min-height: 30px; padding: 2px 4px; border: 1px solid rgba(190,205,225,.24); border-radius: 6px; color: inherit; background: rgba(12,18,28,.45); font: inherit; cursor: pointer; }
+.move-grade-count-value:hover:not(:disabled), .move-grade-count-value:focus-visible { border-color: var(--grade-dot-color,var(--accent)); outline: 2px solid var(--grade-dot-color,var(--accent)); outline-offset: 1px; }
+.move-grade-count-value:disabled { cursor: not-allowed; opacity: .62; }
+.move-grade-count-value strong { min-width: 22px; text-align: right; white-space: nowrap; }
+.move-grade-step { min-width: 28px; padding: 1px; }
+@media (max-width:420px) {
+  .move-grade-summary { grid-template-columns: minmax(0,1fr); }
+  .move-grade-summary .move-grade-count-row { grid-template-columns: minmax(0,1fr) auto 28px 28px; gap: 2px; }
+  .move-grade-count-main { grid-template-columns: 8px 18px minmax(0,1fr); gap: 3px; }
+  .move-grade-count-value { min-width: 28px; padding: 1px 3px; }
+  .move-grade-step { min-width: 26px; }
+}
