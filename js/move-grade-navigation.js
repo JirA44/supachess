@@ -120,8 +120,6 @@
       if (count) countButton.appendChild(count);
       countButton.addEventListener("click", () => moveGradeNavigate(color, category, "first"));
       row.appendChild(countButton);
-      const configured = root.SupaKeyboardShortcuts && root.SupaKeyboardShortcuts.getBindings();
-      const shortcuts = configured && configured[color] && configured[color][category] || MOVE_GRADE_SHORTCUTS[color] && MOVE_GRADE_SHORTCUTS[color][category];
       for (let index = 0; index < 2; index++) {
         const direction = index === 0 ? "previous" : "next";
         const button = document.createElement("button");
@@ -129,15 +127,8 @@
         button.className = "move-grade-step";
         button.disabled = movesOfType === 0;
         button.title = direction === "previous" ? "Demi-coup précédent de ce type" : "Demi-coup suivant de ce type";
-        button.setAttribute("aria-label", button.title + (shortcuts ? " · raccourci " + shortcuts[index].toUpperCase() : ""));
+        button.setAttribute("aria-label", button.title);
         button.textContent = index === 0 ? "‹" : "›";
-        if (shortcuts) {
-          const key = document.createElement("small");
-          key.className = "move-grade-step-key";
-          key.setAttribute("aria-hidden", "true");
-          key.textContent = shortcuts[index].toUpperCase();
-          button.appendChild(key);
-        }
         button.addEventListener("click", () => moveGradeNavigate(color, category, direction));
         row.appendChild(button);
       }
