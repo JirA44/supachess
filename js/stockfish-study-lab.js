@@ -66,7 +66,7 @@
       <p class="sf-study-status" role="status" aria-live="polite" data-sf-status></p>
       <div class="sf-study-progress" aria-label="Progression de l’audit"><span data-sf-progress></span></div>
       <label for="sf-study-search">Rechercher une position analysée</label>
-      <input id="sf-study-search" type="search" placeholder="Titre, joueur, thème…" style="width:min(100%,520px);padding:10px;margin:6px 0">
+      <input id="sf-study-search" data-sf-search type="search" placeholder="Titre, joueur, thème…" style="width:min(100%,520px);padding:10px;margin:6px 0">
       <div class="sf-study-results" data-sf-results></div>
       <button class="btn" type="button" data-sf-more hidden>Afficher davantage</button>
       <p class="sf-study-muted">Un exercice de choix unique n’est créé que si Stockfish classe nettement le premier coup (écart d’au moins 0,35 pion dans cette recherche). Les puzzles dont la solution publiée diffère du premier coup moteur sont signalés, pas réécrits silencieusement. Les analyses et exercices ajoutés sont locaux à cet appareil.</p>
@@ -79,8 +79,6 @@
     section.querySelector("[data-sf-puzzles]").addEventListener("click", () => startAudit("puzzles"));
     section.querySelector("[data-sf-pause]").addEventListener("click", () => { paused = true; setStatus("Pause demandée; le calcul en cours va se terminer avant l’arrêt."); });
     section.querySelector("[data-sf-more]").addEventListener("click", () => { visibleCount += 25; renderResults(); });
-    section.querySelector("[data-sf-search]").addEventListener("input", () => { visibleCount = 25; renderResults(); });
-    renderResults();
     return section;
   }
 
@@ -130,7 +128,7 @@
       const c = source[i];
       if (inString) {
         if (escaped) escaped = false;
-        else if (c === "\\\\") escaped = true;
+        else if (c === "\\") escaped = true;
         else if (c === quote) inString = false;
         continue;
       }
@@ -179,8 +177,12 @@
       sourceEntries = scope === "lessons" ? lessons : scope === "puzzles" ? puzzles : lessons.concat(puzzles);
       const valid = sourceEntries.filter((entry) => entry.kind !== "invalid");
       const uniquePositions = new Map();
-      valid.forEach((entry) => { if (!audit[entry.key]) uniquePositions.set(entry.fen, entry); });
-      const work = Array.from(uniquePositions.values());
+      valid.forEach((entry) => {
+        if (audit[entry.key]) return;
+        if (!uniquePositions.has(entry.fen)) uniquePositions.set(entry.fen, []);
+        uniquePositions.get(entry.fen).push(entry);
+      });
+      const work = Array.from(uniquePositions.entries());
       const processedStart = valid.filter((entry) => audit[entry.key]).length;
       setStatus("Corpus chargé : " + lessons.length + " leçons/exercices et " + puzzles.length +
         " puzzles. Positions distinctes à analyser maintenant : " + work.length + ".");
@@ -189,25 +191,26 @@
         await engine.ready;
       }
       let done = 0;
-      for (const entry of work) {
+      for (const [fen, entries] of work) {
         if (paused) break;
-        const position = new root.Chess(entry.fen);
+        const position = new root.Chess(fen);
         const legalCount = position.moves({ verbose: true }).length;
-        const response = await engine.analyze({ fen: entry.fen, multipv: Math.min(4, legalCount), movetime: MOVE_TIME, elo: 0 });
-        const result = root.SupaChessAcademy.buildEngineChoices(entry.fen, response.lines);
-        const stored = {
-          key: entry.key, id: entry.id, kind: entry.kind, title: entry.title, theme: entry.theme,
-          level: entry.level, fen: entry.fen, choices: result.choices, legalCount: result.legalCount,
-          depth: result.choices.reduce((max, choice) => Math.max(max, choice.depth), 0),
-          puzzleAnswer: entry.answerUci || "", expectedUci: entry.expectedUci || "",
-          analyzedAt: new Date().toISOString(), moveTimeMs: MOVE_TIME
-        };
-        audit[entry.key] = stored;
+        const response = await engine.analyze({ fen: fen, multipv: Math.min(4, legalCount), movetime: MOVE_TIME, elo: 0 });
+        const result = root.SupaChessAcademy.buildEngineChoices(fen, response.lines);
+        for (const entry of entries) {
+          audit[entry.key] = {
+            key: entry.key, id: entry.id, kind: entry.kind, title: entry.title, theme: entry.theme,
+            level: entry.level, fen: fen, choices: result.choices, legalCount: result.legalCount,
+            depth: result.choices.reduce((max, choice) => Math.max(max, choice.depth), 0),
+            puzzleAnswer: entry.answerUci || "", expectedUci: entry.expectedUci || "",
+            analyzedAt: new Date().toISOString(), moveTimeMs: MOVE_TIME
+          };
+        }
         saveAudit();
         done++;
         renderProgress(processedStart + done, valid.length);
-        if (done % 5 === 0) setStatus("Stockfish analyse " + (processedStart + done) + "/" +
-          valid.length + " positions distinctes du corpus…");
+        if (done % 5 === 0) setStatus("Stockfish analyse " + Math.min(processedStart + done, valid.length) +
+          "/" + valid.length + " positions distinctes du corpus…");
       }
       if (paused) setStatus("Audit mis en pause : " + Object.keys(audit).length + " position(s) enregistrée(s). Relance pour reprendre.");
       else setStatus("Audit terminé : " + valid.length + " entrée(s), " + Object.keys(audit).length +
