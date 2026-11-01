@@ -540,10 +540,15 @@ function moveGradeCategory(lossCp, brilliant = false, best = false) {
   return "ok";
 }
 
-function recordMoveGrade(ply, color, category) {
+function recordMoveGrade(ply, color, category, metadata = {}) {
   const existing = state.moveGradeHistory.find((entry) => entry.ply === ply);
-  if (existing) { existing.color = color; existing.category = category; }
-  else state.moveGradeHistory.push({ ply, color, category });
+  if (existing) {
+    existing.color = color;
+    existing.category = category;
+    if (Object.prototype.hasOwnProperty.call(metadata, "noTrainingAids")) {
+      existing.noTrainingAids = metadata.noTrainingAids === true;
+    }
+  } else state.moveGradeHistory.push({ ply, color, category, ...metadata });
   renderMoveGradeSummary();
 }
 
@@ -843,7 +848,8 @@ function commitUserMove(moveObj, cand, forced) {
   const brilliant = isBrilliantCandidate(fenBefore, cand);
   const grade = moveGrade(cand ? cand.deltaCp : null, brilliant, cand?.rank === 1);
   recordMoveGrade(state.chess.history().length, userMoveColor,
-    moveGradeCategory(cand ? cand.deltaCp : null, brilliant, cand?.rank === 1));
+    moveGradeCategory(cand ? cand.deltaCp : null, brilliant, cand?.rank === 1),
+    { noTrainingAids: !boardUI.showDots && !boardUI.showMoveDots });
   moveFeedback.show({ san: mv.san, color: mv.color, moveNumber: moveNumberFromFen(fenBefore), square: mv.to,
     deltaCp: cand ? cand.deltaCp : null, brilliant, best: cand?.rank === 1 });
   const evaluation = cand && cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)

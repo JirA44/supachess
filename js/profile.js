@@ -83,6 +83,13 @@ function getProfile(uid){
 function escapeProfileText(value){
   return String(value==null?'':value).replace(/[&<>\"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch];});
 }
+function readCorrectionProgress(){
+  try{
+    var value=JSON.parse(localStorage.getItem('supachess-correction-progress-v1')||'{}');
+    return value&&typeof value==='object'&&!Array.isArray(value)?value:{};
+  }catch(_e){return {};}
+}
+function correctionProgressKey(gameId,ply){return String(gameId||'')+':'+String(Number(ply)||0);}
 function summarizeAccuracyGames(games, now){
   var currentTime=Number.isFinite(Number(now))?Number(now):Date.now();
   var day=24*60*60*1000;
@@ -141,6 +148,19 @@ function readLocalLearningProgress(data){
   if(!lessons||typeof lessons!=='object'||Array.isArray(lessons))lessons={};
   if(!Array.isArray(games))games=[];
   if(!Array.isArray(playedGames))playedGames=[];
+  var savedCorrectionProgress=readCorrectionProgress();
+  var correctedStats={inaccuracy:0,mistake:0,blunder:0};
+  Object.keys(savedCorrectionProgress).forEach(function(key){
+    var record=savedCorrectionProgress[key];
+    if(!record||typeof record!=='object')return;
+    var category=record.category==='error'?'mistake':record.category;
+    if(Object.prototype.hasOwnProperty.call(correctedStats,category))correctedStats[category]++;
+  });
+  var brilliantWithoutAids=playedGames.reduce(function(sum,game){
+    return sum+(Array.isArray(game&&game.moveGrades)?game.moveGrades.filter(function(move){
+      return move&&move.color===game.userColor&&move.category==='brilliant'&&move.noTrainingAids===true;
+    }).length:0);
+  },0);
   var records=Object.keys(lessons).map(function(id){return {id:id,progress:lessons[id]};}).filter(function(item){return item.progress&&typeof item.progress==='object';});
   var completed=records.filter(function(item){return item.progress.completed;});
   var attempted=records.filter(function(item){return Number(item.progress.attempts)>0||item.progress.completed;});
@@ -174,7 +194,9 @@ function readLocalLearningProgress(data){
     endgameMastered:completedCount(endgames,'completed'),
     tacticMastered:completedCount(tactics,'completedCategories'),
     accuracyGames:accuracyGames,
-    accuracySummary:summarizeAccuracyGames(playedGames)
+    accuracySummary:summarizeAccuracyGames(playedGames),
+    correctedStats:correctedStats,
+    brilliantWithoutAids:brilliantWithoutAids
   };
 }
 function profileText(key,fallback){
@@ -268,7 +290,7 @@ function readDiagnosticProfile(){
       if(move&&move.color===game.userColor&&move.category&&move.category!=='unrated'){
         var category=move.category==='error'?'mistake':move.category;
         if(['brilliant','best','very-good','good','ok','inaccuracy','mistake','blunder'].includes(category)){
-          ratedMoves.push({category:category,gameId:String(game.id),phase:phaseByPly[Number(move.ply)]||null});
+          ratedMoves.push({category:category,gameId:String(game.id),ply:Number(move.ply),phase:phaseByPly[Number(move.ply)]||null});
         }
       }
     });
@@ -280,6 +302,7 @@ function renderDiagnosticProfile(){
   var diagnostic=report.diagnostic;
   if(!diagnostic)return '';
   var labels={'inaccuracy':'Imprécisions','mistake':'Erreurs','blunder':'Gaffes'};
+  var correctionProgress=readCorrectionProgress();
   var categories=['inaccuracy','mistake','blunder'];
   var rated=report.ratedMoves;
   var counts={inaccuracy:0,mistake:0,blunder:0,solid:0};
@@ -432,10 +455,23 @@ function renderDiagnosticProfile(){
   var phaseShape=phaseRadar.map(function(metric,index){var p=phasePoint(index,metric.value/100);return p.x.toFixed(1)+','+p.y.toFixed(1);}).join(' ');
   var phaseText=phaseRadar.map(function(metric,index){var p=phasePoint(index,1.2);return '<text x="'+p.x.toFixed(1)+'" y="'+(p.y+(p.y<phaseCenter.y?0:12)).toFixed(1)+'" text-anchor="'+(p.x<phaseCenter.x-8?'end':p.x>phaseCenter.x+8?'start':'middle')+'" fill="#f4f7fb" font-size="15">'+metric.label+' '+metric.value+'%</text>';}).join('');
   html+='<article style="min-width:0;padding:12px;border:1px solid #53647b;border-radius:12px;background:rgba(12,20,32,.55)"><h5>Radar des phases · volume observé</h5><svg viewBox="0 0 400 260" role="img" aria-label="Part des demi-coups notés par phase : '+phaseRadar.map(function(metric){return metric.label+' '+metric.value+' pour cent';}).join(', ')+'" style="display:block;width:min(100%,500px);height:auto;margin:8px auto">'+phaseRings+phaseAxes+phaseRingLabels+'<polygon points="'+phaseShape+'" fill="rgba(81,217,141,.22)" stroke="#51d98d" stroke-width="2"/>'+phaseText+'</svg><p><strong>Légende :</strong> surface verte = part des coups notés attribuée à cette phase; graduations radiales = pourcentage du total. Les axes sont ouverture, milieu de jeu et finale. Ce radar montre la répartition des observations, pas ton niveau dans chaque phase.</p></article></div>';
-  var ranked=categories.map(function(key){return {key:key,count:counts[key],rate:Math.round(100*counts[key]/rated.length)};}).filter(function(item){return item.count>0;}).sort(function(a,b){return b.rate-a.rate||categories.indexOf(a.key)-categories.indexOf(b.key);});
-  html+='<h5>Priorités de travail observées</h5>';
+  var ranked=categories.map(function(key){
+    var moves=rated.filter(function(move){return move.category===key;});
+    var pending=moves.filter(function(move){return !correctionProgress[correctionProgressKey(move.gameId,move.ply)];});
+    return {key:key,count:moves.length,rate:Math.round(100*moves.length/rated.length),corrected:moves.length-pending.length,pending:pending};
+  }).filter(function(item){return item.count>0;}).sort(function(a,b){return b.rate-a.rate||categories.indexOf(a.key)-categories.indexOf(b.key);});
+  html+='<h5>À retravailler dans tes parties</h5>';
   if(ranked.length){
-    html+='<ol>'+ranked.map(function(item){return '<li><strong>'+labels[item.key]+'</strong> : '+item.count+' coup(s), '+item.rate+'% des demi-coups notés dans cet échantillon.</li>';}).join('')+'</ol><p>Commence par la première catégorie, puis revois les positions concernées dans l’analyse de tes parties.</p>';
+    html+='<ol class="profile-correction-priorities">'+ranked.map(function(item){
+      var first=item.pending.find(function(move){return move.gameId&&Number.isFinite(move.ply)&&move.ply>0;});
+      var detail=item.corrected+' corrigée(s) · '+item.pending.length+' à retravailler';
+      var label=labels[item.key]+' : '+item.count;
+      if(first){
+        var href='index.html?resume-correction-game='+encodeURIComponent(first.gameId)+'&amp;focus-category='+encodeURIComponent(item.key)+'&amp;focus-ply='+encodeURIComponent(first.ply);
+        return '<li><a class="profile-mastery-link profile-correction-priority" href="'+href+'" aria-label="'+label+' · '+detail+' · ouvrir la première position non corrigée"><span>'+label+'<small>'+detail+'</small></span><strong aria-hidden="true">›</strong></a></li>';
+      }
+      return '<li><div class="profile-mastery-entry profile-correction-priority" aria-disabled="true"><span>'+label+'<small>'+item.corrected+' corrigée(s) · aucune position exploitable à ouvrir</small></span><strong aria-hidden="true">✓</strong></div></li>';
+    }).join('')+'</ol><p>Chaque lien ouvre la première position non corrigée de cette catégorie. Une correction n’est comptée qu’après avoir trouvé le coup attendu.</p>';
   }else html+='<p>Aucune imprécision, erreur ou gaffe classée dans les notes disponibles. Cela ne prouve pas l’absence de lacunes tactiques ou stratégiques.</p>';
   return html+'</section>';
 }
@@ -479,6 +515,16 @@ function renderExerciseCharts(local){
   var depth='<svg class="profile-exercise-chart" viewBox="0 0 520 220" role="img" aria-label="Vue 3D des nombres d’exercices par catégorie; axe vertical : nombre d’exercices; profondeur décorative" style="display:block;width:100%;height:auto">'+depthGrid+depthBars+'<line x1="48" y1="70" x2="48" y2="170" stroke="#dce6f2"/><line x1="48" y1="170" x2="500" y2="170" stroke="#dce6f2"/><text x="20" y="122" transform="rotate(-90 20 122)" text-anchor="middle" fill="#f4f7fb" font-size="15">Nombre d’exercices</text></svg>';
   var card='border:1px solid #53647b;border-radius:12px;padding:12px;background:rgba(12,20,32,.55);min-width:0';
   return '<section class="profile-exercise-charts" aria-labelledby="profile-exercise-charts-title" style="margin:18px 0;padding:16px;border:1px solid #53647b;border-radius:14px;background:#202b3d;color:#f4f7fb"><h4 id="profile-exercise-charts-title" style="margin-top:0">Graphiques de mes exercices</h4><p>'+total+' exercices de correction enregistrés. Les graphiques décrivent leur répartition par catégorie; ils ne mesurent pas un niveau de jeu.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;align-items:start"><article style="'+card+'"><h5>Répartition par catégorie</h5>'+barChart+'</article><article style="'+card+'"><h5>Radar · part des exercices</h5>'+radar+'<p>Chaque axe indique la part de cette catégorie dans les exercices enregistrés.</p></article><article style="'+card+'"><h5>Vue 3D · mêmes nombres</h5>'+depth+'<p>La hauteur représente le nombre d’exercices; la profondeur est décorative.</p></article></div></section>';
+}
+function renderCorrectionProgressSummary(local){
+  var stats=local.correctedStats||{inaccuracy:0,mistake:0,blunder:0};
+  var entries=[
+    {label:'Erreurs corrigées',value:stats.mistake||0},
+    {label:'Gaffes corrigées',value:stats.blunder||0},
+    {label:'Imprécisions corrigées',value:stats.inaccuracy||0},
+    {label:'Coups brillants trouvés sans dots ni bulles',value:local.brilliantWithoutAids||0}
+  ];
+  return '<section class="profile-correction-summary" aria-labelledby="profile-correction-summary-title" style="margin:14px 0;padding:14px;border:1px solid #53647b;border-radius:12px;background:#202b3d;color:#f4f7fb"><h4 id="profile-correction-summary-title" style="margin:0 0 10px">Corrections et coups trouvés sans aide</h4><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:8px">'+entries.map(function(item){return '<div style="padding:10px;border:1px solid #53647b;border-radius:9px;background:rgba(12,20,32,.55)"><strong style="display:block;font-size:1.25rem">'+item.value+'</strong><span>'+escapeProfileText(item.label)+'</span></div>';}).join('')+'</div><p style="margin:10px 0 0;font-size:.9rem">Les corrections sont comptées après résolution dans le mode Corriger. Les coups brillants sans aide sont comptés à partir des parties enregistrées où les dots et les bulles étaient désactivés au moment du coup.</p></section>';
 }
 function renderLocalLearningPanel(data){
   var local=readLocalLearningProgress(data);
@@ -525,7 +571,7 @@ function renderLocalLearningPanel(data){
     '<small>'+escapeProfileText(profileText('profile_xp_to_next','Progression vers le niveau suivant'))+': '+Math.round(xpPercent)+'%'+(nextXP!==null?' · '+profileText('profile_next_level_at','prochain niveau à')+' '+Number(nextXP).toLocaleString('fr-FR')+' XP · '+profileText('profile_xp_remaining','XP restantes pour atteindre le niveau suivant')+' : '+xpRemaining+' XP':'')+'</small></div>'+
     '<div class="profile-learning-stats"><div><strong>'+local.completed.length+' / '+local.attempted.length+'</strong><span>'+profileText('profile_lessons_mastered_attempted','leçons maîtrisées / commencées')+'</span></div><div><strong>'+local.moveExercises+'</strong><span>'+profileText('profile_correction_moves','demi-coups à revoir')+'</span></div><div><strong>'+local.puzzlesSolved+'</strong><span>'+profileText('profile_puzzles_solved','problèmes résolus')+'</span></div><div><strong>'+local.practiceSessions+'</strong><span>'+profileText('profile_practice_sessions','séances d’entraînement')+'</span></div></div>'+
     renderPlayerAccuracyPanel(local.accuracySummary)+
-    renderExerciseCharts(local)+renderDiagnosticProfile()+
+    renderExerciseCharts(local)+renderDiagnosticProfile()+renderCorrectionProgressSummary(local)+
     '<h4>'+profileText('profile_mastery_title','Maîtrise et progression')+'</h4><ul class="profile-mastery-list">'+training.map(function(item){var label=escapeProfileText(item.label);var value='<strong>'+item.value+'</strong>';return '<li>'+(item.href?'<a class="profile-mastery-link" href="'+item.href+'" aria-label="'+label+' : '+item.value+'">'+label+value+'</a>':'<div class="profile-mastery-entry">'+label+value+'</div>')+'</li>';}).join('')+'</ul>'+
     '<div class="profile-learning-actions"><div class="profile-resume-card"><a class="profile-resume-link" href="'+weaknessesUrl+'"><span>🎯 Travailler mes plus grandes lacunes<small style="display:block;font-weight:500;opacity:.82;margin-top:3px">'+escapeProfileText(weaknessFocusText)+'</small></span><span aria-hidden="true">›</span></a></div><a class="profile-diagnostic-button" role="button" href="index.html?start-diagnostic=1#level-diagnostic-banner">🧭 Passer le diagnostic de niveau</a><small class="profile-diagnostic-help">Relance un bilan de 10 parties analysées par Stockfish.</small><div class="profile-resume-card"><a class="profile-resume-link" href="'+exercisesUrl+'"><span>'+profileText('profile_resume_exercises','Reprendre mes exercices')+'</span><span aria-hidden="true">›</span></a></div><div class="profile-resume-card"><a class="profile-resume-link" href="https://jira44.github.io/supachess/book-lessons.html?next=1"><span>'+profileText('profile_resume_lessons','Reprendre mes leçons')+'</span><span aria-hidden="true">›</span></a></div><div class="profile-resume-card"><a class="profile-resume-link" href="https://jira44.github.io/supachess-web/TRAINING_OPENINGS.html"><span>'+profileText('profile_resume_mastery','Reprendre l’entraînement de maîtrise')+'</span><span aria-hidden="true">›</span></a></div></div>';
   if(weaknessRanks.length){

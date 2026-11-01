@@ -59,6 +59,7 @@ test('plays correction exercises from a saved analyzed game',async({page})=>{
   await page.locator('#board [data-square="e4"]').click();
   await expect(page.locator('#review-exercise-feedback')).toContainText('Bien joué');
   await expect(page.locator('#btn-review-exercise-next')).toBeEnabled();
+  expect(await page.evaluate(()=>Object.keys(JSON.parse(localStorage.getItem('supachess-correction-progress-v1')||'{}')))).toContain('correction-game:1');
   await page.click('#btn-review-exercise-next');
   await expect(page.locator('#review-exercise-panel')).toBeVisible();
   await expect(page.locator('#move-grade-summary [data-color="w"] .grade-error [data-grade-count]')).toHaveText('+1');
@@ -225,4 +226,30 @@ test('Stockfish completes a 67-halfmove PGN analysis and retries once after a wo
   expect(result.progress).toContain('Stockfish ne répond pas au demi-coup 1/67 — redémarrage du moteur et nouvelle tentative…');
   expect(result.progress).toContain('Analyse Stockfish… coup 67/67');
   expect(result.progress.at(-1)).toBe('Analyse Stockfish terminée — bilan en cours…');
+});
+
+test('resumes the first unresolved diagnostic move from its profile category counter',async({page})=>{
+  await page.goto('/index.html');
+  await page.evaluate(()=>{
+    localStorage.clear();
+    const pgn='1. f3 e5';
+    localStorage.setItem('supachess_games',JSON.stringify([{
+      id:'diagnostic-game-1',pgn,white:'Alice',black:'Stockfish',userColor:'w',
+      result:'1-0',engineName:'Stockfish 19',stats:{moves:2},
+      moveGrades:[{ply:1,color:'w',category:'mistake'}]
+    }]));
+    localStorage.setItem('supachess_reviewed_pgns',JSON.stringify([{
+      id:'reviewed-game-1',pgn,white:'Alice',black:'Stockfish',result:'1-0',
+      moveGrades:[{ply:1,color:'w',category:'mistake'}],
+      correctionExercises:[{
+        fen:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+        bestUci:'e2e4',bestScoreCp:12,bestMate:null,ply:1,moveNumber:1,color:'w',
+        playedSan:'f3',classification:'mistake',lossCp:65
+      }]
+    }]));
+  });
+  await page.goto('/index.html?resume-correction-game=diagnostic-game-1&focus-category=mistake&focus-ply=1');
+  await expect(page.locator('#review-exercise-panel')).toBeVisible();
+  await expect(page.locator('#review-exercise-heading')).toContainText('Exercice 1/1');
+  expect(await page.evaluate(()=>state.chess.fen())).toBe('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
 });
