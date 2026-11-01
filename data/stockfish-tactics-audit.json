@@ -264,32 +264,32 @@
       "title": "Fourchette de fou · A",
       "theme": "fork",
       "rating": 1500,
-      "fen": "7k/8/8/8/8/2B5/7K/q5R1 w - - 0 1",
-      "answerUci": "c3g7"
+      "fen": "7k/8/7B/8/8/8/7K/q5R1 w - - 0 1",
+      "answerUci": "h6g7"
     },
     {
       "id": "bishop-fork-B",
       "title": "Fourchette de fou · B",
       "theme": "fork",
       "rating": 1500,
-      "fen": "k7/8/8/8/8/5B2/K7/1R5q w - - 0 1",
-      "answerUci": "f3b7"
+      "fen": "k7/8/B7/8/8/8/K7/1R5q w - - 0 1",
+      "answerUci": "a6b7"
     },
     {
       "id": "bishop-fork-C",
       "title": "Fourchette de fou · C",
       "theme": "fork",
       "rating": 1500,
-      "fen": "Q5r1/7k/2b5/8/8/8/8/7K b - - 0 1",
-      "answerUci": "c6g2"
+      "fen": "Q5r1/7k/8/8/8/7b/8/7K b - - 0 1",
+      "answerUci": "h3g2"
     },
     {
       "id": "bishop-fork-D",
       "title": "Fourchette de fou · D",
       "theme": "fork",
       "rating": 1500,
-      "fen": "1r5Q/k7/5b2/8/8/8/8/K7 b - - 0 1",
-      "answerUci": "f6b2"
+      "fen": "1r5Q/k7/8/8/8/8/8/K1b5 b - - 0 1",
+      "answerUci": "c1b2"
     },
     {
       "id": "xray-A",
