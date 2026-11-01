@@ -27,7 +27,7 @@
     <section class="method-paths" aria-labelledby="method-paths-title">
       <div class="method-paths-heading">
         <p class="lesson-eyebrow">SupaChess Académie · méthodes de travail</p>
-        <h2 id="method-paths-title">Onze parcours d’apprentissage</h2>
+        <h2 id="method-paths-title">Douze parcours d’apprentissage</h2>
         <p>Chaque parcours commence par les notions les plus accessibles et monte progressivement en difficulté. Les parcours Capablanca et Lasker s’appuient sur des thèmes référencés dans leurs ouvrages; les explications et exercices sont reformulés et originaux. Un nouveau parcours ajoute 24 leçons originales inspirées de trois manuels de Project Gutenberg, indiqués comme étant du domaine public aux États-Unis. Le parcours Edward Lasker est distinct de celui d’Emanuel Lasker. Stockfish calcule les variantes et évaluations, il n’est pas présenté comme l’auteur des explications.</p>
       </div>
       <div class="method-path-grid">
@@ -126,6 +126,15 @@
           <p class="method-path-count" data-method-count>18 positions complexes</p>
           <button class="btn method-path-action" type="button" data-method-action="Calcul profond · parties maîtresses">Explorer les 18 positions complexes</button>
         </article>
+        <article class="method-path method-path-precision" data-method-path="Précision · jouer juste et vérifier">
+          <div class="method-path-kicker">12 · Routine, contrôle et révision</div>
+          <h3>Précision durable</h3>
+          <p>15 exercices en quatre niveaux pour réduire les erreurs : scanner les menaces, comparer les coups candidats, calculer la meilleure réponse adverse et revoir les écarts avec Stockfish.</p>
+          <ol><li>Recalcule après chaque demi-coup adverse.</li><li>Avant de jouer, vérifie échecs, prises, menaces et pièces en prise.</li><li>En position critique, compare plusieurs candidats aux meilleures défenses.</li><li>Après la partie, transforme l’erreur récurrente en exercice à refaire sans indice.</li></ol>
+          <p>Le 100 % n’est pas garanti à chaque partie et ne prouve pas à lui seul une maîtrise complète. Cherche une routine fiable et des progrès réguliers sur des positions variées.</p>
+          <p class="method-path-count" data-method-count>15 leçons de précision</p>
+          <button class="btn method-path-action" type="button" data-method-action="Précision · jouer juste et vérifier">Explorer les 15 leçons de précision</button>
+        </article>
       </div>
     </section>
 
@@ -134,7 +143,7 @@
       <div class="lesson-filter-row">
         <label>Rechercher<input id="lesson-search" type="search" placeholder="thème, coup ou méthode"></label>
         <label>Niveau<select id="lesson-level-filter"><option value="">Tous les niveaux</option><option>Débutant</option><option>Intermédiaire</option><option>Avancé</option><option>Expert</option></select></label>
-        <label>Parcours<select id="lesson-program-filter"><option value="">Tous les parcours</option><option>Fischer · préparation et précision</option><option>Carlsen · amélioration et conversion</option><option>Capablanca · fondamentaux et principes</option><option>Lasker · mobilisation et principes</option><option>Edward Lasker · calcul et stratégie</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Anti-erreurs · anticiper l’adversaire</option><option>Calcul · meilleure réponse adverse</option><option>Manuels classiques · principes et technique</option><option>Calcul profond · parties maîtresses</option></select></label>
+        <label>Parcours<select id="lesson-program-filter"><option value="">Tous les parcours</option><option>Fischer · préparation et précision</option><option>Carlsen · amélioration et conversion</option><option>Capablanca · fondamentaux et principes</option><option>Lasker · mobilisation et principes</option><option>Edward Lasker · calcul et stratégie</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Anti-erreurs · anticiper l’adversaire</option><option>Calcul · meilleure réponse adverse</option><option>Manuels classiques · principes et technique</option><option>Calcul profond · parties maîtresses</option><option>Précision · jouer juste et vérifier</option></select></label>
         <button class="btn lesson-surprise" id="lesson-surprise" type="button">Exercice au hasard</button>
       </div>
     </section>
@@ -216,8 +225,8 @@
   <script src="js/engine.js"></script>
   <script src="js/board.js"></script>
   <script src="js/curriculum.js?v=strategy-plans-course-20261031-v6"></script>
-  <script src="js/book-lessons.js?v=deep-calculation-historical-20261101"></script>
-  <script src="js/method-paths.js?v=deep-calculation-path-20261101"></script>
+  <script src="js/book-lessons.js?v=precision-routine-20261101"></script>
+  <script src="js/method-paths.js?v=precision-routine-20261101"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
