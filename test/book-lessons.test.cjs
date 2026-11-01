@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { Chess } = require("chess.js");
-const { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonHeadingText } = require("../js/book-lessons.js");
+const { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPartnerIndices, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText } = require("../js/book-lessons.js");
 
 test("book lesson setups and user/book move sequences are legal", () => {
   for (const lesson of LESSONS) {
@@ -298,4 +298,65 @@ test("15 original precision lessons progress from habit-building to independent 
   assert.ok(lessons.some((lesson) => /Stockfish/.test(lesson.transfer)));
   assert.ok(lessons.some((lesson) => /indice/.test(lesson.pitfall)));
   assert.ok(lessons.every((lesson) => lesson.sequence.length >= 3));
+});
+
+
+test("review partners keep the same theme and use a different legal lesson position", () => {
+  const lessons = [
+    { id: "a", category: "Anticipation · Ouverture · Développement", fen: "fen-a" },
+    { id: "b", category: "Ouverture · Développement", fen: "fen-b" },
+    { id: "same-position", category: "Ouverture · Développement", fen: "fen-a" },
+    { id: "unrelated", category: "Finale · Roi et pion", fen: "fen-c" },
+  ];
+  assert.equal(lessonReviewKey(lessons[0]), lessonReviewKey(lessons[1]));
+  assert.deepEqual(lessonReviewPartnerIndices(0, lessons), [1]);
+});
+
+test("review progress distinguishes passed lessons, due reviews, and demonstrated mastery", () => {
+  const lessons = [
+    { id: "a", category: "Tactique · Fourchette", fen: "fen-a" },
+    { id: "b", category: "Tactique · Fourchette", fen: "fen-b" },
+    { id: "c", category: "Finale · Roi et pion", fen: "fen-c" },
+  ];
+  const summary = lessonReviewProgressSummary(lessons, {
+    a: { completed: true },
+    c: { completed: true },
+  }, Date.parse("2026-11-01T12:00:00.000Z"));
+  assert.deepEqual(summary, { passed: 2, reviewable: 1, due: 1, integrated: 0, withoutPartner: 1 });
+});
+
+test("mastery requires three unassisted reviews spaced at one- and three-day intervals", () => {
+  const base = { positionFen: "new-position", targetFen: "lesson-position", solved: true, attempts: 0, hintsUsed: 0 };
+  const first = createLessonReviewRecord({}, { ...base, reviewedAt: "2026-11-01T12:00:00.000Z" });
+  assert.equal(first.streak, 1);
+  assert.equal(first.mastered, false);
+  assert.equal(first.dueAt, "2026-11-02T12:00:00.000Z");
+
+  const early = createLessonReviewRecord(first, { ...base, reviewedAt: "2026-11-01T14:00:00.000Z" });
+  assert.equal(early.lastOutcome, "too-soon");
+  assert.equal(early.streak, 1);
+
+  const second = createLessonReviewRecord(first, { ...base, reviewedAt: "2026-11-02T12:00:01.000Z" });
+  assert.equal(second.streak, 2);
+  assert.equal(second.dueAt, "2026-11-05T12:00:01.000Z");
+
+  const third = createLessonReviewRecord(second, { ...base, reviewedAt: "2026-11-05T12:00:02.000Z" });
+  assert.equal(third.streak, 3);
+  assert.equal(third.mastered, true);
+  assert.equal(third.dueAt, "2026-11-12T12:00:02.000Z");
+});
+
+test("errors or hints reset the retention streak, while completing a lesson preserves review state", () => {
+  const first = createLessonReviewRecord({}, {
+    solved: true, attempts: 0, hintsUsed: 0, positionFen: "new", targetFen: "old",
+    reviewedAt: "2026-11-01T12:00:00.000Z",
+  });
+  const afterHint = createLessonReviewRecord(first, {
+    solved: true, attempts: 0, hintsUsed: 1, positionFen: "variant-2", targetFen: "old",
+    reviewedAt: "2026-11-02T12:00:01.000Z",
+  });
+  assert.equal(afterHint.streak, 0);
+  assert.equal(afterHint.lastOutcome, "needs-work");
+  const completedAgain = createCompletedLessonRecord({ completed: true, completions: 1, review: first }, 1, 0, "2026-11-02T13:00:00.000Z");
+  assert.deepEqual(completedAgain.review, first);
 });
