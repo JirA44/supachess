@@ -121,6 +121,14 @@
       panel.appendChild(heading);
       const table = document.createElement("div");
       table.style.cssText = "display:grid;grid-template-columns:minmax(100px,1fr) auto auto;gap:6px 8px;align-items:center";
+      const blank = document.createElement("span");
+      table.appendChild(blank);
+      for (const label of ["Précédent", "Suivant"]) {
+        const column = document.createElement("span");
+        column.textContent = label;
+        column.style.cssText = "color:#a8eaff;font-size:.78rem;font-weight:800;text-align:center";
+        table.appendChild(column);
+      }
       for (const category of Object.keys(DEFAULTS[side])) {
         const name = document.createElement("span");
         name.textContent = LABELS[category];
@@ -139,17 +147,20 @@
             section.querySelectorAll("[data-shortcut-capture]").forEach((item) => { item.dataset.waiting = "false"; });
             button.dataset.waiting = "true";
             section.querySelector("[data-shortcut-status]").textContent = "Appuie sur la touche à attribuer à « " + LABELS[category] + " ».";
+            refreshSettings(section);
             button.focus();
           });
           button.addEventListener("keydown", (event) => {
-            event.preventDefault();
             event.stopImmediatePropagation();
+            if (event.key === "Tab") return;
+            event.preventDefault();
             if (event.key === "Escape") {
               button.dataset.waiting = "false";
               section.querySelector("[data-shortcut-status]").textContent = "Modification annulée.";
+              refreshSettings(section);
               return;
             }
-            if (event.key === "Tab" || event.ctrlKey || event.metaKey || event.altKey) return;
+            if (event.ctrlKey || event.metaKey || event.altKey) return;
             const result = saveKey(side, category, index, event.key);
             section.querySelector("[data-shortcut-status]").textContent = result.ok
               ? "Raccourci enregistré : " + result.key.toLocaleUpperCase("fr") + "."
@@ -159,6 +170,7 @@
               if (typeof root.renderMoveGradeSummary === "function") root.renderMoveGradeSummary();
             }
             button.dataset.waiting = "false";
+            refreshSettings(section);
           });
           table.appendChild(button);
         }
