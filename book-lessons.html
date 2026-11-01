@@ -146,6 +146,8 @@
           <h2 id="lesson-review-title">Est-ce que tu as intégré la leçon ?</h2>
           <p>Une leçon passée n’est pas encore une maîtrise. Réussis trois tests sans erreur ni indice, espacés dans le temps. Chaque test choisit une autre position du même thème. Pendant le test, les indices et l’analyse Stockfish sont désactivés. À chaque réussite, le système vise le niveau suivant (Débutant, Intermédiaire, Avancé, Expert) quand le thème propose une position à ce niveau; sinon, il choisit la position disponible la plus proche. Le thème reste caché jusqu’à la résolution.</p>
           <p id="lesson-review-summary" role="status" aria-live="polite"></p>
+          <div id="lesson-review-competencies" class="lesson-review-competencies" aria-label="Maîtrise par domaine de compétence"></div>
+          <p id="lesson-review-domain-filter-status" class="lesson-review-domain-filter-status" role="status" aria-live="polite"></p>
         </div>
         <button class="btn lesson-review-start" id="lesson-review-start" type="button" disabled>Tester mes acquis</button>
       </section>
@@ -234,7 +236,7 @@
   <script src="js/engine.js"></script>
   <script src="js/board.js"></script>
   <script src="js/curriculum.js?v=strategy-plans-course-20261031-v6"></script>
-  <script src="js/book-lessons.js?v=retention-no-aid-distinct-fen-20261101"></script>
+  <script src="js/book-lessons.js?v=competency-mastery-domains-20261101"></script>
   <script src="js/method-paths.js?v=precision-routine-20261101"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
