@@ -127,8 +127,8 @@ test("mastery summary renders five spaced, labelled rows with clickable lesson a
   assert.match(html, /class="profile-mastery-link" href="https:\/\/jira44\.github\.io\/supachess\/book-lessons\.html\?next=1" aria-label="Leçons maîtrisées : \d+"/);
   assert.match(html, /class="profile-mastery-link" href="https:\/\/jira44\.github\.io\/supachess-web\/TRAINING_TACTICS\.html" aria-label="Problèmes résolus : \d+"/);
   assert.match(html, /class="profile-mastery-link" href="https:\/\/jira44\.github\.io\/supachess-web\/TRAINING_ENDGAMES\.html" aria-label="Fondamentaux des finales : \d+"/);
-  assert.equal((html.match(/class="profile-resume-link"/g) || []).length, 3);
-  assert.equal((html.match(/class="profile-resume-card"/g) || []).length, 3);
+  assert.equal((html.match(/class="profile-resume-link"/g) || []).length, 4);
+  assert.equal((html.match(/class="profile-resume-card"/g) || []).length, 4);
   assert.match(html, /class="profile-resume-link" href="https:\/\/jira44\.github\.io\/supachess\/index\.html\?open-review=1"/);
   assert.match(html, /class="profile-resume-link" href="https:\/\/jira44\.github\.io\/supachess\/book-lessons\.html\?next=1"/);
   assert.match(html, /class="profile-resume-link" href="https:\/\/jira44\.github\.io\/supachess-web\/TRAINING_OPENINGS\.html"/);
@@ -145,4 +145,35 @@ test("profile shows exercise charts from saved correction data without a complet
   assert.equal((html.match(/class="profile-exercise-chart"/g) || []).length, 3);
   assert.match(html, /Radar · part des exercices/);
   assert.match(html, /Vue 3D · mêmes nombres/);
+});
+
+test("profile reports move-type percentages averaged equally across completed games", () => {
+  const moves = (category, count, color = "w") => Array.from({ length: count }, () => ({ category, color }));
+  values.set("supachess_games", JSON.stringify([
+    {
+      id: "game-short",
+      result: "1-0",
+      userColor: "w",
+      moveGrades: [...moves("brilliant", 1), ...moves("good", 1), ...moves("brilliant", 1, "b")],
+    },
+    {
+      id: "game-long",
+      result: "0-1",
+      userColor: "w",
+      moveGrades: [...moves("brilliant", 1), ...moves("blunder", 9)],
+    },
+    { id: "unfinished", result: "*", userColor: "w", moveGrades: moves("brilliant", 8) },
+    { id: "abandoned", result: "0-1", userColor: "w", abandoned: true, moveGrades: moves("blunder", 8) },
+  ]));
+  values.delete("supachess-level-diagnostic");
+
+  const html = window.SupaProfiles.renderLocalLearningPanel({});
+  assert.match(html, /Pourcentage moyen des types de coups par partie/);
+  assert.match(html, /Moyenne calculée sur 2 parties terminées/);
+  assert.match(html, /Coups brillants/);
+  assert.match(html, /30,0 %/);
+  assert.match(html, /Bons coups/);
+  assert.match(html, /25,0 %/);
+  assert.match(html, /Gaffes/);
+  assert.match(html, /45,0 %/);
 });
