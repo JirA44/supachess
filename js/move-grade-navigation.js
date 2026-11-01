@@ -120,7 +120,8 @@
       if (count) countButton.appendChild(count);
       countButton.addEventListener("click", () => moveGradeNavigate(color, category, "first"));
       row.appendChild(countButton);
-      const shortcuts = MOVE_GRADE_SHORTCUTS[color] && MOVE_GRADE_SHORTCUTS[color][category];
+      const configured = root.SupaKeyboardShortcuts && root.SupaKeyboardShortcuts.getBindings();
+      const shortcuts = configured && configured[color] && configured[color][category] || MOVE_GRADE_SHORTCUTS[color] && MOVE_GRADE_SHORTCUTS[color][category];
       for (let index = 0; index < 2; index++) {
         const direction = index === 0 ? "previous" : "next";
         const button = document.createElement("button");
@@ -151,7 +152,8 @@
         (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       const key = String(event.key || "").toLocaleLowerCase("fr");
-      for (const [color, categories] of Object.entries(MOVE_GRADE_SHORTCUTS)) {
+      const configured = root.SupaKeyboardShortcuts && root.SupaKeyboardShortcuts.getBindings() || MOVE_GRADE_SHORTCUTS;
+      for (const [color, categories] of Object.entries(configured)) {
         for (const [category, pair] of Object.entries(categories)) {
           if (pair[0] === key) {
             event.preventDefault();
