@@ -63,11 +63,56 @@
     if(!body)return;
     var data=readResults();
     var rows=Object.keys(data).map(function(key){return data[key];}).filter(Boolean).sort(function(a,b){return a.name.localeCompare(b.name,"fr");});
-    if(!rows.length){body.innerHTML='<tr><td colspan="8">Aucune analyse enregistrée sur cet appareil.</td></tr>';return;}
+    if(!rows.length){body.innerHTML='<tr><td colspan="8">Aucune analyse enregistrée sur cet appareil.</td></tr>';renderRanking();return;}
     body.innerHTML=rows.map(function(row){
       var date=row.completedAt?new Date(row.completedAt).toLocaleString("fr-FR"):"—";
       return "<tr><th scope=\"row\">"+escapeHtml(row.name)+"</th><td>"+row.gamesAnalyzed+" / "+row.candidateGames+"</td><td>"+row.ratedMoves+"</td><td>"+row.accuracy.toFixed(1).replace(".",",")+" %</td><td>"+row.acpl.toFixed(1).replace(".",",")+" cp</td><td>"+row.averageDepth.toFixed(1)+"</td><td>"+escapeHtml(row.engine)+" · "+row.movetime+" ms</td><td>"+escapeHtml(date)+"</td></tr>";
     }).join("");
+    renderRanking();
+  }
+  function renderRanking(){
+    var body=document.getElementById("champion-ranking-body");
+    var protocolSelect=document.getElementById("champion-ranking-protocol");
+    var metricSelect=document.getElementById("champion-ranking-metric");
+    var status=document.getElementById("champion-ranking-status");
+    var caption=document.getElementById("champion-ranking-caption");
+    if(!body||!protocolSelect||!metricSelect||!status)return;
+    var all=Object.keys(readResults()).map(function(key){return readResults()[key];}).filter(function(row){
+      return row&&row.name&&Number.isFinite(Number(row.accuracy))&&Number.isFinite(Number(row.acpl));
+    });
+    var groups={};
+    all.forEach(function(row){
+      var key=String(row.engine||"Stockfish")+"|"+String(row.movetime||0);
+      if(!groups[key])groups[key]={key:key,label:String(row.engine||"Stockfish")+" · "+String(row.movetime||0)+" ms",count:0};
+      groups[key].count++;
+    });
+    var previous=protocolSelect.value;
+    var orderedGroups=Object.keys(groups).map(function(key){return groups[key];}).sort(function(a,b){return b.count-a.count||a.label.localeCompare(b.label,"fr");});
+    protocolSelect.innerHTML=orderedGroups.map(function(group){return '<option value="'+escapeHtml(group.key)+'">'+escapeHtml(group.label)+' · '+group.count+' joueur(s)</option>';}).join("");
+    if(groups[previous])protocolSelect.value=previous;
+    else if(orderedGroups.length)protocolSelect.value=orderedGroups[0].key;
+    if(!orderedGroups.length){
+      body.innerHTML='<tr><td colspan="6">Aucune analyse compatible enregistrée.</td></tr>';
+      status.textContent="Analyse au moins deux joueurs avec les mêmes réglages pour établir un classement.";
+      if(caption)caption.textContent="Classement local des analyses disponibles";
+      return;
+    }
+    var selected=protocolSelect.value;
+    var rows=all.filter(function(row){return String(row.engine||"Stockfish")+"|"+String(row.movetime||0)===selected;});
+    var metric=metricSelect.value;
+    var labels={accuracy:"Précision moyenne",acpl:"ACPL",gamesAnalyzed:"Parties analysées",ratedMoves:"Demi-coups évalués",averageDepth:"Profondeur moyenne"};
+    var values={accuracy:function(row){return Number(row.accuracy);},acpl:function(row){return Number(row.acpl);},gamesAnalyzed:function(row){return Number(row.gamesAnalyzed)||0;},ratedMoves:function(row){return Number(row.ratedMoves)||0;},averageDepth:function(row){return Number(row.averageDepth)||0;}};
+    rows.sort(function(a,b){var diff=values[metric](a)-values[metric](b);return metric==="acpl"?diff: -diff;});
+    body.innerHTML=rows.map(function(row,index){
+      var score=metric==="accuracy"?Number(row.accuracy).toFixed(1).replace(".",",")+" %":
+        metric==="acpl"?Number(row.acpl).toFixed(1).replace(".",",")+" cp":
+        metric==="averageDepth"?Number(row.averageDepth).toFixed(1)+" ply":String(values[metric](row));
+      return "<tr><td>"+(index+1)+"</td><th scope=\"row\">"+escapeHtml(row.name)+"</th><td>"+score+"</td><td>"+(Number(row.gamesAnalyzed)||0)+" / "+(Number(row.candidateGames)||0)+"</td><td>"+(Number(row.ratedMoves)||0)+"</td><td>"+(Number(row.averageDepth)||0).toFixed(1)+" ply</td></tr>";
+    }).join("");
+    var protocol=groups[selected]?groups[selected].label:"";
+    if(caption)caption.textContent=labels[metric]+" · "+protocol;
+    status.textContent=rows.length+" joueur(s) classé(s) pour "+labels[metric].toLocaleLowerCase("fr")+
+      " · "+protocol+". Le rang utilise l’échantillon affiché; parties, cadence et positions peuvent différer.";
   }
   function readSelectedName(){
     var key=document.getElementById("champion-player").value;
@@ -184,6 +229,8 @@
     });
     analyze.addEventListener("click",runAnalysis);
     document.getElementById("champion-cancel").addEventListener("click",cancelAnalysis);
+    document.getElementById("champion-ranking-metric").addEventListener("change",renderRanking);
+    document.getElementById("champion-ranking-protocol").addEventListener("change",renderRanking);
     document.getElementById("champion-clear").addEventListener("click",function(){
       try{localStorage.removeItem(STORAGE_KEY);renderResults();document.getElementById("champion-analysis-status").textContent="Les résultats locaux ont été effacés.";}catch(_error){}
     });
