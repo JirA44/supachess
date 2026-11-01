@@ -209,6 +209,9 @@ function reviewCorrectionButtons(){
 }
 
 function reviewRefreshCorrectionHotkeys(){
+  const api=window.SupaKeyboardShortcuts;
+  const bindings=api&&api.getBindings();
+  const correctionKeys=bindings&&bindings.corrections||["Numpad1","Numpad2","Numpad3","Numpad4","Numpad5","Numpad6","Numpad7","Numpad8","Numpad9","Numpad0"];
   reviewCorrectionButtons().forEach((button,index)=>{
     const label=button.dataset.correctionLabel || button.textContent.trim();
     button.dataset.correctionLabel=label;
@@ -218,14 +221,15 @@ function reviewRefreshCorrectionHotkeys(){
       button.removeAttribute("aria-keyshortcuts");
       return;
     }
-    const number=index===9?0:index+1;
-    button.dataset.correctionHotkey=String(number);
+    const token=correctionKeys[index];
+    const keyLabel=api?api.keyLabel(token):String(index===9?0:index+1);
+    button.dataset.correctionHotkey=token;
     button.textContent=label.startsWith("Corriger") && button.closest("#games-list")
-      ? `Corriger (${number})`
-      : `${label} [${number}]`;
-    button.setAttribute("aria-keyshortcuts",`Numpad${number}`);
+      ? `Corriger (${keyLabel})`
+      : `${label} [${keyLabel}]`;
+    button.setAttribute("aria-keyshortcuts",token);
     if(!button.dataset.baseCorrectionTitle)button.dataset.baseCorrectionTitle=button.title;
-    button.title=`${button.dataset.baseCorrectionTitle ? button.dataset.baseCorrectionTitle+" · " : ""}Pavé numérique ${number}`;
+    button.title=`${button.dataset.baseCorrectionTitle ? button.dataset.baseCorrectionTitle+" · " : ""}Raccourci clavier ${keyLabel}`;
   });
 }
 
@@ -1310,6 +1314,7 @@ if (reviewHistoryList) reviewHistoryList.addEventListener("click", (event) => {
     reviewHistoryReplayAtPly(item,button.dataset.ply);
 });
 reviewHistoryRender();
+document.addEventListener("supachess:shortcuts-changed",reviewRefreshCorrectionHotkeys);
 function resumeCorrectionExercisesFromUrl() {
   if (typeof URLSearchParams === "undefined") return;
   const params = new URLSearchParams(location.search);
@@ -1375,13 +1380,17 @@ document.getElementById("btn-replay-prev").addEventListener("click", () => repla
 document.getElementById("btn-replay-next").addEventListener("click", () => replayGoto((state.replayIdx || 0) + 1).catch(console.error));
 document.getElementById("btn-replay-quit").addEventListener("click", reviewRestoreAfterReplay);
 if (typeof document.addEventListener === "function") document.addEventListener("keydown", (event) => {
-  const correctionKey=event.code.match(/^Numpad([0-9])$/);
+  const shortcutApi=window.SupaKeyboardShortcuts;
   const target=event.target;
-  if(correctionKey&&!event.altKey&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&
-    !(target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)))){
-    const digit=Number(correctionKey[1]);
-    const button=reviewCorrectionButtons()[digit===0?9:digit-1];
-    if(button){event.preventDefault();button.click();return;}
+  const editableTarget=target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+  if(!event.altKey&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&!editableTarget){
+    const correctionIndex=shortcutApi
+      ? shortcutApi.getBindings().corrections.findIndex((token)=>shortcutApi.matchesEvent(event,token))
+      : (()=>{const match=event.code.match(/^Numpad([0-9])$/);return match?(Number(match[1])===0?9:Number(match[1])-1):-1;})();
+    if(correctionIndex>=0){
+      const button=reviewCorrectionButtons()[correctionIndex];
+      if(button){event.preventDefault();button.click();return;}
+    }
   }
   if (!reviewState.returnState || document.getElementById("replay-bar").classList.contains("hidden")) return;
   if (target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
