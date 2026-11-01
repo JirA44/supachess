@@ -87,6 +87,19 @@ test("method paths include all their lessons in progressive level order", () => 
   }
 });
 
+test("a completed path continues at the first unfinished lesson of the next path", () => {
+  const carlsenProgram = "Carlsen · amélioration et conversion";
+  const kasparovProgram = "Kasparov · coups candidats et calcul";
+  const carlsen = methodPathLessonIndices(carlsenProgram);
+  const kasparov = methodPathLessonIndices(kasparovProgram);
+  const completion = Object.fromEntries(kasparov.map((index) => [LESSONS[index].id, { completed: true, completions: 1 }]));
+  const order = [carlsenProgram, kasparovProgram];
+
+  assert.equal(nextMethodPathLessonIndex(kasparov.at(-1), kasparovProgram, completion, order), carlsen[0]);
+  completion[LESSONS[carlsen[0]].id] = { completed: true, completions: 1 };
+  assert.equal(nextMethodPathLessonIndex(kasparov.at(-1), kasparovProgram, completion, order), carlsen[1]);
+});
+
 test("each player and Stockfish path has a clearly attributed original starter lesson", () => {
   const starters = [
     ["method-fischer-preparer-d4", "Fischer · préparation et précision", "Fischer"],
