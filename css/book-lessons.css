@@ -138,3 +138,8 @@
 #lesson-review-queue ol { margin: 8px 0; padding-left: 22px; }
 #lesson-review-queue li { margin: 6px 0; line-height: 1.45; }
 #lesson-reflection-status, #lesson-review-status { font-weight: 700; }
+
+
+.lesson-card h2.is-completed {
+  color: #69e7a1;
+}
