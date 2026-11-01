@@ -2932,6 +2932,25 @@
     ).map(({ index }) => index);
   }
 
+  const REVIEW_COMPLEXITY_LEVELS = ["Débutant", "Intermédiaire", "Avancé", "Expert"];
+
+  function lessonReviewDifficultyOptions(targetIndex, reviewStreak = 0, previousFen = "", lessons = LESSONS) {
+    const target = lessons[targetIndex];
+    const partners = lessonReviewPartnerIndices(targetIndex, lessons);
+    if (!target || !partners.length) return { desiredLevel: target && target.level || "", candidateIndices: [] };
+    const targetRank = Math.max(0, REVIEW_COMPLEXITY_LEVELS.indexOf(target.level));
+    const desiredRank = Math.min(REVIEW_COMPLEXITY_LEVELS.length - 1, targetRank + Math.min(3, Math.max(0, Number(reviewStreak) || 0)));
+    let available = partners;
+    const unusedPositions = available.filter((index) => String(lessons[index].fen || "") !== String(previousFen || ""));
+    if (unusedPositions.length) available = unusedPositions;
+    const distances = available.map((index) => Math.abs(REVIEW_COMPLEXITY_LEVELS.indexOf(lessons[index].level) - desiredRank));
+    const bestDistance = Math.min(...distances);
+    let candidates = available.filter((index) => Math.abs(REVIEW_COMPLEXITY_LEVELS.indexOf(lessons[index].level) - desiredRank) === bestDistance);
+    const harder = candidates.filter((index) => REVIEW_COMPLEXITY_LEVELS.indexOf(lessons[index].level) >= desiredRank);
+    if (harder.length) candidates = harder;
+    return { desiredLevel: REVIEW_COMPLEXITY_LEVELS[desiredRank], candidateIndices: candidates };
+  }
+
   function lessonReviewProgressSummary(lessons, progress, nowValue = Date.now()) {
     const now = typeof nowValue === "number" ? nowValue : Date.parse(nowValue);
     const passed = lessons.filter((lesson) => {
@@ -2944,7 +2963,13 @@
       return !Number.isFinite(dueAt) || dueAt <= now;
     });
     const integrated = reviewable.filter((lesson) => Number(progress[lesson.id] && progress[lesson.id].review && progress[lesson.id].review.streak) >= 3);
-    return { passed: passed.length, reviewable: reviewable.length, due: due.length, integrated: integrated.length, withoutPartner: passed.length - reviewable.length };
+    const differentComplexity = reviewable.filter((lesson) =>
+      lessonReviewPartnerIndices(lessons.indexOf(lesson), lessons).some((index) => lessons[index].level !== lesson.level));
+    return {
+      passed: passed.length, reviewable: reviewable.length, due: due.length,
+      integrated: integrated.length, withoutPartner: passed.length - reviewable.length,
+      differentComplexity: differentComplexity.length,
+    };
   }
 
   function createLessonReviewRecord(previous, attempt) {
@@ -2980,6 +3005,7 @@
       successfulReviews: (Number(prior.successfulReviews) || 0) + (advanced ? 1 : 0),
       failedReviews: (Number(prior.failedReviews) || 0) + (success ? 0 : 1),
       lastReviewAt: reviewedAt, lastPositionFen: positionFen || prior.lastPositionFen || "",
+      lastLevel: attempt && attempt.exerciseLevel || prior.lastLevel || "",
       dueAt, lastOutcome,
     };
   }
@@ -2990,7 +3016,7 @@
   }
 
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPartnerIndices, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText };
+    module.exports = { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPartnerIndices, lessonReviewDifficultyOptions, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText };
   }
 
   if (typeof document === "undefined") return;
@@ -3087,6 +3113,7 @@
       ? "Passe au moins une leçon pour commencer les tests de rétention."
       : summary.reviewable + " leçon(s) passée(s) testable(s) sur une position différente du même thème · " +
         summary.due + " à réviser maintenant · " + summary.integrated + " maîtrise(s) confirmée(s) sur 3 réussites sans aide · " +
+        summary.differentComplexity + " avec variantes à complexité différente · " +
         summary.withoutPartner + " leçon(s) passée(s) sans position sœur liée pour l’instant.";
     button.disabled = summary.reviewable === 0;
     button.title = summary.reviewable === 0 ? "Il faut une leçon passée avec une autre position du même thème." :
@@ -3273,7 +3300,7 @@
     $("lesson-engine-lines").textContent = "";
     lessonIndex = index;
     reviewSession = options.review && options.reviewTargetId
-      ? { targetId: options.reviewTargetId, exerciseId: LESSONS[index].id }
+      ? { targetId: options.reviewTargetId, exerciseId: LESSONS[index].id, exerciseLevel: LESSONS[index].level }
       : null;
     reviewJustFinished = false;
     syncPreviousLessonButton();
@@ -3315,7 +3342,7 @@
     $("lesson-hint").disabled = false;
     $("lesson-flip").setAttribute("aria-pressed", String(flipped));
     renderSource(lesson);
-    if (reviewSession) $("lesson-source").textContent = "Test de rétention · position différente · thème révélé après la résolution";
+    if (reviewSession) $("lesson-source").textContent = "Test de rétention · position différente · complexité " + reviewSession.exerciseLevel + " · thème révélé après la résolution";
     else if (surpriseMode) $("lesson-source").textContent = "Exercice au hasard · thème révélé après la résolution";
     renderChoices(lesson);
     renderCatalog();
@@ -3471,7 +3498,7 @@
       const priorTarget = progress[reviewAttempt.targetId] || {};
       reviewResult = createLessonReviewRecord(priorTarget.review, {
         solved: true, attempts, hintsUsed, positionFen: lesson.fen, targetFen: target && target.fen,
-        reviewedAt: new Date().toISOString(),
+        exerciseLevel: lesson.level, reviewedAt: new Date().toISOString(),
       });
       progress[reviewAttempt.targetId] = { ...priorTarget, review: reviewResult };
       reviewSession = null;
@@ -3496,8 +3523,9 @@
       const dueDate = reviewResult.dueAt ? new Date(reviewResult.dueAt).toLocaleDateString("fr-FR") : "";
       if (reviewResult.lastOutcome === "passed") {
         $("lesson-status").textContent = reviewResult.mastered
-          ? "Maîtrise démontrée : 3 révisions espacées réussies sans erreur ni indice, sur une position différente. Révision d’entretien prévue le " + dueDate + "."
-          : "Révision " + reviewResult.streak + "/3 validée sans erreur ni indice sur une position différente. Prochaine révision prévue le " + dueDate + ".";
+          ? "Maîtrise démontrée : 3 révisions espacées réussies sans erreur ni indice sur des positions différentes. Dernier niveau : " +
+            (reviewResult.lastLevel || lesson.level) + ". Prochaine révision prévue le " + dueDate + "."
+          : "Révision " + reviewResult.streak + "/3 validée sans erreur ni indice · complexité " + lesson.level + " · position différente. Prochaine révision prévue le " + dueDate + ".";
       } else if (reviewResult.lastOutcome === "too-soon") {
         $("lesson-status").textContent = "Bonne résolution sans aide, mais le rappel était trop rapproché pour valider une nouvelle étape. Reviens après la date prévue : " + dueDate + ".";
       } else {
@@ -3755,10 +3783,10 @@
     const lowest = Number(targets[0].record.review && targets[0].record.review.streak) || 0;
     const priority = targets.filter(({ record }) => (Number(record.review && record.review.streak) || 0) === lowest);
     const target = priority[Math.floor(Math.random() * priority.length)];
-    const partners = lessonReviewPartnerIndices(target.index);
-    const previousFen = target.record.review && target.record.review.lastPositionFen;
-    const fresh = partners.filter((index) => LESSONS[index].fen !== previousFen);
-    const choices = fresh.length ? fresh : partners;
+    const reviewStreak = Number(target.record.review && target.record.review.streak) || 0;
+    const difficulty = lessonReviewDifficultyOptions(target.index, reviewStreak,
+      target.record.review && target.record.review.lastPositionFen);
+    const choices = difficulty.candidateIndices;
     if (!choices.length) {
       $("lesson-review-summary").textContent = "Aucune position différente disponible pour ce thème.";
       return;
@@ -3768,7 +3796,8 @@
     $("lesson-level-filter").value = "";
     $("lesson-program-filter").value = "";
     loadLesson(exerciseIndex, { surprise: true, review: true, reviewTargetId: target.lesson.id });
-    $("lesson-goal").textContent = "Montre que tu as retenu l’idée : joue la ligne sans indice. Le thème sera révélé après la résolution.";
+    $("lesson-goal").textContent = "Montre que tu as retenu l’idée : joue la ligne sans indice. Complexité de cette position : " +
+      LESSONS[exerciseIndex].level + ". Le thème sera révélé après la résolution.";
     document.querySelector(".lesson-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
