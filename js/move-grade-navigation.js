@@ -149,7 +149,7 @@
       if (reviewState.running) return;
       const target = event.target;
       if (target instanceof HTMLElement &&
-        (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+        (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.closest("[data-shortcut-capture]"))) return;
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       const shortcutApi = root.SupaKeyboardShortcuts;
       const key = String(event.key || "").toLocaleLowerCase("fr");
