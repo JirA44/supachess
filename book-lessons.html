@@ -27,7 +27,7 @@
     <section class="method-paths" aria-labelledby="method-paths-title">
       <div class="method-paths-heading">
         <p class="lesson-eyebrow">SupaChess Académie · méthodes de travail</p>
-        <h2 id="method-paths-title">Dix parcours d’apprentissage</h2>
+        <h2 id="method-paths-title">Onze parcours d’apprentissage</h2>
         <p>Chaque parcours commence par les notions les plus accessibles et monte progressivement en difficulté. Les parcours Capablanca et Lasker s’appuient sur des thèmes référencés dans leurs ouvrages; les explications et exercices sont reformulés et originaux. Un nouveau parcours ajoute 24 leçons originales inspirées de trois manuels de Project Gutenberg, indiqués comme étant du domaine public aux États-Unis. Le parcours Edward Lasker est distinct de celui d’Emanuel Lasker. Stockfish calcule les variantes et évaluations, il n’est pas présenté comme l’auteur des explications.</p>
       </div>
       <div class="method-path-grid">
@@ -118,6 +118,14 @@
             <a href="https://www.gutenberg.org/ebooks/16377" target="_blank" rel="noopener noreferrer">Staunton · The Blue Book of Chess</a>
           </p>
         </article>
+        <article class="method-path method-path-complex" data-method-path="Calcul profond · parties maîtresses">
+          <div class="method-path-kicker">11 · Variantes critiques en parties réelles</div>
+          <h3>Calcul profond</h3>
+          <p>Rejoue 18 positions critiques tirées des parties de Morphy, Fischer et Kasparov. Trouve le coup de la partie, calcule les défenses, puis compare les coups avec Stockfish.</p>
+          <ol><li>Établis plusieurs coups candidats.</li><li>Pour chacun, calcule la meilleure défense adverse.</li><li>Poursuis les échecs, prises et menaces jusqu’à une position stable.</li><li>Compare ensuite ton calcul à l’analyse moteur; la partie historique seule ne prouve pas que chaque demi-coup est le meilleur.</li></ol>
+          <p class="method-path-count" data-method-count>18 positions complexes</p>
+          <button class="btn method-path-action" type="button" data-method-action="Calcul profond · parties maîtresses">Explorer les 18 positions complexes</button>
+        </article>
       </div>
     </section>
 
@@ -126,7 +134,7 @@
       <div class="lesson-filter-row">
         <label>Rechercher<input id="lesson-search" type="search" placeholder="thème, coup ou méthode"></label>
         <label>Niveau<select id="lesson-level-filter"><option value="">Tous les niveaux</option><option>Débutant</option><option>Intermédiaire</option><option>Avancé</option><option>Expert</option></select></label>
-        <label>Parcours<select id="lesson-program-filter"><option value="">Tous les parcours</option><option>Fischer · préparation et précision</option><option>Carlsen · amélioration et conversion</option><option>Capablanca · fondamentaux et principes</option><option>Lasker · mobilisation et principes</option><option>Edward Lasker · calcul et stratégie</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Anti-erreurs · anticiper l’adversaire</option><option>Calcul · meilleure réponse adverse</option><option>Manuels classiques · principes et technique</option></select></label>
+        <label>Parcours<select id="lesson-program-filter"><option value="">Tous les parcours</option><option>Fischer · préparation et précision</option><option>Carlsen · amélioration et conversion</option><option>Capablanca · fondamentaux et principes</option><option>Lasker · mobilisation et principes</option><option>Edward Lasker · calcul et stratégie</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Anti-erreurs · anticiper l’adversaire</option><option>Calcul · meilleure réponse adverse</option><option>Manuels classiques · principes et technique</option><option>Calcul profond · parties maîtresses</option></select></label>
         <button class="btn lesson-surprise" id="lesson-surprise" type="button">Exercice au hasard</button>
       </div>
     </section>
@@ -208,8 +216,8 @@
   <script src="js/engine.js"></script>
   <script src="js/board.js"></script>
   <script src="js/curriculum.js?v=strategy-plans-course-20261031-v6"></script>
-  <script src="js/book-lessons.js?v=lesson-completion-title-checkmark-20261101"></script>
-  <script src="js/method-paths.js?v=ordered-player-method-paths-20261030"></script>
+  <script src="js/book-lessons.js?v=deep-calculation-historical-20261101"></script>
+  <script src="js/method-paths.js?v=deep-calculation-path-20261101"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
