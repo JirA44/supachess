@@ -73,7 +73,7 @@
   function readBindings() {
     let saved = null;
     try { saved = JSON.parse(root.localStorage.getItem(STORAGE_KEY) || root.localStorage.getItem("supachess.moveGradeShortcuts.v1") || "null"); } catch (_) {}
-    const result = cloneDefaults();
+    const result = saved ? cloneDefaults() : (buildPreset(currentLayout()) || cloneDefaults());
     for (const side of ["w", "b"]) for (const [category, pair] of Object.entries(result[side])) {
       const candidate = saved && saved[side] && saved[side][category];
       result[side][category] = pair.map((fallback, index) => normalizeToken(candidate && candidate[index]) || fallback);
@@ -84,7 +84,7 @@
     }
     result.closeProfile = normalizeToken(saved && saved.closeProfile) || DEFAULTS.closeProfile;
     const values = allBindings(result);
-    return new Set(values).size === values.length ? result : cloneDefaults();
+    return new Set(values).size === values.length ? result : (buildPreset(currentLayout()) || cloneDefaults());
   }
 
   function assignBinding(bindings, id, token) {
@@ -141,6 +141,29 @@
     return new Set(values).size === values.length ? bindings : null;
   }
 
+  let detectedLayoutId = null;
+  function localeLayoutFallback() {
+    const locale = String(root.navigator && (root.navigator.language || root.navigator.userLanguage) || "").toLowerCase();
+    if (!locale) return "azerty";
+    if (/^(de|cs|sk|hu|sl|hr)(-|$)/.test(locale) || /^fr-(ch|lu)(-|$)/.test(locale)) return "qwertz";
+    if (/^fr(-|$)/.test(locale) && !/^fr-ca(-|$)/.test(locale)) return "azerty";
+    return "qwerty";
+  }
+  function detectLayoutFromMap(layoutMap) {
+    if (!layoutMap || typeof layoutMap.get !== "function") return null;
+    const key = (code) => normalizeToken(layoutMap.get(code) || "");
+    const a = key("KeyA"), q = key("KeyQ"), y = key("KeyY"), z = key("KeyZ");
+    if (a === "q" && q === "a") return "azerty";
+    if (y === "z" && z === "y") return "qwertz";
+    if (a === "a" && q === "q") return "qwerty";
+    return null;
+  }
+  function hasSavedShortcutChoice() {
+    try {
+      return root.localStorage.getItem(LAYOUT_STORAGE_KEY) !== null ||
+        !!(root.localStorage.getItem(STORAGE_KEY) || root.localStorage.getItem("supachess.moveGradeShortcuts.v1"));
+    } catch (_) { return false; }
+  }
   function currentLayout() {
     let savedPreset = null, hasSavedBindings = false;
     try {
@@ -149,7 +172,27 @@
     } catch (_) {}
     if (savedPreset === "custom") return "custom";
     if (LAYOUT_PRESETS[savedPreset]) return savedPreset;
-    return hasSavedBindings ? "custom" : "azerty";
+    if (hasSavedBindings) return "custom";
+    return detectedLayoutId || localeLayoutFallback();
+  }
+  function detectKeyboardLayout() {
+    const keyboard = root.navigator && root.navigator.keyboard;
+    if (keyboard && typeof keyboard.getLayoutMap === "function") {
+      return Promise.resolve().then(() => keyboard.getLayoutMap())
+        .then((layoutMap) => detectLayoutFromMap(layoutMap) || localeLayoutFallback())
+        .catch(() => localeLayoutFallback());
+    }
+    return Promise.resolve(localeLayoutFallback());
+  }
+  function autoDetectDefaultLayout() {
+    if (hasSavedShortcutChoice()) return Promise.resolve(currentLayout());
+    return detectKeyboardLayout().then((layout) => {
+      detectedLayoutId = LAYOUT_PRESETS[layout] ? layout : localeLayoutFallback();
+      // If the player picked a grid while detection was pending, keep that choice.
+      if (hasSavedShortcutChoice()) return currentLayout();
+      const result = applyPreset(detectedLayoutId);
+      return result.ok ? detectedLayoutId : detectedLayoutId;
+    });
   }
 
   function applyPreset(id) {
@@ -194,7 +237,7 @@
     const panel = document.createElement("section");
     panel.dataset.keyboardShortcutOpener = "true";
     panel.style.cssText = "margin-top:20px;padding:16px;border:1px solid #52657d;border-radius:12px;background:#111827;color:#f5f7fa";
-    panel.innerHTML = '<h3 style="margin:0 0 6px;color:#fff">Configurer les raccourcis clavier</h3><p style="margin:0 0 12px;color:#d5deea">Choisis une grille AZERTY, QWERTY ou QWERTZ, puis personnalise chaque touche. Les réglages restent sur cet appareil.</p><button type="button" data-open-shortcuts aria-label="Ouvrir les raccourcis et les grilles de clavier" style="min-height:42px;padding:9px 14px;border:1px solid #8ba5c2;border-radius:8px;background:#26364a;color:#fff;font-weight:800;cursor:pointer">Ouvrir les raccourcis et grilles</button>';
+    panel.innerHTML = '<h3 style="margin:0 0 6px;color:#fff">Configurer les raccourcis clavier</h3><p style="margin:0 0 12px;color:#d5deea">SupaChess détecte d’abord la disposition du clavier si le navigateur le permet. Tu peux ensuite choisir AZERTY, QWERTY ou QWERTZ et personnaliser chaque touche.</p><button type="button" data-open-shortcuts aria-label="Ouvrir les raccourcis et les grilles de clavier" style="min-height:42px;padding:9px 14px;border:1px solid #8ba5c2;border-radius:8px;background:#26364a;color:#fff;font-weight:800;cursor:pointer">Ouvrir les raccourcis et grilles</button>';
     panel.querySelector("[data-open-shortcuts]").addEventListener("click", () => openSettingsWindow(panel.querySelector("[data-open-shortcuts]")));
     const profileHeader = container.firstElementChild;
     if (profileHeader && profileHeader.nextSibling) container.insertBefore(panel, profileHeader.nextSibling);
@@ -358,8 +401,10 @@
     closeSettingsWindow(overlay, overlay._returnFocus);
   });
 
+  const ready = autoDetectDefaultLayout();
   root.SupaKeyboardShortcuts = {
     STORAGE_KEY, LAYOUT_STORAGE_KEY, DEFAULTS, LAYOUT_PRESETS, getBindings: readBindings, saveBinding, resetBindings,
     normalizeToken, tokenFromEvent, matchesEvent, keyLabel, buildPreset, currentLayout, applyPreset, renderSettings, refreshWindow,
+    detectLayoutFromMap, detectKeyboardLayout, autoDetectDefaultLayout, ready,
   };
 })(window);
