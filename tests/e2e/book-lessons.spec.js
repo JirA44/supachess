@@ -331,3 +331,44 @@ test("PGN-derived lesson shows its source and accepts the move on the board", as
   await expect(page.locator("#lesson-move-list")).toContainText("Toi : Nxg4");
   await expect(page.locator("#lesson-feedback")).toContainText("Le cavalier f6 capture la dame");
 });
+
+
+test("finishing Kasparov starts the first unfinished player path", async ({ page }) => {
+  const { LESSONS, methodPathLessonIndices } = require("../../js/book-lessons.js");
+  const kasparovProgram = "Kasparov · coups candidats et calcul";
+  const carlsenProgram = "Carlsen · amélioration et conversion";
+  const kasparov = methodPathLessonIndices(kasparovProgram);
+  const carlsen = methodPathLessonIndices(carlsenProgram);
+  const lastKasparovLesson = LESSONS[kasparov[kasparov.length - 1]];
+  const saved = Object.fromEntries(kasparov.slice(0, -1).map((index) => [
+    LESSONS[index].id,
+    { completed: true, completions: 1 },
+  ]));
+  await page.addInitScript((progress) => {
+    localStorage.setItem("supachess-book-lessons-v1", JSON.stringify(progress));
+  }, saved);
+
+  await page.goto("/book-lessons.html");
+  await page.locator('[data-method-path="' + kasparovProgram + '"] [data-method-action]').click();
+  await expect(page.locator("#lesson-program-filter")).toHaveValue(kasparovProgram);
+  await page.locator("#lesson-catalog .lesson-catalog-button").filter({ hasText: lastKasparovLesson.title }).click();
+  const correctChoice = lastKasparovLesson.choices.find((choice) => choice.correct);
+  await page.locator("#lesson-choices .lesson-choice").filter({ hasText: correctChoice.text }).click();
+
+  for (let i = 0; i < lastKasparovLesson.sequence.length; i++) {
+    const action = lastKasparovLesson.sequence[i];
+    if (action.side !== "user") continue;
+    await page.locator('.sq[data-square="' + action.uci.slice(0, 2) + '"]').click();
+    await page.locator('.sq[data-square="' + action.uci.slice(2, 4) + '"]').click();
+    if (lastKasparovLesson.sequence[i + 1]?.side === "book") {
+      await expect(page.locator("#lesson-status")).toContainText("À toi : continue la ligne.");
+    }
+  }
+
+  await expect(page.locator("#lesson-status")).toContainText("Leçon terminée");
+  await expect(page.locator("#lesson-next-preview")).toContainText("Prochain parcours à découvrir : Carlsen");
+  await expect(page.locator("#lesson-next")).toHaveText("Commencer le parcours Carlsen");
+  await page.locator("#lesson-next").click();
+  await expect(page.locator("#lesson-program-filter")).toHaveValue(carlsenProgram);
+  await expectNumberedLessonTitle(page, LESSONS[carlsen[0]].title);
+});
