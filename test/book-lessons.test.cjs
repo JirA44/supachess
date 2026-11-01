@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { Chess } = require("chess.js");
-const { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord } = require("../js/book-lessons.js");
+const { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonHeadingText } = require("../js/book-lessons.js");
 
 test("book lesson setups and user/book move sequences are legal", () => {
   for (const lesson of LESSONS) {
@@ -256,4 +256,10 @@ test("a completed lesson is recorded as validated and increments repeat counts",
   assert.equal(repeated.completed, true);
   assert.equal(repeated.completions, 3);
   assert.equal(repeated.bestAttempts, 2);
+});
+
+test("lesson title shows a green checkmark once validated", () => {
+  assert.equal(lessonHeadingText(1, "Activer son roi", true, false), "✓ 1. Activer son roi");
+  assert.equal(lessonHeadingText(1, "Activer son roi", false, false), "1. Activer son roi");
+  assert.equal(lessonHeadingText(1, "Activer son roi", true, true), "Exercice au hasard");
 });
