@@ -118,26 +118,8 @@
 
   async function collectPuzzleEntries() {
     const response = await fetch(PUZZLE_URL, { cache: "no-cache" });
-    if (!response.ok) throw new Error("Puzzles tactiques indisponibles (HTTP " + response.status + ").");
-    const source = await response.text();
-    const marker = source.indexOf("const PUZZLES =");
-    if (marker < 0) throw new Error("La banque tactique ne contient pas de tableau PUZZLES reconnu.");
-    const start = source.indexOf("[", marker);
-    let depth = 0, quote = "", inString = false, escaped = false, end = -1;
-    for (let i = start; i < source.length; i++) {
-      const c = source[i];
-      if (inString) {
-        if (escaped) escaped = false;
-        else if (c === "\\") escaped = true;
-        else if (c === quote) inString = false;
-        continue;
-      }
-      if (c === "\"" || c === "'" || c === "`") { quote = c; inString = true; continue; }
-      if (c === "[") depth++;
-      else if (c === "]" && --depth === 0) { end = i + 1; break; }
-    }
-    if (end < 0) throw new Error("Impossible de lire la banque de puzzles.");
-    const data = JSON.parse(source);
+    if (!response.ok) throw new Error("Banque de puzzles tactiques indisponible (HTTP " + response.status + ").");
+    const data = await response.json();
     const puzzles = Array.isArray(data) ? data : data.puzzles;
     if (!Array.isArray(puzzles)) throw new Error("Format de banque de puzzles non reconnu.");
     return puzzles.map((puzzle) => {
