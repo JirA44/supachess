@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { Chess } = require("chess.js");
-const { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPositionKey, lessonReviewPartnerIndices, lessonReviewDifficultyOptions, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText } = require("../js/book-lessons.js");
+const { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPositionKey, lessonReviewPartnerIndices, lessonCompetencyKeys, lessonCompetencySummary, lessonReviewDifficultyOptions, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText } = require("../js/book-lessons.js");
 
 test("book lesson setups and user/book move sequences are legal", () => {
   for (const lesson of LESSONS) {
@@ -405,6 +405,34 @@ test("review difficulty falls back to the closest available same-theme position"
   assert.deepEqual(lessonReviewDifficultyOptions(0, 0, "", lessons), { desiredLevel: "Expert", candidateIndices: [1] });
 });
 
+test("competency progress tracks tactics, strategy, plans, calculation, openings, endgames, prevention, and engine analysis", () => {
+  const lessons = [
+    { id: "fork", title: "Fourchette avec tempo", category: "Tactique · Fourchette", level: "Débutant", fen: "fen-fork", program: "Tal" },
+    { id: "fork-transfer", title: "Repérer la fourchette", category: "Tactique · Fourchette", level: "Intermédiaire", fen: "fen-fork-2", program: "Tal" },
+    { id: "plan", title: "Préparer une rupture centrale", category: "Plan · Rupture centrale", level: "Avancé", fen: "fen-plan", program: "Carlsen" },
+    { id: "calculation", title: "Calculer la meilleure réponse adverse", category: "Calcul · Variante forcing", level: "Avancé", fen: "fen-calc", program: "Kasparov" },
+    { id: "opening", title: "Roquer après le développement", category: "Ouverture · Sécurité du roi", level: "Débutant", fen: "fen-open", program: "Fischer" },
+    { id: "endgame", title: "Gagner l’opposition", category: "Finale · Roi et pion", level: "Intermédiaire", fen: "fen-end", program: "Capablanca" },
+    { id: "precision", title: "Vérifier les pièces en prise", category: "Précision · Routine anti-erreurs", level: "Débutant", fen: "fen-precision", program: "Anti-erreurs" },
+    { id: "engine", title: "Lire l’évaluation Stockfish", category: "Parcours moteur · Évaluation", level: "Avancé", fen: "fen-engine", program: "Stockfish" },
+  ];
+  for (const id of ["tactics", "strategyPlans", "calculation", "openings", "endgames", "precision", "engineAnalysis"]) {
+    assert.ok(lessonCompetencyKeys(lessons.find((lesson) =>
+      ({ tactics: "fork", strategyPlans: "plan", calculation: "calculation", openings: "opening", endgames: "endgame", precision: "precision", engineAnalysis: "engine" })[id] === lesson.id,
+    )).includes(id), id + " should be detected");
+  }
+  const progress = {
+    fork: { completed: true, review: { streak: 3, dueAt: "2026-10-20T00:00:00.000Z" } },
+    "fork-transfer": { completed: true, review: { streak: 1, dueAt: "2026-11-20T00:00:00.000Z" } },
+    plan: { completed: true },
+  };
+  const summary = Object.fromEntries(lessonCompetencySummary(lessons, progress, "2026-11-01T00:00:00.000Z").map((entry) => [entry.id, entry]));
+  assert.equal(summary.tactics.total, 2);
+  assert.equal(summary.tactics.passed, 2);
+  assert.equal(summary.tactics.mastered, 1);
+  assert.equal(summary.tactics.due, 1);
+  assert.equal(summary.strategyPlans.passed, 1);
+});
 test("the current lesson corpus includes multiple levels and different-complexity review positions", () => {
   const levels = new Set(LESSONS.map((lesson) => lesson.level));
   assert.deepEqual([...levels].sort(), ["Avancé", "Débutant", "Expert", "Intermédiaire"]);
