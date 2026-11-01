@@ -27,6 +27,73 @@
       <p class="method-note"><strong>Comparaison équitable :</strong> conserve le même moteur, le même temps par position et le même nombre de parties pour chaque joueur. Les résultats dépendent du corpus, de la profondeur effectivement atteinte et des positions; ils ne sont ni un Elo ni une mesure officielle.</p>
     </section>
 
+
+    <section class="champion-card" aria-labelledby="historical-ranking-title">
+      <h2 id="historical-ranking-title">Classements historiques publiés : ACPL et précision ajustée</h2>
+      <p>Ces chiffres proviennent de deux méthodes et de deux échantillons différents. Ils servent de repères documentés : ils ne sont pas comparables directement entre eux et ne constituent pas un classement universel de tous les joueurs ni de toutes leurs parties.</p>
+
+      <h3>Erreur moyenne en championnat du monde — équivalent en centipions</h3>
+      <p>L’étude ICSEA 2019 compare les coups des matchs de championnat du monde de 1886 à 2018 à Stockfish 10, à profondeur 28. Les auteurs rapportent une erreur moyenne en pions; le tableau la multiplie par 100 et l’exprime en centipions. Cette mesure est proche de l’ACPL, mais nous conservons le nom « erreur moyenne » utilisé dans l’étude.</p>
+      <div class="champion-table-scroll">
+        <table>
+          <caption>Les 20 plus faibles erreurs moyennes parmi les joueurs recensés par l’étude — plus bas signifie plus proche de l’évaluation moteur.</caption>
+          <thead><tr><th scope="col">Rang</th><th scope="col">Joueur</th><th scope="col">Erreur moyenne</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><th scope="row">Magnus Carlsen</th><td>6,74 cp</td></tr>
+            <tr><td>2</td><th scope="row">Fabiano Caruana</th><td>7,09 cp</td></tr>
+            <tr><td>3</td><th scope="row">Sergueï Kariakine</th><td>7,68 cp</td></tr>
+            <tr><td>4</td><th scope="row">Peter Leko</th><td>7,82 cp</td></tr>
+            <tr><td>5</td><th scope="row">Vladimir Kramnik</th><td>8,79 cp</td></tr>
+            <tr><td>6</td><th scope="row">Viswanathan Anand</th><td>9,88 cp</td></tr>
+            <tr><td>7</td><th scope="row">Garry Kasparov</th><td>10,00 cp</td></tr>
+            <tr><td>8</td><th scope="row">Levon Aronian</th><td>10,35 cp</td></tr>
+            <tr><td>9</td><th scope="row">Gata Kamsky</th><td>10,36 cp</td></tr>
+            <tr><td>10</td><th scope="row">Boris Gelfand</th><td>10,54 cp</td></tr>
+            <tr><td>11</td><th scope="row">Veselin Topalov</th><td>10,64 cp</td></tr>
+            <tr><td>12</td><th scope="row">José Raúl Capablanca</th><td>10,74 cp</td></tr>
+            <tr><td>13</td><th scope="row">Bobby Fischer</th><td>10,76 cp</td></tr>
+            <tr><td>14</td><th scope="row">Anatoli Karpov</th><td>10,93 cp</td></tr>
+            <tr><td>15</td><th scope="row">Viktor Kortchnoï</th><td>11,64 cp</td></tr>
+            <tr><td>16</td><th scope="row">Tigran Petrossian</th><td>11,99 cp</td></tr>
+            <tr><td>17</td><th scope="row">Peter Svidler</th><td>13,23 cp</td></tr>
+            <tr><td>18</td><th scope="row">Boris Spassky</th><td>13,47 cp</td></tr>
+            <tr><td>19</td><th scope="row">Jan Timman</th><td>14,34 cp</td></tr>
+            <tr><td>20</td><th scope="row">Alexandre Alekhine</th><td>14,43 cp</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="method-note"><strong>Limites de l’échantillon :</strong> les 12 premiers demi-coups (six coups de chaque camp) sont exclus. L’analyse s’arrête lorsqu’un camp a atteint une position gagnante d’au moins deux pions, mais continue pour le camp qui est perdant. L’étude porte sur près de 1&nbsp;000 parties de championnat, pas sur l’ensemble des carrières.</p>
+      <p>Source : <a href="https://personales.upv.es/thinkmind/ICSEA/ICSEA_2019/icsea_2019_9_40_10137.html" target="_blank" rel="noopener noreferrer">Romero, Parra, Cuenca et Lloret, ICSEA 2019 · résumé et méthode ↗</a> · <a href="https://personales.upv.es/thinkmind/ICSEA/ICSEA_2019/icsea_2019_9_40_10137.pdf" target="_blank" rel="noopener noreferrer">PDF complet ↗</a>.</p>
+
+      <h3>« Quality » Chess.com aux périodes de pointe — score ajusté</h3>
+      <p>Cette mesure reprend les scores d’exactitude Chess.com pour les parties décisives pendant les périodes de pointe indiquées par l’auteur, en retirant 1,5 point au gagnant et en en ajoutant 1,5 au perdant. Les nulles sont exclues. Ce n’est ni une précision moyenne brute de carrière, ni une conversion d’ACPL.</p>
+      <div class="champion-table-scroll">
+        <table>
+          <caption>Scores « Quality » publiés, rangés du plus élevé au plus bas.</caption>
+          <thead><tr><th scope="col">Rang</th><th scope="col">Joueur</th><th scope="col">Période</th><th scope="col">Quality ajustée</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><th scope="row">Magnus Carlsen</th><td>2013–2021</td><td>93,23&nbsp;%</td></tr>
+            <tr><td>2</td><th scope="row">Garry Kasparov</th><td>1993–2001</td><td>92,76&nbsp;%</td></tr>
+            <tr><td>3</td><th scope="row">Bobby Fischer</th><td>1970–1972</td><td>92,52&nbsp;%</td></tr>
+            <tr><td>4</td><th scope="row">Ian Nepomniachtchi</th><td>2020–2022</td><td>92,32&nbsp;%</td></tr>
+            <tr><td>5</td><th scope="row">Vladimir Kramnik</th><td>2000–2007</td><td>92,31&nbsp;%</td></tr>
+            <tr><td>6</td><th scope="row">Viswanathan Anand</th><td>2007–2014</td><td>92,25&nbsp;%</td></tr>
+            <tr><td>7</td><th scope="row">Veselin Topalov</th><td>2005–2009</td><td>92,16&nbsp;%</td></tr>
+            <tr><td>8</td><th scope="row">Anatoli Karpov</th><td>1974–1984</td><td>91,82&nbsp;%</td></tr>
+            <tr><td>9</td><th scope="row">Mikhaïl Tal</th><td>1958–1960</td><td>91,39&nbsp;%</td></tr>
+            <tr><td>10</td><th scope="row">Vassily Smyslov</th><td>1953–1957</td><td>91,09&nbsp;%</td></tr>
+            <tr><td>11</td><th scope="row">Tigran Petrossian</th><td>1963–1969</td><td>90,94&nbsp;%</td></tr>
+            <tr><td>12</td><th scope="row">Mikhaïl Botvinnik</th><td>1948–1955</td><td>90,74&nbsp;%</td></tr>
+            <tr><td>13</td><th scope="row">Alexandre Alekhine</th><td>1927–1934</td><td>90,60&nbsp;%</td></tr>
+            <tr><td>14</td><th scope="row">José Raúl Capablanca</th><td>1921–1931</td><td>90,24&nbsp;%</td></tr>
+            <tr><td>15</td><th scope="row">Emanuel Lasker</th><td>1907–1914</td><td>89,95&nbsp;%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="method-note"><strong>À noter :</strong> Fabiano Caruana n’est pas inclus dans cette liste Chess.com : l’auteur indique que son match de championnat 2018 n’a produit aucune partie classique décisive, et qu’il n’avait donc pas assez de parties admissibles. Les rangs 4 et 5 sont triés correctement : 92,32&nbsp;% précède 92,31&nbsp;%. Spassky n’est pas dans cette table source; 91,09&nbsp;% est la valeur de Smyslov.</p>
+      <p>Source : <a href="https://www.chess.com/article/view/chess-accuracy-ratings-goat" target="_blank" rel="noopener noreferrer">Chess.com, « Accuracy, Ratings, and GOATs » · méthode et scores ↗</a>. <a href="https://lichess.org/page/accuracy" target="_blank" rel="noopener noreferrer">Lichess rappelle qu’il n’existe pas de formule universelle d’exactitude ↗</a>.</p>
+    </section>
+
     <section class="champion-card" aria-labelledby="analyze-title">
       <h2 id="analyze-title">Analyser un corpus PGN</h2>
       <div class="champion-form-grid">
