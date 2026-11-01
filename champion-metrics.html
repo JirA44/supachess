@@ -160,6 +160,32 @@
           <tbody id="champion-results-body"><tr><td colspan="7">Aucune analyse enregistrée sur cet appareil.</td></tr></tbody>
         </table>
       </div>
+      <section class="champion-ranking" aria-labelledby="ranking-title">
+        <h3 id="ranking-title">Top ranking · chaque indicateur calculé</h3>
+        <p>Le classement compare uniquement les analyses ayant le même moteur et le même temps par position. Les parties et positions restent des échantillons différents; lis toujours les colonnes de contexte avant de comparer.</p>
+        <div class="champion-form-grid ranking-controls">
+          <label for="champion-ranking-metric">Indicateur à classer
+            <select id="champion-ranking-metric">
+              <option value="accuracy">Précision moyenne · plus haut</option>
+              <option value="acpl">ACPL · plus bas</option>
+              <option value="gamesAnalyzed">Parties analysées · plus haut</option>
+              <option value="ratedMoves">Demi-coups évalués · plus haut</option>
+              <option value="averageDepth">Profondeur moyenne · plus haut</option>
+            </select>
+          </label>
+          <label for="champion-ranking-protocol">Protocole Stockfish
+            <select id="champion-ranking-protocol"><option value="">Analyses disponibles</option></select>
+          </label>
+        </div>
+        <p id="champion-ranking-status" class="champion-status" role="status" aria-live="polite">Analyse au moins deux joueurs avec les mêmes réglages pour établir le classement.</p>
+        <div class="champion-table-scroll">
+          <table>
+            <caption id="champion-ranking-caption">Classement local des analyses disponibles</caption>
+            <thead><tr><th scope="col">Rang</th><th scope="col">Joueur</th><th scope="col">Indicateur</th><th scope="col">Parties</th><th scope="col">Demi-coups</th><th scope="col">Profondeur</th></tr></thead>
+            <tbody id="champion-ranking-body"><tr><td colspan="6">Aucune analyse compatible enregistrée.</td></tr></tbody>
+          </table>
+        </div>
+      </section>
       <p class="champion-local-note">Les résultats restent dans le stockage local du navigateur. Ils ne contiennent ni PGN ni compte utilisateur.</p>
     </section>
 
