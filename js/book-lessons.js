@@ -2715,7 +2715,7 @@
       const timesCompleted = completionCount(progress[lesson.id]);
       state.className = "lesson-catalog-state" + (timesCompleted ? " is-completed" : "");
       state.textContent = timesCompleted
-        ? "✓ Passée · faite " + timesCompleted + " fois · à revoir quand tu veux"
+        ? "✓ Terminée · à revoir quand tu veux · faite " + timesCompleted + " fois"
         : lesson.kind === "anticipation" ? "Défi de réponse adverse" : "À découvrir";
       button.append(title, meta, state);
       button.addEventListener("click", () => {
