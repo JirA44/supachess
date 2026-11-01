@@ -20,6 +20,12 @@
     corrections: Object.freeze(["Numpad1", "Numpad2", "Numpad3", "Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8", "Numpad9", "Numpad0"]),
     closeProfile: "Escape",
   });
+  const LAYOUT_STORAGE_KEY = "supachess.keyboardLayoutPreset.v1";
+  const LAYOUT_PRESETS = Object.freeze({
+    azerty: Object.freeze({ label: "AZERTY · France", rows: Object.freeze(["azertyuiop", "qsdfghjklm", "wxcvbn,;:!"]) }),
+    qwerty: Object.freeze({ label: "QWERTY · US / UK", rows: Object.freeze(["qwertyuiop", "asdfghjkl;", "zxcvbnm,./"]) }),
+    qwertz: Object.freeze({ label: "QWERTZ · Allemagne", rows: Object.freeze(["qwertzuiop", "asdfghjklö", "yxcvbnm,.-"]) }),
+  });
   const TYPE_LABELS = Object.freeze({
     brilliant: "Brillant", best: "Meilleur coup", "very-good": "Très bon coup",
     good: "Bon coup", ok: "Coup OK", inaccuracy: "Imprécision",
@@ -102,15 +108,78 @@
     if (!assignBinding(next, id, token)) return { ok: false, message: "Ce raccourci n’existe pas." };
     const values = allBindings(next);
     if (new Set(values).size !== values.length) return { ok: false, message: "Cette touche est déjà attribuée. Choisis-en une autre." };
-    try { root.localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); }
+    try {
+      root.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      root.localStorage.setItem(LAYOUT_STORAGE_KEY, "custom");
+    }
     catch (_) { return { ok: false, message: "Impossible d’enregistrer ce réglage sur cet appareil." }; }
     root.dispatchEvent(new CustomEvent("supachess:shortcuts-changed", { detail: next }));
     return { ok: true, token };
   }
 
+  function presetKeyMap(layout) {
+    const sourceRows = LAYOUT_PRESETS.azerty.rows;
+    const targetRows = layout.rows;
+    const keyMap = new Map();
+    sourceRows.forEach((row, rowIndex) => {
+      [...row].forEach((key, keyIndex) => {
+        if (targetRows[rowIndex][keyIndex]) keyMap.set(key, targetRows[rowIndex][keyIndex]);
+      });
+    });
+    return keyMap;
+  }
+
+  function buildPreset(id) {
+    const layout = LAYOUT_PRESETS[id];
+    if (!layout) return null;
+    const bindings = cloneDefaults();
+    const keyMap = presetKeyMap(layout);
+    for (const side of ["w", "b"]) for (const pair of Object.values(bindings[side])) {
+      for (let index = 0; index < pair.length; index++) pair[index] = keyMap.get(pair[index]) || pair[index];
+    }
+    const values = allBindings(bindings);
+    return new Set(values).size === values.length ? bindings : null;
+  }
+
+  function currentLayout() {
+    let savedPreset = null, hasSavedBindings = false;
+    try {
+      savedPreset = root.localStorage.getItem(LAYOUT_STORAGE_KEY);
+      hasSavedBindings = !!(root.localStorage.getItem(STORAGE_KEY) || root.localStorage.getItem("supachess.moveGradeShortcuts.v1"));
+    } catch (_) {}
+    if (savedPreset === "custom") return "custom";
+    if (LAYOUT_PRESETS[savedPreset]) return savedPreset;
+    return hasSavedBindings ? "custom" : "azerty";
+  }
+
+  function applyPreset(id) {
+    const bindings = buildPreset(id);
+    if (!bindings) return { ok: false, message: "Ce préréglage de clavier n’est pas disponible." };
+    let previousBindings = null, previousLayout = null;
+    try {
+      previousBindings = root.localStorage.getItem(STORAGE_KEY);
+      previousLayout = root.localStorage.getItem(LAYOUT_STORAGE_KEY);
+      root.localStorage.setItem(STORAGE_KEY, JSON.stringify(bindings));
+      root.localStorage.setItem(LAYOUT_STORAGE_KEY, id);
+    } catch (_) {
+      try {
+        if (previousBindings === null) root.localStorage.removeItem(STORAGE_KEY);
+        else root.localStorage.setItem(STORAGE_KEY, previousBindings);
+        if (previousLayout === null) root.localStorage.removeItem(LAYOUT_STORAGE_KEY);
+        else root.localStorage.setItem(LAYOUT_STORAGE_KEY, previousLayout);
+      } catch (_restoreError) {}
+      return { ok: false, message: "Impossible d’enregistrer ce préréglage sur cet appareil." };
+    }
+    root.dispatchEvent(new CustomEvent("supachess:shortcuts-changed", { detail: bindings }));
+    return { ok: true, layout: id };
+  }
+
   function resetBindings() {
-    try { root.localStorage.removeItem(STORAGE_KEY); }
-    catch (_) { return false; }
+    try {
+      root.localStorage.removeItem(STORAGE_KEY);
+      root.localStorage.removeItem("supachess.moveGradeShortcuts.v1");
+      root.localStorage.removeItem(LAYOUT_STORAGE_KEY);
+    } catch (_) { return false; }
     root.dispatchEvent(new CustomEvent("supachess:shortcuts-changed", { detail: readBindings() }));
     return true;
   }
@@ -140,7 +209,7 @@
     overlay.style.cssText = "position:fixed;inset:0;z-index:10020;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto";
     const box = document.createElement("section");
     box.style.cssText = "box-sizing:border-box;width:min(900px,100%);max-height:92vh;overflow:auto;padding:20px;background:#172131;color:#f5f7fa;border:1px solid #68b5ff;border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.65)";
-    box.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div><h2 id="shortcut-window-title" style="margin:0;color:#fff">Tous les raccourcis clavier</h2><p style="margin:5px 0 0;color:#d5deea">Clique une touche puis appuie sur la nouvelle. Les réglages restent sur cet appareil.</p></div><button type="button" data-shortcut-close aria-label="Fermer les raccourcis clavier" style="min-width:42px;min-height:42px;border:1px solid #8797aa;border-radius:8px;background:#26364a;color:#fff;font-size:24px;cursor:pointer">×</button></div><div data-shortcut-groups style="display:grid;gap:14px;margin-top:16px"></div><p data-shortcut-status role="status" aria-live="polite" style="min-height:1.4em;color:#a8eaff;margin:12px 0"></p><button type="button" data-shortcut-reset style="min-height:42px;padding:9px 14px;border:1px solid #8ba5c2;border-radius:8px;background:#26364a;color:#fff;font-weight:800;cursor:pointer">Rétablir tous les raccourcis par défaut</button>';
+    box.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div><h2 id="shortcut-window-title" style="margin:0;color:#fff">Tous les raccourcis clavier</h2><p style="margin:5px 0 0;color:#d5deea">Clique une touche puis appuie sur la nouvelle. Les réglages restent sur cet appareil.</p></div><button type="button" data-shortcut-close aria-label="Fermer les raccourcis clavier" style="min-width:42px;min-height:42px;border:1px solid #8797aa;border-radius:8px;background:#26364a;color:#fff;font-size:24px;cursor:pointer">×</button></div><section data-shortcut-presets style="margin-top:16px;padding:14px;border:1px solid #52657d;border-radius:10px;background:#1b2636"><h3 style="margin:0 0 6px;color:#fff">Préréglages selon le clavier</h3><p style="margin:0 0 8px;color:#d5deea">La liste ci-dessous montre les raccourcis déjà attribués. Choisir un préréglage remplace toutes les touches par une grille adaptée; tu pourras ensuite personnaliser chaque touche.</p><p data-shortcut-layout-status role="status" style="margin:0 0 10px;color:#a8eaff"></p><div style="display:flex;flex-wrap:wrap;gap:8px"><button type="button" data-layout-preset="azerty" style="min-height:40px;padding:8px 12px;border:1px solid #8ba5c2;border-radius:8px;background:#26364a;color:#fff;font-weight:800;cursor:pointer">AZERTY · A/Z · Q/S · W/X</button><button type="button" data-layout-preset="qwerty" style="min-height:40px;padding:8px 12px;border:1px solid #8ba5c2;border-radius:8px;background:#26364a;color:#fff;font-weight:800;cursor:pointer">QWERTY · Q/W · A/S · Z/X</button><button type="button" data-layout-preset="qwertz" style="min-height:40px;padding:8px 12px;border:1px solid #8ba5c2;border-radius:8px;background:#26364a;color:#fff;font-weight:800;cursor:pointer">QWERTZ · Q/W · A/S · Y/X</button></div><details style="margin-top:10px;color:#e9eef5"><summary style="cursor:pointer;font-weight:800">Voir la grille de raccourcis préfaits (AZERTY)</summary><p style="margin:8px 0 4px"><b>Blancs :</b> Brillant A/Z · Meilleur Q/S · Très bon W/X · Bon E/R · OK D/F · Imprécision C/V · Erreur T/Y · Gaffe G/H.</p><p style="margin:4px 0"><b>Noirs :</b> Brillant B/N · Meilleur U/I · Très bon J/K · Bon ,/; · OK O/P · Imprécision L/M · Erreur :/! · Gaffe ^/$.</p><p style="margin:4px 0 0"><b>Navigation :</b> ← / → · <b>Corriger une partie :</b> pavé numérique 1–9, puis 0 pour la dixième · <b>Fermer :</b> Échap. Pour chaque paire, la première touche va au demi-coup précédent et la seconde au suivant.</p></details></section><div data-shortcut-groups style="display:grid;gap:14px;margin-top:16px"></div><p data-shortcut-status role="status" aria-live="polite" style="min-height:1.4em;color:#a8eaff;margin:12px 0"></p><button type="button" data-shortcut-reset style="min-height:42px;padding:9px 14px;border:1px solid #8ba5c2;border-radius:8px;background:#26364a;color:#fff;font-weight:800;cursor:pointer">Rétablir tous les raccourcis par défaut</button>';
     overlay.appendChild(box);
     document.body.appendChild(overlay);
 
@@ -160,6 +229,16 @@
       id: "correction:" + index, label: index === 9 ? "Dixième partie · Correction" : (index + 1) + (index === 0 ? "re partie" : "e partie") + " · Correction",
     })));
     addGroup(groups, "Fenêtres", [{ id: "closeProfile", label: "Fermer le profil ou la fenêtre ouverte" }]);
+
+    box.querySelectorAll("[data-layout-preset]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const result = applyPreset(button.dataset.layoutPreset);
+        box.querySelector("[data-shortcut-status]").textContent = result.ok
+          ? "Préréglage " + LAYOUT_PRESETS[result.layout].label + " appliqué. Les touches peuvent encore être personnalisées."
+          : result.message;
+        refreshWindow(overlay);
+      });
+    });
 
     box.querySelector("[data-shortcut-close]").addEventListener("click", () => closeSettingsWindow(overlay, returnFocus));
     overlay.addEventListener("click", (event) => {
@@ -241,6 +320,14 @@
   function refreshWindow(overlay) {
     if (!overlay) return;
     const bindings = readBindings();
+    const selectedLayout = currentLayout();
+    const layoutStatus = overlay.querySelector("[data-shortcut-layout-status]");
+    if (layoutStatus) layoutStatus.textContent = "Grille active : " + (selectedLayout === "custom" ? "personnalisée" : LAYOUT_PRESETS[selectedLayout].label) + ".";
+    for (const button of overlay.querySelectorAll("[data-layout-preset]")) {
+      const selected = button.dataset.layoutPreset === selectedLayout;
+      button.setAttribute("aria-pressed", String(selected));
+      button.style.outline = selected ? "2px solid #a8eaff" : "none";
+    }
     for (const button of overlay.querySelectorAll("[data-shortcut-capture]")) {
       const id = button.dataset.shortcutCapture;
       let value;
@@ -270,7 +357,7 @@
   });
 
   root.SupaKeyboardShortcuts = {
-    STORAGE_KEY, DEFAULTS, getBindings: readBindings, saveBinding, resetBindings,
-    normalizeToken, tokenFromEvent, matchesEvent, keyLabel, renderSettings, refreshWindow,
+    STORAGE_KEY, LAYOUT_STORAGE_KEY, DEFAULTS, LAYOUT_PRESETS, getBindings: readBindings, saveBinding, resetBindings,
+    normalizeToken, tokenFromEvent, matchesEvent, keyLabel, buildPreset, currentLayout, applyPreset, renderSettings, refreshWindow,
   };
 })(window);
