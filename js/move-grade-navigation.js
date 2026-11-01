@@ -134,7 +134,7 @@
 
   function installKeyboardShortcuts() {
     document.addEventListener("keydown", (event) => {
-      if (!reviewState.returnState || document.getElementById("replay-bar")?.classList.contains("hidden")) return;
+      if (reviewState.running) return;
       const target = event.target;
       if (target instanceof HTMLElement &&
         (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
@@ -142,12 +142,12 @@
       const key = String(event.key || "").toLocaleLowerCase("fr");
       for (const [color, categories] of Object.entries(MOVE_GRADE_SHORTCUTS)) {
         for (const [category, pair] of Object.entries(categories)) {
-          if (pair[0] === key || pair[0] === event.code) {
+          if (pair[0] === key) {
             event.preventDefault();
             moveGradeNavigate(color, category, "previous");
             return;
           }
-          if (pair[1] === key || pair[1] === event.code) {
+          if (pair[1] === key) {
             event.preventDefault();
             moveGradeNavigate(color, category, "next");
             return;
