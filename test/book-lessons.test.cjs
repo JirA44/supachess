@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { Chess } = require("chess.js");
-const { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex } = require("../js/book-lessons.js");
+const { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord } = require("../js/book-lessons.js");
 
 test("book lesson setups and user/book move sequences are legal", () => {
   for (const lesson of LESSONS) {
@@ -240,4 +240,20 @@ test("PGN-derived lessons cite their source games and keep move-play separate fr
   assert.ok(lessons.every((entry) => entry.kind === "reinforcement"));
   assert.ok(lessons.every((entry) => entry.author === "SupaChess Académie"));
   assert.ok(lessons.every((entry) => entry.reference.includes("pas un verdict Stockfish")));
+});
+
+test("a completed lesson is recorded as validated and increments repeat counts", () => {
+  const first = createCompletedLessonRecord({}, 3, 1, "2026-11-01T12:00:00.000Z");
+  assert.deepEqual(first, {
+    completed: true,
+    completions: 1,
+    attempts: 3,
+    hintsUsed: 1,
+    completedAt: "2026-11-01T12:00:00.000Z",
+    bestAttempts: 3,
+  });
+  const repeated = createCompletedLessonRecord({ ...first, completions: 2, bestAttempts: 2 }, 4, 0, "2026-11-02T12:00:00.000Z");
+  assert.equal(repeated.completed, true);
+  assert.equal(repeated.completions, 3);
+  assert.equal(repeated.bestAttempts, 2);
 });
