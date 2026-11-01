@@ -261,6 +261,24 @@ function profileNextLevelXP(xp,level){
   var thresholds=[0,100,250,500,800,1200,1800,2500,3500,5000];
   return level>0&&level<thresholds.length-1?thresholds[level]:null;
 }
+function profileCurrentLevelXP(level){
+  var api=window.ChessNovaProgress;
+  if(api&&typeof api.getPrestigeXP==='function'){
+    var apiStart=api.getPrestigeXP(level);
+    if(apiStart!==null&&apiStart!==undefined&&Number.isFinite(Number(apiStart)))return Number(apiStart);
+  }
+  var thresholds=[0,100,250,500,800,1200,1800,2500,3500,5000];
+  return level>0&&level<=thresholds.length?thresholds[level-1]:null;
+}
+function profileXPLevelRange(xp,level,nextXP){
+  var start=profileCurrentLevelXP(level);
+  if(start!==null&&nextXP!==null&&nextXP>start){
+    var total=nextXP-start;
+    var current=Math.max(0,Math.min(total,xp-start));
+    return {current:current,total:total,percent:current/total*100};
+  }
+  return {current:null,total:null,percent:profileXPProgress(xp,level)};
+}
 function readDiagnosticProfile(){
   function read(key,fallback){try{return JSON.parse(localStorage.getItem(key)||'');}catch(_e){return fallback;}}
   var diagnostic=read('supachess-level-diagnostic',null);
@@ -693,7 +711,8 @@ function renderLocalLearningPanel(data){
   var mastered=local.completed.length;
   var nextXP=profileNextLevelXP(local.xp,local.level);
   var xpRemaining=nextXP===null?null:Math.max(0,Math.ceil(nextXP-local.xp));
-  var xpPercent=profileXPProgress(local.xp,local.level);
+  var xpRange=profileXPLevelRange(local.xp,local.level,nextXP);
+  var xpPercent=xpRange.percent;
   var training=[
     {label:profileText('profile_mastered_lessons','Leçons maîtrisées'),value:mastered,href:'https://jira44.github.io/supachess/book-lessons.html?next=1'},
     {label:profileText('profile_openings_mastered','Fondamentaux des ouvertures'),value:local.openingMastered,href:'https://jira44.github.io/supachess-web/TRAINING_OPENINGS.html'},
@@ -703,7 +722,8 @@ function renderLocalLearningPanel(data){
   ];
   var html='<section class="profile-learning" aria-labelledby="profile-learning-title"><h3 id="profile-learning-title">'+profileText('profile_learning_title','Mon apprentissage')+'</h3>'+
     '<div class="profile-xp-card"><div class="profile-xp-heading"><div><strong>'+profileText('profile_level','Niveau')+' '+local.level+'</strong><span>'+escapeProfileText(profileRankName(local.level))+'</span></div><strong>'+local.xp+' '+profileText('profile_xp','XP')+'</strong></div>'+
-    '<div class="profile-xp-track" role="progressbar" aria-label="'+profileText('profile_xp_progress','Progression des XP')+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(xpPercent)+'"><span style="width:'+xpPercent.toFixed(1)+'%"></span></div>'+
+    '<div class="profile-xp-track" role="progressbar" aria-label="'+profileText('profile_xp_progress','Progression des XP')+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(xpPercent)+'" aria-valuetext="'+(xpRange.total!==null?xpRange.current+' sur '+xpRange.total+' XP dans le niveau '+local.level:Math.round(xpPercent)+'%')+'"><span style="width:'+xpPercent.toFixed(1)+'%"></span></div>'+
+    (xpRange.total!==null?'<strong class="profile-xp-level-count">'+Number(xpRange.current).toLocaleString('fr-FR')+' / '+Number(xpRange.total).toLocaleString('fr-FR')+' XP '+profileText('profile_xp_this_level','dans ce niveau')+'</strong>':'')+
     '<small>'+escapeProfileText(profileText('profile_xp_to_next','Progression vers le niveau suivant'))+': '+Math.round(xpPercent)+'%'+(nextXP!==null?' · '+profileText('profile_next_level_at','prochain niveau à')+' '+Number(nextXP).toLocaleString('fr-FR')+' XP · '+profileText('profile_xp_remaining','XP restantes pour atteindre le niveau suivant')+' : '+xpRemaining+' XP':'')+'</small></div>'+
     '<div class="profile-learning-stats"><div><strong>'+local.completed.length+' / '+local.attempted.length+'</strong><span>'+profileText('profile_lessons_mastered_attempted','leçons maîtrisées / commencées')+'</span></div><div><strong>'+local.moveExercises+'</strong><span>'+profileText('profile_correction_moves','demi-coups à revoir')+'</span></div><div><strong>'+local.puzzlesSolved+'</strong><span>'+profileText('profile_puzzles_solved','problèmes résolus')+'</span></div><div><strong>'+local.practiceSessions+'</strong><span>'+profileText('profile_practice_sessions','séances d’entraînement')+'</span></div></div>'+
     renderPlayerAccuracyPanel(local.accuracySummary)+renderMoveTypeAveragePanel(local.playedGames)+
