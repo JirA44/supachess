@@ -15,7 +15,9 @@ test("Stockfish audits the full Academy and tactic corpus, then creates a legal 
   const status = page.locator("[data-sf-status]");
   await expect.poll(async () => status.textContent(), { timeout: 300000 }).toMatch(/Audit (terminé|interrompu)/);
   await expect(status).toContainText("Audit terminé");
-  await expect(page.locator("[data-sf-status]")).toContainText("40 position(s) distincte(s) analysée(s)");
+  const audited = await page.evaluate(() => Object.values(JSON.parse(localStorage.getItem("supachess-stockfish-study-audit-v1") || "{}")).filter(record => Array.isArray(record.choices)));
+  expect(audited.filter(record => record.kind === "puzzle")).toHaveLength(40);
+  expect(audited.length).toBeGreaterThan(40);
   const createExercise = page.getByRole("button", { name: "Créer et jouer cet exercice" }).first();
   await expect(createExercise).toBeVisible();
   await createExercise.click();
