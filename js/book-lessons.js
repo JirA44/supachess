@@ -3162,7 +3162,7 @@
       heading.textContent = domain.label;
       const mastered = document.createElement("strong");
       mastered.className = "lesson-review-domain-mastered";
-      mastered.textContent = domain.mastered + " maîtrisée(s)";
+      mastered.textContent = "Maîtrises confirmées : " + domain.mastered;
       const details = document.createElement("small");
       details.textContent = domain.passed + "/" + domain.total + " terminée(s) · " + domain.due + " à réviser";
       card.append(heading, mastered, details);
