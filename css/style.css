@@ -445,3 +445,29 @@ body {
   .move-grade-count-value { min-width: 28px; padding: 1px 3px; }
   .move-grade-step { min-width: 26px; }
 }
+
+/* Paired move-quality table: one row per grade and one count per player. */
+.move-grade-summary { display:block; }
+.move-grade-table { display:grid; gap:3px; width:100%; }
+.move-grade-table-header,
+.move-grade-table-row {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(46px,56px) minmax(46px,56px);
+  align-items:center;
+  gap:6px;
+}
+.move-grade-table-header { min-height:28px; color:var(--text-dim); font-size:.72rem; font-weight:800; text-align:center; }
+.move-grade-table-header span:first-child { text-align:left; }
+.move-grade-table-row { min-height:30px; font-size:.82rem; }
+.move-grade-table-label { display:flex; min-width:0; align-items:center; gap:6px; overflow-wrap:anywhere; }
+.move-grade-table-label .move-grade-count-symbol { flex:0 0 24px; }
+.move-grade-table-label .move-grade-count-name { min-width:0; line-height:1.15; }
+.move-grade-table-row .move-grade-count-value { width:100%; min-height:30px; justify-content:center; }
+@media(max-width:420px) {
+  .move-grade-table-header,.move-grade-table-row { grid-template-columns:minmax(0,1fr) 42px 42px; gap:3px; }
+  .move-grade-table-header { font-size:.68rem; }
+  .move-grade-table-row { font-size:.75rem; }
+  .move-grade-table-label { gap:4px; }
+  .move-grade-table-label .move-grade-count-symbol { flex-basis:18px; }
+  .move-grade-table-row .move-grade-count-value { min-width:42px; padding:1px 3px; }
+}
