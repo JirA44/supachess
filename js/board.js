@@ -158,6 +158,52 @@ class BoardUI {
         this.el.appendChild(cell);
       }
     }
+    if (this.showEngineArrows && Array.isArray(this.engineArrows) && this.engineArrows.length) {
+      const svgNs = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNs, "svg");
+      svg.setAttribute("class", "engine-arrow-overlay");
+      svg.setAttribute("viewBox", "0 0 800 800");
+      svg.setAttribute("aria-hidden", "true");
+      const colors = ["#16a36a", "#2581d8", "#e19b24", "#a36bd1"];
+      const defs = document.createElementNS(svgNs, "defs");
+      this.engineArrows.slice(0, 4).forEach((_uci, index) => {
+        const marker = document.createElementNS(svgNs, "marker");
+        marker.setAttribute("id", "supa-engine-arrow-head-" + index);
+        marker.setAttribute("markerWidth", "8");
+        marker.setAttribute("markerHeight", "8");
+        marker.setAttribute("refX", "6");
+        marker.setAttribute("refY", "3");
+        marker.setAttribute("orient", "auto");
+        const head = document.createElementNS(svgNs, "path");
+        head.setAttribute("d", "M0,0 L0,6 L7,3 z");
+        head.setAttribute("fill", colors[index]);
+        marker.appendChild(head);
+        defs.appendChild(marker);
+      });
+      svg.appendChild(defs);
+      const point = (square) => {
+        let file = square.charCodeAt(0) - 97;
+        let rank = 8 - Number(square[1]);
+        if (this.flipped) { file = 7 - file; rank = 7 - rank; }
+        return { x: file * 100 + 50, y: rank * 100 + 50 };
+      };
+      this.engineArrows.slice(0, 4).forEach((uci, index) => {
+        if (typeof uci !== "string" || !/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(uci)) return;
+        const from = point(uci.slice(0, 2)), to = point(uci.slice(2, 4));
+        const line = document.createElementNS(svgNs, "line");
+        line.setAttribute("x1", String(from.x));
+        line.setAttribute("y1", String(from.y));
+        line.setAttribute("x2", String(to.x));
+        line.setAttribute("y2", String(to.y));
+        line.setAttribute("stroke", colors[index]);
+        line.setAttribute("stroke-width", index === 0 ? "18" : "13");
+        line.setAttribute("stroke-linecap", "round");
+        line.setAttribute("opacity", index === 0 ? ".72" : ".48");
+        line.setAttribute("marker-end", "url(#supa-engine-arrow-head-" + index + ")");
+        svg.appendChild(line);
+      });
+      this.el.appendChild(svg);
+    }
   }
 }
 
