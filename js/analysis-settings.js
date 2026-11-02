@@ -48,10 +48,11 @@
     save(); render();
     if (key === "showArrows") window.SupaChessRenderBoard?.();
   });
-  document.getElementById("analysis-multipv")?.addEventListener("input", event => {
+  const multipvSlider = document.getElementById("analysis-multipv");
+  multipvSlider?.addEventListener("input", event => {
     preferences.multiPv = Math.max(1, Math.min(4, Number(event.target.value) || 1));
     save(); render();
-    window.SupaChessReanalyze?.();
   });
+  multipvSlider?.addEventListener("change", () => window.SupaChessReanalyze?.());
   render();
 })();
