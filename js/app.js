@@ -307,6 +307,7 @@ async function init() {
 }
 
 function newGame() {
+  window.SupaReplayHistory = null;
   state.abandoned = false;
   state.stopped = false;
   const abandonButton = $("btn-abandon-game");
@@ -1011,12 +1012,16 @@ function accuracyHistoryTag(ply) {
 }
 
 function renderHistory() {
-  const hist = state.chess.history();
-  const evals = state.evalHistory || [];
+  const replayHistory = window.SupaReplayHistory;
+  const hist = replayHistory && Array.isArray(replayHistory.moves)
+    ? replayHistory.moves : state.chess.history();
+  const evals = replayHistory ? [] : (state.evalHistory || []);
   let html = "";
   for (let i = 0; i < hist.length; i += 2) {
-    html += "<span class=\"mvnum\">" + (i / 2 + 1) + ".</span><span class=\"mv\">" + esc(hist[i]) + "</span>" + evalTag(evals[i]) + accuracyHistoryTag(i + 1);
-    if (hist[i + 1]) html += "<span class=\"mv\">" + esc(hist[i + 1]) + "</span>" + evalTag(evals[i + 1]) + accuracyHistoryTag(i + 2);
+    html += "<span class=\"mvnum\">" + (i / 2 + 1) + ".</span><span class=\"mv\">" + esc(hist[i]) + "</span>" +
+      evalTag(evals[i]) + (replayHistory ? "" : accuracyHistoryTag(i + 1));
+    if (hist[i + 1]) html += "<span class=\"mv\">" + esc(hist[i + 1]) + "</span>" +
+      evalTag(evals[i + 1]) + (replayHistory ? "" : accuracyHistoryTag(i + 2));
   }
   $("move-history").innerHTML = html || "<em>Aucun coup joué.</em>";
 }
