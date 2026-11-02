@@ -933,9 +933,29 @@ function syncBestMoveButton() {
 }
 function renderBoard() {
   const multipv = window.SupaAnalysisSettings?.getMultiPv() || 4;
-  boardUI.engineArrows = state.candidates.slice(0, multipv).map((candidate) => candidate.uci);
-  boardUI.showEngineArrows = Boolean(window.SupaAnalysisSettings?.showArrows());
+  const showArrows = Boolean(window.SupaAnalysisSettings?.showArrows());
+  const candidates = state.candidates.slice(0, multipv);
+  boardUI.engineArrows = candidates.map((candidate) => candidate.uci);
+  boardUI.showEngineArrows = showArrows;
   boardUI.render(state.chess);
+  const legend = $("engine-arrow-legend");
+  if (legend) {
+    const colors = ["#16a36a", "#2581d8", "#e19b24", "#a36bd1"];
+    legend.hidden = !showArrows || !candidates.length;
+    legend.replaceChildren();
+    candidates.forEach((candidate, index) => {
+      const item = document.createElement("span");
+      item.className = "engine-arrow-legend-item";
+      const swatch = document.createElement("i");
+      swatch.className = "engine-arrow-legend-color";
+      swatch.style.backgroundColor = colors[index];
+      swatch.setAttribute("aria-hidden", "true");
+      const label = document.createElement("span");
+      label.textContent = "Rang " + (index + 1) + (index === 0 ? " · meilleur coup" : " · alternative") + " : " + candidate.san;
+      item.append(swatch, label);
+      legend.appendChild(item);
+    });
+  }
 }
 window.SupaChessRenderBoard = renderBoard;
 window.SupaChessReanalyze = function() {
