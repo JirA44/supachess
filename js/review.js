@@ -1267,6 +1267,7 @@ async function replayGoto(i) {
     grade: moveGrade(reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].deltaCp : null, reviewState.grades[idx - 1] ? reviewState.grades[idx - 1].brilliant : false, reviewState.grades[idx - 1]?.category === "best", reviewState.grades[idx - 1]?.category),
     evaluation: reviewState.grades[idx - 1]?.evaluation || "—" } : null;
   boardUI.dots = [];
+  boardUI.previewDot = null;
   boardUI.selected = null;
   boardUI.legalTargets = [];
   hideCoach();
