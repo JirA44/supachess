@@ -634,19 +634,24 @@ function reviewRenderLocal(rows, accW, accB, headers) {
       : "Observation ponctuelle : pas assez d'exemples pour conclure à une lacune récurrente.";
     return `${color === "w" ? "Blancs" : "Noirs"} : ${exposed} coup(s) sur ${total} avec une prise adverse immédiate possible. ${label}`;
   }).map(esc).join("<br>");
+  const measuredLosses = rows.map((row) => row.lossCp).filter(Number.isFinite);
+  const averageLossCp = measuredLosses.length
+    ? (measuredLosses.reduce((sum, loss) => sum + loss, 0) / measuredLosses.length).toLocaleString("fr-FR", { maximumFractionDigits: 1 })
+    : "indisponible";
   document.getElementById("review-report").innerHTML = `
     <div class="review-local">
       <h3>Bilan Stockfish (local)</h3>
       <div class="review-meta">${esc(headers.White || "Blancs")} vs ${esc(headers.Black || "Noirs")} — ${esc(headers.Result || "*")}</div>
       <div class="review-player-grid">${playerCard("w", headers.White || "Blancs", accW)}${playerCard("b", headers.Black || "Noirs", accB)}</div>
+      <div id="review-acpl-summary"><strong>Perte moyenne (ACPL)</strong> ${averageLossCp}${measuredLosses.length?" cp · "+measuredLosses.length+" demi-coup(s) mesuré(s)":""}</div>
       ${worst.length ? `<div class="review-worst"><strong>Moments clés :</strong> ${worst.map(moveLabel).map(esc).join(" · ")}</div>`
         : "<div class='review-worst'>Aucune erreur notable détectée.</div>"}
     </div>
-    ${examples ? `<div class="review-worst"><h4>Vérification des pièces en prise (preuve d’une capture légale)</h4><ul>${examples}</ul></div>` : ""}
-    <div class="review-worst"><h4>Principes et fondamentaux à travailler</h4>${principlesToWork ? `<ul>${principlesToWork}</ul>` : "<p>Aucun fondamental précis n’est confirmé par les preuves de cette partie. Une partie seule ne suffit pas à établir une lacune récurrente.</p>"}</div>
-    <div class="review-worst"><h4>Habitude à entraîner : échecs, prises, menaces</h4><p>${pedagogical}</p></div>
-    ${nextPractice ? `<div class="review-worst"><h4>Plan d’entraînement personnalisé</h4><ol>${nextPractice}</ol></div>` : ""}
-    <div class="review-worst"><h4>Chaque demi-coup expliqué : centipions et causes démontrables</h4><p><small>Perte relative au meilleur coup ≠ variation absolue de l’évaluation. Le moteur ne peut pas toujours établir le pourquoi en une phrase; les mats sont traités séparément.</small></p><ol>${halfmoveExplanations}</ol></div>
+    ${examples ? `<div class="review-worst analysis-detail"><h4>Vérification des pièces en prise (preuve d’une capture légale)</h4><ul>${examples}</ul></div>` : ""}
+    <div class="review-worst analysis-detail"><h4>Principes et fondamentaux à travailler</h4>${principlesToWork ? `<ul>${principlesToWork}</ul>` : "<p>Aucun fondamental précis n’est confirmé par les preuves de cette partie. Une partie seule ne suffit pas à établir une lacune récurrente.</p>"}</div>
+    <div class="review-worst analysis-detail"><h4>Habitude à entraîner : échecs, prises, menaces</h4><p>${pedagogical}</p></div>
+    ${nextPractice ? `<div class="review-worst analysis-detail"><h4>Plan d’entraînement personnalisé</h4><ol>${nextPractice}</ol></div>` : ""}
+    <div class="review-worst analysis-detail"><h4>Chaque demi-coup expliqué : centipions et causes démontrables</h4><p><small>Perte relative au meilleur coup ≠ variation absolue de l’évaluation. Le moteur ne peut pas toujours établir le pourquoi en une phrase; les mats sont traités séparément.</small></p><ol>${halfmoveExplanations}</ol></div>
     ${reviewCorrectionExercisesHtml(reviewState.correctionExercises)}
     <div id="review-supa"></div>`;
   const correctionButton = document.getElementById("btn-review-corrections");
