@@ -568,8 +568,14 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     const heading = `${row.n}${row.color === "w" ? "." : "..."} ${sanFr(row.san)}`;
     return `<li class="review-ply" data-review-ply="${row.ply}"><button type="button" class="review-ply-link" data-review-ply="${row.ply}" aria-label="Aller à la position après ${esc(heading)}">${esc(heading)}</button></li>`;
   };
-  const playerCard = (color, name, accuracy) => `<section class="review-player-card review-player-${color}">
+  const playerCard = (color, name, accuracy) => {
+    const playerLosses = rows.filter((row) => row.color === color && Number.isFinite(row.lossCp)).map((row) => row.lossCp);
+    const playerAcpl = playerLosses.length
+      ? `${(playerLosses.reduce((sum, loss) => sum + loss, 0) / playerLosses.length).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} cp · ${playerLosses.length} demi-coup(s) mesuré(s)`
+      : "indisponible";
+    return `<section class="review-player-card review-player-${color}">
     <div class="review-player-head"><div class="review-player-identity"><span class="review-player-side-label">${color === "w" ? "Joueur 1 · Blancs" : "Joueur 2 · Noirs"}</span><h4>${esc(name)}</h4></div><strong class="review-player-accuracy">${Number.isFinite(accuracy) ? `${accuracy}%` : "—"}</strong></div>
+    <div class="review-player-acpl"><strong>ACPL :</strong> ${playerAcpl}</div>
     <div class="review-grade-list">${REVIEW_MOVE_CLASSES.map((category) => {
       const moves = rows.filter((row) => row.color === color && row.classification === category.id);
       const count = reviewCount(rows, color, category.id);
@@ -583,6 +589,7 @@ function reviewRenderLocal(rows, accW, accB, headers) {
       return `<div class="review-grade-row review-grade-${category.id}" title="${category.label}"><span class="review-grade-dot" aria-hidden="true"></span><span class="review-grade-symbol" aria-hidden="true">${category.symbol}</span>${categoryJump}${moveList}</div>`;
     }).join("")}</div>
   </section>`;
+  };
   const halfmoveExplanations = rows.map((r, idx) => {
     const cp = r.centipawns;
     const heading = `${r.n}${r.color === "w" ? "." : "..."} ${sanFr(r.san)}`;
