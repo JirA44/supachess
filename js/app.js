@@ -1053,6 +1053,23 @@ function renderHistory() {
   const hist = replayHistory && Array.isArray(replayHistory.moves)
     ? replayHistory.moves : state.chess.history();
   const evals = replayHistory ? [] : (state.evalHistory || []);
+  const gradeLabels = {
+    brilliant: ["!!", "Brillant"], best: ["★", "Meilleur coup"],
+    "very-good": ["!", "Très bon coup"], good: ["✓", "Bon coup"],
+    ok: ["=", "Coup OK"], inaccuracy: ["?!", "Imprécision"],
+    error: ["?", "Erreur"], mistake: ["?", "Erreur"],
+    blunder: ["??", "Gaffe"], unrated: ["…", "Non évalué"],
+  };
+  const grades = replayHistory && Array.isArray(replayHistory.moveGrades)
+    ? replayHistory.moveGrades : (state.moveGradeHistory || []);
+  const gradesByPly = new Map(grades.map((entry) => [Number(entry.ply), entry]));
+  const moveQualityMarkup = (ply) => {
+    const entry = gradesByPly.get(ply);
+    const category = entry && entry.category === "mistake" ? "error" : entry && gradeLabels[entry.category] ? entry.category : "unrated";
+    const [symbol, label] = gradeLabels[category];
+    return "<span class=\"mv-quality grade-" + category + "\" title=\"Qualité Stockfish : " + label +
+      "\" aria-label=\"Qualité Stockfish : " + label + "\">" + symbol + "</span>";
+  };
   const moveMarkup = (san, ply) => {
     const safeSan = esc(san);
     if (!replayHistory) return "<span class=\"mv\">" + safeSan + "</span>";
@@ -1064,9 +1081,9 @@ function renderHistory() {
   let html = "";
   for (let i = 0; i < hist.length; i += 2) {
     html += "<span class=\"mvnum\">" + (i / 2 + 1) + ".</span>" + moveMarkup(hist[i], i + 1) +
-      evalTag(evals[i]) + (replayHistory ? "" : accuracyHistoryTag(i + 1));
+      moveQualityMarkup(i + 1) + evalTag(evals[i]) + (replayHistory ? "" : accuracyHistoryTag(i + 1));
     if (hist[i + 1]) html += moveMarkup(hist[i + 1], i + 2) +
-      evalTag(evals[i + 1]) + (replayHistory ? "" : accuracyHistoryTag(i + 2));
+      moveQualityMarkup(i + 2) + evalTag(evals[i + 1]) + (replayHistory ? "" : accuracyHistoryTag(i + 2));
   }
   $("move-history").innerHTML = html || "<em>Aucun coup joué.</em>";
 }
