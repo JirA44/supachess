@@ -46,7 +46,10 @@
     const key = button.dataset.setting;
     preferences[key] = !preferences[key];
     save(); render();
-    if (key === "showArrows") window.SupaChessRenderBoard?.();
+    if (key === "showArrows") {
+      if (preferences.showArrows) window.gamesMarkTrainingAidUsed?.();
+      window.SupaChessRenderBoard?.();
+    }
   });
   const multipvSlider = document.getElementById("analysis-multipv");
   multipvSlider?.addEventListener("input", event => {
