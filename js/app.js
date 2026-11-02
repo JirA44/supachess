@@ -925,7 +925,10 @@ function syncBestMoveButton() {
   const replayButton = $("btn-replay-quit");
   const replayActive = replayButton && !replayButton.classList.contains("hidden");
   const allowedTurn = isManualMode() || state.chess.turn() === state.userColor;
-  button.disabled = button.dataset.pending === "true" || !["userTurn", "coach"].includes(state.phase) || !allowedTurn || !state.candidates.length;
+  const replayReady = replayActive && typeof window.reviewPlayBestHalfMove === "function";
+  button.disabled = button.dataset.pending === "true" || (replayReady
+    ? !["userTurn", "coach"].includes(state.phase)
+    : !["userTurn", "coach"].includes(state.phase) || !allowedTurn || !state.candidates.length);
 }
 function renderBoard() { boardUI.render(state.chess); }
 
