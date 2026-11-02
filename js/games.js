@@ -45,6 +45,25 @@ function gamesPgnTag(game, name) {
   return match ? match[1] : "";
 }
 
+function gamesHalfMoveCount(game) {
+  let pgn = String(game && game.pgn || "");
+  pgn = pgn.replace(/^\\s*\\[[^\\]]*\\]\\s*$/gm, "");
+  pgn = pgn.replace(/\\{[^}]*\\}/g, "").replace(/;[^\\n]*/g, "");
+  let previous;
+  do {
+    previous = pgn;
+    pgn = pgn.replace(/\\([^()]*\\)/g, " ");
+  } while (pgn !== previous);
+  const tokens = pgn.replace(/\\$\\d+/g, " ").split(/\\s+/).filter(Boolean);
+  let count = 0;
+  for (const token of tokens) {
+    if (/^\\d+\\.(?:\\.\\.)?$/.test(token) || /^(?:1-0|0-1|1\\/2-1\\/2|\\*)$/.test(token) || /^(?:e\\.p\\.|\u00bd)$/i.test(token)) continue;
+    if (/^[!?+#]+$/.test(token)) continue;
+    if (/^(?:O-O(?:-O)?|0-0(?:-0)?|[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?)[!?+#]*$/.test(token)) count++;
+  }
+  return count;
+}
+
 function gamesNumericValue(value) {
   if (value === null || value === undefined || value === "") return null;
   const number = Number(value);
@@ -240,8 +259,9 @@ function gamesRenderPanel() {
       (g.accuracyB != null ? g.accuracyB + "%" : "—");
     const resultLabel = g.abandoned ? "Défaite par abandon" : g.stopped ? "Arrêtée — sans résultat" : g.result;
     const engineDetails = gamesEngineRowDetails(g);
+    const halfMoveCount = gamesHalfMoveCount(g);
     return `<div class="game-row" data-id="${esc(g.id)}">
-      <span class="game-meta">${esc(when)} · <strong>${esc(resultLabel)}</strong> · préc. B/N ${esc(acc)}${engineDetails ? `<small class="game-engine-details">${esc(engineDetails)}</small>` : ""}</span>
+      <span class="game-meta">${esc(when)} · <strong>${esc(resultLabel)}</strong> · ${halfMoveCount} demi-coup${halfMoveCount > 1 ? "s" : ""} · préc. B/N ${esc(acc)}${engineDetails ? `<small class="game-engine-details">${esc(engineDetails)}</small>` : ""}</span>
       <span class="game-actions">
         <button class="btn mini" data-act="correct" title="Aller à la première erreur à corriger">Corriger</button>
         <button class="btn mini" data-act="dl" title="Télécharger le PGN">⬇ PGN</button>
