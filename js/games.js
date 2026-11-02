@@ -47,17 +47,17 @@ function gamesPgnTag(game, name) {
 
 function gamesHalfMoveCount(game) {
   let pgn = String(game && game.pgn || "");
-  pgn = pgn.replace(/^\\s*\\[[^\\]]*\\]\\s*$/gm, "");
-  pgn = pgn.replace(/\\{[^}]*\\}/g, "").replace(/;[^\\n]*/g, "");
+  pgn = pgn.replace(/^\s*\[[^\]]*\]\s*$/gm, "");
+  pgn = pgn.replace(/\{[^}]*\}/g, "").replace(/;[^\n]*/g, "");
   let previous;
   do {
     previous = pgn;
-    pgn = pgn.replace(/\\([^()]*\\)/g, " ");
+    pgn = pgn.replace(/\([^()]*\)/g, " ");
   } while (pgn !== previous);
-  const tokens = pgn.replace(/\\$\\d+/g, " ").split(/\\s+/).filter(Boolean);
+  const tokens = pgn.replace(/\$\d+/g, " ").split(/\s+/).filter(Boolean);
   let count = 0;
   for (const token of tokens) {
-    if (/^\\d+\\.(?:\\.\\.)?$/.test(token) || /^(?:1-0|0-1|1\\/2-1\\/2|\\*)$/.test(token) || /^(?:e\\.p\\.|\u00bd)$/i.test(token)) continue;
+    if (/^\d+\.(?:\.\.)?$/.test(token) || /^(?:1-0|0-1|1\/2-1\/2|\*)$/.test(token) || /^(?:e\.p\.|\u00bd)$/i.test(token)) continue;
     if (/^[!?+#]+$/.test(token)) continue;
     if (/^(?:O-O(?:-O)?|0-0(?:-0)?|[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?)[!?+#]*$/.test(token)) count++;
   }
