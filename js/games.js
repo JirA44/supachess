@@ -18,6 +18,21 @@ function gamesStore(arr) {
   try { localStorage.setItem(GAMES_KEY, JSON.stringify(arr)); } catch (_e) { /* quota */ }
 }
 
+function gamesTrainingAidsActive() {
+  const ui = typeof boardUI === "object" ? boardUI : {};
+  const arrows = window.SupaAnalysisSettings && typeof window.SupaAnalysisSettings.showArrows === "function"
+    ? window.SupaAnalysisSettings.showArrows() : null;
+  return ui.showDots === true || ui.showMoveDots === true || arrows === true;
+}
+
+function gamesMarkTrainingAidUsed() {
+  if (!currentGameMetadata || currentGameMetadata.trainingAidsUsed === true) return;
+  currentGameMetadata.trainingAidsUsed = true;
+  if (currentGameId && typeof state === "object" && state.chess && state.chess.history().length) gamesAutoSave();
+}
+window.gamesTrainingAidsActive = gamesTrainingAidsActive;
+window.gamesMarkTrainingAidUsed = gamesMarkTrainingAidUsed;
+
 function gamesNewEntry() {
   currentGameId = Date.now() + "-" + Math.random().toString(36).slice(2, 7);
   const manual = typeof isManualMode === "function" && isManualMode();
@@ -34,6 +49,7 @@ function gamesNewEntry() {
     stockfishRatingSource: Number.isFinite(estimate) ? "supachess-engine-setting-v1" : null,
     stockfishSettingElo: hasEngineSetting ? setting : null,
     engineThinkTimeMs: Number.isFinite(thinkTime) ? thinkTime : null,
+    trainingAidsUsed: gamesTrainingAidsActive(),
   };
 }
 
@@ -164,6 +180,7 @@ function gamesBuildPgn(result) {
   );
   if (state.abandoned) state.chess.header("Termination", "abandoned");
   else if (state.stopped) state.chess.header("Termination", "unterminated");
+  state.chess.header("SupaChessTrainingAidsUsed", currentGameMetadata.trainingAidsUsed ? "true" : "false");
   if (currentGameMetadata.engineName) {
     const customHeaders = [
       "SupaChessOpponent", currentGameMetadata.engineName,
