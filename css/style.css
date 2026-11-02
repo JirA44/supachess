@@ -250,6 +250,12 @@ body {
   max-height: 130px; overflow-y: auto; font-variant-numeric: tabular-nums; }
 .move-history .mvnum { color: var(--text-dim); }
 .move-history .mv { font-weight: 600; }
+.move-history .mv-quality {
+  display:inline-flex; min-width:1.35em; justify-content:center; align-items:center;
+  margin-left:2px; padding:0 3px; border-radius:4px;
+  background:var(--grade-dot-color,#a6adbf); color:var(--grade-dot-text,#151923);
+  font-size:.72rem; font-weight:900; line-height:1.35; vertical-align:middle;
+}
 .move-history .replay-move { border: 0; border-radius: 4px; padding: 1px 3px; background: transparent; color: inherit; cursor: pointer; font: inherit; }
 .move-history .replay-move:hover, .move-history .replay-move:focus-visible { background: rgba(240,179,92,.18); outline: 1px solid var(--accent); }
 .move-history .replay-move.active { background: rgba(240,179,92,.25); color: var(--accent); }
