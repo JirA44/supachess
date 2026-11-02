@@ -471,3 +471,44 @@ body {
   .move-grade-table-label .move-grade-count-symbol { flex-basis:18px; }
   .move-grade-table-row .move-grade-count-value { min-width:42px; padding:1px 3px; }
 }
+
+
+/* Apparence de l’échiquier — préférences locales */
+:root[data-board-theme="green"] { --sq-light:#eeeed2; --sq-dark:#769656; }
+:root[data-board-theme="blue"] { --sq-light:#e8edf5; --sq-dark:#7892ad; }
+:root[data-board-theme="wood"] { --sq-light:#f0d9b5; --sq-dark:#b58863; }
+:root[data-board-theme="slate"] { --sq-light:#e2e6ed; --sq-dark:#788394; }
+:root[data-board-theme="purple"] { --sq-light:#f0e8f7; --sq-dark:#9a7ab2; }
+:root[data-board-theme="gray"] { --sq-light:#e4e4e1; --sq-dark:#888985; }
+:root[data-board-theme="sand"] { --sq-light:#f4e7c8; --sq-dark:#c4a06a; }
+:root[data-board-theme="midnight"] { --sq-light:#cbd5e1; --sq-dark:#334155; }
+:root[data-piece-theme="bold"] .sq .piece { font-weight:900; -webkit-text-stroke-width:2px; text-shadow:0 1px 3px #000b,0 0 2px currentColor; }
+:root[data-piece-theme="outline"] .sq .piece.w { -webkit-text-stroke:2.7px #111; text-shadow:0 0 2px #111,1px 0 #111,-1px 0 #111,0 1px #111,0 -1px #111; }
+:root[data-piece-theme="outline"] .sq .piece.b { -webkit-text-stroke:2.4px #fff; text-shadow:0 0 2px #fff,1px 0 #fff,-1px 0 #fff,0 1px #fff,0 -1px #fff; }
+:root[data-piece-theme="flat"] .sq .piece { font-family:"Segoe UI Symbol","Noto Sans Symbols 2",serif; font-weight:500; text-shadow:none; }
+:root[data-piece-theme="carved"] .sq .piece { font-family:"DejaVu Sans","Segoe UI Symbol",serif; font-weight:900; text-shadow:1px 1px 0 #0008,2px 2px 2px #0009; filter:drop-shadow(0 1px 1px #0008); }
+.appearance-panel { margin:4px 0 12px; border:1px solid var(--panel-edge); border-radius:12px; background:var(--panel); }
+.appearance-panel > summary { cursor:pointer; list-style:none; padding:11px 14px; color:var(--text); font-weight:800; }
+.appearance-panel > summary::-webkit-details-marker { display:none; }
+.appearance-panel > summary::before { content:"＋"; display:inline-block; width:1.5em; color:var(--accent); }
+.appearance-panel[open] > summary::before { content:"−"; }
+.appearance-content { padding:0 14px 14px; display:grid; grid-template-columns:1fr; gap:14px; }
+.appearance-content h3 { margin:0 0 8px; color:var(--text-dim); font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; }
+.appearance-choice-grid { display:flex; flex-wrap:wrap; gap:8px; }
+.appearance-choice { display:flex; align-items:center; justify-content:center; gap:7px; min-width:62px; min-height:58px; padding:6px; border:2px solid var(--panel-edge); border-radius:10px; background:var(--bg-soft); color:var(--text); cursor:pointer; }
+.appearance-choice:hover { border-color:var(--accent); }
+.appearance-choice[aria-pressed="true"] { border-color:#1687ff; box-shadow:0 0 0 1px #1687ff; }
+.board-theme-choice { flex-direction:column; }
+.board-theme-swatch { width:38px; height:34px; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; overflow:hidden; border-radius:5px; }
+.board-theme-swatch i:nth-child(odd) { background:var(--preview-light); }
+.board-theme-swatch i:nth-child(even) { background:var(--preview-dark); }
+.piece-theme-choice { min-width:90px; flex-direction:column; }
+.piece-theme-sample { font-family:"DejaVu Sans","Segoe UI Symbol",serif; font-size:31px; line-height:1; color:#f5f5f5; -webkit-text-stroke:1px #151515; }
+.piece-theme-bold .piece-theme-sample { font-weight:900; -webkit-text-stroke:2px #151515; text-shadow:0 1px 3px #000b; }
+.piece-theme-outline .piece-theme-sample { -webkit-text-stroke:2.8px #151515; }
+.piece-theme-flat .piece-theme-sample { font-family:"Segoe UI Symbol","Noto Sans Symbols 2",serif; font-weight:500; -webkit-text-stroke:0; }
+.piece-theme-carved .piece-theme-sample { text-shadow:2px 2px 2px #000; filter:drop-shadow(0 1px 1px #000); }
+.appearance-choice-label { font-size:.7rem; line-height:1.1; text-align:center; }
+.appearance-footer { display:flex; justify-content:flex-end; }
+@media (min-width:760px) { .appearance-content { grid-template-columns:minmax(250px,1fr) minmax(250px,1fr); align-items:start; } }
+@media (max-width:600px) { .appearance-panel { margin-left:0; margin-right:0; } .appearance-choice { min-width:52px; } .piece-theme-choice { min-width:68px; } }
