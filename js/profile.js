@@ -500,6 +500,102 @@ function renderCentipawnLossRatePanel(games,range){
     '<p>Moyenne par partie des demi-coups joués qui ont fait perdre des centipions : '+summary.average.toFixed(1).replace('.',',')+' %. Échantillon cumulé : '+summary.losingMoves+' demi-coups avec perte sur '+summary.moves+' demi-coups mesurés, répartis sur '+summary.games+' partie'+(summary.games>1?'s':'')+'.</p>'+
     '<small>Un demi-coup est compté en perte si Stockfish mesure une perte strictement supérieure à 0 cp par rapport au meilleur coup de la position. Chaque partie pèse autant dans la moyenne; les coups non évalués, mates et parties inachevées sont exclus.</small></section>';
 }
+function qualityTrendSamples(games,range,now){
+  var selected=profileGamesForRange(games,range,now);
+  return selected.map(function(game){
+    if(!game||!['1-0','0-1','1/2-1/2'].includes(String(game.result||''))||
+      game.abandoned||game.stopped||game.termination==='abandoned'||game.termination==='unterminated')return null;
+    var color=resolveProfileUserColor(game);
+    if(!color)return null;
+    var timestamp=game.date?new Date(game.date).getTime():NaN;
+    if(!Number.isFinite(timestamp))return null;
+    var raw=game[color==='w'?'accuracyW':'accuracyB'];
+    if(raw===null||raw===undefined||raw==='')return null;
+    var accuracy=Number(raw);
+    if(!Number.isFinite(accuracy))return null;
+    if(accuracy>=0&&accuracy<=1)accuracy*=100;
+    accuracy=Math.max(0,Math.min(100,accuracy));
+    var losses=(Array.isArray(game.moveGrades)?game.moveGrades:[]).filter(function(move){
+      if(!move||move.color!==color||move.lossCp===null||move.lossCp===undefined||move.lossCp==='')return false;
+      var value=Number(move.lossCp);
+      return Number.isFinite(value)&&value>=0;
+    }).map(function(move){return Number(move.lossCp);});
+    return {
+      timestamp:timestamp,
+      accuracy:accuracy,
+      meanLoss:losses.length?losses.reduce(function(sum,value){return sum+value;},0)/losses.length:null,
+      lossMoves:losses.length
+    };
+  }).filter(function(item){return !!item;}).sort(function(a,b){return a.timestamp-b.timestamp;});
+}
+function renderQualityTrendChart(samples,key,title,unit,color,fixedMax){
+  var values=samples.map(function(item){return item[key];}).filter(function(value){return Number.isFinite(value);});
+  var width=760,height=300,left=70,right=22,top=28,bottom=58;
+  var plotWidth=width-left-right,plotHeight=height-top-bottom;
+  var max=fixedMax||Math.max(10,Math.ceil(Math.max.apply(null,values.concat([10]))/10)*10);
+  var min=0;
+  function x(index){return left+(samples.length<2?plotWidth/2:index*plotWidth/(samples.length-1));}
+  function y(value){return top+plotHeight-(value-min)/(max-min)*plotHeight;}
+  var grid=[0,.25,.5,.75,1].map(function(fraction){
+    var value=max*fraction,py=y(value);
+    return '<line x1="'+left+'" y1="'+py.toFixed(1)+'" x2="'+(width-right)+'" y2="'+py.toFixed(1)+'" stroke="#52657d" stroke-width="1"/>'+
+      '<text x="'+(left-10)+'" y="'+(py+5).toFixed(1)+'" text-anchor="end" fill="#e5edf7" font-size="15">'+Math.round(value)+(unit==='%'?'%':' cp')+'</text>';
+  }).join('');
+  var points=samples.map(function(item,index){
+    var value=item[key];
+    if(!Number.isFinite(value))return null;
+    return {x:x(index),y:y(value),value:value,item:item};
+  }).filter(function(point){return !!point;});
+  var line=points.map(function(point){return point.x.toFixed(1)+','+point.y.toFixed(1);}).join(' ');
+  var circles=points.map(function(point,index){
+    var date=new Date(point.item.timestamp).toLocaleDateString('fr-FR');
+    var detail=key==='accuracy'?point.value.toFixed(1)+' %':' '+point.value.toFixed(1)+' cp de perte moyenne';
+    return '<circle cx="'+point.x.toFixed(1)+'" cy="'+point.y.toFixed(1)+'" r="4.5" fill="'+color+'" stroke="#101827" stroke-width="1.5"><title>Partie '+(index+1)+' · '+date+' · '+detail+(point.item.lossMoves?' · '+point.item.lossMoves+' demi-coups évalués':'')+'</title></circle>';
+  }).join('');
+  var dateIndexes=samples.length<2?[0]:[0,Math.floor((samples.length-1)/2),samples.length-1];
+  var dateLabels=Array.from(new Set(dateIndexes)).map(function(index){
+    var label=new Date(samples[index].timestamp).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'});
+    return '<text x="'+x(index).toFixed(1)+'" y="'+(height-30)+'" text-anchor="'+(index===0?'start':index===samples.length-1?'end':'middle')+'" fill="#e5edf7" font-size="14">'+label+'</text>';
+  }).join('');
+  return '<div class="profile-quality-chart-wrap"><h5>'+title+'</h5>'+
+    '<svg viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+title+'. Axe horizontal : date des parties. Axe vertical : '+(unit==='%'?'précision en pourcentage':'perte moyenne en centipions')+'; '+points.length+' parties avec valeur mesurée." style="display:block;width:100%;height:auto;min-height:220px">'+
+    grid+'<line x1="'+left+'" y1="'+top+'" x2="'+left+'" y2="'+(top+plotHeight)+'" stroke="#dce6f2"/><line x1="'+left+'" y1="'+(top+plotHeight)+'" x2="'+(width-right)+'" y2="'+(top+plotHeight)+'" stroke="#dce6f2"/>'+
+    (line?'<polyline points="'+line+'" fill="none" stroke="'+color+'" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>':'')+circles+dateLabels+
+    '<text x="'+(left+plotWidth/2)+'" y="'+(height-5)+'" text-anchor="middle" fill="#f4f7fb" font-size="15">Date des parties (de la plus ancienne à la plus récente)</text>'+
+    '<text x="18" y="'+(top+plotHeight/2)+'" transform="rotate(-90 18 '+(top+plotHeight/2)+')" text-anchor="middle" fill="#f4f7fb" font-size="15">'+(unit==='%'?'Précision (%)':'Perte (cp)')+'</text></svg></div>';
+}
+function renderQualityProgressPanel(games,range){
+  var samples=qualityTrendSamples(games,range,Date.now());
+  var selectedRange=profilePerformanceRanges().find(function(item){return item.key===range;})||profilePerformanceRanges()[5];
+  var withLoss=samples.filter(function(item){return Number.isFinite(item.meanLoss);});
+  var html='<section class="profile-quality-progress" aria-labelledby="profile-quality-progress-title" style="margin:16px 0;padding:16px;border:1px solid #52657d;border-radius:14px;background:#1b2638;color:#f4f7fb">'+
+    '<h4 id="profile-quality-progress-title" style="margin-top:0">Surveillance de la progression de la qualité de jeu · '+selectedRange.aria+'</h4>';
+  if(!samples.length)return html+'<p>Aucune partie terminée, datée et accompagnée d’une précision disponible pour cette période.</p></section>';
+  function mean(list,key){
+    var values=list.map(function(item){return item[key];}).filter(function(value){return Number.isFinite(value);});
+    return values.length?values.reduce(function(sum,value){return sum+value;},0)/values.length:null;
+  }
+  var windowSize=Math.min(5,Math.floor(samples.length/2));
+  var earlier=windowSize? samples.slice(0,windowSize):[];
+  var recent=windowSize? samples.slice(-windowSize):[];
+  var accuracyDelta=windowSize?mean(recent,'accuracy')-mean(earlier,'accuracy'):null;
+  var lossWindow=Math.min(5,Math.floor(withLoss.length/2));
+  var lossDelta=lossWindow?mean(withLoss.slice(-lossWindow),'meanLoss')-mean(withLoss.slice(0,lossWindow),'meanLoss'):null;
+  function changeText(delta,suffix,inverse){
+    if(delta===null||!Number.isFinite(delta))return 'Évolution non calculable : moins de deux groupes de parties comparables.';
+    var improved=inverse?delta<0:delta>0;
+    var stable=Math.abs(delta)<0.05;
+    return (stable?'Stable':improved?'En hausse':'En baisse')+' de '+Math.abs(delta).toFixed(1).replace('.',',')+suffix+' entre les '+windowSize+' premières et les '+windowSize+' dernières parties de la période.';
+  }
+  html+='<p>Échantillon : '+samples.length+' partie(s) terminée(s) avec précision; '+withLoss.length+' partie(s) ont aussi des pertes en centipions calculables. Comparaison descriptive des groupes en début et en fin de période; elle ne constitue pas un Elo.</p>'+
+    '<div class="profile-quality-trend-summary"><article><strong>Précision</strong><span>'+changeText(accuracyDelta,' point(s) de %',false)+'</span></article>'+
+    '<article><strong>Perte moyenne par demi-coup</strong><span>'+(withLoss.length?changeText(lossDelta,' cp',true):'Aucune perte moyenne par partie disponible.')+'</span></article></div>'+
+    '<div class="profile-quality-chart-grid">'+
+    renderQualityTrendChart(samples,'accuracy','Précision Stockfish par partie','%','#7bd394',100)+
+    (withLoss.length?renderQualityTrendChart(samples,'meanLoss','Perte moyenne en centipions par partie','cp','#68b5ff',null):'<p>La courbe de perte en centipions apparaîtra dès que les analyses auront enregistré ces valeurs.</p>')+
+    '</div><p class="profile-accuracy-note">La précision est la valeur enregistrée par SupaChess; elle dépend de l’analyse et n’est pas une mesure universelle. Une baisse des centipions perdus est généralement favorable. Les parties inachevées, sans date ou sans précision sont exclues.</p></section>';
+  return html;
+}
 function renderProfilePerformancePanel(games){
   profilePerformanceGames=Array.isArray(games)?games:[];
   var ranges=profilePerformanceRanges();
@@ -509,7 +605,7 @@ function renderProfilePerformancePanel(games){
   }).join('');
   return '<section class="profile-performance-section" aria-label="Statistiques de précision et de demi-coups">'+
     '<div class="profile-performance-range-controls" role="group" aria-label="Choisir la période des statistiques">'+buttons+'</div>'+
-    '<div class="profile-performance-content" aria-live="polite">'+renderPlayerAccuracyPanel(profilePerformanceGames,profilePerformanceRange)+renderMoveTypeAveragePanel(profilePerformanceGames,profilePerformanceRange)+renderCentipawnLossRatePanel(profilePerformanceGames,profilePerformanceRange)+'</div></section>';
+    '<div class="profile-performance-content" aria-live="polite">'+renderQualityProgressPanel(profilePerformanceGames,profilePerformanceRange)+renderPlayerAccuracyPanel(profilePerformanceGames,profilePerformanceRange)+renderMoveTypeAveragePanel(profilePerformanceGames,profilePerformanceRange)+renderCentipawnLossRatePanel(profilePerformanceGames,profilePerformanceRange)+'</div></section>';
 }
 function bindProfilePerformanceRangeControls(container){
   if(!container||typeof container.querySelectorAll!=='function')return;
@@ -522,7 +618,7 @@ function bindProfilePerformanceRangeControls(container){
           item.setAttribute('aria-pressed',String(selected));
         });
         var content=section.querySelector('.profile-performance-content');
-        if(content)content.innerHTML=renderPlayerAccuracyPanel(profilePerformanceGames,profilePerformanceRange)+renderMoveTypeAveragePanel(profilePerformanceGames,profilePerformanceRange)+renderCentipawnLossRatePanel(profilePerformanceGames,profilePerformanceRange);
+        if(content)content.innerHTML=renderQualityProgressPanel(profilePerformanceGames,profilePerformanceRange)+renderPlayerAccuracyPanel(profilePerformanceGames,profilePerformanceRange)+renderMoveTypeAveragePanel(profilePerformanceGames,profilePerformanceRange)+renderCentipawnLossRatePanel(profilePerformanceGames,profilePerformanceRange);
       });
     });
   });
