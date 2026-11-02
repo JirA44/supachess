@@ -1363,7 +1363,11 @@ async function replayGoto(i) {
   if (!reviewState.fens.length) return;
   reviewState.variation = null;
   const idx = Math.max(0, Math.min(reviewState.fens.length - 1, i));
-  window.SupaReplayHistory = { moves: reviewState.moves.map((move) => move.san), currentPly: idx };
+  window.SupaReplayHistory = {
+    moves: reviewState.moves.map((move) => move.san),
+    moveGrades: reviewState.moveGrades,
+    currentPly: idx,
+  };
   state.gen++;
   moveFeedback.clear();
   if (idx > 0) {
