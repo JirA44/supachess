@@ -474,6 +474,7 @@ async function reviewRun(options = {}) {
 
   reviewState.fens = fens;
   reviewState.moves = moves;
+  window.SupaReplayHistory = { moves: moves.map((move) => move.san), currentPly: 0 };
   reviewState.currentHeaders = { ...headers };
   reviewState.grades = rows.map((row, i) => {
     const reply = positionLines[i + 1];
@@ -1181,6 +1182,7 @@ function reviewRestoreAfterReplay() {
   document.getElementById("coach-panel").className = saved.coachClass;
   reviewState.returnState = null;
   reviewState.variation = null;
+  window.SupaReplayHistory = null;
   document.getElementById("replay-bar").classList.remove("hidden");
   reviewSetReplayControls(false);
   window.setSupaCorrectionExerciseMode?.(false);
@@ -1325,6 +1327,7 @@ async function replayGoto(i) {
   if (!reviewState.fens.length) return;
   reviewState.variation = null;
   const idx = Math.max(0, Math.min(reviewState.fens.length - 1, i));
+  window.SupaReplayHistory = { moves: reviewState.moves.map((move) => move.san), currentPly: idx };
   state.gen++;
   moveFeedback.clear();
   if (idx > 0) {
