@@ -543,3 +543,10 @@ body {
 .sq .coord { z-index:5; }
 .sq .cdot-stack,.sq .played-move-bubble,.sq .preview-move-bubble,.sq .bad-move-marker { z-index:6; }
 @media (max-width:560px) { .analysis-setting { gap:10px; } .analysis-setting p { font-size:.82rem; } }
+
+.engine-arrow-legend { display:flex; flex-wrap:wrap; gap:7px 14px; margin:8px 0 4px; padding:9px 11px; border:1px solid var(--panel-edge); border-radius:9px; background:var(--panel); color:var(--text); font-size:.82rem; }
+.engine-arrow-legend[hidden] { display:none; }
+.engine-arrow-legend-item { display:inline-flex; align-items:center; gap:7px; }
+.engine-arrow-legend-color { display:inline-block; position:relative; width:22px; height:5px; border-radius:4px; }
+.engine-arrow-legend-color::after { content:""; position:absolute; right:-1px; top:-3px; border-top:5px solid transparent; border-bottom:5px solid transparent; border-left:7px solid currentColor; }
+@media (max-width:560px) { .engine-arrow-legend { gap:6px 10px; font-size:.75rem; } }
