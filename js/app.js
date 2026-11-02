@@ -1179,17 +1179,9 @@ $("btn-best-move").addEventListener("click", () => {
   const best = state.candidates.find((candidate) => candidate.rank === 1) || state.candidates[0];
   if (!best) return;
   if (replayActive) {
-    const probe = new Chess(state.chess.fen());
-    const move = probe.move(uciToMoveObj(best.uci));
-    if (!move) return;
-    const evaluation = best.line ? formatScore(best.line, move.color === "w") : "";
-    boardUI.previewDot = {
-      square: move.to, label: "★", quality: "good", category: "best", evaluation,
-      title: "Meilleur demi-coup Stockfish : " + move.san + (evaluation ? " · " + evaluation : ""),
-    };
-    renderBoard();
-    setStatus("Meilleur demi-coup Stockfish pour cette position : " + move.san +
-      (evaluation ? " · évaluation " + evaluation : "") + ". Le coup joué reste inchangé.");
+    if (typeof window.reviewPlayBestHalfMove === "function") {
+      window.reviewPlayBestHalfMove().catch((error) => setStatus("Impossible de jouer le meilleur demi-coup : " + error.message));
+    }
     return;
   }
   hideCoach();
