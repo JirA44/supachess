@@ -924,7 +924,7 @@ function syncBestMoveButton() {
   const replayButton = $("btn-replay-quit");
   const replayActive = replayButton && !replayButton.classList.contains("hidden");
   const allowedTurn = isManualMode() || state.chess.turn() === state.userColor;
-  button.disabled = Boolean(replayActive) || !["userTurn", "coach"].includes(state.phase) || !allowedTurn || !state.candidates.length;
+  button.disabled = !["userTurn", "coach"].includes(state.phase) || !allowedTurn || !state.candidates.length;
 }
 function renderBoard() { boardUI.render(state.chess); }
 
@@ -1174,10 +1174,24 @@ $("btn-flip-board").addEventListener("click", () => {
 });
 $("btn-best-move").addEventListener("click", () => {
   const replayButton = $("btn-replay-quit");
-  if (replayButton && !replayButton.classList.contains("hidden")) return;
+  const replayActive = replayButton && !replayButton.classList.contains("hidden");
   if (!["userTurn", "coach"].includes(state.phase) || (!isManualMode() && state.chess.turn() !== state.userColor)) return;
   const best = state.candidates.find((candidate) => candidate.rank === 1) || state.candidates[0];
   if (!best) return;
+  if (replayActive) {
+    const probe = new Chess(state.chess.fen());
+    const move = probe.move(uciToMoveObj(best.uci));
+    if (!move) return;
+    const evaluation = best.line ? formatScore(best.line, move.color === "w") : "";
+    boardUI.previewDot = {
+      square: move.to, label: "★", quality: "good", category: "best", evaluation,
+      title: "Meilleur demi-coup Stockfish : " + move.san + (evaluation ? " · " + evaluation : ""),
+    };
+    renderBoard();
+    setStatus("Meilleur demi-coup Stockfish pour cette position : " + move.san +
+      (evaluation ? " · évaluation " + evaluation : "") + ". Le coup joué reste inchangé.");
+    return;
+  }
   hideCoach();
   commitUserMove(uciToMoveObj(best.uci), best, true);
 });
