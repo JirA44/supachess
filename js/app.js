@@ -946,6 +946,7 @@ function renderBoard() {
     candidates.forEach((candidate, index) => {
       const item = document.createElement("span");
       item.className = "engine-arrow-legend-item";
+      item.setAttribute("role", "listitem");
       const swatch = document.createElement("i");
       swatch.className = "engine-arrow-legend-color";
       swatch.style.backgroundColor = colors[index];
