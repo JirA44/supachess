@@ -400,7 +400,8 @@ async function analyzeForUser() {
   const fen = state.chess.fen();
   const legalMoveCount = state.chess.moves({ verbose: true }).length;
   setStatus(`Analyse des ${legalMoveCount} coups possibles…`);
-  const res = await state.engine.analyze({ fen, multipv: Math.max(1, legalMoveCount), movetime: movetime(), elo: 0 });
+  const requestedMultiPv = window.SupaAnalysisSettings?.getMultiPv() || 4;
+  const res = await state.engine.analyze({ fen, multipv: Math.max(1, Math.min(legalMoveCount, requestedMultiPv)), movetime: movetime(), elo: 0 });
   if (state.gen !== gen || state.chess.fen() !== fen) return; // partie/mode changé entre temps
   buildCandidates(res.lines, fen);
   updateEvalBar(res.lines[0]);
@@ -930,7 +931,16 @@ function syncBestMoveButton() {
     ? !["userTurn", "coach"].includes(state.phase)
     : !["userTurn", "coach"].includes(state.phase) || !allowedTurn || !state.candidates.length);
 }
-function renderBoard() { boardUI.render(state.chess); }
+function renderBoard() {
+  const multipv = window.SupaAnalysisSettings?.getMultiPv() || 4;
+  boardUI.engineArrows = state.candidates.slice(0, multipv).map((candidate) => candidate.uci);
+  boardUI.showEngineArrows = Boolean(window.SupaAnalysisSettings?.showArrows());
+  boardUI.render(state.chess);
+}
+window.SupaChessRenderBoard = renderBoard;
+window.SupaChessReanalyze = function() {
+  if (state.engine && state.phase === "userTurn") analyzeForUser().catch(console.error);
+};
 
 /* Cartes candidats dépliables (clic sur l'en-tête). Le 1er candidat est
    déplié par défaut. Déplié = arguments POUR/CONTRE + micro-points. */
