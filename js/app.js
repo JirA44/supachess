@@ -950,6 +950,7 @@ function renderBoard() {
       const swatch = document.createElement("i");
       swatch.className = "engine-arrow-legend-color";
       swatch.style.backgroundColor = colors[index];
+      swatch.style.color = colors[index];
       swatch.setAttribute("aria-hidden", "true");
       const label = document.createElement("span");
       label.textContent = "Rang " + (index + 1) + (index === 0 ? " · meilleur coup" : " · alternative") + " : " + candidate.san;
