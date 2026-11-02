@@ -1020,7 +1020,7 @@ function renderProfileModal(data){
   if(!data){ box.innerHTML='<p style="color:#f66">'+profileText('profile_not_found','Profil introuvable')+'</p>'; return; }
   var name=escapeProfileText(data.displayName||profileText('profile_guest','Joueur')), email=escapeProfileText(data.email||'');
   var photo=escapeProfileText(data.photoURL||'https://ui-avatars.com/api/?name='+encodeURIComponent(data.displayName||'?'));
-  var html='<div style="text-align:center"><img src="'+photo+'" alt="" style="width:64px;height:64px;border-radius:50%"><h3 style="margin:8px 0 4px">'+name+'</h3><p style="opacity:.6;font-size:.85em">'+email+'</p></div>';
+  var html='<nav aria-label="Réglages rapides" class="profile-quick-settings" style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;padding:12px;border:1px solid rgba(79,172,254,.3);border-radius:10px"><strong style="width:100%">Réglages rapides</strong><a class="btn" href="index.html#appearance-panel">🎨 Apparence</a><a class="btn" href="index.html#analysis-preferences">📊 Analyse</a></nav><div style="text-align:center"><img src="'+photo+'" alt="" style="width:64px;height:64px;border-radius:50%"><h3 style="margin:8px 0 4px">'+name+'</h3><p style="opacity:.6;font-size:.85em">'+email+'</p></div>';
   html+='<div style="margin-top:16px;display:grid;gap:10px">';
   Object.keys(GAME_TYPES).forEach(function(k){
     var st=data.stats&&data.stats[k]||null;
