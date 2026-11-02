@@ -433,6 +433,12 @@ test("competency progress tracks tactics, strategy, plans, calculation, openings
   assert.equal(summary.tactics.due, 1);
   assert.equal(summary.strategyPlans.passed, 1);
 });
+test("every current lesson is classified by its explicit theme without relying on generic explanations", () => {
+  const unclassified = LESSONS.filter((lesson) => lessonCompetencyKeys(lesson).length === 0);
+  assert.deepEqual(unclassified.map((lesson) => lesson.id), []);
+  assert.ok(lessonCompetencySummary(LESSONS, {}).every((domain) => domain.total > 0));
+});
+
 test("the current lesson corpus includes multiple levels and different-complexity review positions", () => {
   const levels = new Set(LESSONS.map((lesson) => lesson.level));
   assert.deepEqual([...levels].sort(), ["Avancé", "Débutant", "Expert", "Intermédiaire"]);

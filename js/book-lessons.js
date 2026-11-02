@@ -2989,11 +2989,11 @@
 
   const LESSON_COMPETENCIES = [
     { id: "openings", label: "Ouvertures", pattern: /ouverture|roque|développ|développement|préparation d'ouverture/i },
-    { id: "tactics", label: "Tactiques", pattern: /tactique|fourchette|clouage|enfilade|rayon x|attaque découverte|double échec|sacrifice|combinaison|mat en|mat élémentaire|pièce[s]? en prise/i },
-    { id: "strategyPlans", label: "Stratégies et plans", pattern: /plan|stratég|structure de pion|rupture|positionnel|case forte|case faible|colonne|diagonale|conversion|amélior|échange|simplification|mobilisation|centre/i },
+    { id: "tactics", label: "Tactiques", pattern: /tactique|fourchette|clouage|enfilade|rayon x|attaque découverte|double échec|sacrifice|combinaison|mat en|mat élémentaire|pièce[s]? en prise|échec|reprise|prise/i },
+    { id: "strategyPlans", label: "Stratégies et plans", pattern: /plan|stratég|structure de pion|rupture|positionnel|case forte|case faible|colonne|diagonale|conversion|amélior|échange|simplification|mobilisation|centre|manoeuvre|manœuvre/i },
     { id: "calculation", label: "Calcul et anticipation", pattern: /calcul|anticip|variante|coups candidats|meilleure réponse|réponse adverse|forcing|profondeur/i },
     { id: "endgames", label: "Finales", pattern: /finale|roi et pion|opposition|promotion|tablebase|syzygy/i },
-    { id: "precision", label: "Précision et prévention des erreurs", pattern: /anti-erreur|précision|erreur|gaffe|imprécision|vérifi|défendre|défense|sécurité du roi|pièce.*prise|protéger|routine|réflexe|menace adverse/i },
+    { id: "precision", label: "Précision et prévention des erreurs", pattern: /anti-erreur|précision|erreur|gaffe|imprécision|vérifi|défend|défense|sécurité du roi|pièce.*prise|protéger|routine|réflexe|menace adverse|parade/i },
     { id: "engineAnalysis", label: "Analyse critique du moteur", pattern: /stockfish|moteur|évaluation.*moteur|tcec|lc0|lczero/i },
   ];
 
@@ -3017,10 +3017,15 @@
   }
 
   function lessonCompetencyKeys(lesson) {
-    const text = [lesson && lesson.category, lesson && lesson.title, lesson && lesson.program,
-      lesson && lesson.question, lesson && lesson.principle, lesson && lesson.transfer]
+    const categoryTitle = [lesson && lesson.category, lesson && lesson.title]
       .filter(Boolean).join(" ").toLocaleLowerCase("fr");
-    return LESSON_COMPETENCIES.filter((competency) => competency.pattern.test(text)).map((competency) => competency.id);
+    const program = String(lesson && lesson.program || "").toLocaleLowerCase("fr");
+    return LESSON_COMPETENCIES.filter((competency) => {
+      if (competency.id === "engineAnalysis") return competency.pattern.test(categoryTitle + " " + program);
+      if (competency.id === "precision") return competency.pattern.test(categoryTitle) || /anti-erreurs/.test(program);
+      if (competency.id === "calculation") return competency.pattern.test(categoryTitle) || Boolean(lesson && lesson.kind === "reinforcement");
+      return competency.pattern.test(categoryTitle);
+    }).map((competency) => competency.id);
   }
 
   function lessonCompetencySummary(lessons, progress, nowValue = Date.now()) {
