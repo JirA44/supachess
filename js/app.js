@@ -776,6 +776,7 @@ function interceptMove(moveObj, cand) {
     commitUserMove(moveObj, cand, false);
     return;
   }
+  if (typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
   previewCandidate(cand);
   state.phase = "coach";
   state.pendingMove = { ...moveObj, uci: cand.uci, cand };
@@ -862,7 +863,8 @@ function commitUserMove(moveObj, cand, forced) {
   const grade = moveGrade(cand ? cand.deltaCp : null, brilliant, cand?.rank === 1);
   recordMoveGrade(state.chess.history().length, userMoveColor,
     moveGradeCategory(cand ? cand.deltaCp : null, brilliant, cand?.rank === 1),
-    { noTrainingAids: !boardUI.showDots && !boardUI.showMoveDots, lossCp: cand && Number.isFinite(cand.deltaCp) ? cand.deltaCp : null });
+    { noTrainingAids: !gamesTrainingAidsActive() && !forced, lossCp: cand && Number.isFinite(cand.deltaCp) ? cand.deltaCp : null });
+  if (forced && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
   moveFeedback.show({ san: mv.san, color: mv.color, moveNumber: moveNumberFromFen(fenBefore), square: mv.to,
     deltaCp: cand ? cand.deltaCp : null, brilliant, best: cand?.rank === 1 });
   const evaluation = cand && cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
@@ -1203,6 +1205,7 @@ $("btn-abandon-diagnostic")?.addEventListener("click", abandonLevelDiagnostic);
 $("btn-dots").addEventListener("click", () => {
   if (isDiagnosticControlLockActive()) return;
   boardUI.showDots = !boardUI.showDots;
+  if (boardUI.showDots && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
   localStorage.setItem(DOTS_STORAGE_KEY, String(boardUI.showDots));
   syncDotsButton();
   renderBoard();
@@ -1210,6 +1213,7 @@ $("btn-dots").addEventListener("click", () => {
 $("btn-move-dots").addEventListener("click", () => {
   if (isDiagnosticControlLockActive()) return;
   boardUI.showMoveDots = !boardUI.showMoveDots;
+  if (boardUI.showMoveDots && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
   localStorage.setItem(MOVE_DOTS_STORAGE_KEY, String(boardUI.showMoveDots));
   syncMoveDotsButton();
   renderBoard();
