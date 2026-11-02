@@ -117,11 +117,21 @@ function readCorrectionProgress(){
   }catch(_e){return {};}
 }
 function correctionProgressKey(gameId,ply){return String(gameId||'')+':'+String(Number(ply)||0);}
+function profileGameWasUnaided(game){
+  if(!game||game.trainingAidsUsed!==false)return false;
+  var pgn=String(game.pgn||'');
+  if(/^\[SupaChessTrainingAidsUsed\s+"true"\]/mi.test(pgn))return false;
+  if(!/^\[SupaChessTrainingAidsUsed\s+"false"\]/mi.test(pgn))return false;
+  var color=resolveProfileUserColor(game);
+  if(!color)return false;
+  var userMoves=(Array.isArray(game.moveGrades)?game.moveGrades:[]).filter(function(move){return move&&move.color===color;});
+  return userMoves.length>0&&userMoves.every(function(move){return move.noTrainingAids===true;});
+}
 function summarizeAccuracyGames(games, now){
   var currentTime=Number.isFinite(Number(now))?Number(now):Date.now();
   var day=24*60*60*1000;
   var records=(Array.isArray(games)?games:[]).map(function(game){
-    if(!game||!['1-0','0-1','1/2-1/2'].includes(String(game.result||'')))return null;
+    if(!game||!['1-0','0-1','1/2-1/2'].includes(String(game.result||''))||!profileGameWasUnaided(game))return null;
     var color=game.userColor;
     if(color!=='w'&&color!=='b'){
       var pgn=String(game.pgn||'');
@@ -362,7 +372,7 @@ function renderPlayerAccuracyPanel(games,range){
   var hasAny=record&&record.average!==null;
   var count=record&&Number(record.games)||0;
   return '<section class="profile-accuracy-panel" aria-labelledby="profile-accuracy-title"><h4 id="profile-accuracy-title">Précision moyenne · '+selectedRange.aria+'</h4>'+
-    (hasAny?'<div class="profile-accuracy-grid"><article class="profile-accuracy-card"><h4>'+selectedRange.aria+'</h4><strong class="profile-accuracy-value">'+formatAccuracyPercent(record.average)+'</strong><span class="profile-accuracy-count">'+count+' partie'+(count>1?'s':'')+' analysée'+(count>1?'s':'')+' · '+Number(record.moves||0)+' demi-coups</span></article></div><p class="profile-accuracy-note">Moyenne pondérée par le nombre de demi-coups évalués. Les parties sans date sont incluses uniquement dans « Tout l’historique ».</p>':
+    (hasAny?'<div class="profile-accuracy-grid"><article class="profile-accuracy-card"><h4>'+selectedRange.aria+'</h4><strong class="profile-accuracy-value">'+formatAccuracyPercent(record.average)+'</strong><span class="profile-accuracy-count">'+count+' partie'+(count>1?'s':'')+' analysée'+(count>1?'s':'')+' · '+Number(record.moves||0)+' demi-coups</span></article></div><p class="profile-accuracy-note">Moyenne pondérée par le nombre de demi-coups évalués. Les parties avec une aide active ou un statut d’aide non vérifiable sont exclues.</p>':
     '<p class="profile-accuracy-note">Aucune partie datée avec une précision disponible pour cette période.</p>')+'</section>';
 }
 function profileNextLevelXP(xp,level){
@@ -504,7 +514,7 @@ function qualityTrendSamples(games,range,now){
   var selected=profileGamesForRange(games,range,now);
   return selected.map(function(game){
     if(!game||!['1-0','0-1','1/2-1/2'].includes(String(game.result||''))||
-      game.abandoned||game.stopped||game.termination==='abandoned'||game.termination==='unterminated')return null;
+      game.abandoned||game.stopped||game.termination==='abandoned'||game.termination==='unterminated'||!profileGameWasUnaided(game))return null;
     var color=resolveProfileUserColor(game);
     if(!color)return null;
     var timestamp=game.date?new Date(game.date).getTime():NaN;
