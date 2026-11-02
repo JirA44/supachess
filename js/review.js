@@ -20,7 +20,7 @@ const REVIEW_MOVE_CLASSES = [
   { id: "unrated", symbol: "…", label: "Non évalué" },
 ];
 
-const reviewState = { fens: [], moves: [], grades: [], moveGrades: [], correctionExercises: [], currentHeaders: {}, exercise: null, running: false, returnState: null, modalReturnFocus: null, variation: null };
+const reviewState = { fens: [], moves: [], grades: [], moveGrades: [], correctionExercises: [], currentHeaders: {}, exercise: null, running: false, returnState: null, modalReturnFocus: null, variation: null, bestMovePending: false };
 
 function trapModalKeys(modal, close) {
   modal.addEventListener("keydown", (event) => {
@@ -1182,6 +1182,7 @@ function reviewRestoreAfterReplay() {
   document.getElementById("coach-panel").className = saved.coachClass;
   reviewState.returnState = null;
   reviewState.variation = null;
+  reviewState.bestMovePending = false;
   window.SupaReplayHistory = null;
   document.getElementById("replay-bar").classList.remove("hidden");
   reviewSetReplayControls(false);
@@ -1245,7 +1246,16 @@ function reviewSetMoveGradeHistory(grades, ply) {
 
 /* Jouer le meilleur coup à la place du demi-coup sélectionné, dans une variante temporaire. */
 async function reviewPlayBestHalfMove() {
-  if (!reviewState.returnState || reviewState.running || !state.engine) return false;
+  if (!reviewState.returnState || !state.engine) {
+    setStatus("La relecture ou le moteur Stockfish n’est pas prêt.");
+    return false;
+  }
+  if (reviewState.bestMovePending) return false;
+  if (!["userTurn", "coach"].includes(state.phase)) {
+    setStatus("Attends la fin de l’analyse de cette position avant de jouer le meilleur demi-coup.");
+    return false;
+  }
+
   let basePly, baseFen;
   if (reviewState.variation) {
     basePly = reviewState.variation.basePly;
@@ -1254,30 +1264,39 @@ async function reviewPlayBestHalfMove() {
     const currentPly = Math.max(0, Number(state.replayIdx) || 0);
     basePly = currentPly > 0 ? currentPly - 1 : 0;
     baseFen = reviewState.fens[basePly];
-    if (!baseFen) return false;
-    reviewState.variation = { basePly, moves: [] };
+    if (!baseFen) {
+      setStatus("Impossible de retrouver la position avant le demi-coup à remplacer.");
+      return false;
+    }
   }
 
+  reviewState.bestMovePending = true;
+  const button = document.getElementById("btn-best-move");
+  if (button) button.dataset.pending = "true";
   const generation = ++state.gen;
   state.phase = "analyzing";
-  setStatus("Stockfish cherche le meilleur demi-coup à jouer dans la variante…");
+  setStatus("Stockfish calcule le meilleur demi-coup pour remplacer celui de la partie…");
   try {
     const result = await state.engine.analyze({ fen: baseFen, multipv: 1, movetime: movetime(), elo: 0 });
-    if (state.gen !== generation || !result.lines || !result.lines.length) {
-      if (state.gen === generation) setStatus("Stockfish n’a pas renvoyé de coup dans cette position.");
-      return false;
-    }
-    const line = result.lines[0], uci = line.pv && line.pv[0];
+    if (state.gen !== generation) return false;
+    const line = result && result.lines && result.lines[0];
+    const uci = line && line.pv && line.pv[0];
     if (!uci) {
-      setStatus("Stockfish n’a pas renvoyé de demi-coup jouable.");
+      state.phase = "userTurn";
+      renderAll();
+      setStatus("Stockfish n’a pas renvoyé de coup jouable dans cette position.");
       return false;
     }
+
     const variant = new Chess(baseFen);
     const move = variant.move(uciToMoveObj(uci));
     if (!move) {
-      setStatus("Stockfish a renvoyé un demi-coup illégal.");
+      state.phase = "userTurn";
+      renderAll();
+      setStatus("Stockfish a renvoyé un demi-coup illégal pour cette position.");
       return false;
     }
+    if (!reviewState.variation) reviewState.variation = { basePly, moves: [] };
     reviewState.variation.moves.push({ from: move.from, to: move.to, san: move.san, color: move.color, uci });
     state.chess = variant;
     state.replayIdx = basePly + reviewState.variation.moves.length;
@@ -1288,7 +1307,8 @@ async function reviewPlayBestHalfMove() {
     state.candidates = [];
     state.accuracy.pendingEngine = null;
     state.pendingMove = null;
-    boardUI.lastMove = { from: move.from, to: move.to, san: move.san, grade: moveGrade(0, false, true), evaluation: formatScore(line, move.color === "w") };
+    const evaluation = formatScore(line, move.color === "w");
+    boardUI.lastMove = { from: move.from, to: move.to, san: move.san, grade: moveGrade(0, false, true), evaluation };
     boardUI.previewDot = null;
     boardUI.dots = [];
     boardUI.selected = null;
@@ -1305,7 +1325,7 @@ async function reviewPlayBestHalfMove() {
     reviewSetMoveGradeHistory(variationGrades, state.replayIdx);
     renderAll();
     const originalMove = reviewState.moves[basePly];
-    const replaced = originalMove ? " · remplace " + originalMove.san : "";
+    const replaced = reviewState.variation.moves.length === 1 && originalMove ? " · remplace " + originalMove.san : "";
     document.getElementById("replay-label").textContent =
       "Variante Stockfish · " + moveNumberFromFen(baseFen) + (move.color === "w" ? ". " : "... ") +
       move.san + replaced + " · " + reviewState.variation.moves.length + " demi-coup(s)";
@@ -1315,9 +1335,13 @@ async function reviewPlayBestHalfMove() {
     if (state.gen === generation) {
       state.phase = "userTurn";
       renderAll();
-      setStatus("Analyse du meilleur demi-coup impossible : " + (error && error.message || error));
+      setStatus("Le meilleur demi-coup n’a pas pu être joué : " + (error && error.message || error));
     }
     return false;
+  } finally {
+    reviewState.bestMovePending = false;
+    if (button) button.dataset.pending = "false";
+    if (typeof syncBestMoveButton === "function") syncBestMoveButton();
   }
 }
 window.reviewPlayBestHalfMove = reviewPlayBestHalfMove;
