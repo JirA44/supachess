@@ -1051,11 +1051,19 @@ function renderHistory() {
   const hist = replayHistory && Array.isArray(replayHistory.moves)
     ? replayHistory.moves : state.chess.history();
   const evals = replayHistory ? [] : (state.evalHistory || []);
+  const moveMarkup = (san, ply) => {
+    const safeSan = esc(san);
+    if (!replayHistory) return "<span class=\"mv\">" + safeSan + "</span>";
+    const current = Number(replayHistory.currentPly) === ply;
+    return "<button type=\"button\" class=\"mv replay-move" + (current ? " active" : "") +
+      "\" data-replay-ply=\"" + ply + "\" aria-label=\"Afficher la position après le demi-coup " +
+      ply + " : " + safeSan + "\"" + (current ? " aria-current=\"step\"" : "") + ">" + safeSan + "</button>";
+  };
   let html = "";
   for (let i = 0; i < hist.length; i += 2) {
-    html += "<span class=\"mvnum\">" + (i / 2 + 1) + ".</span><span class=\"mv\">" + esc(hist[i]) + "</span>" +
+    html += "<span class=\"mvnum\">" + (i / 2 + 1) + ".</span>" + moveMarkup(hist[i], i + 1) +
       evalTag(evals[i]) + (replayHistory ? "" : accuracyHistoryTag(i + 1));
-    if (hist[i + 1]) html += "<span class=\"mv\">" + esc(hist[i + 1]) + "</span>" +
+    if (hist[i + 1]) html += moveMarkup(hist[i + 1], i + 2) +
       evalTag(evals[i + 1]) + (replayHistory ? "" : accuracyHistoryTag(i + 2));
   }
   $("move-history").innerHTML = html || "<em>Aucun coup joué.</em>";
@@ -1316,3 +1324,10 @@ $("btn-fen").addEventListener("click", () => {
 refreshLevelDiagnosticProgress();
 init();
 
+
+document.getElementById("move-history")?.addEventListener("click", (event) => {
+  const moveButton = event.target.closest("[data-replay-ply]");
+  if (!moveButton || !window.SupaReplayHistory || typeof window.reviewJumpToPly !== "function") return;
+  const ply = Number(moveButton.dataset.replayPly);
+  if (Number.isInteger(ply)) window.reviewJumpToPly(ply);
+});
