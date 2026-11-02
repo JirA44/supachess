@@ -917,7 +917,15 @@ function checkGameOver() {
 }
 
 /* ── Rendu ── */
-function renderAll() { renderBoard(); renderCandidatesList(); renderHistory(); renderStats(); renderMoveGradeSummary(); }
+function renderAll() { renderBoard(); renderCandidatesList(); renderHistory(); renderStats(); renderMoveGradeSummary(); syncBestMoveButton(); }
+function syncBestMoveButton() {
+  const button = $("btn-best-move");
+  if (!button) return;
+  const replayButton = $("btn-replay-quit");
+  const replayActive = replayButton && !replayButton.classList.contains("hidden");
+  const allowedTurn = isManualMode() || state.chess.turn() === state.userColor;
+  button.disabled = Boolean(replayActive) || !["userTurn", "coach"].includes(state.phase) || !allowedTurn || !state.candidates.length;
+}
 function renderBoard() { boardUI.render(state.chess); }
 
 /* Cartes candidats dépliables (clic sur l'en-tête). Le 1er candidat est
@@ -1159,6 +1167,20 @@ $("btn-move-dots").addEventListener("click", () => {
   renderBoard();
 });
 $("sel-color").addEventListener("change", newGame);
+$("btn-flip-board").addEventListener("click", () => {
+  boardUI.setFlipped(!boardUI.flipped);
+  $("btn-flip-board").setAttribute("aria-pressed", String(boardUI.flipped));
+  renderBoard();
+});
+$("btn-best-move").addEventListener("click", () => {
+  const replayButton = $("btn-replay-quit");
+  if (replayButton && !replayButton.classList.contains("hidden")) return;
+  if (!["userTurn", "coach"].includes(state.phase) || (!isManualMode() && state.chess.turn() !== state.userColor)) return;
+  const best = state.candidates.find((candidate) => candidate.rank === 1) || state.candidates[0];
+  if (!best) return;
+  hideCoach();
+  commitUserMove(uciToMoveObj(best.uci), best, true);
+});
 function onOpponentSettingsChange() {
   updateOpponentFideEstimate();
   // Recalcule aussi si le niveau ou le temps change pendant une partie.
