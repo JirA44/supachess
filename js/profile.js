@@ -373,7 +373,7 @@ function renderPlayerAccuracyPanel(games,range){
   var count=record&&Number(record.games)||0;
   return '<section class="profile-accuracy-panel" aria-labelledby="profile-accuracy-title"><h4 id="profile-accuracy-title">Précision moyenne · '+selectedRange.aria+'</h4>'+
     (hasAny?'<div class="profile-accuracy-grid"><article class="profile-accuracy-card"><h4>'+selectedRange.aria+'</h4><strong class="profile-accuracy-value">'+formatAccuracyPercent(record.average)+'</strong><span class="profile-accuracy-count">'+count+' partie'+(count>1?'s':'')+' analysée'+(count>1?'s':'')+' · '+Number(record.moves||0)+' demi-coups</span></article></div><p class="profile-accuracy-note">Moyenne pondérée par le nombre de demi-coups évalués. Les parties avec une aide active ou un statut d’aide non vérifiable sont exclues.</p>':
-    '<p class="profile-accuracy-note">Aucune partie datée avec une précision disponible pour cette période.</p>')+'</section>';
+    '<p class="profile-accuracy-note">Aucune partie éligible : les parties avec aide active ou statut d’aide inconnu ne sont pas comptées.</p>')+'</section>';
 }
 function profileNextLevelXP(xp,level){
   var api=window.ChessNovaProgress;
