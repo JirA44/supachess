@@ -1002,10 +1002,6 @@ function renderLocalLearningPanel(data){
       '<div class="profile-lesson-range-controls" role="group" aria-label="Choisir la période du graphique" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0">'+rangeButtons+'</div>'+
       '<div class="profile-lesson-chart-content" aria-live="polite">'+renderLessonProgressRangeChart(lessonPoints,'all',Date.now())+'</div></section>';
   }else{html+='<h4>'+profileText('profile_lesson_progress','Progression des leçons')+'</h4><p class="profile-learning-note">'+profileText('profile_chart_empty','Terminez une leçon pour afficher votre courbe de progression.')+'</p>';}
-  if(local.accuracyGames.length>1){
-    var accuracyCoords=local.accuracyGames.map(function(value,index){var x=8+index*164/(local.accuracyGames.length-1);var y=56-value*.48;return x.toFixed(1)+','+y.toFixed(1);}).join(' ');
-    html+='<h4>'+profileText('profile_accuracy_progress','Précision des parties récentes')+'</h4><svg class="profile-learning-chart" viewBox="0 0 180 64" role="img" aria-label="'+profileText('profile_accuracy_chart_alt','Précision par partie récente')+'"><polyline points="'+accuracyCoords+'" fill="none" stroke="#68b5ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>';
-  }else{html+='<p class="profile-learning-note">'+profileText('profile_accuracy_empty','Enregistrez au moins deux parties analysées pour afficher votre courbe de précision.')+'</p>';}
   return html+'</section>';
 }
 function renderProfileModal(data){
