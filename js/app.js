@@ -863,7 +863,7 @@ function commitUserMove(moveObj, cand, forced) {
   const grade = moveGrade(cand ? cand.deltaCp : null, brilliant, cand?.rank === 1);
   recordMoveGrade(state.chess.history().length, userMoveColor,
     moveGradeCategory(cand ? cand.deltaCp : null, brilliant, cand?.rank === 1),
-    { noTrainingAids: !gamesTrainingAidsActive() && !forced, lossCp: cand && Number.isFinite(cand.deltaCp) ? cand.deltaCp : null });
+    { noTrainingAids: typeof gamesTrainingAidsActive === "function" && !gamesTrainingAidsActive() && !forced, lossCp: cand && Number.isFinite(cand.deltaCp) ? cand.deltaCp : null });
   if (forced && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
   moveFeedback.show({ san: mv.san, color: mv.color, moveNumber: moveNumberFromFen(fenBefore), square: mv.to,
     deltaCp: cand ? cand.deltaCp : null, brilliant, best: cand?.rank === 1 });
