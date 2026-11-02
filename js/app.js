@@ -925,7 +925,7 @@ function syncBestMoveButton() {
   const replayButton = $("btn-replay-quit");
   const replayActive = replayButton && !replayButton.classList.contains("hidden");
   const allowedTurn = isManualMode() || state.chess.turn() === state.userColor;
-  button.disabled = !["userTurn", "coach"].includes(state.phase) || !allowedTurn || !state.candidates.length;
+  button.disabled = button.dataset.pending === "true" || !["userTurn", "coach"].includes(state.phase) || !allowedTurn || !state.candidates.length;
 }
 function renderBoard() { boardUI.render(state.chess); }
 
@@ -1180,15 +1180,15 @@ $("btn-flip-board").addEventListener("click", () => {
 $("btn-best-move").addEventListener("click", () => {
   const replayButton = $("btn-replay-quit");
   const replayActive = replayButton && !replayButton.classList.contains("hidden");
-  if (!["userTurn", "coach"].includes(state.phase) || (!isManualMode() && state.chess.turn() !== state.userColor)) return;
-  const best = state.candidates.find((candidate) => candidate.rank === 1) || state.candidates[0];
-  if (!best) return;
   if (replayActive) {
     if (typeof window.reviewPlayBestHalfMove === "function") {
       window.reviewPlayBestHalfMove().catch((error) => setStatus("Impossible de jouer le meilleur demi-coup : " + error.message));
-    }
+    } else setStatus("Le mode relecture n’a pas chargé le calcul du meilleur demi-coup.");
     return;
   }
+  if (!["userTurn", "coach"].includes(state.phase) || (!isManualMode() && state.chess.turn() !== state.userColor)) return;
+  const best = state.candidates.find((candidate) => candidate.rank === 1) || state.candidates[0];
+  if (!best) return;
   hideCoach();
   commitUserMove(uciToMoveObj(best.uci), best, true);
 });
