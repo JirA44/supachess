@@ -571,3 +571,6 @@ body {
 .profile-quality-chart-wrap svg { max-width: 100%; }
 @media (min-width: 980px) { .profile-quality-chart-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (max-width: 560px) { .profile-quality-trend-summary { grid-template-columns: minmax(0,1fr); } .profile-quality-chart-wrap { padding: 6px; } }
+
+.evalbar[hidden],.evalbar-label[hidden]{display:none!important}
+#btn-evalbar-toggle:disabled{opacity:.72;cursor:not-allowed}
