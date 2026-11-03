@@ -165,7 +165,7 @@ class BoardUI {
       svg.setAttribute("class", "engine-arrow-overlay");
       svg.setAttribute("viewBox", "0 0 800 800");
       svg.setAttribute("aria-hidden", "true");
-      const colors = ["#16a36a", "#2581d8", "#e19b24", "#e879f9"];
+      const colors = ["#16a36a", "#2581d8", "#e19b24", "#ff3366"];
       const defs = document.createElementNS(svgNs, "defs");
       this.engineArrows.slice(0, 4).forEach((_uci, index) => {
         const marker = document.createElementNS(svgNs, "marker");

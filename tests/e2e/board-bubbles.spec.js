@@ -263,8 +263,8 @@ test('rank-four engine arrow is fuchsia and legend matches', async ({ page }) =>
     };
   });
   expect(result.arrows).toHaveLength(4);
-  expect(result.arrows[3]).toBe('#e879f9');
-  expect(result.legend[3]).toBe('rgb(232, 121, 249)');
+  expect(result.arrows[3]).toBe('#ff3366');
+  expect(result.legend[3]).toBe('rgb(255, 51, 102)');
 });
 
 test('SupaEngine brilliant signal adds a violet marker for a legal move outside Stockfish MultiPV', async ({ page }) => {

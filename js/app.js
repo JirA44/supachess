@@ -1035,7 +1035,7 @@ function renderBoard() {
   boardUI.render(state.chess);
   const legend = $("engine-arrow-legend");
   if (legend) {
-    const colors = ["#16a36a", "#2581d8", "#e19b24", "#e879f9"];
+    const colors = ["#16a36a", "#2581d8", "#e19b24", "#ff3366"];
     legend.hidden = !showArrows || !candidates.length;
     legend.replaceChildren();
     candidates.forEach((candidate, index) => {
