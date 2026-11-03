@@ -20,7 +20,8 @@ const REVIEW_MOVE_CLASSES = [
   { id: "unrated", symbol: "…", label: "Non évalué" },
 ];
 
-const reviewState = { fens: [], moves: [], grades: [], moveGrades: [], correctionExercises: [], currentHeaders: {}, exercise: null, running: false, returnState: null, modalReturnFocus: null, variation: null, bestMovePending: false };
+const reviewState = { fens: [], moves: [], grades: [], moveGrades: [], correctionExercises: [], currentHeaders: {}, gameSummary: null, exercise: null, running: false, returnState: null, modalReturnFocus: null, variation: null, bestMovePending: false };
+window.SupaChessClearReviewAccuracy = () => { reviewState.gameSummary = null; };
 
 function trapModalKeys(modal, close) {
   modal.addEventListener("keydown", (event) => {
@@ -394,6 +395,10 @@ async function reviewRun(options = {}) {
   const parsedHeaders = typeof game.header === "function" ? game.header() : {};
   const headers = { ...(options.headers || {}), ...parsedHeaders };
 
+  if (!options.batch || options.startCorrections) {
+    reviewState.gameSummary = { headers: { ...headers }, players: [] };
+    window.SupaChessRenderAccuracy?.();
+  }
   reviewState.running = true;
   reviewSetReplayControls(false);
   reviewHideModal();
@@ -471,6 +476,14 @@ async function reviewRun(options = {}) {
   const r1 = (v) => (v === null ? null : Math.round(v * 10) / 10);
   const accW = r1(avgAccuracy(accs.w));
   const accB = r1(avgAccuracy(accs.b));
+
+  if (!options.batch || options.startCorrections) {
+    reviewState.gameSummary = {
+      headers: { ...headers },
+      players: [{ color: "w", accuracy: accW }, { color: "b", accuracy: accB }],
+    };
+    window.SupaChessRenderAccuracy?.();
+  }
 
   reviewState.fens = fens;
   reviewState.moves = moves;

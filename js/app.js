@@ -1237,6 +1237,7 @@ function recordAccuracy(color, beforeCp, afterCp, ply = null) {
   renderAccuracy();
 }
 function resetAccuracy() {
+  window.SupaChessClearReviewAccuracy?.();
   state.accuracy = { w: [], b: [], pendingEngine: null, lastMove: null, byPly: {} };
   renderAccuracy();
 }
@@ -1251,10 +1252,12 @@ function accColor(v) {
   return v >= 90 ? "var(--green)" : v >= 80 ? "var(--yellow)" : v >= 60 ? "var(--orange)" : "var(--red)";
 }
 function accuracyHtml() {
-  const exercise = typeof reviewState !== "undefined" && reviewState.exercise;
-  if (exercise) {
-    const headers = exercise.headers || reviewState.currentHeaders || {};
-    const players = Array.isArray(exercise.analysis?.players) ? exercise.analysis.players : [];
+  const summary = typeof reviewState !== "undefined" ? reviewState.gameSummary : null;
+  const exercise = typeof reviewState !== "undefined" ? reviewState.exercise : null;
+  if (summary || exercise) {
+    const headers = summary?.headers || exercise?.headers || reviewState.currentHeaders || {};
+    const players = Array.isArray(summary?.players) ? summary.players :
+      (Array.isArray(exercise?.analysis?.players) ? exercise.analysis.players : []);
     return [["w", headers.White || "Blancs"], ["b", headers.Black || "Noirs"]].map(([color, name]) => {
       const player = players.find((item) => item && item.color === color);
       const value = player && Number.isFinite(player.accuracy) ? player.accuracy : null;
@@ -1285,6 +1288,7 @@ function renderAccuracy() {
   const badge = $("accuracy-badge");
   if (badge) badge.innerHTML = "Précision — " + html;
 }
+window.SupaChessRenderAccuracy = renderAccuracy;
 
 function updateEvalBar(bestLine) {
   if (!bestLine) return;
