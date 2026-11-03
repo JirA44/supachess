@@ -9,7 +9,7 @@ const document = {
   getElementById(id) { return id === "candidates-list" ? candidateList : { innerHTML: "", textContent: "", addEventListener() {}, classList: { add() {}, remove() {}, toggle() {} } }; },
   querySelectorAll() { return []; },
 };
-const context = vm.createContext({ document, esc: String, sanFr: String, reviewState: { grades: [] }, state: { replayIdx: 0 } });
+const context = vm.createContext({ window: {}, document, esc: String, sanFr: String, reviewState: { grades: [] }, state: { replayIdx: 0 } });
 vm.runInContext(fs.readFileSync(path.join(__dirname, "../js/review.js"), "utf8"), context);
 
 test("builds exercises for measurable blunders, mistakes, and inaccuracies in game order", async () => {
