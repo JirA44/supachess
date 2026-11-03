@@ -1030,7 +1030,7 @@ function renderProfileModal(data){
   if(!data){ box.innerHTML='<p style="color:#f66">'+profileText('profile_not_found','Profil introuvable')+'</p>'; return; }
   var name=escapeProfileText(data.displayName||profileText('profile_guest','Joueur')), email=escapeProfileText(data.email||'');
   var photo=escapeProfileText(data.photoURL||'https://ui-avatars.com/api/?name='+encodeURIComponent(data.displayName||'?'));
-  var html='<nav aria-label="Réglages rapides" class="profile-quick-settings" style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;padding:12px;border:1px solid rgba(79,172,254,.3);border-radius:10px"><strong style="width:100%">Réglages rapides</strong><a class="btn" href="index.html#appearance-panel">🎨 Apparence</a><a class="btn" href="index.html#analysis-preferences">📊 Analyse</a></nav><div style="text-align:center"><img src="'+photo+'" alt="" style="width:64px;height:64px;border-radius:50%"><h3 style="margin:8px 0 4px">'+name+'</h3><p style="opacity:.6;font-size:.85em">'+email+'</p></div>';
+  var html='<div style="text-align:center"><img src="'+photo+'" alt="" style="width:64px;height:64px;border-radius:50%"><h3 style="margin:8px 0 4px">'+name+'</h3><p style="opacity:.6;font-size:.85em">'+email+'</p></div>';
   html+='<div style="margin-top:16px;display:grid;gap:10px">';
   Object.keys(GAME_TYPES).forEach(function(k){
     var st=data.stats&&data.stats[k]||null;
@@ -1042,9 +1042,32 @@ function renderProfileModal(data){
   html+='</div>';
   if(auth&&auth.currentUser&&auth.currentUser.uid===data.uid)html+=renderLocalLearningPanel(data);
   box.innerHTML=html;
+  renderProfileSettings(box);
   bindLessonProgressRangeControls(box);
   bindProfilePerformanceRangeControls(box);
   if(auth&&auth.currentUser&&auth.currentUser.uid===data.uid&&window.SupaKeyboardShortcuts)window.SupaKeyboardShortcuts.renderSettings(box);
+}
+function renderProfileSettings(box){
+  if(!box||box.querySelector("#profile-settings"))return;
+  var section=document.createElement("section");
+  section.id="profile-settings";
+  section.setAttribute("aria-labelledby","profile-settings-title");
+  section.style.cssText="margin:16px 0;padding:14px;border:1px solid rgba(79,172,254,.3);border-radius:12px;background:rgba(255,255,255,.04)";
+  section.innerHTML='<h4 id="profile-settings-title" style="margin:0 0 12px">Apparence et analyse</h4><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px"><label>Échiquier<select data-profile-board-theme style="display:block;width:100%;padding:8px;margin-top:5px"><option value="green">Vert classique</option><option value="blue">Bleu</option><option value="wood">Bois</option><option value="slate">Ardoise</option><option value="purple">Violet</option><option value="gray">Gris</option><option value="sand">Sable</option><option value="midnight">Nuit</option></select></label><label>Pièces<select data-profile-piece-theme style="display:block;width:100%;padding:8px;margin-top:5px"><option value="classic">Classique</option><option value="bold">Renforcé</option><option value="outline">Contour</option><option value="flat">Épuré</option><option value="carved">Sculpté</option></select></label><label><input type="checkbox" data-profile-analysis="showAcpl"> Afficher l’ACPL</label><label><input type="checkbox" data-profile-analysis="detailedMetrics"> Métriques détaillées</label><label><input type="checkbox" data-profile-analysis="showArrows"> Flèches du moteur</label><label>Lignes Stockfish (Multi-PV)<input type="range" data-profile-multipv min="1" max="4" step="1" style="display:block;width:100%"><output data-profile-multipv-value></output></label></div><button type="button" class="btn" data-profile-appearance-reset style="margin-top:12px">Réinitialiser l’apparence</button><p data-profile-settings-status role="status" aria-live="polite" style="min-height:1.4em;margin:8px 0 0;opacity:.8"></p>';
+  var appearance=window.SupaAppearanceSettings,analysis=window.SupaAnalysisSettings;
+  var board=section.querySelector("[data-profile-board-theme]"),pieces=section.querySelector("[data-profile-piece-theme]");
+  var state=appearance&&appearance.get?appearance.get():{board:"green",pieces:"classic"};
+  board.value=state.board;pieces.value=state.pieces;
+  board.addEventListener("change",function(){appearance&&appearance.setBoard(board.value);});
+  pieces.addEventListener("change",function(){appearance&&appearance.setPieces(pieces.value);});
+  section.querySelector("[data-profile-appearance-reset]").addEventListener("click",function(){appearance&&appearance.reset();board.value="green";pieces.value="classic";});
+  var prefs=analysis&&analysis.get?analysis.get():{showAcpl:true,detailedMetrics:true,showArrows:true,multiPv:4};
+  section.querySelectorAll("[data-profile-analysis]").forEach(function(input){var key=input.dataset.profileAnalysis;input.checked=Boolean(prefs[key]);input.addEventListener("change",function(){analysis&&analysis.set(key,input.checked);});});
+  var multi=section.querySelector("[data-profile-multipv]"),out=section.querySelector("[data-profile-multipv-value]");
+  multi.value=String(prefs.multiPv);out.value=String(prefs.multiPv);
+  multi.addEventListener("input",function(){out.value=multi.value;analysis&&analysis.set("multiPv",multi.value);});
+  section.addEventListener("change",function(){var status=section.querySelector("[data-profile-settings-status]");if(status)status.textContent="Réglage enregistré sur cet appareil.";});
+  box.prepend(section);
 }
 function renderOwnProfileFallback(user){
   if(!user||!user.uid)return;
