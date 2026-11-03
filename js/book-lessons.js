@@ -3429,7 +3429,7 @@
     $("lesson-review-status").textContent = "";
     $("lesson-engine-analyze").hidden = stockfishCoachMode;
     $("lesson-engine-analyze").disabled = false;
-    $("lesson-engine-analyze").textContent = "Comparer tous les coups avec Stockfish";
+    $("lesson-engine-analyze").textContent = "Analyser la position avec Stockfish";
     $("lesson-engine-status").textContent = "";
     $("lesson-engine-lines").textContent = "";
     lessonIndex = index;
@@ -3849,6 +3849,7 @@
 
   window.SupaChessReanalyze = function () {
     if (!game || reviewSession || !$("lesson-engine-analysis") || $("lesson-engine-analysis").hidden) return;
+    engineCache.delete(game.fen());
     runEngineComparison(false);
   };
 
