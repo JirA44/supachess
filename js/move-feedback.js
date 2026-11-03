@@ -16,7 +16,7 @@ function moveGrade(deltaCp, brilliant = false, best = false, categoryOverride = 
   }
   category = categoryOverride || category;
   const grades = {
-    brilliant: { rating: 10, symbol: "!!", label: "Brillant", tone: "best" },
+    brilliant: { rating: 10, symbol: "!!", label: "Brillant", tone: "brilliant" },
     best: { rating: 10, symbol: "★", label: "Meilleur coup", tone: "best" },
     "very-good": { rating: 10, symbol: "!", label: "Très bon coup", tone: "best" },
     good: { rating: 8, symbol: "✓", label: "Bon coup", tone: "good" },
@@ -37,7 +37,9 @@ function moveGradeBadgeLabel(grade) {
 // Un sacrifice doit conserver l'évaluation et céder au moins une pièce
 // sur la réponse calculée. Le premier coup du classement ne suffit pas.
 function isBrilliantCandidate(fen, cand) {
-  if (!cand || cand.deltaCp >= 30 || !cand.line || cand.line.depth < 8 || cand.line.pv.length < 2) return false;
+  if (!cand) return false;
+  if (cand.supaBrilliant === true || cand.systemBrilliant === true) return true;
+  if (cand.deltaCp >= 30 || !cand.line || cand.line.depth < 8 || cand.line.pv.length < 2) return false;
   try {
     return pvMaterialDelta(fen, cand.line.pv, 2, new Chess(fen).turn()) <= -3;
   } catch (_e) { return false; }
@@ -50,11 +52,11 @@ function moveNumberFromFen(fen) {
 
 const moveFeedback = {
   cards: new Map(),
-  show({ san, color, moveNumber, square = null, deltaCp = null, brilliant = false, best = false, categoryOverride = null, mode = "played", token = null }) {
+  show({ san, color, moveNumber, square = null, deltaCp = null, brilliant = false, best = false, categoryOverride = null, mode = "played", token = null, source = null }) {
     const key = mode === "preview" ? "preview" : color;
     const grade = moveGrade(deltaCp, brilliant, best, categoryOverride);
     this.cards.delete(key);
-    this.cards.set(key, { san, color, moveNumber, square, deltaCp, mode, token, ...grade });
+    this.cards.set(key, { san, color, moveNumber, square, deltaCp, mode, token, source, ...grade });
     if (mode === "preview") this.syncBoardPreview();
     this.render();
   },
@@ -69,7 +71,10 @@ const moveFeedback = {
       evaluation: preview.evaluation,
       quality: preview.tone,
       category: preview.category,
-      title: `${preview.san} — coup testé`,
+      source: preview.source || null,
+      title: preview.category === "brilliant"
+        ? `Coup brillant repéré par ${preview.source || "le système Supa"} — ${preview.san}`
+        : `${preview.san} — coup testé`,
     } : null;
     boardUI.render(state.chess);
   },
@@ -90,9 +95,11 @@ const moveFeedback = {
       result.className = "move-bubble-result";
       result.textContent = `${card.symbol}  ${card.rating === null ? "…" : card.rating + "/10"} · ${card.label}`;
       const detail = document.createElement("p");
-      detail.textContent = card.rating === null ? "La note arrive après l’analyse." :
-        card.deltaCp >= 10000 ? "Mat forcé perdu ou concédé face au meilleur coup." :
-          `Perte face au meilleur coup : ${(Math.max(0, card.deltaCp) / 100).toFixed(2)} pion(s).`;
+      detail.textContent = card.category === "brilliant"
+        ? `Coup brillant repéré par ${card.source || "le système Supa"} · à examiner.`
+        : card.rating === null ? "La note arrive après l’analyse." :
+          card.deltaCp >= 10000 ? "Mat forcé perdu ou concédé face au meilleur coup." :
+            `Perte face au meilleur coup : ${(Math.max(0, card.deltaCp) / 100).toFixed(2)} pion(s).`;
       const close = document.createElement("button");
       close.type = "button";
       close.className = "move-bubble-close";
@@ -112,5 +119,5 @@ function previewCandidate(cand) {
     square: cand.uci.slice(2, 4), deltaCp: cand.deltaCp,
     evaluation: cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
       ? formatScore(cand.line, state.chess.turn() === "w") : "—",
-    brilliant: isBrilliantCandidate(state.chess.fen(), cand), best: cand.rank === 1, mode: "preview" });
+    brilliant: isBrilliantCandidate(state.chess.fen(), cand), best: cand.rank === 1, mode: "preview", source: cand.brilliantSource || (cand.supaBrilliant ? "SupaEngine" : null) });
 }
