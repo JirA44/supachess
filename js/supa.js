@@ -50,7 +50,15 @@ async function supaEnrichCoach(fen, playedSan, candidates) {
     return; // serveur absent / timeout → on garde les heuristiques
   }
   setSupaConnection(true, resp && resp.source);
-  if (!resp || !resp.comments) return;
+  if (!resp) return;
+  const brilliantReports = resp.brilliantCandidates || resp.brilliant_candidates || [];
+  if (Array.isArray(brilliantReports) && typeof window.SupaChessReportBrilliantCandidate === "function") {
+    for (const report of brilliantReports) {
+      const item = typeof report === "string" ? { uci: report } : report;
+      if (item && typeof item === "object") window.SupaChessReportBrilliantCandidate({ ...item, fen, source: item.source || "SupaEngine" });
+    }
+  }
+  if (!resp.comments) return;
   // Le panneau a peut-être changé de position entre temps
   if (supaState.lastFen !== fen) return;
   const panel = document.getElementById("coach-ranking");
