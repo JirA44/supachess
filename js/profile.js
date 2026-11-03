@@ -1048,7 +1048,7 @@ function renderProfileModal(data){
   if(auth&&auth.currentUser&&auth.currentUser.uid===data.uid&&window.SupaKeyboardShortcuts)window.SupaKeyboardShortcuts.renderSettings(box);
 }
 function renderProfileSettings(box){
-  if(!box||box.querySelector("#profile-settings"))return;
+  if(!box||typeof box.querySelector!=="function"||box.querySelector("#profile-settings"))return;
   var section=document.createElement("section");
   section.id="profile-settings";
   section.setAttribute("aria-labelledby","profile-settings-title");
