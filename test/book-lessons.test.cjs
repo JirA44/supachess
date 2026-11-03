@@ -35,10 +35,10 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 225, "the academy contains 225 guided lessons after the precision routine");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 228, "the academy contains 228 guided lessons after the trap-prevention block");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "reinforcement").length, 71, "71 PGN and application lessons reinforce the methods");
-  assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 114, "the academy retains 114 opponent-reply drills");
-  assert.equal(LESSONS.length, 339, "guided lessons and anticipation drills are separate catalog entries");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 116, "the academy retains 116 opponent-reply drills");
+  assert.equal(LESSONS.length, 344, "guided lessons and anticipation drills are separate catalog entries");
   assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
 });
 
@@ -161,6 +161,25 @@ test("each player and Stockfish path has a clearly attributed original starter l
   assert.deepEqual(edwardLessons.map((entry) => entry.level), ["Débutant", "Intermédiaire", "Avancé"]);
   assert.ok(edwardLessons.every((entry) => entry.author === "Edward Lasker" && entry.book === "Chess Strategy"));
   assert.ok(edwardLessons.every((entry) => entry.url === "https://www.gutenberg.org/ebooks/5614"));
+});
+
+test("trap-prevention lessons progress from avoiding a pin to punishing Legal's mate trap", () => {
+  const traps = LESSONS.filter((lesson) => /piège/.test(lesson.title.toLocaleLowerCase("fr")) && lesson.kind !== "anticipation");
+  assert.deepEqual(traps.map((lesson) => lesson.level), ["Débutant", "Intermédiaire", "Avancé"]);
+  for (const lesson of traps) {
+    assert.equal(lesson.program, "Tal · tactique et sacrifices à calculer");
+    assert.ok(lesson.category.includes("Tactique · prévention des erreurs"));
+    assert.ok(lessonCompetencyKeys(lesson).includes("tactics"));
+    assert.ok(lessonCompetencyKeys(lesson).includes("precision"));
+    assert.ok(methodPathLessonIndices(lesson.program).includes(LESSONS.indexOf(lesson)));
+  }
+  const mate = LESSONS.find((lesson) => lesson.id === "curriculum-trap-legal-mate-punish");
+  const game = setupGame(mate, Chess);
+  for (const action of mate.sequence) {
+    const move = game.move({ from: action.uci.slice(0, 2), to: action.uci.slice(2, 4), promotion: action.uci.slice(4) || "q" });
+    assert.ok(move, "the trap refutation line must be legal");
+  }
+  assert.equal(game.in_checkmate(), true, "the trap refutation should end in mate");
 });
 
 test("Stockfish process exercises teach mate search, principal variations, and score interpretation", () => {
