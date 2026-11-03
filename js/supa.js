@@ -54,7 +54,9 @@ async function supaEnrichCoach(fen, playedSan, candidates) {
   const brilliantReports = resp.brilliantCandidates || resp.brilliant_candidates || [];
   if (Array.isArray(brilliantReports) && typeof window.SupaChessReportBrilliantCandidate === "function") {
     for (const report of brilliantReports) {
-      const item = typeof report === "string" ? { uci: report } : report;
+      const item = typeof report === "string"
+        ? (/^[a-h][1-8][a-h][1-8][qrbn]?$/i.test(report) ? { uci: report } : { san: report })
+        : report;
       if (item && typeof item === "object") window.SupaChessReportBrilliantCandidate({ ...item, fen, source: item.source || "SupaEngine" });
     }
   }
