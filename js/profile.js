@@ -1065,7 +1065,8 @@ function renderProfileSettings(box){
   section.querySelectorAll("[data-profile-analysis]").forEach(function(input){var key=input.dataset.profileAnalysis;input.checked=Boolean(prefs[key]);input.addEventListener("change",function(){analysis&&analysis.set(key,input.checked);});});
   var multi=section.querySelector("[data-profile-multipv]"),out=section.querySelector("[data-profile-multipv-value]");
   multi.value=String(prefs.multiPv);out.value=String(prefs.multiPv);
-  multi.addEventListener("input",function(){out.value=multi.value;analysis&&analysis.set("multiPv",multi.value);});
+  multi.addEventListener("input",function(){out.value=multi.value;});
+  multi.addEventListener("change",function(){analysis&&analysis.set("multiPv",multi.value);});
   section.addEventListener("change",function(){var status=section.querySelector("[data-profile-settings-status]");if(status)status.textContent="Réglage enregistré sur cet appareil.";});
   box.prepend(section);
 }
