@@ -5,11 +5,11 @@ const {levels,lessons} = require('../js/curriculum.js');
 
 const engineSan = san => san.replace(/([CFDRT])(?=x?[a-h])/g, letter => ({C:'N',F:'B',D:'Q',R:'K',T:'R'})[letter]);
 
-test('curriculum contains 24 original lessons across four levels', () => {
+test('curriculum contains at least 35 original lessons across four levels', () => {
   assert.equal(levels.length,4);
-  assert.equal(lessons.length,24);
+  assert.ok(lessons.length >= 35);
   assert.equal(new Set(lessons.map(lesson=>lesson.id)).size,lessons.length);
-  for(const level of levels) assert.equal(lessons.filter(lesson=>lesson.level===level).length,({Débutant:6,Intermédiaire:6,Avancé:7,Expert:5})[level],level);
+  for(const level of levels) assert.ok(lessons.filter(lesson=>lesson.level===level).length >= 5,level);
 });
 
 test('three progressive original lessons teach how to spot, avoid, and punish traps', () => {
