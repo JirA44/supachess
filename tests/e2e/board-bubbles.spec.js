@@ -271,6 +271,7 @@ test('SupaEngine brilliant signal adds a violet marker for a legal move outside 
   await page.waitForFunction(() => document.body.dataset.engineReady === '1' && state.phase === 'userTurn');
   const marked = await page.evaluate(() => {
     const fen = state.chess.fen();
+    boardUI.showDots = true;
     const candidate = state.chess.moves({ verbose: true })
       .find(move => !state.candidates.some(item => item.uci === move.from + move.to + (move.promotion || '')));
     const uci = candidate.from + candidate.to + (candidate.promotion || '');
