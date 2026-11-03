@@ -8,6 +8,8 @@ const state = {
   engine: null,
   userColor: "w",
   candidates: [],        // [{rank, uci, san, line, deltaCp, args}]
+  candidateFen: null,
+  systemBrilliantCandidates: [],
   phase: "init",         // init | analyzing | userTurn | coach | engineThinking | gameover
   abandoned: false,
   stopped: false,
@@ -421,10 +423,12 @@ async function startTurn() {
 async function analyzeForUser() {
   state.phase = "analyzing";
   const gen = ++state.gen;
-  setStatus("Analyse de la position… (MultiPV)");
-  boardUI.dots = [];
-  renderBoard();
   const fen = state.chess.fen();
+  state.candidateFen = null;
+  state.systemBrilliantCandidates = state.systemBrilliantCandidates.filter((candidate) => candidate.fen === fen);
+  setStatus("Analyse de la position… (MultiPV)");
+  boardUI.dots = candidateDotsForPosition(fen);
+  renderBoard();
   const legalMoveCount = state.chess.moves({ verbose: true }).length;
   setStatus(`Analyse des ${legalMoveCount} coups possibles…`);
   const requestedMultiPv = window.SupaAnalysisSettings?.getMultiPv() || 4;
@@ -453,8 +457,74 @@ async function analyzeForUser() {
   renderAll();
 }
 
+function candidateDotsForPosition(fen) {
+  const dotsBySquare = new Map();
+  const add = (square, move) => {
+    if (!dotsBySquare.has(square)) dotsBySquare.set(square, []);
+    dotsBySquare.get(square).push(move);
+  };
+  const reports = state.systemBrilliantCandidates.filter((candidate) => candidate.fen === fen);
+  const reportedByUci = new Map(reports.map((candidate) => [candidate.uci, candidate]));
+  const included = new Set();
+  if (state.candidateFen === fen) {
+    for (const cand of state.candidates) {
+      const report = reportedByUci.get(cand.uci);
+      const brilliant = Boolean(report) || isBrilliantCandidate(fen, cand);
+      const grade = moveGrade(cand.deltaCp, brilliant, cand.rank === 1);
+      const evaluation = cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
+        ? formatScore(cand.line, state.chess.turn() === "w") : "—";
+      const source = report ? report.source : brilliant ? "SupaChess" : null;
+      add(cand.uci.slice(2, 4), {
+        san: cand.san, label: moveGradeBadgeLabel(grade), evaluation, grade, rank: cand.rank, source,
+        title: brilliant ? `Coup brillant repéré par ${source || "le système Supa"} · ${cand.san} · à examiner`
+          : `${cand.san}: ${moveGradeBadgeLabel(grade)} · ${evaluation}`
+      });
+      included.add(cand.uci);
+    }
+  }
+  for (const report of reports) {
+    if (included.has(report.uci)) continue;
+    const grade = moveGrade(0, true, false);
+    add(report.uci.slice(2, 4), {
+      san: report.san, label: "!!", evaluation: "—", grade, source: report.source,
+      title: `Coup brillant repéré par ${report.source} · ${report.san} · à examiner`
+    });
+  }
+  return candidateDotsFromGroups(dotsBySquare);
+}
+
+/* API d’intégration : un moteur Supa peut signaler un coup légal, même absent du MultiPV Stockfish. */
+function reportSupaBrilliantCandidate(report) {
+  if (!report || typeof report !== "object") return false;
+  const fen = typeof report.fen === "string" ? report.fen : state.chess.fen();
+  if (fen !== state.chess.fen()) return false;
+  const san = typeof report.san === "string" ? report.san.trim() : "";
+  const uci = typeof report.uci === "string" ? report.uci.trim().toLowerCase() : "";
+  const legalMoves = state.chess.moves({ verbose: true });
+  const move = legalMoves.find((candidate) =>
+    (uci && candidate.from + candidate.to + (candidate.promotion || "") === uci) ||
+    (!uci && san && candidate.san === san)
+  );
+  if (!move) return false;
+  const canonicalUci = move.from + move.to + (move.promotion || "");
+  const source = typeof report.source === "string" && report.source.trim() ? report.source.trim() : "SupaEngine";
+  const existing = state.systemBrilliantCandidates.find((candidate) => candidate.fen === fen && candidate.uci === canonicalUci);
+  const marker = { fen, uci: canonicalUci, san: move.san, source };
+  if (existing) Object.assign(existing, marker);
+  else state.systemBrilliantCandidates.push(marker);
+  for (const candidate of state.candidates) {
+    if (candidate.uci === canonicalUci) { candidate.supaBrilliant = true; candidate.brilliantSource = source; }
+  }
+  boardUI.dots = candidateDotsForPosition(fen);
+  boardUI.render(state.chess);
+  return true;
+}
+window.SupaChessReportBrilliantCandidate = reportSupaBrilliantCandidate;
+window.addEventListener("supa:brilliant-candidate", (event) => reportSupaBrilliantCandidate(event.detail));
+
 function buildCandidates(lines, fen) {
-  if (!lines.length) { state.candidates = []; return; }
+  state.candidateFen = fen;
+  if (!lines.length) { state.candidates = []; boardUI.dots = candidateDotsForPosition(fen); return; }
   const best = lines[0];
   const bestVal = scoreValue(best);
   state.candidates = lines.map((line, i) => {
@@ -462,24 +532,15 @@ function buildCandidates(lines, fen) {
     const args = buildArguments(fen, line, best, state.fenHistory);
     const reply = buildReplyInfo(fen, line.pv);
     const bd = computeBreakdown(fen, line);
-    return { rank: i + 1, uci: line.pv[0], san: args.san, line, deltaCp, args, reply, bd };
+    const uci = line.pv[0];
+    const systemReport = state.systemBrilliantCandidates.find((candidate) => candidate.fen === fen && candidate.uci === uci);
+    return { rank: i + 1, uci, san: args.san, line, deltaCp, args, reply, bd, supaBrilliant: Boolean(systemReport), brilliantSource: systemReport ? systemReport.source : null };
   });
   clExpanded.clear();
-  // Comparaison de chaque candidat avec le suivant du classement
   for (let i = 0; i < state.candidates.length; i++) {
     state.candidates[i].cmp = buildComparison(state.candidates[i], state.candidates[i + 1] || null);
   }
-  const dotsBySquare = new Map();
-  for (const cand of state.candidates) {
-    const square = cand.uci.slice(2, 4);
-    const grade = moveGrade(cand.deltaCp, isBrilliantCandidate(fen, cand), cand.rank === 1);
-    const evaluation = cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
-      ? formatScore(cand.line, state.chess.turn() === "w") : "—";
-    const moveBadge = { san: cand.san, label: moveGradeBadgeLabel(grade), evaluation, grade, rank: cand.rank };
-    if (!dotsBySquare.has(square)) dotsBySquare.set(square, []);
-    dotsBySquare.get(square).push(moveBadge);
-  }
-  boardUI.dots = candidateDotsFromGroups(dotsBySquare);
+  boardUI.dots = candidateDotsForPosition(fen);
 }
 
 /* ── Décomposition heuristique des "micro-points" d'un candidat ──
@@ -653,7 +714,7 @@ function finishEngineFeedback(pending, replyLine) {
   recordMoveGrade(pending.ply, pending.color, moveGradeCategory(deltaCp, brilliant, pending.uci === pending.beforeBestUci), { lossCp: deltaCp });
   const grade = moveGrade(deltaCp, brilliant, pending.uci === pending.beforeBestUci);
   moveFeedback.show({ san: pending.san, color: pending.color, moveNumber: pending.moveNumber, square: pending.square,
-    deltaCp, brilliant, best: pending.uci === pending.beforeBestUci, token: pending.token });
+    deltaCp, brilliant, best: pending.uci === pending.beforeBestUci, token: pending.token, source: pending.cand && pending.cand.brilliantSource || (pending.cand && pending.cand.supaBrilliant ? "SupaEngine" : null) });
   if (boardUI.lastMove && boardUI.lastMove.to === pending.square) {
     boardUI.lastMove.grade = grade;
     boardUI.lastMove.evaluation = replyLine && (replyLine.scoreCp !== null || replyLine.mate !== null)
@@ -893,7 +954,7 @@ function commitUserMove(moveObj, cand, forced) {
     { noTrainingAids: typeof gamesTrainingAidsActive === "function" && !gamesTrainingAidsActive() && !forced, lossCp: cand && Number.isFinite(cand.deltaCp) ? cand.deltaCp : null });
   if (forced && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
   moveFeedback.show({ san: mv.san, color: mv.color, moveNumber: moveNumberFromFen(fenBefore), square: mv.to,
-    deltaCp: cand ? cand.deltaCp : null, brilliant, best: cand?.rank === 1 });
+    deltaCp: cand ? cand.deltaCp : null, brilliant, best: cand?.rank === 1, source: cand?.brilliantSource || (cand?.supaBrilliant ? "SupaEngine" : null) });
   const evaluation = cand && cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
     ? formatScore(cand.line, userMoveColor === "w") : "—";
   boardUI.lastMove = { from: mv.from, to: mv.to, san: mv.san, grade, evaluation };
@@ -969,7 +1030,7 @@ function renderBoard() {
   boardUI.render(state.chess);
   const legend = $("engine-arrow-legend");
   if (legend) {
-    const colors = ["#16a36a", "#2581d8", "#e19b24", "#a36bd1"];
+    const colors = ["#16a36a", "#2581d8", "#e19b24", "#e879f9"];
     legend.hidden = !showArrows || !candidates.length;
     legend.replaceChildren();
     candidates.forEach((candidate, index) => {
