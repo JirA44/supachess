@@ -12,7 +12,7 @@ const document = {
   },
   querySelectorAll() { return []; },
 };
-const context = vm.createContext({ document, esc: String, sanFr: String, reviewState: { grades: [] }, state: { replayIdx: 0 } });
+const context = vm.createContext({ window: {}, document, esc: String, sanFr: String, reviewState: { grades: [] }, state: { replayIdx: 0 } });
 const source = fs.readFileSync(path.join(__dirname, "../js/review.js"), "utf8");
 vm.runInContext(source, context);
 
