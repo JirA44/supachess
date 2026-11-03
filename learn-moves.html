@@ -27,7 +27,7 @@ body{min-height:100vh}.learn{max-width:1000px;margin:0 auto;padding:24px}.learn 
 </div>
 <section class="lesson"><h2>Méthode SupaChess : calculer sans se perdre</h2><ol><li><strong>Menace adverse</strong> — que veut faire l'adversaire ?</li><li><strong>Coups forcés</strong> — échecs, captures, menaces directes.</li><li><strong>2–3 candidats</strong> — évite d'explorer tous les coups.</li><li><strong>Meilleure réponse adverse</strong> — suppose une défense forte.</li><li><strong>Position finale</strong> — matériel, roi, activité, tactiques.</li><li><strong>Anti-gaffe</strong> — dernier contrôle avant de jouer.</li></ol><p class="muted">Exemple d'objectif : visualiser 5 demi-coups correctement avant d'augmenter progressivement la profondeur.</p></section>
 </main>
-<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.12480</footer>
+<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.12485</footer>
 <script>
 document.querySelectorAll('[data-q]').forEach(b=>b.addEventListener('click',()=>{const out=document.getElementById(b.dataset.q);const ok=b.dataset.a==='good';out.className='answer '+(ok?'ok':'no');out.textContent=ok?'✓ Correct.':'Pas encore — recompte chaque mouvement individuel.';}));
 </script>
