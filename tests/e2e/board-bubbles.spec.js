@@ -226,7 +226,8 @@ test('move grade dots use distinct colors with a violet brilliant indicator', as
       summaryColors: categories.map((category) => getComputedStyle(
         document.querySelector('.move-grade-count-row.grade-' + category + ' .move-grade-count-dot')
       ).backgroundColor),
-      brilliantCategory: moveGradeCategory(20, true, false)
+      brilliantCategory: moveGradeCategory(20, true, false),
+      brilliantTone: moveGrade(5, true).tone
     };
   });
 
@@ -243,6 +244,7 @@ test('move grade dots use distinct colors with a violet brilliant indicator', as
   expect(new Set(result.listColors).size).toBe(8);
   expect(result.listColors).toEqual(result.candidateColors);
   expect(result.brilliantCategory).toBe('brilliant');
+  expect(result.brilliantTone).toBe('brilliant');
 });
 
 
@@ -278,10 +280,12 @@ test('SupaEngine brilliant signal adds a violet marker for a legal move outside 
     const accepted = window.SupaChessReportBrilliantCandidate({ fen, uci, source: 'SupaEngine' });
     const dot = [...document.querySelectorAll('.cdot')].find(item =>
       item.getAttribute('aria-label').includes('SupaEngine') && item.getAttribute('aria-label').includes(candidate.san));
-    return { accepted, san: candidate.san, dotClass: dot && dot.className, label: dot && dot.getAttribute('aria-label') };
+    return { accepted, san: candidate.san, dotClass: dot && dot.className,
+      color: dot && getComputedStyle(dot).backgroundColor, label: dot && dot.getAttribute('aria-label') };
   });
   expect(marked.accepted).toBe(true);
   expect(marked.dotClass).toContain('grade-brilliant');
+  expect(marked.color).toBe('rgb(192, 132, 252)');
   expect(marked.label).toContain('SupaEngine');
   expect(marked.label).toContain('Coup brillant repéré');
 });
