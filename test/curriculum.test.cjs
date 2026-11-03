@@ -5,11 +5,18 @@ const {levels,lessons} = require('../js/curriculum.js');
 
 const engineSan = san => san.replace(/([CFDRT])(?=x?[a-h])/g, letter => ({C:'N',F:'B',D:'Q',R:'K',T:'R'})[letter]);
 
-test('curriculum contains 21 original lessons across four levels', () => {
+test('curriculum contains 24 original lessons across four levels', () => {
   assert.equal(levels.length,4);
-  assert.equal(lessons.length,21);
+  assert.equal(lessons.length,24);
   assert.equal(new Set(lessons.map(lesson=>lesson.id)).size,lessons.length);
-  for(const level of levels) assert.equal(lessons.filter(lesson=>lesson.level===level).length,({Débutant:5,Intermédiaire:5,Avancé:6,Expert:5})[level],level);
+  for(const level of levels) assert.equal(lessons.filter(lesson=>lesson.level===level).length,({Débutant:6,Intermédiaire:6,Avancé:7,Expert:5})[level],level);
+});
+
+test('three progressive original lessons teach how to spot, avoid, and punish traps', () => {
+  const traps = lessons.filter(lesson => /piège/.test(lesson.title.toLocaleLowerCase('fr')));
+  assert.deepEqual(traps.map(lesson => lesson.level), ['Débutant','Intermédiaire','Avancé']);
+  assert.ok(traps.every(lesson => /Tactique/.test(lesson.theme) && /prévention des erreurs/.test(lesson.theme)));
+  assert.ok(traps.every(lesson => lesson.pitfall && lesson.notes.length === lesson.line.length));
 });
 
 test('every exercise position is a legal FEN and every answer is a legal move', () => {
