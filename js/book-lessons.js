@@ -3813,7 +3813,9 @@
   function renderEngineChoices(result, fen) {
     const list = $("lesson-engine-lines");
     list.textContent = "";
-    result.choices.forEach((choice) => {
+    const settings = window.SupaAnalysisSettings;
+    const maxLines = settings ? settings.getMultiPv() : result.choices.length;
+    result.choices.slice(0, maxLines).forEach((choice) => {
       const item = document.createElement("li");
       item.className = "lesson-engine-line" + (choice.rank === 1 ? " best" : "");
       const heading = document.createElement("div");
@@ -3841,9 +3843,14 @@
       list.appendChild(item);
     });
     const depth = result.choices.reduce((max, choice) => Math.max(max, choice.depth), 0);
-    $("lesson-engine-status").textContent = "Stockfish a évalué " + result.choices.length + " ligne(s) sur " + result.legalCount + " coup(s) légal(aux), profondeur maximale " + depth + ". L’évaluation est côté au trait; elle dépend de la recherche et ne constitue pas seule une explication humaine.";
+    $("lesson-engine-status").textContent = "Stockfish a évalué " + result.choices.length + " ligne(s); " + Math.min(result.choices.length, maxLines) + " affichée(s) selon le réglage Multi‑PV, sur " + result.legalCount + " coups légaux. Profondeur maximale " + depth + ". L’évaluation dépend de la recherche et ne constitue pas seule une explication humaine.";
     $("lesson-engine-analysis").hidden = false;
   }
+
+  window.SupaChessReanalyze = function () {
+    if (!game || reviewSession || !$("lesson-engine-analysis") || $("lesson-engine-analysis").hidden) return;
+    runEngineComparison(false);
+  };
 
   async function runEngineComparison(automatic) {
     if (!game || reviewSession) return;
@@ -3862,7 +3869,8 @@
         await lessonEngine.ready;
         if (token !== analysisToken || !game || game.fen() !== fen) return;
         const legalCount = game.moves({ verbose: true }).length;
-        const response = await lessonEngine.analyze({ fen: fen, multipv: Math.max(1, legalCount), movetime: 1800, elo: 0 });
+        const preferredLines = window.SupaAnalysisSettings ? window.SupaAnalysisSettings.getMultiPv() : legalCount;
+        const response = await lessonEngine.analyze({ fen: fen, multipv: Math.min(legalCount, preferredLines), movetime: 1800, elo: 0 });
         result = buildEngineChoices(fen, response.lines, Chess);
         engineCache.set(fen, result);
       }
