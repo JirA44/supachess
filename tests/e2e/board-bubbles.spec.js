@@ -188,7 +188,7 @@ test("selecting a piece shows independent hot and cold move points and a chosen 
 });
 
 
-test('move grade dots use eight distinct colors and brilliant is sky blue', async ({ page }) => {
+test('move grade dots use distinct colors with a violet brilliant indicator', async ({ page }) => {
   await preparePracticeMode(page);
   await page.goto('/index.html');
   const result = await page.evaluate(() => {
@@ -226,7 +226,8 @@ test('move grade dots use eight distinct colors and brilliant is sky blue', asyn
       summaryColors: categories.map((category) => getComputedStyle(
         document.querySelector('.move-grade-count-row.grade-' + category + ' .move-grade-count-dot')
       ).backgroundColor),
-      brilliantCategory: moveGradeCategory(20, true, false)
+      brilliantCategory: moveGradeCategory(20, true, false),
+      brilliantTone: moveGrade(5, true).tone
     };
   });
 
@@ -243,4 +244,48 @@ test('move grade dots use eight distinct colors and brilliant is sky blue', asyn
   expect(new Set(result.listColors).size).toBe(8);
   expect(result.listColors).toEqual(result.candidateColors);
   expect(result.brilliantCategory).toBe('brilliant');
+  expect(result.brilliantTone).toBe('brilliant');
+});
+
+
+test('rank-four engine arrow is fuchsia and legend matches', async ({ page }) => {
+  await preparePracticeMode(page);
+  await page.goto('/index.html');
+  await page.waitForFunction(() => document.body.dataset.engineReady === '1' && state.phase === 'userTurn');
+  const result = await page.evaluate(() => {
+    boardUI.engineArrows = ['e2e4', 'd2d4', 'g1f3', 'b1c3'];
+    boardUI.showEngineArrows = true;
+    boardUI.render(state.chess);
+    renderBoard();
+    return {
+      arrows: [...document.querySelectorAll('.engine-arrow-overlay line')].map(line => line.getAttribute('stroke')),
+      legend: [...document.querySelectorAll('.engine-arrow-legend-color')].map(item => getComputedStyle(item).backgroundColor)
+    };
+  });
+  expect(result.arrows).toHaveLength(4);
+  expect(result.arrows[3]).toBe('#e879f9');
+  expect(result.legend[3]).toBe('rgb(232, 121, 249)');
+});
+
+test('SupaEngine brilliant signal adds a violet marker for a legal move outside Stockfish MultiPV', async ({ page }) => {
+  await preparePracticeMode(page);
+  await page.goto('/index.html');
+  await page.waitForFunction(() => document.body.dataset.engineReady === '1' && state.phase === 'userTurn');
+  const marked = await page.evaluate(() => {
+    const fen = state.chess.fen();
+    boardUI.showDots = true;
+    const candidate = state.chess.moves({ verbose: true })
+      .find(move => !state.candidates.some(item => item.uci === move.from + move.to + (move.promotion || '')));
+    const uci = candidate.from + candidate.to + (candidate.promotion || '');
+    const accepted = window.SupaChessReportBrilliantCandidate({ fen, uci, source: 'SupaEngine' });
+    const dot = [...document.querySelectorAll('.cdot')].find(item =>
+      item.getAttribute('aria-label').includes('SupaEngine') && item.getAttribute('aria-label').includes(candidate.san));
+    return { accepted, san: candidate.san, dotClass: dot && dot.className,
+      color: dot && getComputedStyle(dot).backgroundColor, label: dot && dot.getAttribute('aria-label') };
+  });
+  expect(marked.accepted).toBe(true);
+  expect(marked.dotClass).toContain('grade-brilliant');
+  expect(marked.color).toBe('rgb(192, 132, 252)');
+  expect(marked.label).toContain('SupaEngine');
+  expect(marked.label).toContain('Coup brillant repéré');
 });

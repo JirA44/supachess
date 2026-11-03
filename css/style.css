@@ -225,7 +225,7 @@ body {
 .played-move-bubble.tone-bad { background: #fa666b; color: #fff; }
 .played-move-bubble.tone-pending { background: #a6adbf; }
 
-/* Stable color for every engine grade; brilliant is sky blue. */
+/* Brilliant candidate indicators use violet, distinct from the fuchsia rank-4 arrow. */
 .grade-brilliant { --grade-dot-color: #c084fc; --grade-dot-text: #3b0764; }
 .grade-best { --grade-dot-color: #38bdf8; --grade-dot-text: #082f49; }
 .grade-very-good { --grade-dot-color: #22c55e; --grade-dot-text: #052e16; }
@@ -283,6 +283,8 @@ body {
 .move-bubble-close { position: absolute; top: 4px; right: 4px; width: 32px; height: 32px;
   border: 0; background: transparent; color: var(--text); font-size: 1.4rem; cursor: pointer; }
 .tone-best { --feedback-color: #62e1dc; }
+.tone-brilliant { --feedback-color: #c084fc; background: #c084fc; color: #3b0764; }
+.move-bubble.tone-brilliant { background: var(--panel); color: var(--text); }
 .tone-good { --feedback-color: var(--green); }
 .tone-mid { --feedback-color: var(--yellow); }
 .tone-bad { --feedback-color: var(--red); }
