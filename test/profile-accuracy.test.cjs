@@ -85,7 +85,7 @@ test("summary keeps missing periods unavailable and renders French profile indic
   assert.equal(summary.week.delta, null);
   assert.equal(summary.month.delta, null);
   const html = window.SupaProfiles.renderLocalLearningPanel({});
-  assert.match(html, /Précision moyenne du joueur/);
+  assert.match(html, /Précision moyenne/);
   assert.match(html, /Toutes les parties/);
   assert.match(html, /7 derniers jours/);
   assert.match(html, /30 derniers jours/);
@@ -107,7 +107,7 @@ test("renderProfileModal replaces the loading dialog before filling profile cont
   assert.equal(loadingOverlay.removed, true);
   assert.ok(currentOverlay.hasProfileContent);
   assert.match(profileContent.innerHTML, /Joueur test/);
-  assert.match(profileContent.innerHTML, /Précision moyenne du joueur/);
+  assert.match(profileContent.innerHTML, /Précision moyenne/);
   assert.match(profileContent.innerHTML, /Mon apprentissage/);
   assert.match(profileContent.innerHTML, /problèmes résolus/);
   assert.doesNotMatch(profileContent.innerHTML, /My learning|Puzzles solved|Resume my exercises/);
@@ -168,7 +168,7 @@ test("profile reports move-type percentages averaged equally across completed ga
   values.delete("supachess-level-diagnostic");
 
   const html = window.SupaProfiles.renderLocalLearningPanel({});
-  assert.match(html, /Pourcentage moyen des types de coups par partie/);
+  assert.match(html, /Moyenne calculée sur 2 parties terminées avec coups classés/);
   assert.match(html, /Moyenne calculée sur 2 parties terminées/);
   assert.match(html, /Coups brillants/);
   assert.match(html, /30,0 %/);
