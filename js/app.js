@@ -498,8 +498,10 @@ function reportSupaBrilliantCandidate(report) {
   if (!report || typeof report !== "object") return false;
   const fen = typeof report.fen === "string" ? report.fen : state.chess.fen();
   if (fen !== state.chess.fen()) return false;
-  const san = typeof report.san === "string" ? report.san.trim() : "";
-  const uci = typeof report.uci === "string" ? report.uci.trim().toLowerCase() : "";
+  const rawMove = typeof report.move === "string" ? report.move.trim() : "";
+  const suppliedUci = typeof report.uci === "string" ? report.uci.trim() : "";
+  const uci = (suppliedUci || (/^[a-h][1-8][a-h][1-8][qrbn]?$/i.test(rawMove) ? rawMove : "")).toLowerCase();
+  const san = typeof report.san === "string" ? report.san.trim() : (!uci ? rawMove : "");
   const legalMoves = state.chess.moves({ verbose: true });
   const move = legalMoves.find((candidate) =>
     (uci && candidate.from + candidate.to + (candidate.promotion || "") === uci) ||
