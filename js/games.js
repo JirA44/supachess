@@ -22,7 +22,7 @@ function gamesTrainingAidsActive() {
   const ui = typeof boardUI === "object" ? boardUI : {};
   const arrows = window.SupaAnalysisSettings && typeof window.SupaAnalysisSettings.showArrows === "function"
     ? window.SupaAnalysisSettings.showArrows() : null;
-  return ui.showDots === true || ui.showMoveDots === true || arrows === true;
+  return ui.showDots === true || ui.showMoveDots === true || arrows === true || window.SupaChessEvalBarVisible === true;
 }
 
 function gamesMarkTrainingAidUsed() {
