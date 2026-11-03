@@ -234,6 +234,7 @@ if (evalBarToggle) evalBarToggle.addEventListener("click", () => {
   syncEvalBarToggle();
   if (visible && typeof window.gamesMarkTrainingAidUsed === "function") window.gamesMarkTrainingAidUsed();
 });
+setTimeout(syncEvalBarToggle, 0);
 function applyLevelDiagnosticLock() {
   const diagnostic = readLevelDiagnostic();
   const active = Boolean(diagnostic && diagnostic.active) && !correctionExerciseModeActive;
