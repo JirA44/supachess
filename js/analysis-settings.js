@@ -33,11 +33,25 @@
     if (slider) slider.value = String(preferences.multiPv);
     if (output) output.textContent = String(preferences.multiPv);
   }
+  function update(key, value) {
+    if (key === "multiPv") preferences.multiPv = Math.max(1, Math.min(4, Number(value) || defaults.multiPv));
+    else if (Object.prototype.hasOwnProperty.call(defaults, key) && key !== "multiPv") preferences[key] = Boolean(value);
+    else return;
+    save(); render();
+    window.dispatchEvent(new CustomEvent("supachess-analysis-preferences-change", { detail: { ...preferences } }));
+    if (key === "showArrows") {
+      if (preferences.showArrows) window.gamesMarkTrainingAidUsed?.();
+      window.SupaChessRenderBoard?.();
+    }
+    if (key === "multiPv") window.SupaChessReanalyze?.();
+  }
   const api = {
+    get: () => ({ ...preferences }),
     getMultiPv: () => preferences.multiPv,
     showArrows: () => preferences.showArrows,
     showAcpl: () => preferences.showAcpl,
-    detailedMetrics: () => preferences.detailedMetrics
+    detailedMetrics: () => preferences.detailedMetrics,
+    set: update
   };
   window.SupaAnalysisSettings = api;
   document.getElementById("analysis-preferences")?.addEventListener("click", event => {
