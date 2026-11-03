@@ -209,6 +209,31 @@ function syncMoveDotsButton() {
   button.textContent = locked ? "Points chauds/froids : bloqués pendant le diagnostic" : "Points chauds/froids : " + (boardUI.showMoveDots ? "ON" : "OFF");
   button.setAttribute("aria-pressed", String(!locked && boardUI.showMoveDots));
 }
+const EVALBAR_PREFERENCE_KEY = "supachess-evalbar-visible-v1";
+function syncEvalBarToggle() {
+  const button = $("btn-evalbar-toggle");
+  const bar = document.querySelector(".board-row .evalbar") || $(".evalbar");
+  const label = $("evalbar-label");
+  if (!bar || !button) return;
+  let preferred = true;
+  try { preferred = localStorage.getItem(EVALBAR_PREFERENCE_KEY) !== "false"; } catch (_) {}
+  const locked = typeof isDiagnosticControlLockActive === "function" && isDiagnosticControlLockActive();
+  const visible = preferred && !locked;
+  bar.hidden = !visible;
+  if (label) label.hidden = !visible;
+  button.disabled = locked;
+  button.setAttribute("aria-pressed", String(visible));
+  button.textContent = locked ? "Barre d’évaluation : désactivée pendant le diagnostic" : "Barre d’évaluation : " + (visible ? "ON" : "OFF");
+  window.SupaChessEvalBarVisible = visible;
+}
+const evalBarToggle = $("btn-evalbar-toggle");
+if (evalBarToggle) evalBarToggle.addEventListener("click", () => {
+  if (typeof isDiagnosticControlLockActive === "function" && isDiagnosticControlLockActive()) return;
+  const visible = evalBarToggle.getAttribute("aria-pressed") !== "true";
+  try { localStorage.setItem(EVALBAR_PREFERENCE_KEY, String(visible)); } catch (_) {}
+  syncEvalBarToggle();
+  if (visible && typeof window.gamesMarkTrainingAidUsed === "function") window.gamesMarkTrainingAidUsed();
+});
 function applyLevelDiagnosticLock() {
   const diagnostic = readLevelDiagnostic();
   const active = Boolean(diagnostic && diagnostic.active) && !correctionExerciseModeActive;
@@ -232,6 +257,7 @@ function applyLevelDiagnosticLock() {
   levelDiagnosticLockWasActive = active;
   syncDotsButton();
   syncMoveDotsButton();
+  syncEvalBarToggle();
   if (typeof renderBoard === "function") renderBoard();
 }
 window.addEventListener("supachess:level-diagnostic-change", applyLevelDiagnosticLock);
