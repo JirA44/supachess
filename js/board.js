@@ -111,8 +111,9 @@ class BoardUI {
             bubble.className = "cdot tone-" + dot.quality + (dot.category ? " grade-" + dot.category : "");
             appendBoardBubbleText(bubble, dot.label || dot.rank, dot.evaluation);
             const moveSan = dot.san || dot.moveSan || "";
+            bubble.title = dot.title || "";
             bubble.setAttribute("aria-label", moveSan
-              ? `${dot.label || dot.rank || "Coup candidat"} · ${dot.evaluation || "évaluation indisponible"} · coup à jouer ${moveSan}`
+              ? `${dot.category === "brilliant" ? `Coup brillant repéré par ${dot.source || "le système Supa"}. ` : ""}${dot.label || dot.rank || "Coup candidat"} · ${dot.evaluation || "évaluation indisponible"} · coup à jouer ${moveSan}`
               : dot.title || "Coup candidat");
             if (moveSan) {
               bubble.tabIndex = 0;
@@ -164,7 +165,7 @@ class BoardUI {
       svg.setAttribute("class", "engine-arrow-overlay");
       svg.setAttribute("viewBox", "0 0 800 800");
       svg.setAttribute("aria-hidden", "true");
-      const colors = ["#16a36a", "#2581d8", "#e19b24", "#a36bd1"];
+      const colors = ["#16a36a", "#2581d8", "#e19b24", "#e879f9"];
       const defs = document.createElementNS(svgNs, "defs");
       this.engineArrows.slice(0, 4).forEach((_uci, index) => {
         const marker = document.createElementNS(svgNs, "marker");
@@ -256,7 +257,8 @@ function candidateDotsFromGroups(dotsBySquare) {
     evaluation: move.evaluation,
     quality: move.grade.tone,
     category: move.grade.category,
-    title: `${move.san}: ${move.label} · ${move.evaluation}`,
+    source: move.source || null,
+    title: move.title || `${move.san}: ${move.label} · ${move.evaluation}`,
   }))).flat();
 }
 function appendBoardBubbleText(bubble, grade, evaluation) {
