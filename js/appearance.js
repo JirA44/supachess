@@ -29,6 +29,13 @@
     } catch (_) { return { board:"green", pieces:"classic" }; }
   }
   let current = load();
+  const api = {
+    get: () => ({ ...current }),
+    setBoard: value => { if (boardThemes.some(theme => theme.id === value)) { current.board = value; apply(true); } },
+    setPieces: value => { if (pieceThemes.some(theme => theme.id === value)) { current.pieces = value; apply(true); } },
+    reset: () => { current = { board:"green", pieces:"classic" }; apply(true); }
+  };
+  window.SupaAppearanceSettings = api;
   function apply(save = false) {
     document.documentElement.dataset.boardTheme = current.board;
     document.documentElement.dataset.pieceTheme = current.pieces;
