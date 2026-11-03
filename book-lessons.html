@@ -23,7 +23,7 @@
       <p class="lesson-eyebrow">SupaChess Académie · mode apprentissage</p>
       <h1>Leçons</h1>
       <p class="lesson-subtitle">La route vers l’excellence</p>
-      <p>Progresse du débutant à l’expert avec des leçons originales, des coups adverses à anticiper, des exercices tirés au hasard et des retours sur les erreurs à éviter. Compare les coups candidats avec Stockfish 19.</p><p class="lesson-method-note">Parcours thématiques inspirés de principes publics associés aux parties de Fischer, Carlsen, Tal et Kasparov. Ce ne sont ni des méthodes officielles attribuées à ces joueurs ni des textes copiés. Stockfish vérifie des variantes selon sa recherche; son Elo moteur, même annoncé autour de 3 500, n’est pas un classement FIDE humain et ne se convertit pas directement en Elo FIDE. Aucune leçon ne garantit un classement donné.</p>
+      <p>Progresse du débutant à l’expert avec des leçons originales, des coups adverses à anticiper, des exercices tirés au hasard et des retours sur les erreurs à éviter. Un bloc tactique entraîne aussi à repérer les pièges, calculer leur menace et choisir comment les parer. Compare les coups candidats avec Stockfish 19.</p><p class="lesson-method-note">Parcours thématiques inspirés de principes publics associés aux parties de Fischer, Carlsen, Tal et Kasparov. Ce ne sont ni des méthodes officielles attribuées à ces joueurs ni des textes copiés. Stockfish vérifie des variantes selon sa recherche; son Elo moteur, même annoncé autour de 3 500, n’est pas un classement FIDE humain et ne se convertit pas directement en Elo FIDE. Aucune leçon ne garantit un classement donné.</p>
     </section>
 
     <section class="method-paths" aria-labelledby="method-paths-title">
@@ -52,8 +52,8 @@
         <article class="method-path" data-method-path="Tal · tactique et sacrifices à calculer">
           <div class="method-path-kicker">3 · Imagination et vérification</div>
           <h3>Méthode Tal</h3>
-          <p>Repère les coups brillants, avec ou sans sacrifice, puis teste les défenses au lieu de te fier à l’apparence.</p>
-          <ol><li>Liste les échecs, prises et menaces.</li><li>Ajoute les sacrifices comme coups candidats.</li><li>Calcule les reprises et la meilleure défense.</li><li>Évalue la position finale : un sacrifice n’est pas automatiquement juste.</li></ol>
+          <p>Repère les coups brillants et les pièges, avec ou sans sacrifice. Apprends à les éviter quand tu défends et à les punir quand l’adversaire tombe dedans.</p>
+          <ol><li>Repère le gain apparent et demande-toi quelle menace se cache derrière.</li><li>Vérifie les échecs, les prises, les pièces clouées et les défenseurs de la cible.</li><li>Calcule la meilleure réponse adverse, y compris les coups intermédiaires et les menaces de mat.</li><li>Après chaque réponse, vérifie la position finale avant de conclure qu’un piège fonctionne.</li></ol>
           <p class="method-path-count" data-method-count>Leçons du parcours en cours de comptage…</p>
           <button class="btn method-path-action" type="button" data-method-action="Tal · tactique et sacrifices à calculer">Explorer les leçons Tal</button>
         </article>
@@ -154,7 +154,7 @@
         <button class="btn lesson-review-start" id="lesson-review-start" type="button" disabled>Tester mes acquis</button>
       </section>
       <div class="lesson-filter-row">
-        <label>Rechercher<input id="lesson-search" type="search" placeholder="thème, coup ou méthode"></label>
+        <label>Rechercher<input id="lesson-search" type="search" placeholder="thème, coup, piège ou méthode"></label>
         <label>Niveau<select id="lesson-level-filter"><option value="">Tous les niveaux</option><option>Débutant</option><option>Intermédiaire</option><option>Avancé</option><option>Expert</option></select></label>
         <label>Parcours<select id="lesson-program-filter"><option value="">Tous les parcours</option><option>Fischer · préparation et précision</option><option>Carlsen · amélioration et conversion</option><option>Capablanca · fondamentaux et principes</option><option>Lasker · mobilisation et principes</option><option>Edward Lasker · calcul et stratégie</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Anti-erreurs · anticiper l’adversaire</option><option>Calcul · meilleure réponse adverse</option><option>Manuels classiques · principes et technique</option><option>Calcul profond · parties maîtresses</option><option>Précision · jouer juste et vérifier</option></select></label>
         <button class="btn lesson-surprise" id="lesson-surprise" type="button">Exercice au hasard</button>
