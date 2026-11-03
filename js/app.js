@@ -348,6 +348,8 @@ function newGame() {
   state.moveGradeHistory = [];
   state.chess = new Chess();
   state.candidates = [];
+  state.candidateFen = null;
+  state.systemBrilliantCandidates = [];
   state.pendingMove = null;
   resetAccuracy();
   state.fenHistory = [fenKey(state.chess.fen())];
@@ -518,7 +520,8 @@ function reportSupaBrilliantCandidate(report) {
     if (candidate.uci === canonicalUci) { candidate.supaBrilliant = true; candidate.brilliantSource = source; }
   }
   boardUI.dots = candidateDotsForPosition(fen);
-  boardUI.render(state.chess);
+  renderBoard();
+  if (state.candidateFen === fen) renderCandidatesList();
   return true;
 }
 window.SupaChessReportBrilliantCandidate = reportSupaBrilliantCandidate;
@@ -1419,6 +1422,8 @@ $("btn-fen").addEventListener("click", () => {
   state.gen++;
   moveFeedback.clear();
   state.chess = new Chess(fen.trim());
+  state.candidateFen = null;
+  state.systemBrilliantCandidates = [];
   state.fenHistory = [fenKey(state.chess.fen())];
   state.positionFenHistory = [state.chess.fen()];
   state.evalHistory = [];
