@@ -18,6 +18,10 @@
   function save() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences)); } catch (_) {}
   }
+  function unassistedActive() {
+    try { return Boolean(window.SupaChessIsUnassistedGame?.()) || sessionStorage.getItem("supachess-unassisted-game-active-v1") === "true"; }
+    catch (_) { return Boolean(window.SupaChessIsUnassistedGame?.()); }
+  }
   function render() {
     const root = document.documentElement;
     root.dataset.showAcpl = String(preferences.showAcpl);
@@ -27,6 +31,9 @@
       const value = Boolean(preferences[button.dataset.setting]);
       button.setAttribute("aria-checked", String(value));
       button.setAttribute("aria-pressed", String(value));
+      const locked = button.dataset.setting === "showArrows" && unassistedActive();
+      button.disabled = locked;
+      if (locked) button.title = "Flèches désactivées pendant une partie sans aide";
     });
     const slider = document.getElementById("analysis-multipv");
     const output = document.getElementById("analysis-multipv-value");
@@ -34,6 +41,7 @@
     if (output) output.textContent = String(preferences.multiPv);
   }
   function update(key, value) {
+    if (key === "showArrows" && value && unassistedActive()) return;
     if (key === "multiPv") preferences.multiPv = Math.max(1, Math.min(4, Number(value) || defaults.multiPv));
     else if (Object.prototype.hasOwnProperty.call(defaults, key) && key !== "multiPv") preferences[key] = Boolean(value);
     else return;
@@ -58,8 +66,8 @@
     const button = event.target.closest(".analysis-toggle[data-setting]");
     if (!button) return;
     const key = button.dataset.setting;
-    preferences[key] = !preferences[key];
-    save(); render();
+    if (key === "showArrows" && unassistedActive()) return;
+    update(key, !preferences[key]);
     if (key === "showArrows") {
       if (preferences.showArrows) window.gamesMarkTrainingAidUsed?.();
       window.SupaChessRenderBoard?.();
