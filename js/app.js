@@ -1658,7 +1658,7 @@ function updateEvalBar(bestLine) {
 
 // La barre d'évaluation est calée sur l'échiquier en CSS (.board-row, align-items: stretch).
 
-function setStatus(msg) { $("status-line").textContent = msg; }
+function setStatus(msg) { $("status-line").textContent = msg; syncUndoButton(); }
 function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
 /* ── Boutons ── */
