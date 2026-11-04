@@ -54,7 +54,7 @@ const now = Date.UTC(2026, 9, 28, 12);
 const game = (daysAgo, accuracyW, accuracyB, userColor = "w", result = "1-0", moves = 10) => ({
   date: new Date(now - daysAgo * 86400000).toISOString(),
   accuracyW, accuracyB, userColor, result, trainingAidsUsed: false,
-  pgn: '[SupaChessUserColor "' + userColor + '"]\\n[SupaChessTrainingAidsUsed "false"]',
+  pgn: '[SupaChessUserColor "' + userColor + '"]\n[SupaChessTrainingAidsUsed "false"]',
   moveGrades: Array.from({ length: moves }, () => ({ color: userColor, noTrainingAids: true })),
   stats: { moves },
 });
