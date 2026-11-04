@@ -50,6 +50,7 @@ function isLevelDiagnosticActive() {
   return Boolean(diagnostic && diagnostic.active);
 }
 let correctionExerciseModeActive = false;
+function isUnassistedAidLockActive() { return state.unassistedGame && !correctionExerciseModeActive; }
 function isDiagnosticControlLockActive() {
   return isLevelDiagnosticActive() && !correctionExerciseModeActive;
 }
@@ -203,7 +204,7 @@ function syncDotsButton() {
   const button = $("btn-dots");
   if (!button) return;
   const diagnosticLocked = isDiagnosticControlLockActive();
-  const unassistedLocked = state.unassistedGame;
+  const unassistedLocked = isUnassistedAidLockActive();
   const locked = diagnosticLocked || unassistedLocked;
   const candidatesPanel = $("candidates-panel");
   if (candidatesPanel) {
@@ -220,7 +221,7 @@ function syncMoveDotsButton() {
   const button = $("btn-move-dots");
   if (!button) return;
   const diagnosticLocked = isDiagnosticControlLockActive();
-  const unassistedLocked = state.unassistedGame;
+  const unassistedLocked = isUnassistedAidLockActive();
   const locked = diagnosticLocked || unassistedLocked;
   button.disabled = locked;
   button.title = locked ? (unassistedLocked ? "Aide désactivée pour cette partie" : "Bloqué pendant le diagnostic de niveau") : "Afficher ou masquer les points de coups possibles";
@@ -236,7 +237,7 @@ function syncEvalBarToggle() {
   let preferred = true;
   try { preferred = localStorage.getItem(EVALBAR_PREFERENCE_KEY) !== "false"; } catch (_) {}
   const diagnosticLocked = typeof isDiagnosticControlLockActive === "function" && isDiagnosticControlLockActive();
-  const unassistedLocked = state.unassistedGame;
+  const unassistedLocked = isUnassistedAidLockActive();
   const locked = diagnosticLocked || unassistedLocked;
   const visible = preferred && !locked;
   bar.hidden = !visible;
@@ -258,7 +259,7 @@ setTimeout(syncEvalBarToggle, 0);
 function applyLevelDiagnosticLock() {
   const diagnostic = readLevelDiagnostic();
   const active = Boolean(diagnostic && diagnostic.active) && !correctionExerciseModeActive;
-  if (active || state.unassistedGame) {
+  if (active || isUnassistedAidLockActive()) {
     boardUI.showDots = false;
     boardUI.showMoveDots = false;
     if (state.phase === "coach") {
@@ -267,7 +268,7 @@ function applyLevelDiagnosticLock() {
       moveFeedback.clearPreview();
       hideCoach();
     }
-  } else if (levelDiagnosticLockWasActive && !state.unassistedGame) {
+  } else if (levelDiagnosticLockWasActive && !isUnassistedAidLockActive()) {
     // Leaving the diagnostic must turn both aids back on, even if older saved
     // preferences were false; the player can switch either aid off afterwards.
     boardUI.showDots = true;
@@ -557,7 +558,7 @@ function stopCurrentGame() {
 
 const UNASSISTED_MODE_KEY = "supachess-unassisted-game-active-v1";
 const UNASSISTED_PREFS_KEY = "supachess-unassisted-game-restore-v1";
-function isUnassistedGameModeActive() { return Boolean(state.unassistedGame); }
+function isUnassistedGameModeActive() { return Boolean(state.unassistedGame && !correctionExerciseModeActive); }
 window.SupaChessIsUnassistedGame = isUnassistedGameModeActive;
 function syncUndoButton() {
   const button = $("btn-undo");
@@ -886,8 +887,8 @@ function recordMoveGrade(ply, color, category, metadata = {}) {
 function renderMoveGradeSummary() {
   const wrap = $("move-grade-summary");
   if (!wrap) return;
-  wrap.hidden = state.unassistedGame;
-  if (state.unassistedGame) return;
+  wrap.hidden = isUnassistedAidLockActive();
+  if (isUnassistedAidLockActive()) return;
   const categories = [
     ["brilliant", "!!", "Brillant"], ["best", "★", "Meilleur coup"],
     ["very-good", "!", "Très bon coup"], ["good", "✓", "Bon coup"],
@@ -1330,7 +1331,7 @@ function clIsOpen(c, i) {
 
 function renderCandidatesList() {
   const wrap = $("candidates-list");
-  if (state.unassistedGame) { wrap.replaceChildren(); return; }
+  if (isUnassistedAidLockActive()) { wrap.replaceChildren(); return; }
   if (!state.candidates.length) { wrap.innerHTML = "<em>En attente d'analyse…</em>"; return; }
   const whiteSide = state.chess.turn() === "w";
   wrap.innerHTML = state.candidates.map((c, i) => {
@@ -1667,7 +1668,7 @@ $("btn-abandon-diagnostic")?.addEventListener("click", abandonLevelDiagnostic);
 $("btn-dots").addEventListener("click", () => {
   if (isDiagnosticControlLockActive() || state.unassistedGame) return;
   boardUI.showDots = !boardUI.showDots;
-  if (boardUI.showDots && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
+  if (!correctionExerciseModeActive && boardUI.showDots && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
   localStorage.setItem(DOTS_STORAGE_KEY, String(boardUI.showDots));
   syncDotsButton();
   renderBoard();
@@ -1675,7 +1676,7 @@ $("btn-dots").addEventListener("click", () => {
 $("btn-move-dots").addEventListener("click", () => {
   if (isDiagnosticControlLockActive() || state.unassistedGame) return;
   boardUI.showMoveDots = !boardUI.showMoveDots;
-  if (boardUI.showMoveDots && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
+  if (!correctionExerciseModeActive && boardUI.showMoveDots && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
   localStorage.setItem(MOVE_DOTS_STORAGE_KEY, String(boardUI.showMoveDots));
   syncMoveDotsButton();
   renderBoard();
