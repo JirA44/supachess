@@ -121,7 +121,7 @@
       <h2 style="margin-top:24px">Partie en notation</h2>
       <div id="move-columns" class="move-columns" hidden><span>Coup</span><span id="white-heading">Blancs</span><span id="black-heading">Noirs</span></div>
       <div id="move-list" class="empty" aria-live="polite">La partie apparaîtra ici coup par coup, sans représentation de l’échiquier.</div>
-      <div class="foot"><span>Les coups sont joués sur la position légale réelle, même si elle reste cachée.</span><span>Version SupaChess : 1.13.14817</span></div>
+      <div class="foot"><span>Les coups sont joués sur la position légale réelle, même si elle reste cachée.</span><span>Version SupaChess : 1.13.14818</span></div>
     </section>
 
     <section class="panel mode-panel" id="mode-lessons" data-mode-panel="lessons" role="tabpanel" hidden>
@@ -461,10 +461,10 @@
       const question=document.createElement("h3");question.textContent=item.question;content.appendChild(question);
       if(notationPhase==="quiz"){
         const choices=document.createElement("div");choices.className="option-list";
-        item.choices.forEach(function(choice,index){
-          const button=document.createElement("button");button.type="button";button.textContent=choice;
+        shuffle(item.choices.map(function(choice,index){return {choice:choice,index:index};})).forEach(function(entry){
+          const button=document.createElement("button");button.type="button";button.textContent=entry.choice;
           button.addEventListener("click",function(){
-            if(index!==item.answer){setFeedback("notation-feedback","Pas encore. Relis la notation expliquée puis réessaie.","error");return;}
+            if(entry.index!==item.answer){setFeedback("notation-feedback","Pas encore. Relis la notation expliquée puis réessaie.","error");return;}
             notationPhase="write";notationMistakes=0;
             setFeedback("notation-feedback","Bonne réponse. Maintenant, écris le coup en notation algébrique.","ok");
             renderNotationLesson();
@@ -523,11 +523,11 @@
       const text=document.createElement("p");text.textContent=item.text;content.appendChild(text);
       const question=document.createElement("h3");question.textContent=item.question;content.appendChild(question);
       const options=document.createElement("div");options.className="option-list";
-      item.choices.forEach(function(choice,index){
-        const button=document.createElement("button");button.type="button";button.textContent=choice;
+      shuffle(item.choices.map(function(choice,index){return {choice:choice,index:index};})).forEach(function(entry){
+        const button=document.createElement("button");button.type="button";button.textContent=entry.choice;
         button.addEventListener("click",function(){
           if(lessonAnswered)return;
-          if(index!==item.answer){setFeedback("lesson-feedback","Pas encore. Reconstitue la position à partir des coups écrits et réessaie.","error");return;}
+          if(entry.index!==item.answer){setFeedback("lesson-feedback","Pas encore. Reconstitue la position à partir des coups écrits et réessaie.","error");return;}
           lessonAnswered=true;
           if(!data.lessons.includes(item.id)){data.lessons.push(item.id);data.xp+=10;saveData();}
           setFeedback("lesson-feedback","Leçon validée. À retenir : "+item.transfer,"ok");
