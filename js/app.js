@@ -21,7 +21,10 @@ const state = {
   evalWhiteCp: 0,
   gen: 0,                // génération de tour : invalide les analyses en vol au changement de mode
 
-  stats: { moves: 0, top1: 0, top3: 0, intercepts: 0, forced: 0 },
+  stats: { moves: 0, rankedMoves: 0, top1: 0, top3: 0, top5: 0, top10: 0, top25: 0, top50: 0, accuracyMoves: 0, accuracyAbove60: 0, accuracyAbove75: 0, accuracyAbove90: 0, intercepts: 0, forced: 0 },
+  sessionMoveSamples: [],
+  candidateRankByUci: new Map(),
+  candidateRankCoverageComplete: false,
   accuracy: { w: [], b: [], pendingEngine: null, lastMove: null, byPly: {} }, // moveAccuracy [0..100] par couleur
   moveGradeHistory: [], // demi-coups joués avec catégorie, révisée après analyse moteur
   clockMs: { w: 0, b: 0 },
@@ -643,9 +646,15 @@ async function analyzeForUser() {
   const legalMoveCount = state.chess.moves({ verbose: true }).length;
   setStatus(`Analyse des ${legalMoveCount} coups possibles…`);
   const requestedMultiPv = window.SupaAnalysisSettings?.getMultiPv() || 4;
-  const res = await state.engine.analyze({ fen, multipv: Math.max(1, Math.min(legalMoveCount, requestedMultiPv)), movetime: movetime(), elo: 0 });
+  const displayMultiPv = Math.max(1, Math.min(legalMoveCount, requestedMultiPv));
+  const rankingMultiPv = Math.min(legalMoveCount, Math.max(50, displayMultiPv));
+  state.candidateRankByUci = new Map();
+  state.candidateRankCoverageComplete = false;
+  const res = await state.engine.analyze({ fen, multipv: rankingMultiPv, movetime: movetime(), elo: 0 });
   if (state.gen !== gen || state.chess.fen() !== fen) return; // partie/mode changé entre temps
-  buildCandidates(res.lines, fen);
+  state.candidateRankByUci = new Map(res.lines.map((line, index) => [line.pv[0], index + 1]));
+  state.candidateRankCoverageComplete = res.lines.length >= Math.min(50, legalMoveCount);
+  buildCandidates(res.lines.slice(0, displayMultiPv), fen);
   updateEvalBar(res.lines[0]);
   // Précision du dernier coup engine : l'eval top-1 de cette analyse (POV utilisateur)
   // inversée donne l'eval APRÈS le coup engine de son point de vue.
@@ -1075,7 +1084,7 @@ async function attemptUserMove(moveObj) {
     const args = buildArguments(state.chess.fen(), line, best, state.fenHistory);
     const reply = buildReplyInfo(state.chess.fen(), line.pv);
     const bd = computeBreakdown(state.chess.fen(), line);
-    cand = { rank: null, uci, san: args.san, line, deltaCp, args, reply, cmp: null, bd };
+    cand = { rank: state.candidateRankByUci.get(uci) || null, uci, san: args.san, line, deltaCp, args, reply, cmp: null, bd };
     state.phase = "userTurn";
   }
 
@@ -1202,9 +1211,7 @@ function commitUserMove(moveObj, cand, forced) {
   boardUI.dots = [];
   state.fenHistory.push(fenKey(state.chess.fen()));
   state.positionFenHistory.push(state.chess.fen());
-  state.stats.moves++;
-  if (cand && cand.rank === 1) state.stats.top1++;
-  if (cand && cand.rank !== null && cand.rank <= 3) state.stats.top3++;
+  recordSessionMoveSample(cand, userMoveColor);
   if (forced) state.stats.forced++;
   state.pendingMove = null;
   if (typeof gamesAutoSave === "function") gamesAutoSave();
@@ -1439,10 +1446,68 @@ function fmtEval(e) {
 function renderStats() {
   const s = state.stats;
   $("stat-moves").textContent = s.moves;
-  $("stat-top1").textContent = s.moves ? Math.round((s.top1 / s.moves) * 100) + " %" : "—";
-  $("stat-top3").textContent = s.moves ? Math.round((s.top3 / s.moves) * 100) + " %" : "—";
+  const rate = (count, total) => total ? `${Math.round((count / total) * 100)} % (${count}/${total})` : "—";
+  $("stat-top1").textContent = rate(s.top1, s.rankedMoves);
+  $("stat-top3").textContent = rate(s.top3, s.rankedMoves);
+  $("stat-top5").textContent = rate(s.top5, s.rankedMoves);
+  $("stat-top10").textContent = rate(s.top10, s.rankedMoves);
+  $("stat-top25").textContent = rate(s.top25, s.rankedMoves);
+  $("stat-top50").textContent = rate(s.top50, s.rankedMoves);
+  $("stat-accuracy-60").textContent = rate(s.accuracyAbove60, s.accuracyMoves);
+  $("stat-accuracy-75").textContent = rate(s.accuracyAbove75, s.accuracyMoves);
+  $("stat-accuracy-90").textContent = rate(s.accuracyAbove90, s.accuracyMoves);
   $("stat-intercepts").textContent = s.intercepts;
   $("stat-forced").textContent = s.forced;
+}
+
+function recordSessionMoveSample(cand, color) {
+  const rank = cand && Number.isInteger(cand.rank) ? cand.rank : null;
+  const rankKnown = rank !== null || state.candidateRankCoverageComplete;
+  const sample = {
+    rank: rank !== null ? rank : (rankKnown ? 51 : null),
+    rankKnown,
+    accuracy: state.accuracy.lastMove && state.accuracy.lastMove.color === color
+      ? state.accuracy.lastMove.moveAccuracy : null,
+  };
+  state.sessionMoveSamples.push(sample);
+  state.stats.moves++;
+  if (sample.rankKnown) {
+    state.stats.rankedMoves++;
+    if (sample.rank <= 1) state.stats.top1++;
+    if (sample.rank <= 3) state.stats.top3++;
+    if (sample.rank <= 5) state.stats.top5++;
+    if (sample.rank <= 10) state.stats.top10++;
+    if (sample.rank <= 25) state.stats.top25++;
+    if (sample.rank <= 50) state.stats.top50++;
+  }
+  if (sample.accuracy !== null) {
+    state.stats.accuracyMoves++;
+    if (sample.accuracy > 60) state.stats.accuracyAbove60++;
+    if (sample.accuracy > 75) state.stats.accuracyAbove75++;
+    if (sample.accuracy > 90) state.stats.accuracyAbove90++;
+  }
+}
+
+function undoSessionMoveSample() {
+  const sample = state.sessionMoveSamples.pop();
+  if (!sample) return;
+  const s = state.stats;
+  s.moves = Math.max(0, s.moves - 1);
+  if (sample.rankKnown) {
+    s.rankedMoves = Math.max(0, s.rankedMoves - 1);
+    if (sample.rank <= 1) s.top1 = Math.max(0, s.top1 - 1);
+    if (sample.rank <= 3) s.top3 = Math.max(0, s.top3 - 1);
+    if (sample.rank <= 5) s.top5 = Math.max(0, s.top5 - 1);
+    if (sample.rank <= 10) s.top10 = Math.max(0, s.top10 - 1);
+    if (sample.rank <= 25) s.top25 = Math.max(0, s.top25 - 1);
+    if (sample.rank <= 50) s.top50 = Math.max(0, s.top50 - 1);
+  }
+  if (sample.accuracy !== null) {
+    s.accuracyMoves = Math.max(0, s.accuracyMoves - 1);
+    if (sample.accuracy > 60) s.accuracyAbove60 = Math.max(0, s.accuracyAbove60 - 1);
+    if (sample.accuracy > 75) s.accuracyAbove75 = Math.max(0, s.accuracyAbove75 - 1);
+    if (sample.accuracy > 90) s.accuracyAbove90 = Math.max(0, s.accuracyAbove90 - 1);
+  }
 }
 
 /* ── Précision (style lichess accuracy) ── */
@@ -1637,15 +1702,18 @@ $("btn-undo").addEventListener("click", () => {
   moveFeedback.clear();
   // Annule jusqu'à revenir au trait du joueur (1 ou 2 demi-coups)
   let undone = 0;
+  let userMoveUndone = false;
   while (undone < 2 && state.chess.history().length > 0) {
+    const undoneColor = state.chess.turn() === "w" ? "b" : "w";
     state.chess.undo();
+    if (undoneColor === state.userColor) userMoveUndone = true;
     state.fenHistory.pop();
     state.positionFenHistory.pop();
     state.evalHistory.pop();
     undone++;
     if (state.chess.turn() === state.userColor) break;
   }
-  if (state.stats.moves > 0) state.stats.moves--;
+  if (userMoveUndone) undoSessionMoveSample();
   state.moveGradeHistory = state.moveGradeHistory.filter((entry) => entry.ply <= state.chess.history().length);
   state.accuracy.pendingEngine = null;
   boardUI.lastMove = null;
