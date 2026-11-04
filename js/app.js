@@ -1252,10 +1252,11 @@ function accColor(v) {
   return v >= 90 ? "var(--green)" : v >= 80 ? "var(--yellow)" : v >= 60 ? "var(--orange)" : "var(--red)";
 }
 function accuracyHtml() {
-  const summary = typeof reviewState !== "undefined" ? reviewState.gameSummary : null;
-  const exercise = typeof reviewState !== "undefined" ? reviewState.exercise : null;
-  if (summary || exercise) {
-    const headers = summary?.headers || exercise?.headers || reviewState.currentHeaders || {};
+  const review = typeof reviewState !== "undefined" ? reviewState : null;
+  const summary = review ? review.gameSummary : null;
+  const exercise = review ? review.exercise : null;
+  const headers = summary?.headers || exercise?.headers || review?.currentHeaders || {};
+  if (summary || exercise || headers.White || headers.Black) {
     const players = Array.isArray(summary?.players) ? summary.players :
       (Array.isArray(exercise?.analysis?.players) ? exercise.analysis.players : []);
     return [["w", headers.White || "Blancs"], ["b", headers.Black || "Noirs"]].map(([color, name]) => {
