@@ -607,7 +607,7 @@ function setUnassistedGameMode(active, options = {}) {
   const undoButton = $("btn-undo");
   if (undoButton) {
     undoButton.disabled = state.unassistedGame || isDiagnosticControlLockActive();
-    undoButton.title = state.unassistedGame ? "Annulation désactivée pendant une partie sans aide" : "Annuler le dernier coup";
+    undoButton.title = state.unassistedGame ? "Annulation désactivée pendant une partie sans aide" : "Annuler votre dernier demi-coup et la réponse du moteur";
   }
   const bestButton = $("btn-best-move");
   if (bestButton && state.unassistedGame) {
@@ -1721,26 +1721,34 @@ $("btn-cancel").addEventListener("click", () => {
 });
 $("btn-undo").addEventListener("click", () => {
   if (state.unassistedGame) return;
-  stopPlayerClock();
-  if (typeof window.reviewUndoCorrectionExercise === "function" && window.reviewUndoCorrectionExercise()) return;
   if (state.phase === "engineThinking" || state.phase === "analyzing") return;
+  if (typeof window.reviewUndoCorrectionExercise === "function" && window.reviewUndoCorrectionExercise()) return;
+  const history = state.chess.history({ verbose: true });
+  let lastUserMoveIndex = -1;
+  for (let index = history.length - 1; index >= 0; index--) {
+    if (history[index].color === state.userColor) {
+      lastUserMoveIndex = index;
+      break;
+    }
+  }
+  if (lastUserMoveIndex < 0) {
+    setStatus("Aucun demi-coup joué à annuler.");
+    return;
+  }
+
+  stopPlayerClock();
   hideCoach();
   state.gen++;
   moveFeedback.clear();
-  // Annule jusqu'à revenir au trait du joueur (1 ou 2 demi-coups)
-  let undone = 0;
-  let userMoveUndone = false;
-  while (undone < 2 && state.chess.history().length > 0) {
-    const undoneColor = state.chess.turn() === "w" ? "b" : "w";
-    state.chess.undo();
-    if (undoneColor === state.userColor) userMoveUndone = true;
+  // Retire le dernier demi-coup du joueur et les réponses moteur qui le suivent.
+  const pliesToUndo = history.length - lastUserMoveIndex;
+  for (let undone = 0; undone < pliesToUndo; undone++) {
+    const move = state.chess.undo();
+    if (move && move.color === state.userColor) undoSessionMoveSample();
     state.fenHistory.pop();
     state.positionFenHistory.pop();
     state.evalHistory.pop();
-    undone++;
-    if (state.chess.turn() === state.userColor) break;
   }
-  if (userMoveUndone) undoSessionMoveSample();
   state.moveGradeHistory = state.moveGradeHistory.filter((entry) => entry.ply <= state.chess.history().length);
   state.accuracy.pendingEngine = null;
   boardUI.lastMove = null;
