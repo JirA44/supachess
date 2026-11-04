@@ -565,15 +565,19 @@ function syncUndoButton() {
   if (!button) return;
   const limit = 3;
   const reached = state.undoCount >= limit;
+  const engineBusy = state.phase === "engineThinking" || state.phase === "analyzing";
+  const diagnosticLocked = isDiagnosticControlLockActive();
   button.textContent = "Annuler mon demi-coup (" + state.undoCount + "/" + limit + ")";
-  button.disabled = state.unassistedGame || isDiagnosticControlLockActive() || reached;
+  button.disabled = state.unassistedGame || diagnosticLocked || engineBusy || reached;
   button.title = state.unassistedGame
     ? "Annulation désactivée pendant une partie sans aide"
-    : isDiagnosticControlLockActive()
+    : diagnosticLocked
       ? "Annulation désactivée pendant le diagnostic"
-      : reached
-        ? "Limite de trois annulations atteinte pour cette partie"
-        : "Annuler votre dernier demi-coup et la réponse du moteur (" + (limit - state.undoCount) + " restante(s))";
+      : engineBusy
+        ? "Attends la fin de l’analyse ou du coup adverse avant d’annuler"
+        : reached
+          ? "Limite de trois annulations atteinte pour cette partie"
+          : "Annuler votre dernier demi-coup et la réponse du moteur (" + (limit - state.undoCount) + " restante(s))";
 }
 function setUnassistedGameMode(active, options = {}) {
   const wasActive = state.unassistedGame;
