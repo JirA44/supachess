@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101926">
+  <title>NoBoardChess · SupaChess</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1220;--panel:#121e2e;--edge:#2a3d52;--text:#eff6ff;--muted:#b8c8d8;--accent:#63dfbf;--gold:#f4cb66;--danger:#ff8585}
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(ellipse at top,#16283b 0,var(--bg) 62%);color:var(--text);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+    a{color:var(--accent)}
+    .shell{width:min(920px,100% - 28px);margin:0 auto;padding:22px 0 40px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+    .brand{font-weight:800;letter-spacing:.02em}.brand span{color:var(--accent)}
+    .back{border:1px solid var(--edge);border-radius:10px;padding:8px 12px;text-decoration:none;background:#142235}
+    .hero,.panel{background:rgba(18,30,46,.95);border:1px solid var(--edge);border-radius:18px;padding:clamp(18px,4vw,30px);box-shadow:0 16px 50px #0003}
+    .hero{margin-bottom:16px}
+    h1{font-size:clamp(1.65rem,4vw,2.5rem);line-height:1.15;margin:4px 0 10px}
+    h2{font-size:1.15rem;margin:0 0 12px}
+    p{margin:8px 0;color:var(--muted)}
+    .eyebrow{color:var(--accent);font-size:.8rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+    .concept{border-left:3px solid var(--gold);padding:8px 12px;margin:18px 0;background:#f4cb660c}
+    .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin:18px 0}
+    label{display:grid;gap:6px;font-size:.9rem;font-weight:700;color:#dce8f5}
+    select,input{font:inherit;color:var(--text);background:#091421;border:1px solid #496078;border-radius:10px;padding:10px 12px;min-height:44px}
+    #move-input{flex:1 1 260px;font-size:1.15rem;letter-spacing:.04em;text-transform:none}
+    button{font:inherit;font-weight:750;color:#081711;background:var(--accent);border:0;border-radius:10px;padding:11px 16px;min-height:44px;cursor:pointer}
+    button.secondary{background:#22364b;color:var(--text);border:1px solid #496078}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .input-row{display:flex;gap:10px;flex-wrap:wrap}
+    .input-row input{flex:1 1 260px}
+    .status{padding:11px 13px;border-radius:10px;background:#0b1725;border:1px solid var(--edge);color:#dce8f5;margin:14px 0}
+    .status[data-state="error"]{border-color:#8c4848;color:#ffc1c1}
+    .status[data-state="ok"]{border-color:#387c68;color:#aaf3d8}
+    .move-columns{display:grid;grid-template-columns:48px 1fr 1fr;gap:10px;padding:8px 4px;color:#91a7bd;font-size:.82rem;font-weight:750}.moves{list-style:none;padding:0;margin:0;display:grid;gap:7px}
+    .moves li{display:grid;grid-template-columns:48px 1fr 1fr;gap:10px;border-bottom:1px solid #26394d;padding:8px 4px;font-variant-numeric:tabular-nums}
+    .move-no{color:#91a7bd}.move-user{color:#fff;font-weight:750}.move-engine{color:#b9d4ee}
+    .empty{padding:25px;text-align:center;border:1px dashed #496078;border-radius:12px;color:#b8c8d8}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+    .foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:16px;color:#91a7bd;font-size:.82rem}
+    .note{font-size:.88rem}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    @media(max-width:560px){.controls{align-items:stretch}.controls label{flex:1 1 140px}.input-row button{width:100%}.moves li,.move-columns{grid-template-columns:34px 1fr 1fr;gap:6px;font-size:.9rem}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="brand">♞ Supa<span>Chess</span> · NoBoardChess</div>
+      <a class="back" href="index.html">← Retour à SupaChess</a>
+    </header>
+    <section class="hero" aria-labelledby="page-title">
+      <div class="eyebrow">Entraînement mental · sans échiquier</div>
+      <h1 id="page-title">Jouer aux échecs par écrit</h1>
+      <p>Garde la position en mémoire, visualise les coups et affronte Stockfish sans voir l’échiquier, les coups candidats ni l’évaluation.</p>
+      <div class="concept"><strong>Information complète, avenir inconnu.</strong> Les règles et les coups légaux restent les mêmes; c’est à toi de retenir la position et d’anticiper la meilleure réponse adverse.</div>
+      <p class="note">Écris un coup en notation algébrique, par exemple <strong>e4</strong>, <strong>Nf3</strong>, <strong>Bb5</strong> ou <strong>O-O</strong>. Tu peux aussi saisir un coup UCI comme <strong>e2e4</strong>. Pour une promotion, précise la pièce, par exemple <strong>e8=Q</strong>.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="game-title">
+      <h2 id="game-title">Nouvelle partie</h2>
+      <div class="controls">
+        <label for="player-color">Tu joues
+          <select id="player-color"><option value="w">les Blancs</option><option value="b">les Noirs</option></select>
+        </label>
+        <label for="engine-elo">Niveau Stockfish indicatif
+          <select id="engine-elo"></select>
+        </label>
+        <button id="new-game" type="button">Démarrer / recommencer</button>
+      </div>
+
+      <div id="game-status" class="status" role="status" aria-live="polite" data-state="ok">Préparation du moteur Stockfish…</div>
+
+      <form id="move-form" autocomplete="off">
+        <label for="move-input">Ton coup
+          <div class="input-row">
+            <input id="move-input" name="move" type="text" inputmode="text" autocapitalize="none" spellcheck="false" placeholder="Ex. e4" aria-describedby="move-help" maxlength="12">
+            <button id="play-move" type="submit" disabled>Jouer le coup</button>
+          </div>
+        </label>
+        <p id="move-help" class="note">La saisie est vérifiée contre les coups légaux de la position mémorisée. Aucune proposition de coup n’est affichée.</p>
+      </form>
+
+      <div class="actions">
+        <button id="copy-pgn" class="secondary" type="button" disabled>Copier la partie PGN</button>
+      </div>
+      <h2 style="margin-top:24px">Partie en notation</h2>
+      <div id="move-columns" class="move-columns" hidden><span>Coup</span><span id="white-heading">Blancs</span><span id="black-heading">Noirs</span></div>
+      <div id="move-list" class="empty" aria-live="polite">La partie apparaîtra ici coup par coup, sans représentation de l’échiquier.</div>
+      <div class="foot"><span>Les coups sont joués sur la position légale réelle, même si elle reste cachée.</span><span>Version SupaChess : 1.13.14805</span></div>
+    </section>
+  </main>
+
+  <script src="vendor/chess.js"></script>
+  <script src="js/engine.js?v=stockfish-worker-recovery-20261029"></script>
+  <script>
+    "use strict";
+    const game = new Chess();
+    const engine = new StockfishEngine("vendor/stockfish-19-lite-single.js");
+    const colorSelect = document.getElementById("player-color");
+    const eloSelect = document.getElementById("engine-elo");
+    const statusEl = document.getElementById("game-status");
+    const moveForm = document.getElementById("move-form");
+    const moveInput = document.getElementById("move-input");
+    const playButton = document.getElementById("play-move");
+    const newGameButton = document.getElementById("new-game");
+    const copyButton = document.getElementById("copy-pgn");
+    const moveList = document.getElementById("move-list");
+    let playerColor = "w";
+    let gameStarted = false;
+    let busy = false;
+    let gameFinished = false;
+    let sequenceId = 0;
+    let engineReady = false;
+
+    for (let elo = 1400; elo <= 3100; elo += 100) {
+      const option = document.createElement("option");
+      option.value = String(elo);
+      option.textContent = elo + " Elo moteur (indicatif)";
+      eloSelect.appendChild(option);
+    }
+    const fullOption = document.createElement("option");
+    fullOption.value = "0";
+    fullOption.textContent = "Pleine force Stockfish";
+    eloSelect.appendChild(fullOption);
+    eloSelect.value = "1400";
+
+    function setStatus(message, state) {
+      statusEl.textContent = message;
+      statusEl.dataset.state = state || "ok";
+    }
+    function updateControls() {
+      const userToMove = gameStarted && !busy && !gameFinished && game.turn() === playerColor && engineReady;
+      playButton.disabled = !userToMove;
+      moveInput.disabled = !userToMove;
+      colorSelect.disabled = busy;
+      eloSelect.disabled = busy;
+      copyButton.disabled = game.history().length === 0;
+    }
+    function renderMoves() {
+      const sans = game.history();
+      const columns = document.getElementById("move-columns");
+      if (columns) columns.hidden = sans.length === 0;
+      document.getElementById("white-heading").textContent = playerColor === "w" ? "Blancs · J1 (toi)" : "Blancs · J2 (Stockfish)";
+      document.getElementById("black-heading").textContent = playerColor === "b" ? "Noirs · J1 (toi)" : "Noirs · J2 (Stockfish)";
+      if (!sans.length) {
+        moveList.className = "empty";
+        moveList.textContent = "La partie apparaîtra ici coup par coup, sans représentation de l’échiquier.";
+        return;
+      }
+      moveList.className = "";
+      const list = document.createElement("ol");
+      list.className = "moves";
+      for (let i = 0; i < sans.length; i += 2) {
+        const row = document.createElement("li");
+        const no = document.createElement("span");
+        no.className = "move-no";
+        no.textContent = String(Math.floor(i / 2) + 1) + ".";
+        const white = document.createElement("span");
+        white.className = playerColor === "w" ? "move-user" : "move-engine";
+        white.textContent = sans[i] || "…";
+        const black = document.createElement("span");
+        black.className = playerColor === "b" ? "move-user" : "move-engine";
+        black.textContent = sans[i + 1] || "…";
+        row.append(no, white, black);
+        list.appendChild(row);
+      }
+      moveList.replaceChildren(list);
+    }
+    function resultText() {
+      if (game.in_checkmate()) {
+        const winner = game.turn() === playerColor ? "Stockfish gagne par échec et mat." : "Tu gagnes par échec et mat.";
+        return winner;
+      }
+      if (game.in_stalemate()) return "Partie nulle par pat.";
+      if (game.in_draw()) return "Partie nulle selon les règles.";
+      return "Partie terminée.";
+    }
+    function checkFinished() {
+      if (!game.game_over()) return false;
+      gameFinished = true;
+      busy = false;
+      game.header("Result", game.in_checkmate() ? (game.turn() === "w" ? "0-1" : "1-0") : "1/2-1/2");
+      setStatus(resultText(), "ok");
+      updateControls();
+      return true;
+    }
+    function parseUserMove(raw) {
+      const text = raw.trim();
+      const uci = text.replace(/\s+/g, "");
+      if (/^[a-h][1-8][a-h][1-8][qrbn]?$/i.test(uci)) {
+        return game.move({ from: uci.slice(0, 2).toLowerCase(), to: uci.slice(2, 4).toLowerCase(), promotion: (uci[4] || "q").toLowerCase() });
+      }
+      return game.move(text, { sloppy: true });
+    }
+    async function playEngineMove(token) {
+      if (gameFinished || token !== sequenceId) return;
+      busy = true;
+      updateControls();
+      setStatus("Stockfish calcule sa réponse…", "ok");
+      try {
+        const result = await engine.analyze({ fen: game.fen(), multipv: 1, movetime: 900, elo: Number(eloSelect.value) });
+        if (token !== sequenceId) return;
+        const uci = result && result.bestmove;
+        if (!uci || uci === "(none)" || uci === "0000") {
+          setStatus("Stockfish n’a pas fourni de coup; la partie reste en attente. Tu peux recommencer.", "error");
+          busy = false;
+          updateControls();
+          return;
+        }
+        const move = game.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: (uci[4] || "q").toLowerCase() });
+        if (!move) throw new Error("Le coup Stockfish reçu n’est pas légal dans la position courante.");
+        renderMoves();
+        if (!checkFinished()) {
+          setStatus("À toi. Rappelle-toi la position et écris ton prochain coup.", "ok");
+          busy = false;
+          updateControls();
+          moveInput.focus();
+        }
+      } catch (error) {
+        if (token !== sequenceId) return;
+        busy = false;
+        setStatus("Moteur indisponible : " + (error && error.message ? error.message : "erreur inconnue") + " Tu peux réessayer en recommençant.", "error");
+        updateControls();
+      }
+    }
+    moveForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (busy || gameFinished || !engineReady || game.turn() !== playerColor) return;
+      const raw = moveInput.value;
+      let move = null;
+      try { move = parseUserMove(raw); } catch (_) { move = null; }
+      if (!move) {
+        setStatus("Coup illégal ou notation non reconnue. Vérifie les règles de la position mémorisée, puis réessaie.", "error");
+        moveInput.select();
+        return;
+      }
+      moveInput.value = "";
+      renderMoves();
+      if (checkFinished()) return;
+      busy = true;
+      updateControls();
+      await playEngineMove(sequenceId);
+    });
+    newGameButton.addEventListener("click", async () => {
+      sequenceId += 1;
+      engine.stop();
+      game.reset();
+      playerColor = colorSelect.value;
+      gameStarted = true;
+      game.header("Event", "SupaChess NoBoardChess");
+      game.header("Site", "SupaChess");
+      game.header("White", playerColor === "w" ? "Joueur 1" : "Stockfish");
+      game.header("Black", playerColor === "b" ? "Joueur 1" : "Stockfish");
+      busy = false;
+      gameFinished = false;
+      renderMoves();
+      setStatus("Nouvelle partie. " + (playerColor === "w" ? "Tu as les Blancs; joue ton premier coup." : "Tu as les Noirs; Stockfish ouvre."), "ok");
+      updateControls();
+      if (playerColor === "b") await playEngineMove(sequenceId);
+      else moveInput.focus();
+    });
+    copyButton.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(game.pgn());
+        setStatus("PGN copié dans le presse-papiers.", "ok");
+      } catch (_) {
+        setStatus("Copie refusée par le navigateur. Tu peux sélectionner la notation ci-dessus.", "error");
+      }
+    });
+    engine.ready.then(() => {
+      engineReady = true;
+      document.getElementById("play-move").disabled = false;
+      setStatus("Stockfish prêt. Choisis les Blancs ou les Noirs, puis démarre la partie.", "ok");
+      updateControls();
+    }).catch((error) => setStatus("Stockfish n’a pas démarré : " + (error.message || "erreur inconnue"), "error"));
+    renderMoves();
+  </script>
+</body>
+</html>
