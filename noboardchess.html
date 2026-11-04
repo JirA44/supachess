@@ -201,6 +201,7 @@
       try {
         const result = await engine.analyze({ fen: game.fen(), multipv: 1, movetime: 900, elo: Number(eloSelect.value) });
         if (token !== sequenceId) return;
+        engineReady = true;
         const uci = result && result.bestmove;
         if (!uci || uci === "(none)" || uci === "0000") {
           setStatus("Stockfish n’a pas fourni de coup; la partie reste en attente. Tu peux recommencer.", "error");
