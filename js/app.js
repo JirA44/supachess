@@ -253,7 +253,7 @@ if (evalBarToggle) evalBarToggle.addEventListener("click", () => {
   const visible = evalBarToggle.getAttribute("aria-pressed") !== "true";
   try { localStorage.setItem(EVALBAR_PREFERENCE_KEY, String(visible)); } catch (_) {}
   syncEvalBarToggle();
-  if (visible && typeof window.gamesMarkTrainingAidUsed === "function") window.gamesMarkTrainingAidUsed();
+  if (!correctionExerciseModeActive && visible && typeof window.gamesMarkTrainingAidUsed === "function") window.gamesMarkTrainingAidUsed();
 });
 setTimeout(syncEvalBarToggle, 0);
 function applyLevelDiagnosticLock() {
