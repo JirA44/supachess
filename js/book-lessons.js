@@ -1315,49 +1315,49 @@
   }
   LESSONS.push(...reinforcementAdded);
 
-  // Turn every studied reply into an active-recall challenge: the learner now plays
-  // the opponent's half-move, then sees the original continuation and its explanation.
-  const SELF_REFUTATION_PROGRAM = "Auto-réfutation · méthode Hikaru";
+  // Each challenge first asks the learner to judge their own preceding half-move.
+  // The prepared reply is only a stress test, not a prediction.
+  const SELF_REFUTATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   const selfRefutationBlueprints = [
     {
       id: "self-refute-01-test-the-candidate", baseId: "avoid-hanging-piece",
-      title: "01 · Ne valide pas ton premier avis",
-      question: "Tu envisages un coup et tu le crois correct. Quelle question le met réellement à l’épreuve ?",
-      principle: "Ne réponds pas seulement oui ou non. Cherche une réfutation concrète : échec, prise, menace ou défense adverse qui neutralise ton idée. Si tu n’en trouves pas, le coup survit à ce test; cela ne prouve pas encore qu’il est le meilleur.",
-      transfer: "Écris ton candidat, puis cherche la meilleure réponse adverse. Calcule cette réponse avant de décider si ton idée tient.",
-      pitfall: "Ne confonds pas « je ne vois pas de réfutation » avec « le coup est forcément bon ». Vérifie les coups forcing et la ligne Stockfish après ton propre calcul."
+      title: "01 · Juge ton propre demi-coup",
+      question: "Tu viens de jouer un coup que tu crois correct. Quelle question te permet de l’auto-évaluer ?",
+      principle: "Avant de deviner une réponse adverse, examine ton coup : quelle pièce devient vulnérable, quelle menace reste sans réponse, quelle faiblesse as-tu créée, et existait-il une meilleure option ?",
+      transfer: "Note l’idée de ton coup, puis formule une raison concrète pour laquelle il pourrait être mauvais. Ensuite seulement, mets ton diagnostic à l’épreuve sur une ou plusieurs réponses possibles.",
+      pitfall: "Ne décide pas qu’un coup est bon parce qu’il te plaît, ni mauvais sans preuve. Identifie un défaut vérifiable et compare les alternatives."
     },
     {
       id: "self-refute-02-find-the-forcing-reply", baseId: "trade-when-ahead",
-      title: "02 · Cherche la réponse la plus gênante",
-      question: "Ton candidat crée une menace. Quel test évite de ne voir que le plan que tu espères ?",
-      principle: "Cherche d’abord les échecs, les prises et les menaces adverses. Une réponse forcing peut réfuter ton candidat ou te forcer à abandonner ton idée.",
-      transfer: "Pour chaque candidat, note la réponse adverse la plus gênante et calcule au moins un coup de plus pour les deux camps.",
-      pitfall: "N’analyse pas uniquement la réponse la plus naturelle. Cherche aussi l’échec, la prise et le coup intermédiaire qui changent la position."
+      title: "02 · Repère le défaut de ton idée",
+      question: "Ton coup crée une menace. Que dois-tu vérifier dans ton propre coup avant de te réjouir de cette menace ?",
+      principle: "Évalue le prix de ton idée : pièce ou pion laissé en prise, défense abandonnée, roi fragilisé, tempo perdu ou menace adverse ignorée. Une réponse adverse calculée ensuite aide à confirmer le défaut.",
+      transfer: "Écris d’abord le bénéfice visé, puis au moins un risque concret créé par ton coup. Après cela, examine des réponses adverses possibles pour tester ce risque.",
+      pitfall: "Ne confonds pas ton intention avec la qualité du coup : une menace peut être lente ou laisser un problème plus urgent."
     },
     {
       id: "self-refute-03-recheck-after-each-reply", baseId: "zwischenzug",
-      title: "03 · Réfute ta variante à chaque demi-coup",
-      question: "Tu as calculé une suite prometteuse, mais l’adversaire trouve une réponse inattendue. Que fais-tu ?",
-      principle: "Arrête ta variante prévue, reconstruis la position et cherche à nouveau les meilleures réponses des deux camps. Un coup intermédiaire peut invalider une suite qui semblait forcée.",
-      transfer: "Rejoue la variante demi-coup par demi-coup. À chaque réponse, vérifie les échecs, captures, menaces et pièces non défendues.",
-      pitfall: "Ne poursuis pas ta ligne comme si l’adversaire devait suivre ton scénario."
+      title: "03 · Réévalue ton coup dans la position",
+      question: "Après une réponse que tu n’avais pas envisagée, comment juger ton demi-coup précédent ?",
+      principle: "Reconstruis la position et réévalue ton idée à partir de ce qui est maintenant attaqué, défendu ou affaibli. Si ton plan ne tient plus, reconnais le défaut et cherche une meilleure option.",
+      transfer: "Après chaque demi-coup, demande-toi si ton coup précédent a laissé une faiblesse concrète et si ton prochain coup peut la corriger.",
+      pitfall: "Ne continue pas ton plan par inertie. La position a changé; ton évaluation doit pouvoir changer aussi."
     },
     {
       id: "self-refute-04-test-the-best-defense", baseId: "remove-defender",
-      title: "04 · Défends le camp adverse",
-      question: "Tu crois avoir trouvé un gain tactique. Comment tenter de réfuter ton propre calcul ?",
-      principle: "Prends le point de vue adverse : trouve sa défense la plus résistante, même si elle paraît passive. Ton idée n’est confirmée que si elle reste valable contre cette défense.",
-      transfer: "Calcule ta ligne, puis demande-toi quel coup te poserait le plus de problèmes si tu étais l’adversaire.",
-      pitfall: "Ne prends pas la première reprise ou la réponse la plus commode pour preuve que ton sacrifice fonctionne."
+      title: "04 · Vérifie le coût d’un sacrifice",
+      question: "Tu envisages un sacrifice. Comment juger ton demi-coup sans te fier à son apparence brillante ?",
+      principle: "Compte ce que ton propre coup abandonne et ce qu’il obtient réellement : activité, initiative, roi exposé, cases ou matériel récupérable. Une ligne adverse possible met ensuite ce bilan à l’épreuve.",
+      transfer: "Avant de calculer les réponses, écris le coût immédiat de ton coup et la compensation concrète que tu attends.",
+      pitfall: "Ne qualifie pas un sacrifice de correct parce qu’il semble actif. La compensation doit résister à l’analyse."
     },
     {
       id: "self-refute-05-compare-with-stockfish", baseId: "candidate-moves",
-      title: "05 · Comparer sans copier",
-      question: "Tu as noté ton candidat et sa réfutation adverse possible. Comment utiliser Stockfish pour apprendre ?",
-      principle: "Garde d’abord ta propre variante. Compare ensuite ton candidat et la meilleure ligne du moteur, puis explique la différence à partir des menaces, des pièces et des cases.",
-      transfer: "Note ce que tu pensais, la meilleure réponse adverse que tu as trouvée et le point précis que Stockfish révèle ou confirme.",
-      pitfall: "Ne copie pas la première ligne sans comprendre pourquoi ta variante échoue ou pourquoi ton candidat résiste."
+      title: "05 · Comparer ton jugement à Stockfish",
+      question: "Tu as auto-évalué ton demi-coup. Comment utiliser Stockfish pour apprendre de l’écart éventuel ?",
+      principle: "Compare ton diagnostic avec les coups et variantes du moteur. Repère le motif concret que tu as manqué ou la raison pour laquelle ton coup reste valable; le score seul n’explique pas la position.",
+      transfer: "Note ton idée, le défaut que tu soupçonnes, puis la différence précise révélée par les candidats Stockfish.",
+      pitfall: "Ne copie pas la première ligne. Explique en termes de menaces, pièces, roi, cases et alternatives pourquoi le moteur préfère un autre coup."
     },
   ];
   for (const blueprint of selfRefutationBlueprints) {
@@ -1370,23 +1370,23 @@
       id: blueprint.id,
       kind: "method",
       title: blueprint.title,
-      category: "Auto-réfutation · calcul et vérification",
+      category: "Auto-évaluation · calcul et vérification",
       program: SELF_REFUTATION_PROGRAM,
       author: "SupaChess Académie",
-      book: "Routine pédagogique originale d’auto-réfutation",
-      reference: "Leçon originale SupaChess · aucun texte, citation ou protocole officiel attribué à Hikaru Nakamura",
+      book: "Routine pédagogique originale d’auto-évaluation du demi-coup",
+      reference: "Leçon originale SupaChess inspirée de la routine décrite par l’utilisateur; attribution non officielle à Hikaru Nakamura",
       question: blueprint.question,
       choices: [
-        { text: "Chercher la meilleure réponse adverse, calculer sa suite, puis comparer avec Stockfish.", correct: true },
-        { text: "Garder mon coup parce qu’il semble bon à première vue.", correct: false },
-        { text: "N’examiner que la réponse adverse que j’espère voir.", correct: false },
+        { text: "Chercher le défaut concret de mon coup avant d’examiner des réponses possibles.", correct: true },
+        { text: "Le déclarer bon parce que mon idée me plaît.", correct: false },
+        { text: "Deviner un coup adverse précis puis juger seulement ce scénario.", correct: false },
       ],
       principle: blueprint.principle,
       transfer: blueprint.transfer,
       pitfall: blueprint.pitfall,
       hints: [
-        "Essaie de défendre le camp adverse et cherche ses coups forcing.",
-        "Une réfutation doit être une suite concrète; l’absence d’idée immédiate ne prouve pas que ton coup est optimal.",
+        "Examine ce que ton propre coup laisse en prise, affaiblit ou ne résout pas.",
+        "Ensuite, compare plusieurs réponses possibles; aucune réponse n’est connue à l’avance.",
       ],
     });
   }
@@ -1412,31 +1412,31 @@
             id: source.id + "-anticipate-" + index,
             kind: "anticipation",
             level: source.level,
-            title: (selfRefutationExercise ? "Puzzle d’auto-réfutation · " : "Anticipation · prévoir la réponse à ") + source.title,
-            category: (selfRefutationExercise ? "Puzzle · meilleure réfutation adverse · " : "Anticipation · ") + source.category,
+            title: (selfRefutationExercise ? "Défi d’auto-évaluation · " : "Anticipation · prévoir la réponse à ") + source.title,
+            category: (selfRefutationExercise ? "Défi · auto-évaluation du demi-coup · " : "Anticipation · ") + source.category,
             program: selfRefutationExercise ? SELF_REFUTATION_PROGRAM : "Anti-erreurs · anticiper l’adversaire",
             author: "SupaChess Académie",
             book: "Programme de renforcement et rappel actif",
-            reference: selfRefutationExercise ? "Puzzle original · réponse de la ligne à vérifier" : "Exercice original de prévision du demi-coup adverse",
+            reference: selfRefutationExercise ? "Défi original · réponse préparée comme test, pas comme prédiction" : "Exercice original de prévision du demi-coup adverse",
             fen: position.fen(),
             setup: [],
             color: position.turn(),
             question: selfRefutationExercise
-              ? "Mets-toi à la place de l’adversaire : quelle est sa meilleure réponse à la ligne étudiée ? Joue-la et vérifie ensuite ce qu’elle réfute."
+              ? "Le demi-coup " + (priorMove ? priorMove.san : previous.uci) + " vient d’être joué. Avant de regarder la suite, quelle démarche juge correctement ton propre coup ?"
               : "Après le dernier coup joué, quelle réponse de la ligne faut-il envisager avant de poursuivre ?",
             choices: [
-              { text: "Anticiper " + replySan + " et vérifier ses conséquences", correct: true },
-              { text: "Continuer son plan sans réexaminer la position", correct: false },
-              { text: "Jouer un coup d’aile sans vérifier les menaces", correct: false },
+              { text: "Chercher ce que mon coup laisse en prise, affaiblit ou néglige avant de tester des réponses possibles.", correct: true },
+              { text: "Supposer que l’adversaire jouera forcément le coup que je préfère.", correct: false },
+              { text: "Décider que mon coup est correct parce qu’il crée une menace.", correct: false },
             ],
             principle: (selfRefutationExercise
-              ? "Réponse de la ligne à tester : " + replySan + ". Cherche pourquoi elle met ton idée à l’épreuve; une ligne de partie ne prouve pas à elle seule que c’est l’unique meilleur coup."
+              ? "La ligne préparée joue " + replySan + " comme test après ton diagnostic. Elle montre une conséquence possible, pas un coup adverse connu d’avance ni une preuve que cette réponse est unique."
               : "Réponse de la ligne étudiée : " + replySan + ". " + action.explanation),
-            transfer: "Après chaque demi-coup adverse, recommence l’inventaire des échecs, prises et menaces avant de poursuivre ton plan.",
-            pitfall: "Ne considère pas ton coup comme réussi tant que tu n’as pas examiné la réponse adverse la plus gênante.",
+            transfer: selfRefutationExercise ? "Après ton auto-évaluation, joue la réponse préparée et vérifie si elle met en évidence le défaut que tu avais formulé." : "Après chaque demi-coup adverse, recommence l’inventaire des échecs, prises et menaces avant de poursuivre ton plan.",
+            pitfall: selfRefutationExercise ? "Ne prétends pas connaître le choix adverse : une ligne testée est un scénario d’analyse, pas une prédiction." : "Ne considère pas ton coup comme réussi tant que tu n’as pas examiné la réponse adverse la plus gênante.",
             hints: [
-              "Observe ce que le dernier coup a attaqué ou laissé sans défense.",
-              "Compare les échecs, prises et menaces possibles pour le camp adverse.",
+              selfRefutationExercise ? "Examine ton demi-coup : quelles pièces ou cases laisse-t-il vulnérables, et quelle alternative existait ?" : "Observe ce que le dernier coup a attaqué ou laissé sans défense.",
+              selfRefutationExercise ? "Après avoir formulé ton diagnostic, joue la réponse de la ligne pour le mettre à l’épreuve." : "Compare les échecs, prises et menaces possibles pour le camp adverse.",
             ],
             sequence: source.sequence.slice(index).map((item) => ({
               side: item.side === "book" ? "user" : "book",
@@ -3530,7 +3530,7 @@
     $("lesson-reflection-candidate").value = "";
     $("lesson-reflection-reply").value = "";
     $("lesson-reflection-submit").disabled = false;
-    $("lesson-reflection-submit").textContent = "Valider mon calcul et afficher Stockfish";
+    $("lesson-reflection-submit").textContent = "Valider mon auto-évaluation et afficher Stockfish";
     $("lesson-reflection-status").textContent = "";
     $("lesson-reflection-review").hidden = true;
     $("lesson-review-status").textContent = "";
@@ -3995,7 +3995,7 @@
       if (stockfishCoachMode && stockfishReflection) {
         const bestLine = result.choices[0] ? result.choices[0].sanLine.join(" ") : "aucune variante disponible";
         $("lesson-reflection-review").hidden = false;
-        $("lesson-reflection-summary").textContent = "Ton candidat : " + stockfishReflection.candidate + " | Réponse adverse prévue : " + stockfishReflection.reply + " | Première ligne Stockfish : " + bestLine + ". Compare les menaces et chaque demi-coup avant de décider quoi revoir.";
+        $("lesson-reflection-summary").textContent = "Ton coup et ton idée : " + stockfishReflection.candidate + " | Défaut que tu as envisagé : " + stockfishReflection.reply + " | Première ligne Stockfish : " + bestLine + ". Compare les conséquences et les alternatives pour comprendre ton propre coup.";
         $("lesson-review-save").disabled = false;
         renderStockfishReviewQueue();
       }
@@ -4080,13 +4080,13 @@
     const candidate = $("lesson-reflection-candidate").value.trim();
     const reply = $("lesson-reflection-reply").value.trim();
     if (!candidate || !reply) {
-      $("lesson-reflection-status").textContent = "Note ton coup candidat et au moins une réponse adverse avant de regarder Stockfish.";
+      $("lesson-reflection-status").textContent = "Note ton demi-coup candidat et une faiblesse possible de ce coup avant de regarder Stockfish.";
       return;
     }
     stockfishReflection = { candidate: candidate, reply: reply };
     $("lesson-reflection-submit").disabled = true;
     $("lesson-reflection-submit").textContent = "Calcul enregistré";
-    $("lesson-reflection-status").textContent = "Ta prévision est gardée dans cette page. Lance maintenant la comparaison Stockfish.";
+    $("lesson-reflection-status").textContent = "Ton auto-évaluation est gardée dans cette page. Lance maintenant la comparaison Stockfish.";
     $("lesson-engine-analyze").hidden = false;
     $("lesson-engine-analyze").focus();
   });
