@@ -562,7 +562,7 @@ window.SupaChessIsUnassistedGame = isUnassistedGameModeActive;
 function syncUndoButton() {
   const button = $("btn-undo");
   if (!button) return;
-  const limit = 5;
+  const limit = 3;
   const reached = state.undoCount >= limit;
   button.textContent = "Annuler mon demi-coup (" + state.undoCount + "/" + limit + ")";
   button.disabled = state.unassistedGame || isDiagnosticControlLockActive() || reached;
@@ -571,7 +571,7 @@ function syncUndoButton() {
     : isDiagnosticControlLockActive()
       ? "Annulation désactivée pendant le diagnostic"
       : reached
-        ? "Limite de cinq annulations atteinte pour cette partie"
+        ? "Limite de trois annulations atteinte pour cette partie"
         : "Annuler votre dernier demi-coup et la réponse du moteur (" + (limit - state.undoCount) + " restante(s))";
 }
 function setUnassistedGameMode(active, options = {}) {
@@ -1740,8 +1740,8 @@ $("btn-undo").addEventListener("click", () => {
   if (state.unassistedGame) return;
   if (state.phase === "engineThinking" || state.phase === "analyzing") return;
   if (typeof window.reviewUndoCorrectionExercise === "function" && window.reviewUndoCorrectionExercise()) return;
-  if (state.undoCount >= 5) {
-    setStatus("Limite de cinq annulations atteinte pour cette partie.");
+  if (state.undoCount >= 3) {
+    setStatus("Limite de trois annulations atteinte pour cette partie.");
     syncUndoButton();
     return;
   }
