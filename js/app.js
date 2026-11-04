@@ -1443,7 +1443,34 @@ function fmtEval(e) {
   return (v > 0 ? "+" : "") + v.toFixed(2);
 }
 
+function ensureSessionStatRows() {
+  const rows = [
+    ["stat-top5", "% top-5 Stockfish", "stat-top3"],
+    ["stat-top10", "% top-10 Stockfish", "stat-top5"],
+    ["stat-top25", "% top-25 Stockfish", "stat-top10"],
+    ["stat-top50", "% top-50 Stockfish", "stat-top25"],
+    ["stat-accuracy-60", "Demi-coups avec précision > 60 %", "stat-top50"],
+    ["stat-accuracy-75", "Demi-coups avec précision > 75 %", "stat-accuracy-60"],
+    ["stat-accuracy-90", "Demi-coups avec précision > 90 %", "stat-accuracy-75"],
+  ];
+  for (const [id, label, afterId] of rows) {
+    if ($(id)) continue;
+    const after = $(afterId);
+    const parentRow = after && after.closest("tr");
+    if (!parentRow) continue;
+    const row = document.createElement("tr");
+    const labelCell = document.createElement("td");
+    labelCell.textContent = label;
+    const valueCell = document.createElement("td");
+    valueCell.id = id;
+    valueCell.textContent = "—";
+    row.append(labelCell, valueCell);
+    parentRow.after(row);
+  }
+}
+
 function renderStats() {
+  ensureSessionStatRows();
   const s = state.stats;
   $("stat-moves").textContent = s.moves;
   const rate = (count, total) => total ? `${Math.round((count / total) * 100)} % (${count}/${total})` : "—";
