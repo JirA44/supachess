@@ -1743,14 +1743,21 @@ $("btn-undo").addEventListener("click", () => {
   // Retire le dernier demi-coup du joueur et les réponses moteur qui le suivent.
   const pliesToUndo = history.length - lastUserMoveIndex;
   for (let undone = 0; undone < pliesToUndo; undone++) {
+    const ply = state.chess.history().length;
     const move = state.chess.undo();
     if (move && move.color === state.userColor) undoSessionMoveSample();
+    if (move && state.accuracy.byPly[ply]) {
+      if (state.accuracy[move.color].length) state.accuracy[move.color].pop();
+      delete state.accuracy.byPly[ply];
+    }
     state.fenHistory.pop();
     state.positionFenHistory.pop();
     state.evalHistory.pop();
   }
   state.moveGradeHistory = state.moveGradeHistory.filter((entry) => entry.ply <= state.chess.history().length);
   state.accuracy.pendingEngine = null;
+  const remainingAccuracyPlies = Object.keys(state.accuracy.byPly).map(Number).filter(Number.isFinite).sort((a, b) => b - a);
+  state.accuracy.lastMove = remainingAccuracyPlies.length ? state.accuracy.byPly[remainingAccuracyPlies[0]] : null;
   boardUI.lastMove = null;
   renderAll();
   startTurn();
