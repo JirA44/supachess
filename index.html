@@ -197,7 +197,8 @@
   </div>
 </details>
 <div class="board-controls">
-        <button id="btn-new" class="btn">Nouvelle partie</button>
+        <button id="btn-new" class="btn" type="button">Nouvelle partie</button>
+        <button id="btn-unassisted-game" class="btn" type="button" aria-pressed="false" title="Démarrer une nouvelle partie sans bulles, aides de coups, flèches, évaluation, coach ni annulation.">Jouer une partie sans aide</button>
         <button id="btn-undo" class="btn">Annuler le coup</button>
         <button id="btn-flip-board" class="btn" type="button" aria-pressed="false">Retourner l’échiquier</button>
         <button id="btn-best-move" class="btn" type="button" title="Jouer le meilleur demi-coup Stockfish ; en relecture, il remplace le coup affiché dans une variante temporaire." disabled>Jouer le meilleur demi-coup</button>
@@ -406,11 +407,11 @@
 <script src="js/supa.js?v=supa-brilliant-feed-20261103-v1"></script>
 <script src="js/board.js?v=rank4-fuchsia-brilliant-marker-20261103-v2"></script>
 <script src="js/appearance.js?v=appearance-options-20261102-v1"></script>
-<script src="js/analysis-settings.js?v=track-engine-arrows-as-aid-20261102-v1"></script>
+<script src="js/analysis-settings.js?v=unassisted-arrows-lock-20261104-v1"></script>
 <script src="js/move-feedback.js?v=supa-brilliant-indicator-20261103-v1"></script>
-<script src="js/app.js?v=rank4-fuchsia-supa-brilliant-20261103-v2"></script>
-<script src="js/diagnostic-undo-lock.js?v=diagnostic-undo-lock-20261030"></script>
-<script src="js/games.js?v=training-aid-provenance-20261102-v1"></script>
+<script src="js/app.js?v=unassisted-game-20261104-v1"></script>
+<script src="js/diagnostic-undo-lock.js?v=unassisted-undo-lock-20261104-v1"></script>
+<script src="js/games.js?v=unassisted-pgn-tag-20261104-v1"></script>
 <script src="js/tablebase.js?v=op1-partial-tablebase-20261027"></script>
 <script src="js/blindspots.js?v=pressure-defender-causes-20261030"></script>
   <script src="js/learning-loop.js"></script>
