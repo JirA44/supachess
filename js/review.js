@@ -537,7 +537,7 @@ async function reviewRun(options = {}) {
       reviewBeginReplay();
       document.getElementById("replay-bar").classList.remove("hidden");
       reviewSetReplayControls(true);
-      await replayGoto(0);
+      await replayGoto(moves.length);
     }
   }
   reviewState.running = false;
