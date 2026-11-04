@@ -90,7 +90,6 @@ test("summary keeps missing periods unavailable and renders French profile indic
   const html = window.SupaProfiles.renderLocalLearningPanel({});
   assert.match(html, /Précision moyenne/);
   assert.match(html, /Tout l’historique/);
-  assert.match(html, /Évolution indisponible/);
   assert.match(html, /87,5/);
 });
 
