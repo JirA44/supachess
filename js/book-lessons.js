@@ -1572,6 +1572,97 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     }
   }
 
+  const OPPONENT_MOVE_STUDY_PROGRAM = "Étudier le demi-coup adverse";
+  const opponentMoveBlueprints = [
+    {
+      id: "opponent-halfmove-01-threat", baseId: "develop-before-attack",
+      title: "01 · Lire l’effet immédiat du coup adverse",
+      question: "Quand l’adversaire joue un demi-coup, quelle première vérification révèle son effet immédiat ?",
+      correct: "Repérer la pièce déplacée, les cases contrôlées, les cibles attaquées et les menaces créées.",
+      wrongOne: "Chercher seulement une attaque contre le roi.",
+      wrongTwo: "Répondre tout de suite sans regarder ce qui a changé.",
+      principle: "Commence par les faits visibles : qu’est-ce qui est maintenant attaqué, défendu, ouvert ou bloqué ? Sépare l’effet direct du plan à plus long terme."
+    },
+    {
+      id: "opponent-halfmove-02-plan", baseId: "central-break",
+      title: "02 · Déduire son plan et sa stratégie",
+      question: "Comment passer du coup adverse isolé à l’idée stratégique qu’il poursuit ?",
+      correct: "Relier le coup à la structure de pions, aux pièces actives, aux cases clés et aux ruptures possibles.",
+      wrongOne: "Attribuer un plan à l’adversaire sans vérifier la position.",
+      wrongTwo: "Regarder seulement la dernière pièce déplacée.",
+      principle: "Un plan est une suite d’objectifs plausibles, pas une certitude sur la pensée adverse. Cherche les indices dans la structure, l’activité et les cases."
+    },
+    {
+      id: "opponent-halfmove-03-good-or-error", baseId: "knight-fork",
+      title: "03 · Distinguer bon coup, imprécision et erreur",
+      question: "Comment juger si le demi-coup adverse est bon ou s’il comporte un défaut ?",
+      correct: "Comparer ses menaces et son idée aux meilleures alternatives, puis calculer ce qu’il permet aux deux camps.",
+      wrongOne: "Le juger bon parce qu’il attaque quelque chose.",
+      wrongTwo: "Le juger mauvais parce qu’il paraît surprenant.",
+      principle: "Une attaque n’est pas forcément une menace efficace. Évalue les conséquences concrètes, les ressources tactiques et les alternatives; Stockfish donne un repère, pas une explication humaine complète."
+    },
+    {
+      id: "opponent-halfmove-04-consequences", baseId: "intermezzo-check",
+      title: "04 · Calculer les conséquences",
+      question: "Après le coup adverse, quel calcul évite une réponse automatique ?",
+      correct: "Vérifier échecs, prises et menaces pour les deux camps, puis comparer plusieurs réponses légales.",
+      wrongOne: "Rejouer immédiatement le coup que tu avais prévu avant la réponse.",
+      wrongTwo: "Échanger la pièce attaquée sans calculer les reprises.",
+      principle: "Le demi-coup adverse peut changer l’ordre des priorités. Recalcule depuis la position actuelle et vérifie les réponses forcing avant de choisir."
+    },
+    {
+      id: "opponent-halfmove-05-reply-and-evaluation", baseId: "king-pawn-endgame",
+      title: "05 · Répondre au plan adverse",
+      question: "Comment choisir une réponse après avoir compris le plan adverse ?",
+      correct: "Évaluer le coup adverse, formuler son plan probable, puis trouver une réponse qui traite la menace et améliore sa propre position.",
+      wrongOne: "Contrecopier le plan adverse sans évaluer s’il est urgent.",
+      wrongTwo: "Ignorer le plan et jouer le coup le plus familier.",
+      principle: "Une bonne réponse peut neutraliser une menace, contester une case clé ou poursuivre un plan plus urgent. Compare les conséquences plutôt que de réagir par réflexe."
+    },
+  ];
+  for (const blueprint of opponentMoveBlueprints) {
+    const base = LESSONS.find((lesson) => lesson.id === blueprint.baseId);
+    if (!base || !Array.isArray(base.sequence) || base.sequence.length < 2 || base.sequence[0].side !== "user" || base.sequence[1].side !== "book") {
+      throw new Error("Ligne source indisponible pour l’étude du demi-coup adverse : " + blueprint.baseId);
+    }
+    const beforeOpponentMove = setupGame(base, ChessClass);
+    if (!playUci(beforeOpponentMove, base.sequence[0].uci)) {
+      throw new Error("Coup de préparation illégal pour l’étude adverse : " + blueprint.baseId);
+    }
+    LESSONS.push({
+      ...base,
+      id: blueprint.id,
+      kind: "method",
+      title: blueprint.title,
+      category: "Étude du demi-coup adverse · intentions et conséquences",
+      program: OPPONENT_MOVE_STUDY_PROGRAM,
+      author: "SupaChess Académie",
+      book: "Parcours original d’analyse du coup adverse",
+      reference: "Leçon originale utilisant une ligne existante; le coup montré est un exemple d’étude, pas une prédiction.",
+      fen: beforeOpponentMove.fen(),
+      setup: [],
+      color: beforeOpponentMove.turn(),
+      sequence: base.sequence.slice(1).map((item, index) => ({
+        side: index % 2 === 0 ? "user" : "book",
+        uci: item.uci,
+        explanation: item.explanation,
+      })),
+      question: blueprint.question,
+      choices: [
+        { text: blueprint.correct, correct: true },
+        { text: blueprint.wrongOne, correct: false },
+        { text: blueprint.wrongTwo, correct: false },
+      ],
+      principle: blueprint.principle,
+      transfer: "Après le coup montré, décris son effet direct, son plan plausible, les conséquences et les alternatives avant de choisir ta réponse.",
+      pitfall: "Ne confonds pas une explication plausible du plan avec une certitude sur l’intention adverse; juge le coup par la position et le calcul.",
+      hints: [
+        "Compare la position avant et après le demi-coup.",
+        "Demande-toi ce que ce coup attaque, prépare, abandonne et permet à ton camp.",
+      ],
+    });
+  }
+
   const sourceLessons = LESSONS.slice();
   const responseExercises = [];
   for (const source of sourceLessons) {
@@ -1592,20 +1683,23 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
           const selfEvaluationExercise = source.program === SELF_EVALUATION_PROGRAM;
           const carlsenPatternExercise = source.program === CARLSEN_PATTERN_PROGRAM;
           const phaseStudyExercise = PHASE_STUDY_PROGRAMS.has(source.program);
+          const opponentMoveStudyExercise = source.program === OPPONENT_MOVE_STUDY_PROGRAM;
           responseExercises.push({
             id: source.id + "-anticipate-" + index,
             kind: "anticipation",
             level: source.level,
-            title: phaseStudyExercise ? "Révision de phase · " + source.title : carlsenPatternExercise ? "Rappel de motif · " + source.patternName : (selfEvaluationExercise ? "Défi d’auto-évaluation · " : selfRefutationExercise ? "Puzzle d’auto-réfutation · " : "Anticipation · prévoir la réponse à ") + source.title,
-            category: phaseStudyExercise ? "Étude active · " + source.phaseLabel : carlsenPatternExercise ? "Carlsen · rappel actif des motifs" : (selfEvaluationExercise ? "Défi · auto-évaluation du demi-coup · " : selfRefutationExercise ? "Puzzle · meilleure réfutation adverse · " : "Anticipation · ") + source.category,
-            program: phaseStudyExercise ? source.program : carlsenPatternExercise ? CARLSEN_PATTERN_PROGRAM : selfEvaluationExercise ? SELF_EVALUATION_PROGRAM : selfRefutationExercise ? SELF_REFUTATION_PROGRAM : "Anti-erreurs · anticiper l’adversaire",
+            title: opponentMoveStudyExercise ? "Conséquences du coup adverse · " + source.title : phaseStudyExercise ? "Révision de phase · " + source.title : carlsenPatternExercise ? "Rappel de motif · " + source.patternName : (selfEvaluationExercise ? "Défi d’auto-évaluation · " : selfRefutationExercise ? "Puzzle d’auto-réfutation · " : "Anticipation · prévoir la réponse à ") + source.title,
+            category: opponentMoveStudyExercise ? "Étude active · conséquences et réponses" : phaseStudyExercise ? "Étude active · " + source.phaseLabel : carlsenPatternExercise ? "Carlsen · rappel actif des motifs" : (selfEvaluationExercise ? "Défi · auto-évaluation du demi-coup · " : selfRefutationExercise ? "Puzzle · meilleure réfutation adverse · " : "Anticipation · ") + source.category,
+            program: opponentMoveStudyExercise ? OPPONENT_MOVE_STUDY_PROGRAM : phaseStudyExercise ? source.program : carlsenPatternExercise ? CARLSEN_PATTERN_PROGRAM : selfEvaluationExercise ? SELF_EVALUATION_PROGRAM : selfRefutationExercise ? SELF_REFUTATION_PROGRAM : "Anti-erreurs · anticiper l’adversaire",
             author: "SupaChess Académie",
             book: "Programme de renforcement et rappel actif",
-            reference: phaseStudyExercise ? "Révision de phase · ligne à rejouer et principe à rappeler" : carlsenPatternExercise ? "Rappel de motif · réponse préparée pour rejouer le schéma" : selfEvaluationExercise ? "Défi original · réponse préparée comme test, pas comme prédiction" : selfRefutationExercise ? "Puzzle original · réponse de la ligne à vérifier" : "Exercice original de prévision du demi-coup adverse",
+            reference: opponentMoveStudyExercise ? "Exercice original · réponse à une ligne étudiée, pas prédiction du choix adverse" : phaseStudyExercise ? "Révision de phase · ligne à rejouer et principe à rappeler" : carlsenPatternExercise ? "Rappel de motif · réponse préparée pour rejouer le schéma" : selfEvaluationExercise ? "Défi original · réponse préparée comme test, pas comme prédiction" : selfRefutationExercise ? "Puzzle original · réponse de la ligne à vérifier" : "Exercice original de prévision du demi-coup adverse",
             fen: position.fen(),
             setup: [],
             color: position.turn(),
-            question: phaseStudyExercise
+            question: opponentMoveStudyExercise
+              ? "Après le coup adverse étudié, quelle réponse de la ligne permet d’examiner ses conséquences ? Calcule aussi d’autres réponses possibles."
+              : phaseStudyExercise
               ? "Pour réviser cette position de " + source.phaseLabel.toLowerCase() + ", joue le coup de la ligne puis rappelle le principe qu’il illustre."
               : carlsenPatternExercise
               ? "Quel motif faut-il reconnaître ici avant de jouer le demi-coup de la ligne ?"
@@ -1614,7 +1708,13 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
               : selfRefutationExercise
                 ? "Mets-toi à la place de l’adversaire : quelle est sa meilleure réponse à la ligne étudiée ? Joue-la et vérifie ensuite ce qu’elle réfute."
                 : "Après le dernier coup joué, quelle réponse de la ligne faut-il envisager avant de poursuivre ?",
-            choices: phaseStudyExercise
+            choices: opponentMoveStudyExercise
+              ? [
+                  { text: "Jouer " + replySan + " puis vérifier menaces, plan et conséquences pour les deux camps.", correct: true },
+                  { text: "Répondre automatiquement sans vérifier ce que le coup adverse menace.", correct: false },
+                  { text: "Supposer que la réponse de la ligne est la seule possibilité.", correct: false },
+                ]
+              : phaseStudyExercise
               ? [
                   { text: "Jouer " + replySan + " et l’expliquer par le principe étudié.", correct: true },
                   { text: "Mémoriser le coup sans regarder la position.", correct: false },
@@ -1637,7 +1737,9 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
                   { text: "Continuer son plan sans réexaminer la position", correct: false },
                   { text: "Jouer un coup d’aile sans vérifier les menaces", correct: false },
                 ],
-            principle: (phaseStudyExercise
+            principle: (opponentMoveStudyExercise
+              ? "Réponse de la ligne : " + replySan + ". Vérifie ce qu’elle répond au coup adverse et compare ses conséquences aux autres réponses légales; elle ne prouve pas que ce choix est unique ni optimal."
+              : phaseStudyExercise
               ? source.phaseLabel + " : " + action.explanation + " Rejoue le coup dans la position et rattache-le à son idée; une suite mémorisée sans contexte ne suffit pas."
               : carlsenPatternExercise
               ? "Motif à reconnaître : " + source.patternName + ". Le demi-coup " + replySan + " permet de rejouer ce schéma; vérifie la position concrète au lieu de répondre par simple mémorisation."
@@ -1646,21 +1748,27 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
               : selfRefutationExercise
                 ? "Réponse de la ligne à tester : " + replySan + ". Cherche pourquoi elle met ton idée à l’épreuve; une ligne de partie ne prouve pas à elle seule que c’est l’unique meilleur coup."
                 : "Réponse de la ligne étudiée : " + replySan + ". " + action.explanation),
-            transfer: phaseStudyExercise
+            transfer: opponentMoveStudyExercise
+              ? "Nomme l’effet et le plan plausible du demi-coup adverse, puis compare plusieurs réponses et vérifie l’évaluation avec Stockfish."
+              : phaseStudyExercise
               ? "Rejoue le coup, explique le principe, puis compare une autre réponse candidate et les conséquences sur la position."
               : carlsenPatternExercise
               ? "Après avoir identifié le motif, joue le coup de la ligne et explique quelles pièces, cases ou menaces en montrent la présence."
               : selfEvaluationExercise
               ? "Après ton auto-évaluation, joue la réponse préparée et vérifie si elle met en évidence le défaut que tu avais formulé."
               : "Après chaque demi-coup adverse, recommence l’inventaire des échecs, prises et menaces avant de poursuivre ton plan.",
-            pitfall: phaseStudyExercise
+            pitfall: opponentMoveStudyExercise
+              ? "Ne transforme pas une suite de partie en vérité générale; sépare faits observables, hypothèse de plan et évaluation calculée."
+              : phaseStudyExercise
               ? "Ne mémorise pas un coup d’ouverture, de milieu de jeu ou de finale sans comprendre son but et ses limites dans cette position."
               : carlsenPatternExercise
               ? "Ne plaque pas un motif appris sur chaque position : confirme ses éléments sur l’échiquier."
               : selfEvaluationExercise
               ? "Ne prétends pas connaître le choix adverse : une ligne testée est un scénario d’analyse, pas une prédiction."
               : "Ne considère pas ton coup comme réussi tant que tu n’as pas examiné la réponse adverse la plus gênante.",
-            hints: phaseStudyExercise
+            hints: opponentMoveStudyExercise
+              ? ["Quelles cases, pièces ou pions le demi-coup adverse attaque-t-il ou protège-t-il ?", "Quel plan plausible indique-t-il, et quelle réponse permet d’en tester les conséquences ?"]
+              : phaseStudyExercise
               ? ["Observe les pièces, les pions, le roi et les cases clés de cette phase.", "Rappelle le principe, puis vérifie-le sur la ligne jouée."]
               : carlsenPatternExercise
               ? ["Cherche le schéma répété : alignement, double attaque, cible affaiblie ou pièce sans activité.", "Nomme le motif, puis vérifie chaque détail sur la position."]
