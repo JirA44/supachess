@@ -24,6 +24,13 @@ const state = {
   stats: { moves: 0, top1: 0, top3: 0, intercepts: 0, forced: 0 },
   accuracy: { w: [], b: [], pendingEngine: null, lastMove: null, byPly: {} }, // moveAccuracy [0..100] par couleur
   moveGradeHistory: [], // demi-coups joués avec catégorie, révisée après analyse moteur
+  clockMs: { w: 0, b: 0 },
+  clockRemainingMs: { w: 0, b: 0 },
+  clockActiveColor: null,
+  clockStartedAt: 0,
+  clockIntervalId: null,
+  timeExpiredColor: null,
+  timeRankSubmitted: false,
 };
 
 const boardUI = new BoardUI($("board"), onSquareClick);
@@ -290,6 +297,116 @@ window.addEventListener("storage", (event) => {
 /* ── Réglages ── */
 function thresholdCp() { return Math.round(parseFloat($("sel-threshold").value) * 100); }
 function movetime() { return parseInt($("sel-movetime").value, 10); }
+const PLAYER_CLOCK_SETTINGS_KEY = "supachess-player-clocks-v1";
+function restorePlayerClockSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PLAYER_CLOCK_SETTINGS_KEY) || "{}");
+    for (const color of ["w", "b"]) {
+      const select = $(color === "w" ? "sel-clock-white" : "sel-clock-black");
+      const value = String(Number(saved[color]) || 0);
+      if (select && ["0", "1", "3", "5"].includes(value)) select.value = value;
+    }
+  } catch (_) {}
+}
+function persistPlayerClockSettings() {
+  try {
+    localStorage.setItem(PLAYER_CLOCK_SETTINGS_KEY, JSON.stringify({
+      w: $("sel-clock-white")?.value || "0",
+      b: $("sel-clock-black")?.value || "0",
+    }));
+  } catch (_) {}
+}
+function selectedClockMs(color) {
+  const select = $(color === "w" ? "sel-clock-white" : "sel-clock-black");
+  const minutes = select ? Math.max(0, Number(select.value) || 0) : 0;
+  return minutes * 60 * 1000;
+}
+function formatPlayerClock(ms) {
+  const safe = Math.max(0, ms);
+  const totalSeconds = Math.ceil(safe / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return minutes + ":" + String(seconds).padStart(2, "0");
+}
+function renderPlayerClocks() {
+  for (const color of ["w", "b"]) {
+    const value = $(color === "w" ? "clock-white" : "clock-black");
+    const box = document.querySelector('[data-clock-side="' + color + '"]');
+    if (!value || !box) continue;
+    let remaining = state.clockRemainingMs[color];
+    if (state.clockActiveColor === color && state.clockStartedAt) remaining -= Date.now() - state.clockStartedAt;
+    const expired = state.timeExpiredColor === color || (state.clockMs[color] > 0 && remaining <= 0);
+    value.textContent = state.clockMs[color] > 0 ? formatPlayerClock(remaining) : "∞";
+    box.classList.toggle("is-active", state.clockActiveColor === color);
+    box.classList.toggle("is-expired", expired);
+    value.setAttribute("aria-label", color === "w" ? "Temps restant des Blancs" : "Temps restant des Noirs");
+  }
+  const status = $("clock-control-status");
+  if (status) {
+    const remainingFor = (color) => {
+      const activeDelta = state.clockActiveColor === color && state.clockStartedAt ? Date.now() - state.clockStartedAt : 0;
+      return state.clockMs[color] ? formatPlayerClock(state.clockRemainingMs[color] - activeDelta) : "illimité";
+    };
+    const white = remainingFor("w");
+    const black = remainingFor("b");
+    status.textContent = "Blancs : " + white + " · Noirs : " + black +
+      (state.clockActiveColor ? " · pendule en cours" : " · arrêtée");
+  }
+}
+function stopPlayerClock(color) {
+  if (!state.clockActiveColor || (color && color !== state.clockActiveColor)) return;
+  const active = state.clockActiveColor;
+  if (state.clockStartedAt && state.clockMs[active] > 0) {
+    state.clockRemainingMs[active] = Math.max(0, state.clockRemainingMs[active] - (Date.now() - state.clockStartedAt));
+  }
+  state.clockActiveColor = null;
+  state.clockStartedAt = 0;
+  if (state.clockIntervalId !== null) window.clearInterval(state.clockIntervalId);
+  state.clockIntervalId = null;
+  renderPlayerClocks();
+}
+function startPlayerClock(color) {
+  stopPlayerClock();
+  if (!color || state.phase === "gameover" || !state.clockMs[color]) { renderPlayerClocks(); return; }
+  state.clockActiveColor = color;
+  state.clockStartedAt = Date.now();
+  state.clockIntervalId = window.setInterval(() => {
+    const remaining = state.clockRemainingMs[color] - (Date.now() - state.clockStartedAt);
+    if (remaining <= 0) finishOnTime(color);
+    else renderPlayerClocks();
+  }, 100);
+  renderPlayerClocks();
+}
+function finishOnTime(color) {
+  if (state.phase === "gameover" || state.clockActiveColor !== color) return;
+  stopPlayerClock(color);
+  state.clockRemainingMs[color] = 0;
+  state.timeExpiredColor = color;
+  state.phase = "gameover";
+  state.gen++;
+  state.pendingMove = null;
+  const abandonButton = $("btn-abandon-game"), stopButton = $("btn-stop-game");
+  if (abandonButton) abandonButton.disabled = true;
+  if (stopButton) stopButton.disabled = true;
+  const winner = isManualMode()
+    ? (color === "w" ? "les Noirs gagnent" : "les Blancs gagnent")
+    : (color === state.userColor ? "Stockfish gagne" : "tu gagnes");
+  setStatus("Temps écoulé — " + winner + " par dépassement du temps.");
+  renderAll();
+  if (typeof gamesAutoSave === "function") gamesAutoSave();
+  renderPlayerClocks();
+}
+window.SupaChessStartTimedGame = function(minutes) {
+  const value = String(Math.max(0, Number(minutes) || 0));
+  const white = $("sel-clock-white"), black = $("sel-clock-black");
+  if (white) white.value = value;
+  if (black) black.value = value;
+  persistPlayerClockSettings();
+  const modal = $("profile-modal");
+  if (modal) modal.remove();
+  if (document.body.dataset.engineReady === "1" && state.phase !== "init") newGame({ unassisted: true });
+  else sessionStorage.setItem("supachess-pending-clock-game-v1", value);
+};
 function opponentElo() { return parseInt($("sel-elo").value, 10); }
 function isManualMode() { return $("sel-elo").value === "manual"; }
 function opponentThinkTime() { return movetime(); }
@@ -339,11 +456,22 @@ async function init() {
   $("engine-label").textContent = state.engine.engineName + " (NNUE) — prêt";
   document.body.dataset.engineReady = "1";
   const resumeUnaided = sessionStorage.getItem("supachess-unassisted-game-active-v1") === "true";
-  newGame({ unassisted: resumeUnaided, resume: resumeUnaided });
+  const queuedClockMinutes = sessionStorage.getItem("supachess-pending-clock-game-v1");
+  if (queuedClockMinutes !== null) {
+    $("sel-clock-white").value = queuedClockMinutes;
+    $("sel-clock-black").value = queuedClockMinutes;
+    sessionStorage.removeItem("supachess-pending-clock-game-v1");
+    newGame({ unassisted: false });
+  } else newGame({ unassisted: resumeUnaided, resume: resumeUnaided });
   document.dispatchEvent(new Event("supachess:engine-ready"));
 }
 
 function newGame(options = {}) {
+  stopPlayerClock();
+  state.timeExpiredColor = null;
+  state.timeRankSubmitted = false;
+  state.clockMs = { w: selectedClockMs("w"), b: selectedClockMs("b") };
+  state.clockRemainingMs = { ...state.clockMs };
   setUnassistedGameMode(Boolean(options.unassisted), { resume: Boolean(options.resume) });
   window.SupaReplayHistory = null;
   state.abandoned = false;
@@ -374,11 +502,13 @@ function newGame(options = {}) {
   hideCoach();
   if (typeof gamesNewEntry === "function") gamesNewEntry();
   renderAll();
+  renderPlayerClocks();
   startTurn();
 }
 
 function abandonCurrentGame() {
   if (state.phase === "init" || state.phase === "gameover") return;
+  stopPlayerClock();
   state.gen++;
   state.abandoned = true;
   state.stopped = false;
@@ -400,6 +530,7 @@ function abandonCurrentGame() {
 
 function stopCurrentGame() {
   if (state.phase === "init" || state.phase === "gameover") return;
+  stopPlayerClock();
   state.gen++;
   state.abandoned = false;
   state.stopped = true;
@@ -525,6 +656,7 @@ async function analyzeForUser() {
     finishEngineFeedback(p, res.lines[0]);
   }
   state.phase = "userTurn";
+  startPlayerClock(state.chess.turn());
   if (state.unassistedGame) {
     setStatus(isManualMode() ? "Mode sans aide — jouez les coups des deux côtés, aucun conseil affiché." : "À vous de jouer — partie sans aide, aucun indice ni évaluation affiché.");
   } else if (isManualMode()) {
@@ -656,6 +788,7 @@ function breakdownHtml(bd, cls) {
 async function playEngineMove() {
   state.phase = "engineThinking";
   const gen = ++state.gen;
+  startPlayerClock(state.chess.turn());
   setStatus("Stockfish réfléchit…");
   boardUI.dots = [];
   renderBoard();
@@ -671,6 +804,7 @@ async function playEngineMove() {
   if (state.gen !== gen || state.chess.fen() !== fen) return;
   if (!res.bestmove || res.bestmove === "(none)") { checkGameOver(); return; }
   const engineColor = state.chess.turn();
+  stopPlayerClock(engineColor);
   const mv = state.chess.move(uciToMoveObj(res.bestmove));
   if (mv) {
     if (window.SupaChessAudio) window.SupaChessAudio.play(state.chess.in_check() ? "check" : (mv.flags && (mv.flags.includes("c") || mv.flags.includes("e")) ? "capture" : "move"));
@@ -902,6 +1036,7 @@ async function attemptUserMove(moveObj) {
   const probe = new Chess(fen);
   const attempted = probe.move(moveObj);
   if (!attempted) return;
+  stopPlayerClock(state.chess.turn());
   boardUI.selected = null;
   boardUI.legalTargets = [];
   boardUI.legalTargetHints = {};
@@ -931,6 +1066,7 @@ async function attemptUserMove(moveObj) {
       line = { multipv: 99, depth: 0, scoreCp: 0, mate: probe.in_checkmate() ? 1 : null, pv: [uci] };
     } else {
       state.phase = "userTurn";
+      startPlayerClock(state.chess.turn());
       setStatus("Analyse du coup indisponible. Réessaie ce coup.");
       return;
     }
@@ -962,6 +1098,7 @@ function interceptMove(moveObj, cand) {
   if (window.SupaChessAudio) window.SupaChessAudio.play("incorrect");
   previewCandidate(cand);
   state.phase = "coach";
+  startPlayerClock(state.chess.turn());
   state.pendingMove = { ...moveObj, uci: cand.uci, cand };
   state.stats.intercepts++;
   const bestSan = state.candidates[0] ? state.candidates[0].san : "—";
@@ -1036,6 +1173,7 @@ function candidateCard(c, whiteSide, isUserMove) {
 }
 
 function commitUserMove(moveObj, cand, forced) {
+  stopPlayerClock(state.chess.turn());
   state.phase = "userTurn";
   const userMoveColor = state.chess.turn();
   const fenBefore = state.chess.fen();
@@ -1081,9 +1219,10 @@ function hideCoach() {
 
 /* ── Fin de partie ── */
 function checkGameOver() {
-  if (state.abandoned || state.stopped) return true;
+  if (state.abandoned || state.stopped || state.timeExpiredColor) return true;
   const c = state.chess;
   if (!c.game_over()) return false;
+  stopPlayerClock();
   state.phase = "gameover";
   const abandonButton = $("btn-abandon-game");
   const stopButton = $("btn-stop-game");
@@ -1465,6 +1604,15 @@ function onOpponentSettingsChange() {
 }
 $("sel-elo").addEventListener("change", onOpponentSettingsChange);
 $("sel-movetime").addEventListener("change", onOpponentSettingsChange);
+restorePlayerClockSettings();
+for (const id of ["sel-clock-white", "sel-clock-black"]) {
+  const control = $(id);
+  control?.addEventListener("change", () => {
+    persistPlayerClockSettings();
+    const status = $("clock-control-status");
+    if (status) status.textContent = "Nouveau temps enregistré. Il sera appliqué à la prochaine partie.";
+  });
+}
 updateOpponentFideEstimate();
 $("btn-force").addEventListener("click", () => {
   if (!state.unassistedGame && state.pendingMove) {
@@ -1475,11 +1623,13 @@ $("btn-force").addEventListener("click", () => {
 $("btn-cancel").addEventListener("click", () => {
   state.pendingMove = null;
   state.phase = "userTurn";
+  startPlayerClock(state.chess.turn());
   hideCoach();
   setStatus("À vous de jouer.");
 });
 $("btn-undo").addEventListener("click", () => {
   if (state.unassistedGame) return;
+  stopPlayerClock();
   if (typeof window.reviewUndoCorrectionExercise === "function" && window.reviewUndoCorrectionExercise()) return;
   if (state.phase === "engineThinking" || state.phase === "analyzing") return;
   hideCoach();
