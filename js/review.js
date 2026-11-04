@@ -756,13 +756,16 @@ async function reviewCorrectPgn(pgn,headers={},resumeTarget=null){
   if(saved){
     const exercises=reviewValidCorrectionExercises(saved.correctionExercises)
       .sort(reviewCompareCorrectionExercises);
-    if(exercises.length&&Array.isArray(saved.moveGrades)&&saved.moveGrades.length){
+    const targetPly=Number(correctionTarget&&correctionTarget.ply);
+    const exactTargetAvailable=!Number.isFinite(targetPly)||exercises.some((exercise)=>Number(exercise.ply)===targetPly);
+    if(exercises.length&&Array.isArray(saved.moveGrades)&&saved.moveGrades.length&&exactTargetAvailable){
       reviewState.currentHeaders={White:saved.white||headers.White||"Blancs",Black:saved.black||headers.Black||"Noirs"};
       reviewStartCorrectionExercises(exercises,reviewState.currentHeaders,saved.analysis||null,saved.moveGrades,correctionTarget);
       return true;
     }
     if(saved.analysis&&saved.analysis.version===1&&
-      (!Array.isArray(saved.correctionExercises)||saved.correctionExercises.length===0)){
+      (!Array.isArray(saved.correctionExercises)||saved.correctionExercises.length===0)&&
+      !Number.isFinite(targetPly)){
       const status=document.getElementById("review-history-status");
       if(status)status.textContent="Cette partie a déjà été analysée : aucun demi-coup à corriger n’a été détecté.";
       document.getElementById("review-panel")?.scrollIntoView({block:"start"});
