@@ -27,6 +27,8 @@
           label.textContent = count + " leçons · " + anticipationExercises.length + " défis d’auto-évaluation";
         } else if (program === "Carlsen · reconnaissance des motifs") {
           label.textContent = count + " leçons · " + anticipationExercises.length + " rappels de motifs";
+        } else if (program === "Étude des ouvertures" || program === "Étude du milieu de jeu" || program === "Étude des finales") {
+          label.textContent = count + " leçons · " + anticipationExercises.length + " exercices de révision";
         } else {
           const subject = program === "Stockfish · comparer et vérifier" ? "positions de leçons analysables" : "leçons du parcours";
           label.textContent = count + " " + subject;
@@ -40,7 +42,9 @@
             ? count + " leçons et " + anticipationExercises.length + " défis d’auto-évaluation"
             : program === "Carlsen · reconnaissance des motifs"
               ? count + " leçons et " + anticipationExercises.length + " rappels de motifs"
-              : count + " leçons";
+              : program === "Étude des ouvertures" || program === "Étude du milieu de jeu" || program === "Étude des finales"
+                ? count + " leçons et " + anticipationExercises.length + " exercices de révision"
+                : count + " leçons";
       path.setAttribute("aria-label", path.querySelector("h3").textContent + " · " + pathSummary);
     }
   }
