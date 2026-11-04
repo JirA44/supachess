@@ -2,8 +2,8 @@
 (() => {
   const key = "supachess-level-diagnostic";
   const active = () => {
-    try { return Boolean(JSON.parse(localStorage.getItem(key) || "null")?.active); }
-    catch (_) { return false; }
+    try { return Boolean(JSON.parse(localStorage.getItem(key) || "null")?.active) || Boolean(window.SupaChessIsUnassistedGame?.()); }
+    catch (_) { return Boolean(window.SupaChessIsUnassistedGame?.()); }
   };
   const sync = () => {
     const button = document.getElementById("btn-undo");
@@ -15,6 +15,7 @@
   sync();
   window.addEventListener("storage", e => { if (e.key === key) sync(); });
   window.addEventListener("supachess:level-diagnostic-change", sync);
+  window.addEventListener("supachess:unassisted-mode-change", sync);
   const banner = document.getElementById("level-diagnostic-banner");
   if (banner && typeof MutationObserver === "function")
     new MutationObserver(sync).observe(banner, { childList: true, characterData: true, subtree: true });
