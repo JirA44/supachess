@@ -459,7 +459,10 @@ async function reviewRun(options = {}) {
     const mateAwareLoss = cpEvidence && cpEvidence.status === "MATE_EVALUATION" && Number.isFinite(delta)
       ? Math.round(delta * 100) : null;
     const displayDelta = verifiedLossCp === null ? null : verifiedLossCp / 100;
-    if (verifiedLossCp !== null) accs[moves[i].color].push(moveAccuracyPct(before, after));
+    const comparableCentipawnScores = positionLines[i] && positionLines[i + 1]
+      && positionLines[i].mate === null && positionLines[i + 1].mate === null
+      && Number.isFinite(positionLines[i].scoreCp) && Number.isFinite(positionLines[i + 1].scoreCp);
+    if (comparableCentipawnScores) accs[moves[i].color].push(moveAccuracyPct(before, after));
     rows.push({
       n: Math.floor(i / 2) + 1,
       color: moves[i].color,
