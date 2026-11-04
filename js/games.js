@@ -44,6 +44,8 @@ function gamesNewEntry() {
     : null;
   currentGameMetadata = {
     engineName: manual ? null : (state.engine && state.engine.engineName) || "Stockfish 19",
+    manualMode: manual,
+    clockMs: { ...(state.clockMs || { w: 0, b: 0 }) },
     userColor: state.userColor,
     stockfishRatingEstimate: Number.isFinite(estimate) ? estimate : null,
     stockfishRatingSource: Number.isFinite(estimate) ? "supachess-engine-setting-v1" : null,
@@ -162,6 +164,7 @@ function gamesEngineRowDetails(game) {
 function gamesResult() {
   if (state.abandoned) return state.userColor === "w" ? "0-1" : "1-0";
   if (state.stopped) return "*";
+  if (state.timeExpiredColor) return state.timeExpiredColor === "w" ? "0-1" : "1-0";
   const c = state.chess;
   if (c.in_checkmate()) return c.turn() === "w" ? "0-1" : "1-0";
   if (c.game_over()) return "1/2-1/2";
@@ -181,6 +184,17 @@ function gamesBuildPgn(result) {
   );
   if (state.abandoned) state.chess.header("Termination", "abandoned");
   else if (state.stopped) state.chess.header("Termination", "unterminated");
+  else if (state.timeExpiredColor) state.chess.header("Termination", "time forfeit");
+  if (currentGameMetadata.clockMs) {
+    state.chess.header(
+      "SupaChessClockWhiteMs", String(Number(currentGameMetadata.clockMs.w) || 0),
+      "SupaChessClockBlackMs", String(Number(currentGameMetadata.clockMs.b) || 0)
+    );
+    if (currentGameMetadata.clockMs.w === currentGameMetadata.clockMs.b) {
+      state.chess.header("TimeControl", Number(currentGameMetadata.clockMs.w) > 0
+        ? String(Math.round(currentGameMetadata.clockMs.w / 1000)) + "+0" : "-");
+    }
+  }
   state.chess.header("SupaChessTrainingAidsUsed", currentGameMetadata.trainingAidsUsed ? "true" : "false");
   state.chess.header("SupaChessUnassistedMode", currentGameMetadata.unassistedMode ? "true" : "false");
   if (currentGameMetadata.engineName) {
@@ -197,6 +211,32 @@ function gamesBuildPgn(result) {
   return state.chess.pgn();
 }
 
+function gamesSubmitTimedRanking(entry) {
+  if (!entry || currentGameMetadata.rankingSubmitted || state.phase !== "gameover" ||
+      state.abandoned || state.stopped || entry.result === "*" ||
+      currentGameMetadata.manualMode || currentGameMetadata.trainingAidsUsed !== false) return;
+  const clocks = currentGameMetadata.clockMs || {};
+  if (Number(clocks.w) !== Number(clocks.b)) return;
+  const minutes = Number(clocks.w) / 60000;
+  const typeByMinutes = { 0: "classicUnlimited", 1: "classic1m", 3: "classic3m", 5: "classic5m" };
+  const gameType = typeByMinutes[minutes];
+  if (!gameType || !(state.chess.game_over() || state.timeExpiredColor)) return;
+  let auth = null;
+  try { auth = window.firebase && window.firebase.auth ? window.firebase.auth() : null; } catch (_) {}
+  const user = auth && auth.currentUser;
+  if (!user || !window.SupaProfiles || typeof window.SupaProfiles.recordTimedGame !== "function") return;
+  let outcome;
+  const result = entry.result;
+  const userWon = (result === "1-0" && state.userColor === "w") || (result === "0-1" && state.userColor === "b");
+  if (result === "1/2-1/2") outcome = "draw";
+  else outcome = userWon ? "win" : "loss";
+  currentGameMetadata.rankingSubmitted = true;
+  const opponentRating = Number(currentGameMetadata.stockfishRatingEstimate) ||
+    (Number(currentGameMetadata.stockfishSettingElo) || 1600);
+  Promise.resolve(window.SupaProfiles.recordTimedGame(user.uid, gameType, outcome, opponentRating))
+    .catch(() => {});
+}
+
 /* Appelé après chaque coup (joueur + engine) et à la fin de partie. */
 function gamesAutoSave() {
   if (!currentGameId) gamesNewEntry();
@@ -209,7 +249,9 @@ function gamesAutoSave() {
     result,
     abandoned: Boolean(state.abandoned),
     stopped: Boolean(state.stopped),
-    termination: state.abandoned ? "abandoned" : state.stopped ? "unterminated" : null,
+    termination: state.abandoned ? "abandoned" : state.stopped ? "unterminated" : state.timeExpiredColor ? "time-forfeit" : null,
+    timeExpiredColor: state.timeExpiredColor || null,
+    timeControlMs: { ...(currentGameMetadata.clockMs || { w: 0, b: 0 }) },
     accuracyW: gamesRound1(avgAccuracy(state.accuracy.w)),
     accuracyB: gamesRound1(avgAccuracy(state.accuracy.b)),
     stats: { ...state.stats },
@@ -222,6 +264,7 @@ function gamesAutoSave() {
   if (i >= 0) arr[i] = entry; else arr.push(entry);
   gamesStore(arr);
   gamesRenderPanel();
+  gamesSubmitTimedRanking(entry);
 }
 
 function gamesDownload(name, content) {
