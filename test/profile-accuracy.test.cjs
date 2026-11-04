@@ -53,7 +53,10 @@ vm.runInNewContext(fs.readFileSync(path.join(__dirname, "../js/profile.js"), "ut
 const now = Date.UTC(2026, 9, 28, 12);
 const game = (daysAgo, accuracyW, accuracyB, userColor = "w", result = "1-0", moves = 10) => ({
   date: new Date(now - daysAgo * 86400000).toISOString(),
-  accuracyW, accuracyB, userColor, result, stats: { moves },
+  accuracyW, accuracyB, userColor, result, trainingAidsUsed: false,
+  pgn: '[SupaChessUserColor "' + userColor + '"]\\n[SupaChessTrainingAidsUsed "false"]',
+  moveGrades: Array.from({ length: moves }, () => ({ color: userColor, noTrainingAids: true })),
+  stats: { moves },
 });
 
 test("summarizeAccuracyGames averages completed player moves and compares rolling periods", () => {
@@ -86,7 +89,7 @@ test("summary keeps missing periods unavailable and renders French profile indic
   assert.equal(summary.month.delta, null);
   const html = window.SupaProfiles.renderLocalLearningPanel({});
   assert.match(html, /Précision moyenne/);
-  assert.match(html, /Toutes les parties/);
+  assert.match(html, /Tout l’historique/);
   assert.match(html, /7 derniers jours/);
   assert.match(html, /30 derniers jours/);
   assert.match(html, /Évolution indisponible/);
