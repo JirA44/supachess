@@ -406,7 +406,7 @@ async function reviewRun(options = {}) {
   const moves = game.history({ verbose: true });
   if (!moves.length) { alert("Aucun coup dans ce PGN."); return false; }
   const parsedHeaders = typeof game.header === "function" ? game.header() : {};
-  const headers = { ...(options.headers || {}), ...parsedHeaders };
+  const headers = { ...reviewState.currentHeaders, ...(options.headers || {}), ...parsedHeaders };
 
   if (!options.batch || options.startCorrections) {
     reviewState.gameSummary = { headers: { ...headers }, players: [] };
@@ -1463,7 +1463,7 @@ if (reviewHistoryList) reviewHistoryList.addEventListener("click", (event) => {
   const id = row.dataset.reviewHistoryId;
   const item = reviewHistoryLoad().find((saved) => saved.id === id);
   if (button.dataset.reviewHistoryAct === "delete") reviewHistoryRemove(id);
-  else if (button.dataset.reviewHistoryAct === "open" && item) reviewStart(item.pgn);
+  else if (button.dataset.reviewHistoryAct === "open" && item) reviewStart(item.pgn,{ White:item.white, Black:item.black });
   else if (button.dataset.reviewHistoryAct === "reanalyze-corrections" && item)
     reviewCorrectPgn(item.pgn,{White:item.white,Black:item.black});
   else if (button.dataset.reviewHistoryAct === "exercise" && item)
