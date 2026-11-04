@@ -21,8 +21,8 @@
       if (label) {
         if (program === "Calcul · meilleure réponse adverse") {
           label.textContent = count + " leçons · " + anticipationExercises.length + " exercices d’anticipation";
-        } else if (program === "Auto-réfutation · méthode Hikaru") {
-          label.textContent = count + " leçons · " + anticipationExercises.length + " puzzles de réfutation";
+        } else if (program === "Auto-évaluation · méthode Hikaru") {
+          label.textContent = count + " leçons · " + anticipationExercises.length + " défis d’auto-évaluation";
         } else {
           const subject = program === "Stockfish · comparer et vérifier" ? "positions de leçons analysables" : "leçons du parcours";
           label.textContent = count + " " + subject;
@@ -30,8 +30,8 @@
       }
       const pathSummary = program === "Calcul · meilleure réponse adverse"
         ? count + " leçons et " + anticipationExercises.length + " exercices"
-        : program === "Auto-réfutation · méthode Hikaru"
-          ? count + " leçons et " + anticipationExercises.length + " puzzles"
+        : program === "Auto-évaluation · méthode Hikaru"
+          ? count + " leçons et " + anticipationExercises.length + " défis d’auto-évaluation"
           : count + " leçons";
       path.setAttribute("aria-label", path.querySelector("h3").textContent + " · " + pathSummary);
     }
