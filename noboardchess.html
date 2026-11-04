@@ -79,13 +79,14 @@
       <h1 id="page-title">Jouer aux échecs sans échiquier, par écrit</h1>
       <p>Garde la position en mémoire, visualise les coups et affronte Stockfish sans voir l’échiquier, les coups candidats ni l’évaluation.</p>
       <div class="concept"><strong>Information complète, avenir inconnu.</strong> Les règles et les coups légaux restent les mêmes; c’est à toi de retenir la position et d’anticiper la meilleure réponse adverse.</div>
-      <p class="note">Écris un coup en notation algébrique, par exemple <strong>e4</strong>, <strong>Nf3</strong>, <strong>Bb5</strong> ou <strong>O-O</strong>. Tu peux aussi saisir un coup UCI comme <strong>e2e4</strong>. Pour une promotion, précise la pièce, par exemple <strong>e8=Q</strong>.</p>
+      <p class="note">Écris un coup en notation algébrique : <strong>e4</strong>, <strong>Nf3</strong>, <strong>Bb5</strong>, <strong>O-O</strong>. La notation utilisée ici emploie les lettres internationales : <strong>N</strong> pour le cavalier, <strong>B</strong> pour le fou, <strong>R</strong> pour la tour, <strong>Q</strong> pour la dame et <strong>K</strong> pour le roi. Tu peux aussi saisir un coup UCI comme <strong>e2e4</strong>. Pour une promotion, précise la pièce, par exemple <strong>e8=Q</strong>.</p>
     </section>
 
 
     <nav class="mode-tabs" role="tablist" aria-label="Modes sans échiquier">
       <button type="button" role="tab" data-mode="games" aria-selected="true" aria-controls="mode-games">♟ Parties</button>
       <button type="button" role="tab" data-mode="lessons" aria-selected="false" aria-controls="mode-lessons">📘 Leçons</button>
+      <button type="button" role="tab" data-mode="notation" aria-selected="false" aria-controls="mode-notation">✍️ Apprendre la notation</button>
       <button type="button" role="tab" data-mode="exercises" aria-selected="false" aria-controls="mode-exercises">✍️ Exercices</button>
       <button type="button" role="tab" data-mode="puzzles" aria-selected="false" aria-controls="mode-puzzles">🧩 Puzzles</button>
       <button type="button" role="tab" data-mode="mastery" aria-selected="false" aria-controls="mode-mastery">🎯 Maîtrise</button>
@@ -120,7 +121,7 @@
       <h2 style="margin-top:24px">Partie en notation</h2>
       <div id="move-columns" class="move-columns" hidden><span>Coup</span><span id="white-heading">Blancs</span><span id="black-heading">Noirs</span></div>
       <div id="move-list" class="empty" aria-live="polite">La partie apparaîtra ici coup par coup, sans représentation de l’échiquier.</div>
-      <div class="foot"><span>Les coups sont joués sur la position légale réelle, même si elle reste cachée.</span><span>Version SupaChess : 1.13.14816</span></div>
+      <div class="foot"><span>Les coups sont joués sur la position légale réelle, même si elle reste cachée.</span><span>Version SupaChess : 1.13.14817</span></div>
     </section>
 
     <section class="panel mode-panel" id="mode-lessons" data-mode-panel="lessons" role="tabpanel" hidden>
@@ -131,6 +132,16 @@
       <div id="lesson-content" class="lesson-card" aria-live="polite"></div>
       <div id="lesson-feedback" class="feedback" role="status" aria-live="polite"></div>
       <div id="lesson-actions" class="actions"></div>
+    </section>
+
+    <section class="panel mode-panel" id="mode-notation" data-mode-panel="notation" role="tabpanel" aria-labelledby="notation-title" hidden>
+      <div class="eyebrow">Parcours de notation · sans échiquier</div>
+      <h2 id="notation-title">Apprendre à écrire les coups</h2>
+      <p>Avance pas à pas : coordonnées, coups de pions et de pièces, captures, échecs, mat, roque, promotion, coups ambigus et notation d’une partie. Chaque leçon se termine par un coup à écrire.</p>
+      <div id="notation-progress"></div>
+      <div id="notation-content" class="lesson-card" aria-live="polite"></div>
+      <div id="notation-feedback" class="feedback" role="status" aria-live="polite"></div>
+      <div id="notation-actions" class="actions"></div>
     </section>
 
     <section class="panel mode-panel" id="mode-exercises" data-mode-panel="exercises" role="tabpanel" hidden>
@@ -402,10 +413,12 @@
       {id:"compare",title:"4 · Comparer",text:"Compare les positions finales après les suites forcing. Évalue les deux camps, pas seulement ton avantage apparent.",question:"Quels critères comparer ?",choices:["Matériel, activité, sécurité des rois, faiblesses et initiative des deux camps.","Le nombre de coups que j’ai calculés.","La beauté de mon premier coup seulement."],answer:0,transfer:"Note un avantage et un risque pour chaque candidat."},
       {id:"verify",title:"5 · Vérifier et apprendre",text:"Avant de jouer, cherche une réfutation. Après la partie, note ton idée avant Stockfish, puis compare ta variante au meilleur jeu.",question:"Comment consulter le moteur pour apprendre ?",choices:["Noter mon candidat et ma ligne, puis comparer avec l’analyse et rejouer l’erreur.","Afficher Stockfish avant de réfléchir et recopier son coup.","Regarder seulement le résultat."],answer:0,transfer:"Enregistre une cause précise et refais la position sans aide plus tard."}
     ];
+    const NOTATION_LESSONS = [{"id":"coords","title":"1 · Repérer les cases","text":"Chaque case est nommée par une lettre de colonne (a à h) et un chiffre de rangée (1 à 8). Les Blancs commencent sur les rangées 1 et 2; les Noirs sur 8 et 7. Un coup de pion simple s’écrit avec sa case d’arrivée, sans lettre de pièce.","question":"Comment nomme-t-on la case située sur la colonne e et la quatrième rangée ?","choices":["e4","4e","Pe4"],"answer":0,"transfer":"Écris seulement la case d’arrivée du pion : e4.","write":{"fen":"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1","uci":"e2e4","prompt":"Écris le coup du pion e2 vers e4 en notation algébrique.","hint":"Pour un coup de pion simple, écris seulement la case d’arrivée."}},{"id":"pawn","title":"2 · Écrire un coup de pion","text":"Un pion n’a pas de lettre de pièce dans la notation. On écrit sa case d’arrivée. Depuis sa case de départ, il peut avancer d’une ou deux cases si la voie est libre.","question":"Quelle notation désigne une avance du pion d jusqu’à d4 ?","choices":["Pd4","d4","d2-d4 seulement"],"answer":1,"transfer":"Le coup du pion s’écrit d4; son départ se déduit de la position légale.","write":{"fen":"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1","uci":"d2d4","prompt":"Écris l’avance du pion d jusqu’à d4.","hint":"N’ajoute pas de lettre pour le pion."}},{"id":"pieces","title":"3 · Nommer les pièces","text":"Dans la notation internationale, les pièces ont une lettre : K = roi, Q = dame, R = tour, B = fou, N = cavalier. Le pion n’a pas de lettre. Le coup d’un cavalier vers f3 s’écrit Nf3.","question":"Quelle lettre représente le cavalier dans la notation internationale utilisée ici ?","choices":["N","C","H"],"answer":0,"transfer":"N signifie knight, c’est le cavalier. B signifie bishop, le fou.","write":{"fen":"rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2","uci":"g1f3","prompt":"Écris le coup du cavalier g1 vers f3.","hint":"Utilise la lettre internationale du cavalier, puis sa case d’arrivée."}},{"id":"captures","title":"4 · Marquer une prise","text":"Le signe x indique une capture. Pour une prise de pion, on ajoute la colonne de départ avant x : le pion e4 qui prend en d5 s’écrit exd5.","question":"Dans exd5, que signifie le x ?","choices":["Le pion e prend une pièce en d5.","Le pion avance sans capturer.","Le coup donne échec."],"answer":0,"transfer":"Le x marque une prise; la lettre e précise la colonne d’où vient le pion.","write":{"fen":"rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 2","uci":"e4d5","prompt":"Le pion blanc en e4 prend le pion noir en d5. Écris le coup.","hint":"Prise de pion : colonne de départ, x, case d’arrivée."}},{"id":"check","title":"5 · Signaler l’échec","text":"Le signe + à la fin indique que le roi adverse est en échec. Il décrit la conséquence du coup; il ne remplace pas le nom du coup.","question":"Quel symbole ajoute-t-on à un coup qui met le roi adverse en échec ?","choices":["+","=","x"],"answer":0,"transfer":"Le signe + indique l’échec; le signe x indique une prise.","write":{"fen":"4k3/8/8/8/8/8/4R3/4K3 w - - 0 1","uci":"e2e7","prompt":"Écris le coup de tour e2-e7, qui donne échec.","hint":"Écris la tour, sa case d’arrivée, puis le signe d’échec."}},{"id":"mate","title":"6 · Signaler le mat","text":"Le signe # indique que le coup met le roi échec et mat. En notation complète, on peut ajouter + pour un échec ou # pour un mat.","question":"Quel symbole indique l’échec et mat ?","choices":["#","!","+"],"answer":0,"transfer":"Le signe # signale le mat; + signale un échec qui n’est pas nécessairement mat.","write":{"fen":"7k/8/6K1/8/8/8/8/6Q1 w - - 0 1","uci":"g1g7","prompt":"Écris le coup de dame g1-g7 qui donne mat.","hint":"Note la pièce, la case d’arrivée et le symbole de mat."}},{"id":"castling","title":"7 · Écrire le roque","text":"Le petit roque s’écrit O-O; le grand roque s’écrit O-O-O. La lettre O est souvent saisie comme le chiffre zéro : le système reconnaît les deux formes.","question":"Comment s’écrit le petit roque ?","choices":["O-O","0-0-0","Kg1"],"answer":0,"transfer":"O-O indique le petit roque; O-O-O indique le grand roque.","write":{"fen":"r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1","uci":"e1g1","prompt":"Écris le petit roque blanc.","hint":"Utilise deux lettres O séparées par un trait d’union; les zéros sont aussi acceptés."}},{"id":"promotion","title":"8 · Écrire une promotion","text":"Quand un pion atteint la dernière rangée, on indique la pièce choisie après =. Par exemple, =Q signifie promotion en dame. Le signe + peut suivre si la promotion donne échec.","question":"Que signifie =Q dans e8=Q+ ?","choices":["Le pion est promu en dame.","La dame capture en e8.","Le roi roque côté dame."],"answer":0,"transfer":"Écris la case d’arrivée, =, puis la lettre de la pièce de promotion.","write":{"fen":"7k/P7/8/8/8/8/8/7K w - - 0 1","uci":"a7a8q","prompt":"Écris la promotion du pion a7 en dame.","hint":"Notation : case d’arrivée, =Q, puis + si le coup donne échec."}},{"id":"disambiguation","title":"9 · Lever une ambiguïté","text":"Si deux pièces identiques peuvent aller sur la même case, la notation précise laquelle bouge, avec sa colonne ou sa rangée. Ainsi Nbd2 indique que le cavalier de la colonne b va en d2.","question":"Que précise la lettre b dans Nbd2 ?","choices":["Le cavalier part de la colonne b.","Le coup est joué au coup numéro b.","Le cavalier capture une pièce b."],"answer":0,"transfer":"Ajoute le minimum de précision nécessaire pour identifier la pièce qui bouge.","write":{"fen":"rnbqkbnr/ppp1pppp/8/8/8/5N2/PPP2PPP/RNBQKB1R w KQkq - 0 1","uci":"b1d2","prompt":"Deux cavaliers peuvent aller en d2. Écris le coup du cavalier parti de b1.","hint":"Ajoute la colonne de départ entre la lettre N et la case d’arrivée."}},{"id":"scoresheet","title":"10 · Noter la partie et les commentaires","text":"Les numéros de coups ordonnent la feuille : 1. e4 e5 signifie que les Blancs jouent e4 puis les Noirs e5. Le signe ! commente un bon coup, ? une erreur, et ?! ou !? une appréciation nuancée. Ces commentaires sont optionnels et ne font pas partie du coup légal.","question":"Dans 1. e4 e5, à quel camp correspond e5 ?","choices":["Aux Noirs, qui jouent le deuxième demi-coup du premier coup.","Aux Blancs, qui jouent le premier demi-coup du deuxième coup.","À un commentaire de moteur."],"answer":0,"transfer":"Le numéro identifie le coup complet; un coup blanc et un coup noir forment deux demi-coups.","write":{"fen":"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1","uci":"e7e5","prompt":"Écris le demi-coup noir de la séquence 1. e4 e5.","hint":"La saisie demande seulement le coup légal, sans le numéro 1... ."}}];
     const STORAGE_KEY="supachess-noboard-training-v1";
     const EXERCISES=PUZZLES.filter(function(p){return p.rating<=2000;});
     let data=loadData();
     let lessonIndex=0,lessonAnswered=false;
+    let notationLessonIndex=0,notationPhase="quiz",notationMistakes=0;
     let exercise=null,exerciseGame=null,exercisePly=0,exerciseMistakes=0,exerciseMoves=[],exerciseIndex=-1;
     let puzzle=null,puzzleGame=null,puzzleMistakes=0,previousPuzzleId=null;
     let masteryDeck=[],masteryIndex=0,masteryScore=0,masteryAnswered=false,masteryActive=false;
@@ -413,9 +426,9 @@
     function loadData(){
       let value={};
       try{value=JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}")||{};}catch(_){}
-      const defaults={lessons:[],solved:[],exercisesSolved:0,puzzleAttempts:0,puzzleCorrect:0,streak:0,bestStreak:0,masteryAttempts:0,masteryPasses:0,masteryBest:0,xp:0};
+      const defaults={lessons:[],notationLessons:[],solved:[],exercisesSolved:0,puzzleAttempts:0,puzzleCorrect:0,streak:0,bestStreak:0,masteryAttempts:0,masteryPasses:0,masteryBest:0,xp:0};
       const result=Object.assign(defaults,value);
-      ["lessons","solved"].forEach(function(k){if(!Array.isArray(result[k]))result[k]=[];});
+      ["lessons","notationLessons","solved"].forEach(function(k){if(!Array.isArray(result[k]))result[k]=[];});
       ["exercisesSolved","puzzleAttempts","puzzleCorrect","streak","bestStreak","masteryAttempts","masteryPasses","masteryBest","xp"].forEach(function(k){result[k]=Number.isFinite(Number(result[k]))?Math.max(0,Number(result[k])):0;});
       return result;
     }
@@ -427,11 +440,75 @@
       document.querySelectorAll("[data-mode]").forEach(function(button){button.setAttribute("aria-selected",button.dataset.mode===name?"true":"false");});
       document.querySelectorAll("[data-mode-panel]").forEach(function(panel){panel.hidden=panel.dataset.modePanel!==name;});
       if(name==="lessons")renderLesson();
+      if(name==="notation")renderNotationLesson();
       if(name==="puzzles")renderPuzzleStats();
       if(name==="mastery")renderMasteryStats();
       if(name==="exercises")renderExerciseStats();
     }
     document.querySelectorAll("[data-mode]").forEach(function(button){button.addEventListener("click",function(){selectMode(button.dataset.mode);});});
+
+    function renderNotationProgress(){
+      const done=data.notationLessons.length;
+      const total=NOTATION_LESSONS.length;
+      byId("notation-progress").innerHTML="<strong>"+done+" / "+total+" leçons de notation validées</strong><div class=\"progress-track\"><span style=\"width:"+Math.round(done/total*100)+"%\"></span></div>";
+    }
+    function renderNotationLesson(){
+      const content=byId("notation-content"),actions=byId("notation-actions");
+      const item=NOTATION_LESSONS[notationLessonIndex];
+      content.replaceChildren();actions.replaceChildren();
+      const step=document.createElement("div");step.className="lesson-step";step.textContent=item.title;content.appendChild(step);
+      const explanation=document.createElement("p");explanation.textContent=item.text;content.appendChild(explanation);
+      const question=document.createElement("h3");question.textContent=item.question;content.appendChild(question);
+      if(notationPhase==="quiz"){
+        const choices=document.createElement("div");choices.className="option-list";
+        item.choices.forEach(function(choice,index){
+          const button=document.createElement("button");button.type="button";button.textContent=choice;
+          button.addEventListener("click",function(){
+            if(index!==item.answer){setFeedback("notation-feedback","Pas encore. Relis la notation expliquée puis réessaie.","error");return;}
+            notationPhase="write";notationMistakes=0;
+            setFeedback("notation-feedback","Bonne réponse. Maintenant, écris le coup en notation algébrique.","ok");
+            renderNotationLesson();
+            const input=byId("notation-input");if(input)input.focus();
+          });choices.appendChild(button);
+        });content.appendChild(choices);
+      }else if(notationPhase==="write"){
+        const prompt=document.createElement("p");prompt.textContent=item.write.prompt;content.appendChild(prompt);
+        const form=document.createElement("form");form.className="move-answer";form.autocomplete="off";
+        const label=document.createElement("label");label.htmlFor="notation-input";label.textContent="Ton coup en notation algébrique";
+        const row=document.createElement("div");row.className="input-row";
+        const input=document.createElement("input");input.id="notation-input";input.type="text";input.autocomplete="off";input.autocapitalize="none";input.spellcheck=false;input.maxLength=12;input.placeholder="Ex. Nf3";
+        const submit=document.createElement("button");submit.type="submit";submit.textContent="Vérifier";
+        row.append(input,submit);label.appendChild(row);form.appendChild(label);
+        form.addEventListener("submit",function(event){
+          event.preventDefault();
+          const raw=input.value.trim();
+          if(/^[a-h][1-8][a-h][1-8][qrbn]?$/i.test(raw)){
+            notationMistakes++;setFeedback("notation-feedback","Ici, entraîne-toi à écrire la notation algébrique, pas les coordonnées UCI. "+item.write.hint,"error");input.select();return;
+          }
+          const game=new Chess(item.write.fen),move=resolveMove(game,raw);
+          if(!move||uciOf(move)!==item.write.uci){
+            notationMistakes++;const prefix=notationMistakes>1?"Nouvel essai. ":"";
+            setFeedback("notation-feedback",prefix+item.write.hint,"error");input.select();return;
+          }
+          notationPhase="done";
+          if(!data.notationLessons.includes(item.id)){data.notationLessons.push(item.id);data.xp+=10;saveData();}
+          setFeedback("notation-feedback","Notation correcte : "+move.san+". À retenir : "+item.transfer,"ok");
+          renderNotationLesson();
+        });
+        content.appendChild(form);
+      }else{
+        const prompt=document.createElement("p");prompt.textContent="Leçon validée. "+item.transfer;content.appendChild(prompt);
+      }
+      renderNotationProgress();
+      if(notationLessonIndex>0){
+        const previous=document.createElement("button");previous.type="button";previous.className="secondary";previous.textContent="← Leçon précédente";
+        previous.addEventListener("click",function(){notationLessonIndex--;notationPhase="quiz";notationMistakes=0;renderNotationLesson();setFeedback("notation-feedback","Réponds au rappel, puis écris le coup demandé.","");});actions.appendChild(previous);
+      }
+      if(notationPhase==="done"){
+        const next=document.createElement("button");next.type="button";next.textContent=notationLessonIndex<NOTATION_LESSONS.length-1?"Leçon suivante":"Revoir la première leçon";
+        next.addEventListener("click",function(){notationLessonIndex=notationLessonIndex<NOTATION_LESSONS.length-1?notationLessonIndex+1:0;notationPhase="quiz";notationMistakes=0;renderNotationLesson();setFeedback("notation-feedback","Réponds au rappel, puis écris le coup demandé.","");});actions.appendChild(next);
+      }
+    }
 
     function renderLessonProgress(){
       const done=data.lessons.length;
