@@ -1176,7 +1176,7 @@
         level: source.level,
         title: source.title,
         category: "Programme · " + source.theme,
-        program: programForLesson({ category: source.theme, title: source.title }),
+        program: source.program || programForLesson({ category: source.theme, title: source.title }),
         author: "SupaChess Académie",
         book: "Curriculum original fusionné depuis le parcours local",
         reference: "Leçon originale · " + source.level,
