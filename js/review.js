@@ -1515,16 +1515,30 @@ function resumeCorrectionExercisesFromUrl() {
 function resumeDiagnosticCorrectionFromUrl(){
   if(typeof URLSearchParams==="undefined")return;
   const params=new URLSearchParams(location.search);
+  const profileResume=params.get("resume-correction-profile")==="1";
   const gameId=params.get("resume-correction-game");
   const category=params.get("focus-category");
   const ply=Number(params.get("focus-ply"));
   const allowed=new Set(["inaccuracy","mistake","blunder"]);
-  if(!gameId||!allowed.has(category)||!Number.isFinite(ply)||ply<1||typeof gamesLoad!=="function")return;
-  const game=gamesLoad().find((entry)=>String(entry&&entry.id)===gameId);
-  if(!game||!game.pgn)return;
+  if((!gameId&&!profileResume)||!allowed.has(category)||!Number.isFinite(ply)||ply<1||typeof gamesLoad!=="function")return;
+
+  let profilePayload=null;
+  if(profileResume){
+    try{profilePayload=JSON.parse(sessionStorage.getItem("supachess_pending_correction")||"null");}catch(_){}
+    if(!profilePayload||typeof profilePayload.pgn!=="string"||!profilePayload.pgn.trim())return;
+    sessionStorage.removeItem("supachess_pending_correction");
+    if(profilePayload.category!==category||Number(profilePayload.ply)!==ply)return;
+  }
+  const game=gameId?gamesLoad().find((entry)=>String(entry&&entry.id)===gameId):null;
+  if(gameId&&!game&&!profilePayload)return;
+  if(!game&&!profilePayload)return;
+  const pgn=profilePayload?profilePayload.pgn:game.pgn;
   const resume=()=>{
-    const headers={White:game.white||"Blancs",Black:game.black||"Noirs"};
-    reviewCorrectPgn(game.pgn,headers,{sourceGameId:String(game.id),category,ply});
+    const headers=profilePayload&&profilePayload.headers
+      ?profilePayload.headers
+      :{White:game.white||"Blancs",Black:game.black||"Noirs"};
+    const sourceGameId=profilePayload&&profilePayload.sourceGameId||game&&String(game.id)||gameId||null;
+    reviewCorrectPgn(pgn,headers,{sourceGameId,category,ply});
     document.getElementById("review-exercise-panel")?.scrollIntoView({block:"start"});
   };
   if(document.body.dataset.engineReady==="1")resume();
