@@ -1465,6 +1465,79 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     });
   }
 
+  const CARLSEN_PATTERN_PROGRAM = "Carlsen · reconnaissance des motifs";
+  const carlsenPatternBlueprints = [
+    {
+      id: "carlsen-pattern-fork", baseId: "knight-fork", patternName: "Fourchette avec tempo",
+      title: "Reconnaître la fourchette avant de jouer",
+      question: "Quel schéma tactique dois-tu reconnaître avant de déplacer le cavalier ?",
+      principle: "Une fourchette attaque deux cibles avec une seule pièce. Repère les cases d’arrivée qui donnent échec ou attaquent simultanément roi, dame ou tour.",
+      transfer: "Quand un cavalier peut entrer avec échec, vérifie toutes les pièces qu’il attaquerait depuis sa case d’arrivée.",
+      pitfall: "Ne te contente pas de voir le motif : calcule aussi si le cavalier peut être repris et quelle compensation reste."
+    },
+    {
+      id: "carlsen-pattern-pin", baseId: "relative-pin", patternName: "Clouage relatif",
+      title: "Voir la pièce clouée et la cible derrière",
+      question: "Quel motif relie la pièce attaquée à la pièce importante située derrière elle ?",
+      principle: "Dans un clouage relatif, la pièce peut légalement bouger, mais le déplacement expose une dame, une tour ou une autre cible plus précieuse.",
+      transfer: "Repère l’alignement entre attaquant, pièce clouée et cible; vérifie si la pièce clouée est réellement immobilisée ou peut encore bouger.",
+      pitfall: "N’appelle pas tout alignement un clouage gagnant : la pièce clouée peut parfois se défendre par une tactique."
+    },
+    {
+      id: "carlsen-pattern-intermezzo", baseId: "intermezzo-check", patternName: "Coup intermédiaire avec échec",
+      title: "Chercher le coup intermédiaire",
+      question: "Quel motif peut interrompre une reprise apparemment automatique ?",
+      principle: "Avant une reprise attendue, cherche un coup forcing qui change l’ordre des échanges, notamment un échec, une attaque de dame ou une menace directe.",
+      transfer: "Quand une pièce est prise, suspends la reprise automatique et cherche les coups forcing disponibles.",
+      pitfall: "Ne joue pas le coup intermédiaire seulement parce qu’il existe : vérifie la réponse et le bilan matériel final."
+    },
+    {
+      id: "carlsen-pattern-worst-piece", baseId: "improve-piece", patternName: "Amélioration de la pièce la moins active",
+      title: "Reconnaître la pièce qui doit progresser",
+      question: "Quel indice positionnel aide à reconnaître la pièce à améliorer ?",
+      principle: "Compare les pièces de ton camp : mobilité, cases utiles, influence centrale, sécurité et coopération. La pièce la moins active indique souvent un plan d’amélioration.",
+      transfer: "Avant une poussée de pion, nomme ta pièce la moins active et cherche une route concrète vers une meilleure case.",
+      pitfall: "Ne poursuis pas une amélioration lente si l’adversaire menace une tactique immédiate."
+    },
+    {
+      id: "carlsen-pattern-capture", baseId: "calculate-before-capture", patternName: "Capturer sans tomber dans une tactique",
+      title: "Reconnaître le danger avant une prise",
+      question: "Quel schéma dois-tu vérifier avant de capturer une pièce ou un pion ?",
+      principle: "Une prise peut détourner un défenseur, ouvrir une ligne ou laisser une autre pièce sans protection. Reconnais ces motifs avant de décider si le gain apparent est réel.",
+      transfer: "Avant de capturer, repère les pièces non défendues, les alignements et les reprises possibles des deux camps.",
+      pitfall: "Ne compte pas seulement la pièce prise; calcule aussi les réponses forcing et ce qui reste vulnérable."
+    },
+  ];
+  for (const blueprint of carlsenPatternBlueprints) {
+    const base = LESSONS.find((lesson) => lesson.id === blueprint.baseId);
+    if (!base || !Array.isArray(base.sequence) || !base.sequence.length) {
+      throw new Error("Position source indisponible pour le motif Carlsen : " + blueprint.baseId);
+    }
+    LESSONS.push({
+      ...base,
+      id: blueprint.id,
+      kind: "method",
+      level: base.level,
+      title: blueprint.title,
+      category: "Carlsen · reconnaissance des motifs",
+      program: CARLSEN_PATTERN_PROGRAM,
+      patternName: blueprint.patternName,
+      author: "SupaChess Académie",
+      book: "Parcours original de reconnaissance des motifs",
+      reference: "Leçon originale SupaChess inspirée par la pratique de reconnaissance de motifs; aucun texte protégé ni méthode officielle citée",
+      question: blueprint.question,
+      choices: [
+        { text: "Reconnaître le motif décrit puis vérifier ses conséquences concrètes.", correct: true },
+        { text: "Jouer le premier coup familier sans vérifier la position.", correct: false },
+        { text: "Mémoriser une suite sans comprendre le motif.", correct: false },
+      ],
+      principle: blueprint.principle,
+      transfer: blueprint.transfer,
+      pitfall: blueprint.pitfall,
+      hints: ["Nomme le motif avant de calculer.", "Vérifie qu’il s’applique vraiment à cette position."],
+    });
+  }
+
   const sourceLessons = LESSONS.slice();
   const responseExercises = [];
   for (const source of sourceLessons) {
@@ -1483,25 +1556,34 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
           const replySan = expected.san;
           const selfRefutationExercise = source.program === SELF_REFUTATION_PROGRAM;
           const selfEvaluationExercise = source.program === SELF_EVALUATION_PROGRAM;
+          const carlsenPatternExercise = source.program === CARLSEN_PATTERN_PROGRAM;
           responseExercises.push({
             id: source.id + "-anticipate-" + index,
             kind: "anticipation",
             level: source.level,
-            title: (selfEvaluationExercise ? "Défi d’auto-évaluation · " : selfRefutationExercise ? "Puzzle d’auto-réfutation · " : "Anticipation · prévoir la réponse à ") + source.title,
-            category: (selfEvaluationExercise ? "Défi · auto-évaluation du demi-coup · " : selfRefutationExercise ? "Puzzle · meilleure réfutation adverse · " : "Anticipation · ") + source.category,
-            program: selfEvaluationExercise ? SELF_EVALUATION_PROGRAM : selfRefutationExercise ? SELF_REFUTATION_PROGRAM : "Anti-erreurs · anticiper l’adversaire",
+            title: carlsenPatternExercise ? "Rappel de motif · " + source.patternName : (selfEvaluationExercise ? "Défi d’auto-évaluation · " : selfRefutationExercise ? "Puzzle d’auto-réfutation · " : "Anticipation · prévoir la réponse à ") + source.title,
+            category: carlsenPatternExercise ? "Carlsen · rappel actif des motifs" : (selfEvaluationExercise ? "Défi · auto-évaluation du demi-coup · " : selfRefutationExercise ? "Puzzle · meilleure réfutation adverse · " : "Anticipation · ") + source.category,
+            program: carlsenPatternExercise ? CARLSEN_PATTERN_PROGRAM : selfEvaluationExercise ? SELF_EVALUATION_PROGRAM : selfRefutationExercise ? SELF_REFUTATION_PROGRAM : "Anti-erreurs · anticiper l’adversaire",
             author: "SupaChess Académie",
             book: "Programme de renforcement et rappel actif",
-            reference: selfEvaluationExercise ? "Défi original · réponse préparée comme test, pas comme prédiction" : selfRefutationExercise ? "Puzzle original · réponse de la ligne à vérifier" : "Exercice original de prévision du demi-coup adverse",
+            reference: carlsenPatternExercise ? "Rappel de motif · réponse préparée pour rejouer le schéma" : selfEvaluationExercise ? "Défi original · réponse préparée comme test, pas comme prédiction" : selfRefutationExercise ? "Puzzle original · réponse de la ligne à vérifier" : "Exercice original de prévision du demi-coup adverse",
             fen: position.fen(),
             setup: [],
             color: position.turn(),
-            question: selfEvaluationExercise
+            question: carlsenPatternExercise
+              ? "Quel motif faut-il reconnaître ici avant de jouer le demi-coup de la ligne ?"
+              : selfEvaluationExercise
               ? "Le demi-coup " + (priorMove ? priorMove.san : previous.uci) + " vient d’être joué. Avant de regarder la suite, quelle démarche juge correctement ton propre coup ?"
               : selfRefutationExercise
                 ? "Mets-toi à la place de l’adversaire : quelle est sa meilleure réponse à la ligne étudiée ? Joue-la et vérifie ensuite ce qu’elle réfute."
                 : "Après le dernier coup joué, quelle réponse de la ligne faut-il envisager avant de poursuivre ?",
-            choices: selfEvaluationExercise
+            choices: carlsenPatternExercise
+              ? [
+                  { text: "Reconnaître le motif « " + source.patternName + " » puis vérifier qu’il s’applique à la position.", correct: true },
+                  { text: "Jouer un coup familier sans identifier ce qu’il crée.", correct: false },
+                  { text: "Mémoriser la suite sans observer le schéma.", correct: false },
+                ]
+              : selfEvaluationExercise
               ? [
                   { text: "Chercher ce que mon coup laisse en prise, affaiblit ou néglige avant de tester des réponses possibles.", correct: true },
                   { text: "Supposer que l’adversaire jouera forcément le coup que je préfère.", correct: false },
@@ -1512,18 +1594,26 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
                   { text: "Continuer son plan sans réexaminer la position", correct: false },
                   { text: "Jouer un coup d’aile sans vérifier les menaces", correct: false },
                 ],
-            principle: (selfEvaluationExercise
+            principle: (carlsenPatternExercise
+              ? "Motif à reconnaître : " + source.patternName + ". Le demi-coup " + replySan + " permet de rejouer ce schéma; vérifie la position concrète au lieu de répondre par simple mémorisation."
+              : selfEvaluationExercise
               ? "La ligne préparée joue " + replySan + " comme test après ton diagnostic. Elle montre une conséquence possible, pas un coup adverse connu d’avance ni une preuve que cette réponse est unique."
               : selfRefutationExercise
                 ? "Réponse de la ligne à tester : " + replySan + ". Cherche pourquoi elle met ton idée à l’épreuve; une ligne de partie ne prouve pas à elle seule que c’est l’unique meilleur coup."
                 : "Réponse de la ligne étudiée : " + replySan + ". " + action.explanation),
-            transfer: selfEvaluationExercise
+            transfer: carlsenPatternExercise
+              ? "Après avoir identifié le motif, joue le coup de la ligne et explique quelles pièces, cases ou menaces en montrent la présence."
+              : selfEvaluationExercise
               ? "Après ton auto-évaluation, joue la réponse préparée et vérifie si elle met en évidence le défaut que tu avais formulé."
               : "Après chaque demi-coup adverse, recommence l’inventaire des échecs, prises et menaces avant de poursuivre ton plan.",
-            pitfall: selfEvaluationExercise
+            pitfall: carlsenPatternExercise
+              ? "Ne plaque pas un motif appris sur chaque position : confirme ses éléments sur l’échiquier."
+              : selfEvaluationExercise
               ? "Ne prétends pas connaître le choix adverse : une ligne testée est un scénario d’analyse, pas une prédiction."
               : "Ne considère pas ton coup comme réussi tant que tu n’as pas examiné la réponse adverse la plus gênante.",
-            hints: selfEvaluationExercise
+            hints: carlsenPatternExercise
+              ? ["Cherche le schéma répété : alignement, double attaque, cible affaiblie ou pièce sans activité.", "Nomme le motif, puis vérifie chaque détail sur la position."]
+              : selfEvaluationExercise
               ? [
                   "Examine ton demi-coup : quelles pièces ou cases laisse-t-il vulnérables, et quelle alternative existait ?",
                   "Après avoir formulé ton diagnostic, joue la réponse de la ligne pour le mettre à l’épreuve.",
@@ -1539,6 +1629,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
             })),
             anticipatedMove: replySan,
             previousMove: priorMove ? priorMove.san : previous.uci,
+            patternName: source.patternName || null,
           });
         }
       }
@@ -4101,7 +4192,9 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
       if (stockfishCoachMode && stockfishReflection) {
         const bestLine = result.choices[0] ? result.choices[0].sanLine.join(" ") : "aucune variante disponible";
         $("lesson-reflection-review").hidden = false;
-        $("lesson-reflection-summary").textContent = "Ton candidat : " + stockfishReflection.candidate + " | Réponse adverse prévue : " + stockfishReflection.reply + " | Première ligne Stockfish : " + bestLine + ". Compare les menaces et chaque demi-coup avant de décider quoi revoir.";
+        $("lesson-reflection-summary").textContent = LESSONS[lessonIndex] && LESSONS[lessonIndex].program === SELF_EVALUATION_PROGRAM
+          ? "Ton coup et ton idée : " + stockfishReflection.candidate + " | Défaut envisagé dans ton propre coup : " + stockfishReflection.reply + " | Première ligne Stockfish : " + bestLine + ". Utilise la variante pour tester ton diagnostic, sans prétendre connaître le choix adverse."
+          : "Ton candidat : " + stockfishReflection.candidate + " | Réponse adverse prévue : " + stockfishReflection.reply + " | Première ligne Stockfish : " + bestLine + ". Compare les menaces et chaque demi-coup avant de décider quoi revoir.";
         $("lesson-review-save").disabled = false;
         renderStockfishReviewQueue();
       }
