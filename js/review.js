@@ -785,7 +785,12 @@ async function reviewCorrectPgn(pgn,headers={},resumeTarget=null){
 
 function reviewStartCorrectionExercises(items,headers={},analysis=null,moveGrades=reviewState.moveGrades,resumeTarget=null){
   let valid=reviewValidCorrectionExercises(items).sort(reviewCompareCorrectionExercises);
-  if(resumeTarget&&resumeTarget.category){
+  if(resumeTarget&&Number.isFinite(Number(resumeTarget.ply))){
+    const targetPly=Number(resumeTarget.ply);
+    const targetItem=valid.find((item)=>Number(item.ply)===targetPly);
+    const category=targetItem&&targetItem.classification||resumeTarget.category;
+    if(category)valid=valid.filter((item)=>item.classification===category);
+  }else if(resumeTarget&&resumeTarget.category){
     valid=valid.filter((item)=>item.classification===resumeTarget.category);
   }
   if(!valid.length){
