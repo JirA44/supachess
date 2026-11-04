@@ -1538,6 +1538,40 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     });
   }
 
+  const PHASE_STUDY_PROGRAMS = new Set(["Étude des ouvertures","Étude du milieu de jeu","Étude des finales"]);
+  const phaseStudyBlueprints = [{"program":"Étude des ouvertures","phase":"Ouverture","lessons":[["phase-opening-01-center","develop-before-attack","Contrôler le centre","Quel principe guide le choix entre développer une pièce et jouer un coup périphérique ?","Développer une pièce vers le centre tout en préparant le roque","Avancer un pion de l’aile sans objectif","Sortir la dame pour attaquer un pion","L’ouverture vise le contrôle du centre, le développement et la sécurité du roi. Ces objectifs doivent se soutenir mutuellement."],["phase-opening-02-king-safety","castle-safely","Mettre le roi en sécurité","Que faut-il préparer avant que l’adversaire ouvre le centre ?","Développer puis roquer quand les conditions légales sont réunies","Retarder le développement et pousser les pions du roi","Déplacer plusieurs fois la dame","La sécurité du roi se construit avec le développement et un roque effectué au bon moment."],["phase-opening-03-pawn-structure","central-recapture","Comprendre la structure de pions","Après un échange au centre, que faut-il examiner avant de reprendre ?","La structure créée et le contrôle des cases centrales","Seulement la possibilité de gagner un pion immédiatement","La pièce la plus éloignée de l’action","Une reprise peut modifier les pions centraux et les cases disponibles. Compare la structure avant et après."],["phase-opening-04-develop-efficiently","bishop-retreat","Développer sans perdre de temps","Comment choisir une retraite de pièce attaquée ?","La replacer sur une case utile qui contribue encore au développement","La déplacer au hasard pour éviter l’échange","Rejouer un pion déjà avancé","Les tempos comptent en ouverture : une pièce repoussée peut rejoindre une case utile et soutenir le plan."],["phase-opening-05-transition","trade-not-retreat","Passer de l’ouverture au milieu de jeu","À la fin du développement, que faut-il faire avant de lancer une attaque ?","Évaluer la structure, les pièces actives et les ruptures possibles","Attaquer automatiquement avec la dame","Pousser tous les pions du roque","La transition commence par un bilan de position : centre, développement, sécurité des rois et plans disponibles."]]},{"program":"Étude du milieu de jeu","phase":"Milieu de jeu","lessons":[["phase-middlegame-01-plan","improve-piece","Choisir un plan d’amélioration","Quel point de départ aide à construire un plan positionnel ?","Identifier la pièce la moins active et lui chercher une meilleure case","Pousser un pion sans examiner la position","Échanger la pièce la mieux placée","Un plan utile améliore la coordination sans créer de faiblesse évitable."],["phase-middlegame-02-break","central-break","Préparer une rupture de pions","Avant une rupture centrale, que faut-il calculer ?","Les prises, les pièces qui s’ouvrent et les cases laissées faibles","Seulement le nombre de pions avancés","La prochaine sortie de la dame","Une rupture transforme la position : vérifie les lignes ouvertes et les conséquences pour les deux camps."],["phase-middlegame-03-coordination","rook-file","Coordonner les pièces","Comment choisir une colonne pour une tour ?","Repérer une colonne ouverte ou susceptible de s’ouvrir et les cibles qui s’y trouvent","Placer la tour sur la première colonne disponible","Échanger la tour sans comparer son activité","La tour est plus efficace quand elle agit sur une colonne utile et coopère avec les autres pièces."],["phase-middlegame-04-tactical-pattern","intermezzo-check","Insérer un coup intermédiaire","Avant une reprise automatique, quel motif tactique rechercher ?","Un échec, une attaque de dame ou une menace plus urgente","Un coup de pion sans lien avec l’échange","Une répétition de coup déjà joué","Un coup intermédiaire peut changer l’ordre des échanges; calcule la suite avant de le jouer."],["phase-middlegame-05-defender","remove-defender","Repérer le défenseur clé","Avant d’échanger une pièce défensive, quelle question poser ?","Quelle cible cette pièce protège-t-elle et que devient-elle si elle disparaît ?","Combien de coups reste-t-il dans l’ouverture","Si un pion de l’aile peut avancer","Identifier le défenseur révèle parfois une tactique ou un plan d’attaque sur la cible qu’il protégeait."]]},{"program":"Étude des finales","phase":"Finale","lessons":[["phase-endgame-01-king","king-pawn-endgame","Activer le roi","Pourquoi activer le roi avant certaines poussées de pion ?","Le roi devient une pièce active et peut soutenir le pion","Le roi ne participe plus au jeu en finale","Le pion peut toujours avancer seul","En finale, l’activité du roi décide souvent de l’accès au centre et du soutien des pions."],["phase-endgame-02-opposition","pawn-opposition","Utiliser l’opposition","Que faut-il vérifier avant d’avancer le roi dans une finale de pions ?","Le trait, la distance entre les rois et l’accès aux cases clés","Seulement la distance de son propre pion","Si le roi peut s’éloigner du pion","L’opposition dépend de la position exacte et du trait; calcule les cases plutôt que d’appliquer une règle aveuglément."],["phase-endgame-03-passer","Soutenir le pion passé","Comment augmenter les chances de promotion d’un pion passé ?","Approcher le roi et calculer l’escorte jusqu’à la promotion","Pousser sans compter les tempos","Éloigner son roi pour courir plus vite","Un pion passé a besoin d’un soutien adapté; compare l’activité des rois et les cases de contrôle."],["phase-endgame-04-rook","Placer la tour derrière le pion passé","Où la tour peut-elle soutenir efficacement un pion passé ?","Derrière le pion, sur sa colonne, selon la position","Sur une colonne sans rapport avec les pions","Devant son propre pion en bloquant sa marche","La tour derrière le pion peut soutenir son avance ou freiner le pion adverse; compare toujours son activité."],["phase-endgame-05-rook-king","Coordonner roi et tour","Dans une finale de tour, quelle priorité aide à convertir un avantage ?","Coordonner l’activité du roi et de la tour avant de pousser les pions","Échanger automatiquement les tours","Éloigner le roi des pions pour éviter les échecs","Une finale de tour exige coordination, activité et calcul des échecs; la poussée de pion doit être préparée."]]}];
+  for (const pathway of phaseStudyBlueprints) {
+    for (const [id, baseId, title, question, correct, wrongOne, wrongTwo, principle] of pathway.lessons) {
+      const base = LESSONS.find((lesson) => lesson.id === baseId);
+      if (!base || !Array.isArray(base.sequence) || !base.sequence.length) {
+        throw new Error("Position source indisponible pour " + pathway.phase + " : " + baseId);
+      }
+      LESSONS.push({
+        ...base,
+        id,
+        kind: "method",
+        title,
+        level: base.level,
+        category: pathway.phase + " · étude guidée",
+        program: pathway.program,
+        phaseLabel: pathway.phase,
+        author: "SupaChess Académie",
+        book: "Parcours original d’étude par phase",
+        reference: "Leçon pédagogique originale utilisant une position existante vérifiée",
+        question,
+        choices: [
+          { text: correct, correct: true },
+          { text: wrongOne, correct: false },
+          { text: wrongTwo, correct: false },
+        ],
+        principle,
+        transfer: "Rejoue la ligne, arrête-toi aux positions clés et formule le plan ou le principe avant de consulter l’explication.",
+        pitfall: "Ne mémorise pas seulement les coups : comprends pourquoi ils conviennent à cette position précise.",
+        hints: ["Observe les pièces, les pions, le roi et les cases avant de choisir un plan.", "Compare la position après le coup avec celle d’avant."],
+      });
+    }
+  }
+
   const sourceLessons = LESSONS.slice();
   const responseExercises = [];
   for (const source of sourceLessons) {
@@ -1557,27 +1591,36 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
           const selfRefutationExercise = source.program === SELF_REFUTATION_PROGRAM;
           const selfEvaluationExercise = source.program === SELF_EVALUATION_PROGRAM;
           const carlsenPatternExercise = source.program === CARLSEN_PATTERN_PROGRAM;
+          const phaseStudyExercise = PHASE_STUDY_PROGRAMS.has(source.program);
           responseExercises.push({
             id: source.id + "-anticipate-" + index,
             kind: "anticipation",
             level: source.level,
-            title: carlsenPatternExercise ? "Rappel de motif · " + source.patternName : (selfEvaluationExercise ? "Défi d’auto-évaluation · " : selfRefutationExercise ? "Puzzle d’auto-réfutation · " : "Anticipation · prévoir la réponse à ") + source.title,
-            category: carlsenPatternExercise ? "Carlsen · rappel actif des motifs" : (selfEvaluationExercise ? "Défi · auto-évaluation du demi-coup · " : selfRefutationExercise ? "Puzzle · meilleure réfutation adverse · " : "Anticipation · ") + source.category,
-            program: carlsenPatternExercise ? CARLSEN_PATTERN_PROGRAM : selfEvaluationExercise ? SELF_EVALUATION_PROGRAM : selfRefutationExercise ? SELF_REFUTATION_PROGRAM : "Anti-erreurs · anticiper l’adversaire",
+            title: phaseStudyExercise ? "Révision de phase · " + source.title : carlsenPatternExercise ? "Rappel de motif · " + source.patternName : (selfEvaluationExercise ? "Défi d’auto-évaluation · " : selfRefutationExercise ? "Puzzle d’auto-réfutation · " : "Anticipation · prévoir la réponse à ") + source.title,
+            category: phaseStudyExercise ? "Étude active · " + source.phaseLabel : carlsenPatternExercise ? "Carlsen · rappel actif des motifs" : (selfEvaluationExercise ? "Défi · auto-évaluation du demi-coup · " : selfRefutationExercise ? "Puzzle · meilleure réfutation adverse · " : "Anticipation · ") + source.category,
+            program: phaseStudyExercise ? source.program : carlsenPatternExercise ? CARLSEN_PATTERN_PROGRAM : selfEvaluationExercise ? SELF_EVALUATION_PROGRAM : selfRefutationExercise ? SELF_REFUTATION_PROGRAM : "Anti-erreurs · anticiper l’adversaire",
             author: "SupaChess Académie",
             book: "Programme de renforcement et rappel actif",
-            reference: carlsenPatternExercise ? "Rappel de motif · réponse préparée pour rejouer le schéma" : selfEvaluationExercise ? "Défi original · réponse préparée comme test, pas comme prédiction" : selfRefutationExercise ? "Puzzle original · réponse de la ligne à vérifier" : "Exercice original de prévision du demi-coup adverse",
+            reference: phaseStudyExercise ? "Révision de phase · ligne à rejouer et principe à rappeler" : carlsenPatternExercise ? "Rappel de motif · réponse préparée pour rejouer le schéma" : selfEvaluationExercise ? "Défi original · réponse préparée comme test, pas comme prédiction" : selfRefutationExercise ? "Puzzle original · réponse de la ligne à vérifier" : "Exercice original de prévision du demi-coup adverse",
             fen: position.fen(),
             setup: [],
             color: position.turn(),
-            question: carlsenPatternExercise
+            question: phaseStudyExercise
+              ? "Pour réviser cette position de " + source.phaseLabel.toLowerCase() + ", joue le coup de la ligne puis rappelle le principe qu’il illustre."
+              : carlsenPatternExercise
               ? "Quel motif faut-il reconnaître ici avant de jouer le demi-coup de la ligne ?"
               : selfEvaluationExercise
               ? "Le demi-coup " + (priorMove ? priorMove.san : previous.uci) + " vient d’être joué. Avant de regarder la suite, quelle démarche juge correctement ton propre coup ?"
               : selfRefutationExercise
                 ? "Mets-toi à la place de l’adversaire : quelle est sa meilleure réponse à la ligne étudiée ? Joue-la et vérifie ensuite ce qu’elle réfute."
                 : "Après le dernier coup joué, quelle réponse de la ligne faut-il envisager avant de poursuivre ?",
-            choices: carlsenPatternExercise
+            choices: phaseStudyExercise
+              ? [
+                  { text: "Jouer " + replySan + " et l’expliquer par le principe étudié.", correct: true },
+                  { text: "Mémoriser le coup sans regarder la position.", correct: false },
+                  { text: "Passer à la suite sans rappeler l’idée du coup.", correct: false },
+                ]
+              : carlsenPatternExercise
               ? [
                   { text: "Reconnaître le motif « " + source.patternName + " » puis vérifier qu’il s’applique à la position.", correct: true },
                   { text: "Jouer un coup familier sans identifier ce qu’il crée.", correct: false },
@@ -1594,24 +1637,32 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
                   { text: "Continuer son plan sans réexaminer la position", correct: false },
                   { text: "Jouer un coup d’aile sans vérifier les menaces", correct: false },
                 ],
-            principle: (carlsenPatternExercise
+            principle: (phaseStudyExercise
+              ? source.phaseLabel + " : " + action.explanation + " Rejoue le coup dans la position et rattache-le à son idée; une suite mémorisée sans contexte ne suffit pas."
+              : carlsenPatternExercise
               ? "Motif à reconnaître : " + source.patternName + ". Le demi-coup " + replySan + " permet de rejouer ce schéma; vérifie la position concrète au lieu de répondre par simple mémorisation."
               : selfEvaluationExercise
               ? "La ligne préparée joue " + replySan + " comme test après ton diagnostic. Elle montre une conséquence possible, pas un coup adverse connu d’avance ni une preuve que cette réponse est unique."
               : selfRefutationExercise
                 ? "Réponse de la ligne à tester : " + replySan + ". Cherche pourquoi elle met ton idée à l’épreuve; une ligne de partie ne prouve pas à elle seule que c’est l’unique meilleur coup."
                 : "Réponse de la ligne étudiée : " + replySan + ". " + action.explanation),
-            transfer: carlsenPatternExercise
+            transfer: phaseStudyExercise
+              ? "Rejoue le coup, explique le principe, puis compare une autre réponse candidate et les conséquences sur la position."
+              : carlsenPatternExercise
               ? "Après avoir identifié le motif, joue le coup de la ligne et explique quelles pièces, cases ou menaces en montrent la présence."
               : selfEvaluationExercise
               ? "Après ton auto-évaluation, joue la réponse préparée et vérifie si elle met en évidence le défaut que tu avais formulé."
               : "Après chaque demi-coup adverse, recommence l’inventaire des échecs, prises et menaces avant de poursuivre ton plan.",
-            pitfall: carlsenPatternExercise
+            pitfall: phaseStudyExercise
+              ? "Ne mémorise pas un coup d’ouverture, de milieu de jeu ou de finale sans comprendre son but et ses limites dans cette position."
+              : carlsenPatternExercise
               ? "Ne plaque pas un motif appris sur chaque position : confirme ses éléments sur l’échiquier."
               : selfEvaluationExercise
               ? "Ne prétends pas connaître le choix adverse : une ligne testée est un scénario d’analyse, pas une prédiction."
               : "Ne considère pas ton coup comme réussi tant que tu n’as pas examiné la réponse adverse la plus gênante.",
-            hints: carlsenPatternExercise
+            hints: phaseStudyExercise
+              ? ["Observe les pièces, les pions, le roi et les cases clés de cette phase.", "Rappelle le principe, puis vérifie-le sur la ligne jouée."]
+              : carlsenPatternExercise
               ? ["Cherche le schéma répété : alignement, double attaque, cible affaiblie ou pièce sans activité.", "Nomme le motif, puis vérifie chaque détail sur la position."]
               : selfEvaluationExercise
               ? [
