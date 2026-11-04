@@ -14,6 +14,7 @@ const state = {
   phase: "init",         // init | analyzing | userTurn | coach | engineThinking | gameover
   abandoned: false,
   stopped: false,
+  undoCount: 0,
   pendingMove: null,     // coup utilisateur intercepté {from,to,promotion,uci}
   fenHistory: [],        // clés FEN (4 champs) pour détection de répétition
   positionFenHistory: [], // FEN exacts avant chaque demi-coup pour retrouver les évaluations
@@ -471,6 +472,7 @@ async function init() {
 
 function newGame(options = {}) {
   stopPlayerClock();
+  state.undoCount = 0;
   state.timeExpiredColor = null;
   state.timeRankSubmitted = false;
   state.clockMs = { w: selectedClockMs("w"), b: selectedClockMs("b") };
@@ -557,6 +559,21 @@ const UNASSISTED_MODE_KEY = "supachess-unassisted-game-active-v1";
 const UNASSISTED_PREFS_KEY = "supachess-unassisted-game-restore-v1";
 function isUnassistedGameModeActive() { return Boolean(state.unassistedGame); }
 window.SupaChessIsUnassistedGame = isUnassistedGameModeActive;
+function syncUndoButton() {
+  const button = $("btn-undo");
+  if (!button) return;
+  const limit = 5;
+  const reached = state.undoCount >= limit;
+  button.textContent = "Annuler mon demi-coup (" + state.undoCount + "/" + limit + ")";
+  button.disabled = state.unassistedGame || isDiagnosticControlLockActive() || reached;
+  button.title = state.unassistedGame
+    ? "Annulation désactivée pendant une partie sans aide"
+    : isDiagnosticControlLockActive()
+      ? "Annulation désactivée pendant le diagnostic"
+      : reached
+        ? "Limite de cinq annulations atteinte pour cette partie"
+        : "Annuler votre dernier demi-coup et la réponse du moteur (" + (limit - state.undoCount) + " restante(s))";
+}
 function setUnassistedGameMode(active, options = {}) {
   const wasActive = state.unassistedGame;
   if (active && !wasActive && !options.resume) {
@@ -604,11 +621,7 @@ function setUnassistedGameMode(active, options = {}) {
     button.setAttribute("aria-pressed", String(state.unassistedGame));
     button.textContent = state.unassistedGame ? "Recommencer sans aide" : "Jouer une partie sans aide";
   }
-  const undoButton = $("btn-undo");
-  if (undoButton) {
-    undoButton.disabled = state.unassistedGame || isDiagnosticControlLockActive();
-    undoButton.title = state.unassistedGame ? "Annulation désactivée pendant une partie sans aide" : "Annuler votre dernier demi-coup et la réponse du moteur";
-  }
+  syncUndoButton();
   const bestButton = $("btn-best-move");
   if (bestButton && state.unassistedGame) {
     bestButton.disabled = true;
@@ -1727,6 +1740,11 @@ $("btn-undo").addEventListener("click", () => {
   if (state.unassistedGame) return;
   if (state.phase === "engineThinking" || state.phase === "analyzing") return;
   if (typeof window.reviewUndoCorrectionExercise === "function" && window.reviewUndoCorrectionExercise()) return;
+  if (state.undoCount >= 5) {
+    setStatus("Limite de cinq annulations atteinte pour cette partie.");
+    syncUndoButton();
+    return;
+  }
   const history = state.chess.history({ verbose: true });
   let lastUserMoveIndex = -1;
   for (let index = history.length - 1; index >= 0; index--) {
@@ -1746,6 +1764,8 @@ $("btn-undo").addEventListener("click", () => {
   moveFeedback.clear();
   // Retire le dernier demi-coup du joueur et les réponses moteur qui le suivent.
   const pliesToUndo = history.length - lastUserMoveIndex;
+  state.undoCount++;
+  syncUndoButton();
   for (let undone = 0; undone < pliesToUndo; undone++) {
     const ply = state.chess.history().length;
     const move = state.chess.undo();
