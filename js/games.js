@@ -50,6 +50,7 @@ function gamesNewEntry() {
     stockfishSettingElo: hasEngineSetting ? setting : null,
     engineThinkTimeMs: Number.isFinite(thinkTime) ? thinkTime : null,
     trainingAidsUsed: gamesTrainingAidsActive(),
+    unassistedMode: Boolean(state.unassistedGame),
   };
 }
 
@@ -181,6 +182,7 @@ function gamesBuildPgn(result) {
   if (state.abandoned) state.chess.header("Termination", "abandoned");
   else if (state.stopped) state.chess.header("Termination", "unterminated");
   state.chess.header("SupaChessTrainingAidsUsed", currentGameMetadata.trainingAidsUsed ? "true" : "false");
+  state.chess.header("SupaChessUnassistedMode", currentGameMetadata.unassistedMode ? "true" : "false");
   if (currentGameMetadata.engineName) {
     const customHeaders = [
       "SupaChessOpponent", currentGameMetadata.engineName,
@@ -213,6 +215,7 @@ function gamesAutoSave() {
     stats: { ...state.stats },
     moveGrades: Array.isArray(state.moveGradeHistory) ? state.moveGradeHistory.map((grade) => ({ ...grade })) : [],
     ...currentGameMetadata,
+    unassistedMode: Boolean(state.unassistedGame),
   };
   const arr = gamesLoad();
   const i = arr.findIndex((g) => g.id === currentGameId);
