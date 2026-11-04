@@ -35,10 +35,10 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 239, "the academy contains 228 guided lessons after the trap-prevention block");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 239, "the academy contains 239 guided lessons including the trap-prevention block");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "reinforcement").length, 71, "71 PGN and application lessons reinforce the methods");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 127, "the academy retains 127 opponent-reply drills");
-  assert.equal(LESSONS.length, 355, "guided lessons and anticipation drills are separate catalog entries");
+  assert.equal(LESSONS.length, 366, "guided lessons and anticipation drills are separate catalog entries");
   assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
 });
 
