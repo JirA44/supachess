@@ -7,6 +7,7 @@ const state = {
   chess: new Chess(),
   engine: null,
   userColor: "w",
+  unassistedGame: false,
   candidates: [],        // [{rank, uci, san, line, deltaCp, args}]
   candidateFen: null,
   systemBrilliantCandidates: [],
@@ -190,25 +191,29 @@ boardUI.showMoveDots = levelDiagnosticLockWasActive ? false : localStorage.getIt
 function syncDotsButton() {
   const button = $("btn-dots");
   if (!button) return;
-  const locked = isDiagnosticControlLockActive();
+  const diagnosticLocked = isDiagnosticControlLockActive();
+  const unassistedLocked = state.unassistedGame;
+  const locked = diagnosticLocked || unassistedLocked;
   const candidatesPanel = $("candidates-panel");
   if (candidatesPanel) {
     candidatesPanel.hidden = locked;
     candidatesPanel.setAttribute("aria-hidden", String(locked));
   }
   button.disabled = locked;
-  button.title = locked ? "Bloqué pendant le diagnostic de niveau" : "Afficher ou masquer les bulles candidates";
-  button.textContent = locked ? "Bulles candidates : bloquées pendant le diagnostic" : "Bulles candidates : " + (boardUI.showDots ? "ON" : "OFF");
+  button.title = locked ? (unassistedLocked ? "Aide désactivée pour cette partie" : "Bloqué pendant le diagnostic de niveau") : "Afficher ou masquer les bulles candidates";
+  button.textContent = locked ? (unassistedLocked ? "Bulles candidates : désactivées pour cette partie" : "Bulles candidates : bloquées pendant le diagnostic") : "Bulles candidates : " + (boardUI.showDots ? "ON" : "OFF");
   button.setAttribute("aria-pressed", String(!locked && boardUI.showDots));
   syncLevelDiagnosticBanner();
 }
 function syncMoveDotsButton() {
   const button = $("btn-move-dots");
   if (!button) return;
-  const locked = isDiagnosticControlLockActive();
+  const diagnosticLocked = isDiagnosticControlLockActive();
+  const unassistedLocked = state.unassistedGame;
+  const locked = diagnosticLocked || unassistedLocked;
   button.disabled = locked;
-  button.title = locked ? "Bloqué pendant le diagnostic de niveau" : "Afficher ou masquer les points de coups possibles";
-  button.textContent = locked ? "Points chauds/froids : bloqués pendant le diagnostic" : "Points chauds/froids : " + (boardUI.showMoveDots ? "ON" : "OFF");
+  button.title = locked ? (unassistedLocked ? "Aide désactivée pour cette partie" : "Bloqué pendant le diagnostic de niveau") : "Afficher ou masquer les points de coups possibles";
+  button.textContent = locked ? (unassistedLocked ? "Points chauds/froids : désactivés pour cette partie" : "Points chauds/froids : bloqués pendant le diagnostic") : "Points chauds/froids : " + (boardUI.showMoveDots ? "ON" : "OFF");
   button.setAttribute("aria-pressed", String(!locked && boardUI.showMoveDots));
 }
 const EVALBAR_PREFERENCE_KEY = "supachess-evalbar-visible-v1";
@@ -219,18 +224,20 @@ function syncEvalBarToggle() {
   if (!bar || !button) return;
   let preferred = true;
   try { preferred = localStorage.getItem(EVALBAR_PREFERENCE_KEY) !== "false"; } catch (_) {}
-  const locked = typeof isDiagnosticControlLockActive === "function" && isDiagnosticControlLockActive();
+  const diagnosticLocked = typeof isDiagnosticControlLockActive === "function" && isDiagnosticControlLockActive();
+  const unassistedLocked = state.unassistedGame;
+  const locked = diagnosticLocked || unassistedLocked;
   const visible = preferred && !locked;
   bar.hidden = !visible;
   if (label) label.hidden = !visible;
   button.disabled = locked;
   button.setAttribute("aria-pressed", String(visible));
-  button.textContent = locked ? "Barre d’évaluation : désactivée pendant le diagnostic" : "Barre d’évaluation : " + (visible ? "ON" : "OFF");
+  button.textContent = locked ? (unassistedLocked ? "Barre d’évaluation : désactivée pour cette partie" : "Barre d’évaluation : désactivée pendant le diagnostic") : "Barre d’évaluation : " + (visible ? "ON" : "OFF");
   window.SupaChessEvalBarVisible = visible;
 }
 const evalBarToggle = $("btn-evalbar-toggle");
 if (evalBarToggle) evalBarToggle.addEventListener("click", () => {
-  if (typeof isDiagnosticControlLockActive === "function" && isDiagnosticControlLockActive()) return;
+  if (isUnassistedGameModeActive() || (typeof isDiagnosticControlLockActive === "function" && isDiagnosticControlLockActive())) return;
   const visible = evalBarToggle.getAttribute("aria-pressed") !== "true";
   try { localStorage.setItem(EVALBAR_PREFERENCE_KEY, String(visible)); } catch (_) {}
   syncEvalBarToggle();
@@ -240,7 +247,7 @@ setTimeout(syncEvalBarToggle, 0);
 function applyLevelDiagnosticLock() {
   const diagnostic = readLevelDiagnostic();
   const active = Boolean(diagnostic && diagnostic.active) && !correctionExerciseModeActive;
-  if (active) {
+  if (active || state.unassistedGame) {
     boardUI.showDots = false;
     boardUI.showMoveDots = false;
     if (state.phase === "coach") {
@@ -249,7 +256,7 @@ function applyLevelDiagnosticLock() {
       moveFeedback.clearPreview();
       hideCoach();
     }
-  } else if (levelDiagnosticLockWasActive) {
+  } else if (levelDiagnosticLockWasActive && !state.unassistedGame) {
     // Leaving the diagnostic must turn both aids back on, even if older saved
     // preferences were false; the player can switch either aid off afterwards.
     boardUI.showDots = true;
@@ -331,11 +338,13 @@ async function init() {
   $("engine-dot").className = "status-dot ready";
   $("engine-label").textContent = state.engine.engineName + " (NNUE) — prêt";
   document.body.dataset.engineReady = "1";
-  newGame();
+  const resumeUnaided = sessionStorage.getItem("supachess-unassisted-game-active-v1") === "true";
+  newGame({ unassisted: resumeUnaided, resume: resumeUnaided });
   document.dispatchEvent(new Event("supachess:engine-ready"));
 }
 
-function newGame() {
+function newGame(options = {}) {
+  setUnassistedGameMode(Boolean(options.unassisted), { resume: Boolean(options.resume) });
   window.SupaReplayHistory = null;
   state.abandoned = false;
   state.stopped = false;
@@ -410,6 +419,75 @@ function stopCurrentGame() {
   renderAll();
 }
 
+const UNASSISTED_MODE_KEY = "supachess-unassisted-game-active-v1";
+const UNASSISTED_PREFS_KEY = "supachess-unassisted-game-restore-v1";
+function isUnassistedGameModeActive() { return Boolean(state.unassistedGame); }
+window.SupaChessIsUnassistedGame = isUnassistedGameModeActive;
+function setUnassistedGameMode(active, options = {}) {
+  const wasActive = state.unassistedGame;
+  if (active && !wasActive && !options.resume) {
+    const snapshot = {
+      dots: localStorage.getItem(DOTS_STORAGE_KEY),
+      moveDots: localStorage.getItem(MOVE_DOTS_STORAGE_KEY),
+      arrows: window.SupaAnalysisSettings?.showArrows() ?? true,
+      evalbar: localStorage.getItem(EVALBAR_PREFERENCE_KEY),
+    };
+    try { sessionStorage.setItem(UNASSISTED_PREFS_KEY, JSON.stringify(snapshot)); } catch (_) {}
+  }
+  state.unassistedGame = Boolean(active);
+  if (state.unassistedGame) {
+    try { sessionStorage.setItem(UNASSISTED_MODE_KEY, "true"); } catch (_) {}
+    boardUI.showDots = false;
+    boardUI.showMoveDots = false;
+    localStorage.setItem(DOTS_STORAGE_KEY, "false");
+    localStorage.setItem(MOVE_DOTS_STORAGE_KEY, "false");
+    window.SupaAnalysisSettings?.set("showArrows", false);
+    localStorage.setItem(EVALBAR_PREFERENCE_KEY, "false");
+    window.SupaChessEvalBarVisible = false;
+    state.pendingMove = null;
+    if (state.phase === "coach") state.phase = "userTurn";
+    moveFeedback.clear();
+    hideCoach();
+  } else {
+    try { sessionStorage.removeItem(UNASSISTED_MODE_KEY); } catch (_) {}
+    if (wasActive) {
+      try {
+        const snapshot = JSON.parse(sessionStorage.getItem(UNASSISTED_PREFS_KEY) || "null");
+        if (snapshot) {
+          if (snapshot.dots === null) localStorage.removeItem(DOTS_STORAGE_KEY); else localStorage.setItem(DOTS_STORAGE_KEY, snapshot.dots);
+          if (snapshot.moveDots === null) localStorage.removeItem(MOVE_DOTS_STORAGE_KEY); else localStorage.setItem(MOVE_DOTS_STORAGE_KEY, snapshot.moveDots);
+          window.SupaAnalysisSettings?.set("showArrows", Boolean(snapshot.arrows));
+          if (snapshot.evalbar === null) localStorage.removeItem(EVALBAR_PREFERENCE_KEY); else localStorage.setItem(EVALBAR_PREFERENCE_KEY, snapshot.evalbar);
+        }
+      } catch (_) {}
+      try { sessionStorage.removeItem(UNASSISTED_PREFS_KEY); } catch (_) {}
+      boardUI.showDots = localStorage.getItem(DOTS_STORAGE_KEY) !== "false";
+      boardUI.showMoveDots = localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false";
+    }
+  }
+  const button = $("btn-unassisted-game");
+  if (button) {
+    button.setAttribute("aria-pressed", String(state.unassistedGame));
+    button.textContent = state.unassistedGame ? "Recommencer sans aide" : "Jouer une partie sans aide";
+  }
+  const undoButton = $("btn-undo");
+  if (undoButton) {
+    undoButton.disabled = state.unassistedGame || isDiagnosticControlLockActive();
+    undoButton.title = state.unassistedGame ? "Annulation désactivée pendant une partie sans aide" : "Annuler le dernier coup";
+  }
+  const bestButton = $("btn-best-move");
+  if (bestButton && state.unassistedGame) {
+    bestButton.disabled = true;
+    bestButton.title = "Meilleur coup masqué pendant une partie sans aide";
+  }
+  document.querySelector('.analysis-toggle[data-setting="showArrows"]')?.toggleAttribute("disabled", state.unassistedGame);
+  syncDotsButton();
+  syncMoveDotsButton();
+  syncEvalBarToggle();
+  syncBestMoveButton();
+  document.dispatchEvent(new Event("supachess:unassisted-mode-change"));
+  if (typeof renderBoard === "function") renderBoard();
+}
 function fenKey(fen) { return fen.split(" ").slice(0, 4).join(" "); }
 
 /* ── Boucle de jeu ── */
@@ -447,7 +525,9 @@ async function analyzeForUser() {
     finishEngineFeedback(p, res.lines[0]);
   }
   state.phase = "userTurn";
-  if (isManualMode()) {
+  if (state.unassistedGame) {
+    setStatus(isManualMode() ? "Mode sans aide — jouez les coups des deux côtés, aucun conseil affiché." : "À vous de jouer — partie sans aide, aucun indice ni évaluation affiché.");
+  } else if (isManualMode()) {
     const turnLabel = state.chess.turn() === "w" ? "Blancs" : "Noirs";
     const isOpp = state.chess.turn() !== state.userColor;
     setStatus(`Mode manuel — au trait: ${turnLabel}${isOpp ? " (coup adverse: pas d'interception)" : ""}.`);
@@ -601,8 +681,8 @@ async function playEngineMove() {
     // Eval AVANT (POV engine) = top-1 de son analyse ; APRÈS = top-1 de la
     // prochaine analyse MultiPV utilisateur (déjà lancée pour son tour).
     moveFeedback.clearPreview();
-    moveFeedback.show({ san: mv.san, color: engineColor, moveNumber: moveNumberFromFen(fen), square: mv.to, token: gen });
-    boardUI.lastMove = { from: mv.from, to: mv.to, san: mv.san, grade: moveGrade(null) };
+    if (!state.unassistedGame) moveFeedback.show({ san: mv.san, color: engineColor, moveNumber: moveNumberFromFen(fen), square: mv.to, token: gen });
+    boardUI.lastMove = { from: mv.from, to: mv.to, san: mv.san, grade: state.unassistedGame ? null : moveGrade(null) };
     if (baseline.lines.length) {
       const pending = { color: engineColor, beforeCp: clampCpFromLine(baseline.lines[0]),
         beforeValue: scoreValue(baseline.lines[0]), beforeBestUci: baseline.lines[0].pv[0],
@@ -650,6 +730,8 @@ function recordMoveGrade(ply, color, category, metadata = {}) {
 function renderMoveGradeSummary() {
   const wrap = $("move-grade-summary");
   if (!wrap) return;
+  wrap.hidden = state.unassistedGame;
+  if (state.unassistedGame) return;
   const categories = [
     ["brilliant", "!!", "Brillant"], ["best", "★", "Meilleur coup"],
     ["very-good", "!", "Très bon coup"], ["good", "✓", "Bon coup"],
@@ -719,11 +801,11 @@ function finishEngineFeedback(pending, replyLine) {
   const brilliant = isBrilliantCandidate(pending.fen, cand);
   recordMoveGrade(pending.ply, pending.color, moveGradeCategory(deltaCp, brilliant, pending.uci === pending.beforeBestUci), { lossCp: deltaCp });
   const grade = moveGrade(deltaCp, brilliant, pending.uci === pending.beforeBestUci);
-  moveFeedback.show({ san: pending.san, color: pending.color, moveNumber: pending.moveNumber, square: pending.square,
+  if (!state.unassistedGame) moveFeedback.show({ san: pending.san, color: pending.color, moveNumber: pending.moveNumber, square: pending.square,
     deltaCp, brilliant, best: pending.uci === pending.beforeBestUci, token: pending.token, source: pending.cand && pending.cand.brilliantSource || (pending.cand && pending.cand.supaBrilliant ? "SupaEngine" : null) });
   if (boardUI.lastMove && boardUI.lastMove.to === pending.square) {
-    boardUI.lastMove.grade = grade;
-    boardUI.lastMove.evaluation = replyLine && (replyLine.scoreCp !== null || replyLine.mate !== null)
+    boardUI.lastMove.grade = state.unassistedGame ? null : grade;
+    boardUI.lastMove.evaluation = state.unassistedGame ? null : replyLine && (replyLine.scoreCp !== null || replyLine.mate !== null)
       ? formatScore(replyLine, pending.color === "b") : "—";
     renderBoard();
   }
@@ -773,6 +855,12 @@ function onSquareClick(sq) {
   const selectableColor = isManualMode() ? state.chess.turn() : state.userColor;
   if (piece && piece.color === selectableColor) {
     boardUI.selected = sq;
+    if (state.unassistedGame) {
+      boardUI.legalTargets = [];
+      boardUI.legalTargetHints = {};
+      renderBoard();
+      return;
+    }
     const legalMoves = state.chess.moves({ square: sq, verbose: true });
     boardUI.legalTargets = [...new Set(legalMoves.map((m) => m.to))];
     boardUI.legalTargetHints = {};
@@ -825,7 +913,7 @@ async function attemptUserMove(moveObj) {
     setStatus("Évaluation de votre coup…");
     state.phase = "analyzing";
     renderBoard();
-    moveFeedback.show({ san: attempted.san, color: attempted.color, moveNumber: moveNumberFromFen(fen), square: attempted.to, mode: "preview" });
+    if (!state.unassistedGame) moveFeedback.show({ san: attempted.san, color: attempted.color, moveNumber: moveNumberFromFen(fen), square: attempted.to, mode: "preview" });
     const res = probe.game_over() ? { lines: [] } :
       await state.engine.analyze({ fen: probe.fen(), multipv: 1, movetime: 600, elo: 0 });
     if (state.gen !== gen || state.chess.fen() !== fen) return;
@@ -857,7 +945,7 @@ async function attemptUserMove(moveObj) {
 
   // Mode manuel : pas d'interception pour le camp adverse (réplication d'une
   // partie jouée ailleurs — on rentre le coup tel quel, l'analyse reste affichée).
-  const skipIntercept = isLevelDiagnosticActive() || (isManualMode() && state.chess.turn() !== state.userColor);
+  const skipIntercept = state.unassistedGame || isLevelDiagnosticActive() || (isManualMode() && state.chess.turn() !== state.userColor);
   if (!skipIntercept && cand.deltaCp > thresholdCp()) {
     interceptMove(moveObj, cand);
   } else {
@@ -961,11 +1049,11 @@ function commitUserMove(moveObj, cand, forced) {
     moveGradeCategory(cand ? cand.deltaCp : null, brilliant, cand?.rank === 1),
     { noTrainingAids: typeof gamesTrainingAidsActive === "function" && !gamesTrainingAidsActive() && !forced, lossCp: cand && Number.isFinite(cand.deltaCp) ? cand.deltaCp : null });
   if (forced && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
-  moveFeedback.show({ san: mv.san, color: mv.color, moveNumber: moveNumberFromFen(fenBefore), square: mv.to,
+  if (!state.unassistedGame) moveFeedback.show({ san: mv.san, color: mv.color, moveNumber: moveNumberFromFen(fenBefore), square: mv.to,
     deltaCp: cand ? cand.deltaCp : null, brilliant, best: cand?.rank === 1, source: cand?.brilliantSource || (cand?.supaBrilliant ? "SupaEngine" : null) });
   const evaluation = cand && cand.line && (cand.line.scoreCp !== null || cand.line.mate !== null)
     ? formatScore(cand.line, userMoveColor === "w") : "—";
-  boardUI.lastMove = { from: mv.from, to: mv.to, san: mv.san, grade, evaluation };
+  boardUI.lastMove = { from: mv.from, to: mv.to, san: mv.san, grade: state.unassistedGame ? null : grade, evaluation: state.unassistedGame ? null : evaluation };
   // Précision du coup utilisateur : avant = meilleur candidat, après = candidat joué.
   if (cand && state.candidates.length) {
     recordAccuracy(userMoveColor,
@@ -1021,6 +1109,12 @@ function renderAll() { renderBoard(); renderCandidatesList(); renderHistory(); r
 function syncBestMoveButton() {
   const button = $("btn-best-move");
   if (!button) return;
+  if (state.unassistedGame) {
+    button.disabled = true;
+    button.title = "Meilleur coup masqué pendant une partie sans aide";
+    return;
+  }
+  button.title = "Jouer le meilleur demi-coup Stockfish";
   const replayButton = $("btn-replay-quit");
   const replayActive = replayButton && !replayButton.classList.contains("hidden");
   const allowedTurn = isManualMode() || state.chess.turn() === state.userColor;
@@ -1073,6 +1167,7 @@ function clIsOpen(c, i) {
 
 function renderCandidatesList() {
   const wrap = $("candidates-list");
+  if (state.unassistedGame) { wrap.replaceChildren(); return; }
   if (!state.candidates.length) { wrap.innerHTML = "<em>En attente d'analyse…</em>"; return; }
   const whiteSide = state.chess.turn() === "w";
   wrap.innerHTML = state.candidates.map((c, i) => {
@@ -1288,9 +1383,9 @@ function accuracyHtml() {
 function renderAccuracy() {
   const html = accuracyHtml();
   const cell = $("stat-accuracy");
-  if (cell) cell.innerHTML = html;
+  if (cell) { cell.innerHTML = html; if (cell.closest("tr")) cell.closest("tr").hidden = state.unassistedGame; }
   const badge = $("accuracy-badge");
-  if (badge) badge.innerHTML = "Précision — " + html;
+  if (badge) { badge.innerHTML = "Précision — " + html; badge.hidden = state.unassistedGame; }
 }
 window.SupaChessRenderAccuracy = renderAccuracy;
 
@@ -1314,14 +1409,15 @@ function setStatus(msg) { $("status-line").textContent = msg; }
 function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
 /* ── Boutons ── */
-$("btn-new").addEventListener("click", newGame);
+$("btn-new").addEventListener("click", () => newGame({ unassisted: false }));
+$("btn-unassisted-game")?.addEventListener("click", () => newGame({ unassisted: true }));
 $("btn-abandon-game")?.addEventListener("click", abandonCurrentGame);
 $("btn-stop-game")?.addEventListener("click", stopCurrentGame);
 syncDotsButton();
 syncMoveDotsButton();
 $("btn-abandon-diagnostic")?.addEventListener("click", abandonLevelDiagnostic);
 $("btn-dots").addEventListener("click", () => {
-  if (isDiagnosticControlLockActive()) return;
+  if (isDiagnosticControlLockActive() || state.unassistedGame) return;
   boardUI.showDots = !boardUI.showDots;
   if (boardUI.showDots && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
   localStorage.setItem(DOTS_STORAGE_KEY, String(boardUI.showDots));
@@ -1329,20 +1425,21 @@ $("btn-dots").addEventListener("click", () => {
   renderBoard();
 });
 $("btn-move-dots").addEventListener("click", () => {
-  if (isDiagnosticControlLockActive()) return;
+  if (isDiagnosticControlLockActive() || state.unassistedGame) return;
   boardUI.showMoveDots = !boardUI.showMoveDots;
   if (boardUI.showMoveDots && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
   localStorage.setItem(MOVE_DOTS_STORAGE_KEY, String(boardUI.showMoveDots));
   syncMoveDotsButton();
   renderBoard();
 });
-$("sel-color").addEventListener("change", newGame);
+$("sel-color").addEventListener("change", () => newGame({ unassisted: state.unassistedGame }));
 $("btn-flip-board").addEventListener("click", () => {
   boardUI.setFlipped(!boardUI.flipped);
   $("btn-flip-board").setAttribute("aria-pressed", String(boardUI.flipped));
   renderBoard();
 });
 $("btn-best-move").addEventListener("click", () => {
+  if (state.unassistedGame) return;
   const replayButton = $("btn-replay-quit");
   const replayActive = replayButton && !replayButton.classList.contains("hidden");
   if (replayActive) {
@@ -1370,7 +1467,7 @@ $("sel-elo").addEventListener("change", onOpponentSettingsChange);
 $("sel-movetime").addEventListener("change", onOpponentSettingsChange);
 updateOpponentFideEstimate();
 $("btn-force").addEventListener("click", () => {
-  if (state.pendingMove) {
+  if (!state.unassistedGame && state.pendingMove) {
     const { from, to, promotion, cand } = state.pendingMove;
     commitUserMove({ from, to, promotion }, cand, true);
   }
@@ -1382,6 +1479,7 @@ $("btn-cancel").addEventListener("click", () => {
   setStatus("À vous de jouer.");
 });
 $("btn-undo").addEventListener("click", () => {
+  if (state.unassistedGame) return;
   if (typeof window.reviewUndoCorrectionExercise === "function" && window.reviewUndoCorrectionExercise()) return;
   if (state.phase === "engineThinking" || state.phase === "analyzing") return;
   hideCoach();
@@ -1413,7 +1511,9 @@ $("btn-pgn").addEventListener("click", () => {
     "Site", "https://jira44.github.io/supachess/",
     "Date", `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`,
     "White", state.userColor === "w" ? "Joueur" : "Stockfish 19",
-    "Black", state.userColor === "b" ? "Joueur" : "Stockfish 19"
+    "Black", state.userColor === "b" ? "Joueur" : "Stockfish 19",
+    "SupaChessTrainingAidsUsed", typeof gamesTrainingAidsActive === "function" && gamesTrainingAidsActive() ? "true" : "false",
+    "SupaChessUnassistedMode", state.unassistedGame ? "true" : "false"
   );
   const blob = new Blob([state.chess.pgn()], { type: "application/x-chess-pgn" });
   const a = document.createElement("a");
