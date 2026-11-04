@@ -1317,6 +1317,80 @@
 
   // Turn every studied reply into an active-recall challenge: the learner now plays
   // the opponent's half-move, then sees the original continuation and its explanation.
+  const SELF_REFUTATION_PROGRAM = "Auto-réfutation · méthode Hikaru";
+  const selfRefutationBlueprints = [
+    {
+      id: "self-refute-01-test-the-candidate", baseId: "avoid-hanging-piece",
+      title: "01 · Ne valide pas ton premier avis",
+      question: "Tu envisages un coup et tu le crois correct. Quelle question le met réellement à l’épreuve ?",
+      principle: "Ne réponds pas seulement oui ou non. Cherche une réfutation concrète : échec, prise, menace ou défense adverse qui neutralise ton idée. Si tu n’en trouves pas, le coup survit à ce test; cela ne prouve pas encore qu’il est le meilleur.",
+      transfer: "Écris ton candidat, puis cherche la meilleure réponse adverse. Calcule cette réponse avant de décider si ton idée tient.",
+      pitfall: "Ne confonds pas « je ne vois pas de réfutation » avec « le coup est forcément bon ». Vérifie les coups forcing et la ligne Stockfish après ton propre calcul."
+    },
+    {
+      id: "self-refute-02-find-the-forcing-reply", baseId: "trade-when-ahead",
+      title: "02 · Cherche la réponse la plus gênante",
+      question: "Ton candidat crée une menace. Quel test évite de ne voir que le plan que tu espères ?",
+      principle: "Cherche d’abord les échecs, les prises et les menaces adverses. Une réponse forcing peut réfuter ton candidat ou te forcer à abandonner ton idée.",
+      transfer: "Pour chaque candidat, note la réponse adverse la plus gênante et calcule au moins un coup de plus pour les deux camps.",
+      pitfall: "N’analyse pas uniquement la réponse la plus naturelle. Cherche aussi l’échec, la prise et le coup intermédiaire qui changent la position."
+    },
+    {
+      id: "self-refute-03-recheck-after-each-reply", baseId: "zwischenzug",
+      title: "03 · Réfute ta variante à chaque demi-coup",
+      question: "Tu as calculé une suite prometteuse, mais l’adversaire trouve une réponse inattendue. Que fais-tu ?",
+      principle: "Arrête ta variante prévue, reconstruis la position et cherche à nouveau les meilleures réponses des deux camps. Un coup intermédiaire peut invalider une suite qui semblait forcée.",
+      transfer: "Rejoue la variante demi-coup par demi-coup. À chaque réponse, vérifie les échecs, captures, menaces et pièces non défendues.",
+      pitfall: "Ne poursuis pas ta ligne comme si l’adversaire devait suivre ton scénario."
+    },
+    {
+      id: "self-refute-04-test-the-best-defense", baseId: "remove-defender",
+      title: "04 · Défends le camp adverse",
+      question: "Tu crois avoir trouvé un gain tactique. Comment tenter de réfuter ton propre calcul ?",
+      principle: "Prends le point de vue adverse : trouve sa défense la plus résistante, même si elle paraît passive. Ton idée n’est confirmée que si elle reste valable contre cette défense.",
+      transfer: "Calcule ta ligne, puis demande-toi quel coup te poserait le plus de problèmes si tu étais l’adversaire.",
+      pitfall: "Ne prends pas la première reprise ou la réponse la plus commode pour preuve que ton sacrifice fonctionne."
+    },
+    {
+      id: "self-refute-05-compare-with-stockfish", baseId: "candidate-moves",
+      title: "05 · Comparer sans copier",
+      question: "Tu as noté ton candidat et sa réfutation adverse possible. Comment utiliser Stockfish pour apprendre ?",
+      principle: "Garde d’abord ta propre variante. Compare ensuite ton candidat et la meilleure ligne du moteur, puis explique la différence à partir des menaces, des pièces et des cases.",
+      transfer: "Note ce que tu pensais, la meilleure réponse adverse que tu as trouvée et le point précis que Stockfish révèle ou confirme.",
+      pitfall: "Ne copie pas la première ligne sans comprendre pourquoi ta variante échoue ou pourquoi ton candidat résiste."
+    },
+  ];
+  for (const blueprint of selfRefutationBlueprints) {
+    const base = LESSONS.find((lesson) => lesson.id === blueprint.baseId);
+    if (!base || !Array.isArray(base.sequence) || !base.sequence.length) {
+      throw new Error("Position source indisponible pour l’auto-réfutation: " + blueprint.baseId);
+    }
+    LESSONS.push({
+      ...base,
+      id: blueprint.id,
+      kind: "method",
+      title: blueprint.title,
+      category: "Auto-réfutation · calcul et vérification",
+      program: SELF_REFUTATION_PROGRAM,
+      author: "SupaChess Académie",
+      book: "Routine pédagogique originale d’auto-réfutation",
+      reference: "Leçon originale SupaChess · aucun texte, citation ou protocole officiel attribué à Hikaru Nakamura",
+      question: blueprint.question,
+      choices: [
+        { text: "Chercher la meilleure réponse adverse, calculer sa suite, puis comparer avec Stockfish.", correct: true },
+        { text: "Garder mon coup parce qu’il semble bon à première vue.", correct: false },
+        { text: "N’examiner que la réponse adverse que j’espère voir.", correct: false },
+      ],
+      principle: blueprint.principle,
+      transfer: blueprint.transfer,
+      pitfall: blueprint.pitfall,
+      hints: [
+        "Essaie de défendre le camp adverse et cherche ses coups forcing.",
+        "Une réfutation doit être une suite concrète; l’absence d’idée immédiate ne prouve pas que ton coup est optimal.",
+      ],
+    });
+  }
+
   const sourceLessons = LESSONS.slice();
   const responseExercises = [];
   for (const source of sourceLessons) {
@@ -1333,26 +1407,31 @@
           for (let prior = 0; prior < index; prior++) playUci(priorPosition, source.sequence[prior].uci);
           const priorMove = priorPosition.history({ verbose: true }).slice(-1)[0];
           const replySan = expected.san;
+          const selfRefutationExercise = source.program === SELF_REFUTATION_PROGRAM;
           responseExercises.push({
             id: source.id + "-anticipate-" + index,
             kind: "anticipation",
             level: source.level,
-            title: "Anticipation · prévoir la réponse à " + source.title,
-            category: "Anticipation · " + source.category,
-            program: "Anti-erreurs · anticiper l’adversaire",
+            title: (selfRefutationExercise ? "Puzzle d’auto-réfutation · " : "Anticipation · prévoir la réponse à ") + source.title,
+            category: (selfRefutationExercise ? "Puzzle · meilleure réfutation adverse · " : "Anticipation · ") + source.category,
+            program: selfRefutationExercise ? SELF_REFUTATION_PROGRAM : "Anti-erreurs · anticiper l’adversaire",
             author: "SupaChess Académie",
             book: "Programme de renforcement et rappel actif",
-            reference: "Exercice original de prévision du demi-coup adverse",
+            reference: selfRefutationExercise ? "Puzzle original · réponse de la ligne à vérifier" : "Exercice original de prévision du demi-coup adverse",
             fen: position.fen(),
             setup: [],
             color: position.turn(),
-            question: "Après le dernier coup joué, quelle réponse de la ligne faut-il envisager avant de poursuivre ?",
+            question: selfRefutationExercise
+              ? "Mets-toi à la place de l’adversaire : quelle est sa meilleure réponse à la ligne étudiée ? Joue-la et vérifie ensuite ce qu’elle réfute."
+              : "Après le dernier coup joué, quelle réponse de la ligne faut-il envisager avant de poursuivre ?",
             choices: [
               { text: "Anticiper " + replySan + " et vérifier ses conséquences", correct: true },
               { text: "Continuer son plan sans réexaminer la position", correct: false },
               { text: "Jouer un coup d’aile sans vérifier les menaces", correct: false },
             ],
-            principle: "Réponse de la ligne étudiée : " + replySan + ". " + action.explanation,
+            principle: (selfRefutationExercise
+              ? "Réponse de la ligne à tester : " + replySan + ". Cherche pourquoi elle met ton idée à l’épreuve; une ligne de partie ne prouve pas à elle seule que c’est l’unique meilleur coup."
+              : "Réponse de la ligne étudiée : " + replySan + ". " + action.explanation),
             transfer: "Après chaque demi-coup adverse, recommence l’inventaire des échecs, prises et menaces avant de poursuivre ton plan.",
             pitfall: "Ne considère pas ton coup comme réussi tant que tu n’as pas examiné la réponse adverse la plus gênante.",
             hints: [
@@ -2846,6 +2925,26 @@
     return true;
   };
 
+  root.startSupaChessMethodSurprise = function (program) {
+    const candidates = LESSONS.map((lesson, index) => ({ lesson, index }))
+      .filter(({ lesson }) => lesson.kind === "anticipation" && lesson.program === program);
+    if (!candidates.length) return false;
+    let choices = candidates.filter(({ lesson }) => !(progress[lesson.id] && progress[lesson.id].completed));
+    if (!choices.length) choices = candidates;
+    const lastId = sessionStorage.getItem("supachess-last-surprise-" + program);
+    const fresh = choices.filter(({ lesson }) => lesson.id !== lastId);
+    const pool = fresh.length ? fresh : choices;
+    const selected = pool[Math.floor(Math.random() * pool.length)];
+    sessionStorage.setItem("supachess-last-surprise-" + program, selected.lesson.id);
+    $("lesson-search").value = "";
+    $("lesson-level-filter").value = "";
+    $("lesson-program-filter").value = program;
+    $("lesson-program-filter").dispatchEvent(new Event("change", { bubbles: true }));
+    loadLesson(selected.index, { surprise: true });
+    document.querySelector(".lesson-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return true;
+  };
+
   root.SupaChessLessons = LESSONS;
   root.SupaChessAcademy = Object.assign(root.SupaChessAcademy || {}, {
     buildEngineChoices: function (fen, lines) { return buildEngineChoices(fen, lines, Chess); },
@@ -3425,7 +3524,7 @@
     enginePreview = null;
     $("lesson-engine-analysis").hidden = true;
     $("lesson-engine-return").hidden = true;
-    stockfishCoachMode = Boolean(options.coach);
+    stockfishCoachMode = Boolean(options.coach || (LESSONS[index] && LESSONS[index].program === SELF_REFUTATION_PROGRAM));
     stockfishReflection = null;
     $("lesson-reflection").hidden = !stockfishCoachMode;
     $("lesson-reflection-candidate").value = "";
