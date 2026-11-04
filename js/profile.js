@@ -256,7 +256,7 @@ function summarizeCentipawnLossGames(games,range,now){
   var selected=profileGamesForRange(Array.isArray(games)?games:[],range||'all',now);
   var perGame=selected.map(function(game){
     if(!game||!['1-0','0-1','1/2-1/2'].includes(String(game.result||''))||
-      game.abandoned||game.stopped||game.termination==='abandoned'||game.termination==='unterminated')return null;
+      game.abandoned||game.stopped||game.termination==='abandoned'||game.termination==='unterminated'||!profileGameWasUnaided(game))return null;
     var color=resolveProfileUserColor(game);
     if(!color)return null;
     var moves=(Array.isArray(game.moveGrades)?game.moveGrades:[]).filter(function(move){
@@ -500,7 +500,7 @@ function renderMoveTypeAveragePanel(games,range){
   var perGame=[];
   profileGamesForRange(games,range,Date.now()).forEach(function(game){
     if(!game||!['1-0','0-1','1/2-1/2'].includes(String(game.result||''))||
-      game.abandoned||game.stopped||game.termination==='abandoned'||game.termination==='unterminated')return;
+      game.abandoned||game.stopped||game.termination==='abandoned'||game.termination==='unterminated'||!profileGameWasUnaided(game))return;
     var color=game.userColor;
     if(color!=='w'&&color!=='b'){
       var pgn=String(game.pgn||'');
@@ -531,7 +531,7 @@ function renderMoveTypeAveragePanel(games,range){
     var average=perGame.reduce(function(sum,game){return sum+100*game.counts[type.key]/game.total;},0)/perGame.length;
     return '<tr><th scope="row" style="text-align:left;padding:7px 9px;border-bottom:1px solid #52657d;color:'+type.color+'">'+type.label+'</th><td style="text-align:right;padding:7px 9px;border-bottom:1px solid #52657d">'+totalCount+'</td><td style="text-align:right;padding:7px 9px;border-bottom:1px solid #52657d;font-weight:700">'+average.toFixed(1).replace('.',',')+' %</td></tr>';
   }).join('');
-  return heading+'<p>Moyenne calculée sur '+perGame.length+' parties terminées avec coups classés. Pour chaque partie, le pourcentage de chaque type est rapporté aux demi-coups évalués de ton camp; les parties ont ensuite le même poids. Les demi-coups non évalués sont exclus.</p>'+
+  return heading+'<p>Moyenne calculée sur '+perGame.length+' parties terminées sans aides, avec coups classés. Pour chaque partie, le pourcentage de chaque type est rapporté aux demi-coups évalués de ton camp; les parties ont ensuite le même poids. Les demi-coups non évalués sont exclus.</p>'+
     '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><caption style="text-align:left;padding:4px 8px;color:#dce6f2">Total des coups et part moyenne par partie</caption><thead><tr><th scope="col" style="text-align:left;padding:7px 9px;border-bottom:2px solid #789">Type de demi-coup</th><th scope="col" style="text-align:right;padding:7px 9px;border-bottom:2px solid #789">Total</th><th scope="col" style="text-align:right;padding:7px 9px;border-bottom:2px solid #789">Moyenne / partie</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
 }
 function renderCentipawnLossRatePanel(games,range){
@@ -564,10 +564,12 @@ function qualityTrendSamples(games,range,now){
       var value=Number(move.lossCp);
       return Number.isFinite(value)&&value>=0;
     }).map(function(move){return Number(move.lossCp);});
+    var totalLoss=losses.reduce(function(sum,value){return sum+value;},0);
     return {
       timestamp:timestamp,
       accuracy:accuracy,
-      meanLoss:losses.length?losses.reduce(function(sum,value){return sum+value;},0)/losses.length:null,
+      meanLoss:losses.length?totalLoss/losses.length:null,
+      totalLoss:losses.length?totalLoss:null,
       lossMoves:losses.length
     };
   }).filter(function(item){return !!item;}).sort(function(a,b){return a.timestamp-b.timestamp;});
@@ -593,7 +595,7 @@ function renderQualityTrendChart(samples,key,title,unit,color,fixedMax){
   var line=points.map(function(point){return point.x.toFixed(1)+','+point.y.toFixed(1);}).join(' ');
   var circles=points.map(function(point,index){
     var date=new Date(point.item.timestamp).toLocaleDateString('fr-FR');
-    var detail=key==='accuracy'?point.value.toFixed(1)+' %':' '+point.value.toFixed(1)+' cp de perte moyenne';
+    var detail=key==='accuracy'?point.value.toFixed(1)+' %':' moyenne de '+point.value.toFixed(1)+' cp par demi-coup évalué · total mesuré '+Number(point.item.totalLoss||0).toFixed(0)+' cp';
     return '<circle cx="'+point.x.toFixed(1)+'" cy="'+point.y.toFixed(1)+'" r="4.5" fill="'+color+'" stroke="#101827" stroke-width="1.5"><title>Partie '+(index+1)+' · '+date+' · '+detail+(point.item.lossMoves?' · '+point.item.lossMoves+' demi-coups évalués':'')+'</title></circle>';
   }).join('');
   var dateIndexes=samples.length<2?[0]:[0,Math.floor((samples.length-1)/2),samples.length-1];
@@ -602,16 +604,19 @@ function renderQualityTrendChart(samples,key,title,unit,color,fixedMax){
     return '<text x="'+x(index).toFixed(1)+'" y="'+(height-30)+'" text-anchor="'+(index===0?'start':index===samples.length-1?'end':'middle')+'" fill="#e5edf7" font-size="14">'+label+'</text>';
   }).join('');
   return '<div class="profile-quality-chart-wrap"><h5>'+title+'</h5>'+
-    '<svg viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+title+'. Axe horizontal : date des parties. Axe vertical : '+(unit==='%'?'précision en pourcentage':'perte moyenne en centipions')+'; '+points.length+' parties avec valeur mesurée." style="display:block;width:100%;height:auto;min-height:220px">'+
+    '<svg viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+title+'. Axe horizontal : date des parties. Axe vertical : '+(unit==='%'?'précision en pourcentage':'perte moyenne par demi-coup évalué, en centipions')+'; chaque point est une partie sans aides; '+points.length+' parties avec valeur mesurée." style="display:block;width:100%;height:auto;min-height:220px">'+
     grid+'<line x1="'+left+'" y1="'+top+'" x2="'+left+'" y2="'+(top+plotHeight)+'" stroke="#dce6f2"/><line x1="'+left+'" y1="'+(top+plotHeight)+'" x2="'+(width-right)+'" y2="'+(top+plotHeight)+'" stroke="#dce6f2"/>'+
     (line?'<polyline points="'+line+'" fill="none" stroke="'+color+'" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>':'')+circles+dateLabels+
     '<text x="'+(left+plotWidth/2)+'" y="'+(height-5)+'" text-anchor="middle" fill="#f4f7fb" font-size="15">Date des parties (de la plus ancienne à la plus récente)</text>'+
-    '<text x="18" y="'+(top+plotHeight/2)+'" transform="rotate(-90 18 '+(top+plotHeight/2)+')" text-anchor="middle" fill="#f4f7fb" font-size="15">'+(unit==='%'?'Précision (%)':'Perte (cp)')+'</text></svg></div>';
+    '<text x="18" y="'+(top+plotHeight/2)+'" transform="rotate(-90 18 '+(top+plotHeight/2)+')" text-anchor="middle" fill="#f4f7fb" font-size="15">'+(unit==='%'?'Précision (%)':'Moyenne par demi-coup (cp)')+'</text></svg></div>';
 }
 function renderQualityProgressPanel(games,range){
   var samples=qualityTrendSamples(games,range,Date.now());
   var selectedRange=profilePerformanceRanges().find(function(item){return item.key===range;})||profilePerformanceRanges()[5];
   var withLoss=samples.filter(function(item){return Number.isFinite(item.meanLoss);});
+  var totalMeasuredLossMoves=withLoss.reduce(function(sum,item){return sum+item.lossMoves;},0);
+  var totalMeasuredLossCp=withLoss.reduce(function(sum,item){return sum+item.totalLoss;},0);
+  var overallMeanLossCp=totalMeasuredLossMoves?totalMeasuredLossCp/totalMeasuredLossMoves:null;
   var html='<section class="profile-quality-progress" aria-labelledby="profile-quality-progress-title" style="margin:16px 0;padding:16px;border:1px solid #52657d;border-radius:14px;background:#1b2638;color:#f4f7fb">'+
     '<h4 id="profile-quality-progress-title" style="margin-top:0">Surveillance de la progression de la qualité de jeu · '+selectedRange.aria+'</h4>';
   if(!samples.length)return html+'<p>Aucune partie terminée, datée et accompagnée d’une précision disponible pour cette période.</p></section>';
@@ -633,10 +638,11 @@ function renderQualityProgressPanel(games,range){
   }
   html+='<p>Échantillon : '+samples.length+' partie(s) terminée(s) avec précision; '+withLoss.length+' partie(s) ont aussi des pertes en centipions calculables. Comparaison descriptive des groupes en début et en fin de période; elle ne constitue pas un Elo.</p>'+
     '<div class="profile-quality-trend-summary"><article><strong>Précision</strong><span>'+changeText(accuracyDelta,' point(s) de %',false)+'</span></article>'+
-    '<article><strong>Perte moyenne par demi-coup</strong><span>'+(withLoss.length?changeText(lossDelta,' cp',true):'Aucune perte moyenne par partie disponible.')+'</span></article></div>'+
+    '<article><strong>Évolution de la moyenne par demi-coup</strong><span>'+(withLoss.length?changeText(lossDelta,' cp',true):'Aucune perte moyenne par partie disponible.')+'</span></article></div>'+
+    '<p>Moyenne pondérée des parties sans aides : '+(overallMeanLossCp===null?'—':overallMeanLossCp.toFixed(1).replace('.',',')+' cp par demi-coup évalué')+' · total mesuré : '+(totalMeasuredLossMoves?totalMeasuredLossCp.toFixed(0)+' cp sur '+totalMeasuredLossMoves+' demi-coup(s) de '+withLoss.length+' partie(s)':'aucune perte CP mesurée')+'. Chaque point du graphique est la moyenne de cette partie, pas son total.</p>'+
     '<div class="profile-quality-chart-grid">'+
     renderQualityTrendChart(samples,'accuracy','Précision Stockfish par partie','%','#7bd394',100)+
-    (withLoss.length?renderQualityTrendChart(samples,'meanLoss','Perte moyenne en centipions par partie','cp','#68b5ff',null):'<p>La courbe de perte en centipions apparaîtra dès que les analyses auront enregistré ces valeurs.</p>')+
+    (withLoss.length?renderQualityTrendChart(samples,'meanLoss','Perte moyenne par demi-coup évalué · une moyenne par partie','cp','#68b5ff',null):'<p>La courbe de perte en centipions apparaîtra dès que les analyses auront enregistré ces valeurs.</p>')+
     '</div><p class="profile-accuracy-note">La précision est la valeur enregistrée par SupaChess; elle dépend de l’analyse et n’est pas une mesure universelle. Une baisse des centipions perdus est généralement favorable. Les parties inachevées, sans date ou sans précision sont exclues.</p></section>';
   return html;
 }
