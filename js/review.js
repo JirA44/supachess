@@ -56,8 +56,21 @@ function reviewHideModal() {
 }
 
 /* Point d'entrée (bouton "Analyser PGN (Supa)" ou panneau Parties). */
-function reviewStart(pgn) {
-  reviewShowModal(pgn || "");
+function reviewStart(pgn, headers = {}) {
+  const source = pgn || "";
+  const suppliedHeaders = headers && typeof headers === "object" ? headers : {};
+  let parsedHeaders = {};
+  if (source.trim()) {
+    const game = new Chess();
+    const loadFn = game.load_pgn ? "load_pgn" : "loadPgn";
+    if (game[loadFn](source, { sloppy: true }) && typeof game.header === "function") parsedHeaders = game.header();
+  }
+  reviewState.currentHeaders = { ...suppliedHeaders, ...parsedHeaders };
+  reviewState.gameSummary = source.trim() || Object.keys(suppliedHeaders).length
+    ? { headers: { ...reviewState.currentHeaders }, players: [] }
+    : null;
+  window.SupaChessRenderAccuracy?.();
+  reviewShowModal(source);
 }
 
 function reviewHistoryLoad() {
