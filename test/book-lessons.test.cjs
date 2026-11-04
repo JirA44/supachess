@@ -35,10 +35,10 @@ test("each lesson has a level, principle, transfer, source, and explanation for 
     for (const action of lesson.sequence) assert.ok(action.explanation, `${lesson.id} ${action.uci} needs a half-move explanation`);
   }
   assert.deepEqual([...new Set(LESSONS.map((lesson) => lesson.level))], ["Débutant", "Intermédiaire", "Avancé", "Expert"]);
-  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 228, "the academy contains 228 guided lessons after the trap-prevention block");
+  assert.equal(LESSONS.filter((lesson) => lesson.kind !== "anticipation").length, 239, "the academy contains 228 guided lessons after the trap-prevention block");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "reinforcement").length, 71, "71 PGN and application lessons reinforce the methods");
   assert.equal(LESSONS.filter((lesson) => lesson.kind === "anticipation").length, 116, "the academy retains 116 opponent-reply drills");
-  assert.equal(LESSONS.length, 344, "guided lessons and anticipation drills are separate catalog entries");
+  assert.equal(LESSONS.length, 355, "guided lessons and anticipation drills are separate catalog entries");
   assert.equal(new Set(LESSONS.map((lesson) => lesson.id)).size, LESSONS.length);
 });
 
@@ -167,7 +167,7 @@ test("trap-prevention lessons progress from avoiding a pin to punishing Legal's 
   const traps = LESSONS.filter((lesson) => /piège/.test(lesson.title.toLocaleLowerCase("fr")) && lesson.kind !== "anticipation");
   assert.deepEqual(traps.map((lesson) => lesson.level), ["Débutant", "Intermédiaire", "Avancé"]);
   for (const lesson of traps) {
-    assert.equal(lesson.program, "Tal · tactique et sacrifices à calculer");
+    assert.equal(lesson.program, "Anti-pièges · repérer et parer");
     assert.ok(lesson.category.includes("Tactique · prévention des erreurs"));
     assert.ok(lessonCompetencyKeys(lesson).includes("tactics"));
     assert.ok(lessonCompetencyKeys(lesson).includes("precision"));
