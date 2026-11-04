@@ -193,3 +193,14 @@ test('PGN analysis automatically opens replay and keeps previous/next controls v
   await page.keyboard.press('ArrowLeft');
   await expect.poll(()=>page.evaluate(()=>state.replayIdx)).toBe(0);
 });
+
+test('loaded PGN player names appear beneath the analysis board before evaluation',async({page})=>{
+  await page.goto('/index.html');
+  const text=await page.evaluate(()=>{
+    if(typeof reviewStart!=="function") return null;
+    reviewStart('[Event "Name display check"]\n[White "Alpha"]\n[Black "Beta"]\n\n1. e4 e5 *');
+    return document.getElementById('accuracy-badge')?.textContent||null;
+  });
+  expect(text).toContain('Alpha: —');
+  expect(text).toContain('Beta: —');
+});
