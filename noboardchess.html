@@ -41,6 +41,31 @@
     .foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:16px;color:#91a7bd;font-size:.82rem}
     .note{font-size:.88rem}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
     @media(max-width:560px){.controls{align-items:stretch}.controls label{flex:1 1 140px}.input-row button{width:100%}.moves li,.move-columns{grid-template-columns:34px 1fr 1fr;gap:6px;font-size:.9rem}}
+  
+    .mode-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+    .mode-tabs button{background:#17283a;color:#dce8f5;border:1px solid #42566c}
+    .mode-tabs button[aria-selected="true"]{background:var(--accent);color:#081711;border-color:var(--accent)}
+    .mode-panel[hidden]{display:none!important}
+    .mode-panel h2{margin-bottom:10px}
+    .lesson-card,.challenge-card,.mastery-card{background:#0b1725;border:1px solid var(--edge);border-radius:14px;padding:18px;margin:12px 0}
+    .lesson-step{color:var(--accent);font-weight:800}
+    .option-list{display:grid;gap:9px;margin:16px 0}
+    .option-list button{text-align:left;background:#1c3044;color:var(--text);border:1px solid #486078}
+    .option-list button:hover{border-color:var(--accent)}
+    .option-list button:disabled{opacity:1}
+    .progress-track{height:10px;border-radius:999px;background:#23364a;overflow:hidden;margin:10px 0}
+    .progress-track span{display:block;height:100%;background:var(--accent);transition:width .2s}
+    .challenge-head{display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:.9rem}
+    .move-answer{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+    .move-answer input{flex:1 1 220px}
+    .sequence-text{font:600 1.05rem/1.8 ui-monospace,Consolas,monospace;color:#f4f7fb;overflow-wrap:anywhere}
+    .feedback{min-height:2.5em;padding:10px 12px;margin:10px 0;border-radius:9px;background:#0a1420;color:#dce8f5}
+    .feedback[data-state="error"]{color:#ffc1c1;border:1px solid #8c4848}
+    .feedback[data-state="ok"]{color:#aaf3d8;border:1px solid #387c68}
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;margin:15px 0}
+    .stat-grid div{padding:12px;border-radius:10px;background:#0b1725;border:1px solid var(--edge)}
+    .stat-grid strong{display:block;font-size:1.3rem;color:var(--accent)}
+    .source-note{font-size:.82rem;color:#9eb0c3}
   </style>
 </head>
 <body>
@@ -57,7 +82,15 @@
       <p class="note">Écris un coup en notation algébrique, par exemple <strong>e4</strong>, <strong>Nf3</strong>, <strong>Bb5</strong> ou <strong>O-O</strong>. Tu peux aussi saisir un coup UCI comme <strong>e2e4</strong>. Pour une promotion, précise la pièce, par exemple <strong>e8=Q</strong>.</p>
     </section>
 
-    <section class="panel" aria-labelledby="game-title">
+
+    <nav class="mode-tabs" role="tablist" aria-label="Modes NoBoardChess">
+      <button type="button" role="tab" data-mode="games" aria-selected="true" aria-controls="mode-games">♟ Parties</button>
+      <button type="button" role="tab" data-mode="lessons" aria-selected="false" aria-controls="mode-lessons">📘 Leçons</button>
+      <button type="button" role="tab" data-mode="exercises" aria-selected="false" aria-controls="mode-exercises">✍️ Exercices</button>
+      <button type="button" role="tab" data-mode="puzzles" aria-selected="false" aria-controls="mode-puzzles">🧩 Puzzles</button>
+      <button type="button" role="tab" data-mode="mastery" aria-selected="false" aria-controls="mode-mastery">🎯 Maîtrise</button>
+    </nav>
+    <section class="panel mode-panel" id="mode-games" data-mode-panel="games" role="tabpanel" aria-labelledby="game-title">
       <h2 id="game-title">Nouvelle partie</h2>
       <div class="controls">
         <label for="player-color">Tu joues
@@ -87,7 +120,87 @@
       <h2 style="margin-top:24px">Partie en notation</h2>
       <div id="move-columns" class="move-columns" hidden><span>Coup</span><span id="white-heading">Blancs</span><span id="black-heading">Noirs</span></div>
       <div id="move-list" class="empty" aria-live="polite">La partie apparaîtra ici coup par coup, sans représentation de l’échiquier.</div>
-      <div class="foot"><span>Les coups sont joués sur la position légale réelle, même si elle reste cachée.</span><span>Version SupaChess : 1.13.14805</span></div>
+      <div class="foot"><span>Les coups sont joués sur la position légale réelle, même si elle reste cachée.</span><span>Version SupaChess : 1.13.14806</span></div>
+    </section>
+
+    <section class="panel mode-panel" id="mode-lessons" data-mode-panel="lessons" role="tabpanel" hidden>
+      <div class="eyebrow">Leçons sans échiquier</div>
+      <h2>La routine de réflexion</h2>
+      <p>Apprends à reconstruire la position avec les coups écrits, puis applique une étape à la fois.</p>
+      <div id="lesson-progress"></div>
+      <div id="lesson-content" class="lesson-card" aria-live="polite"></div>
+      <div id="lesson-feedback" class="feedback" role="status" aria-live="polite"></div>
+      <div id="lesson-actions" class="actions"></div>
+    </section>
+
+    <section class="panel mode-panel" id="mode-exercises" data-mode-panel="exercises" role="tabpanel" hidden>
+      <div class="eyebrow">Exercices guidés · notation et calcul</div>
+      <h2>Joue la suite sans voir la position</h2>
+      <p>Entre les coups de ta ligne. Les réponses du camp adverse s’affichent en notation et tu dois reprendre le fil sans échiquier.</p>
+      <div class="challenge-card">
+        <div id="exercise-head" class="challenge-head"></div>
+        <p id="exercise-prompt"></p>
+        <div id="exercise-sequence" class="sequence-text" aria-live="polite"></div>
+        <form id="exercise-form" class="move-answer">
+          <label class="visually-hidden" for="exercise-input">Ton prochain coup</label>
+          <input id="exercise-input" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="12" placeholder="Ton coup, ex. Nf3" disabled>
+          <button id="exercise-submit" type="submit" disabled>Valider le coup</button>
+        </form>
+        <div id="exercise-feedback" class="feedback" role="status" aria-live="polite"></div>
+        <div class="actions">
+          <button id="exercise-start" type="button">Commencer un exercice</button>
+          <button id="exercise-next" class="secondary" type="button" hidden>Exercice suivant</button>
+          <button id="exercise-skip" class="secondary" type="button" hidden>Voir la ligne et passer</button>
+        </div>
+      </div>
+      <p id="exercise-progress" class="source-note"></p>
+    </section>
+
+    <section class="panel mode-panel" id="mode-puzzles" data-mode-panel="puzzles" role="tabpanel" hidden>
+      <div class="eyebrow">Puzzles tactiques · échiquier caché</div>
+      <h2>Trouve le premier coup de la solution</h2>
+      <p>Calcule avant de saisir. Le puzzle est compté comme résolu seulement si tu trouves le premier coup exact sans afficher la réponse.</p>
+      <div class="challenge-card">
+        <div id="puzzle-head" class="challenge-head"></div>
+        <p id="puzzle-prompt">Charge un puzzle pour commencer.</p>
+        <form id="puzzle-form" class="move-answer">
+          <label class="visually-hidden" for="puzzle-input">Premier coup de la solution</label>
+          <input id="puzzle-input" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="12" placeholder="Ex. Qh7+" disabled>
+          <button id="puzzle-submit" type="submit" disabled>Vérifier</button>
+        </form>
+        <div id="puzzle-feedback" class="feedback" role="status" aria-live="polite"></div>
+        <div id="puzzle-line" class="sequence-text" hidden></div>
+        <div id="puzzle-source" class="source-note" hidden></div>
+        <div class="actions">
+          <button id="puzzle-start" type="button">Nouveau puzzle</button>
+          <button id="puzzle-next" class="secondary" type="button" hidden>Puzzle suivant</button>
+        </div>
+      </div>
+      <div id="puzzle-stats" class="stat-grid"></div>
+      <p class="source-note">Les ratings affichés sont ceux de la source des puzzles; ils ne sont pas des Elo FIDE. Les positions et leurs lignes ont été vérifiées comme coups légaux.</p>
+    </section>
+
+    <section class="panel mode-panel" id="mode-mastery" data-mode-panel="mastery" role="tabpanel" hidden>
+      <div class="eyebrow">Maîtrise · test sans aide</div>
+      <h2>Vérifie ce que tu sais refaire</h2>
+      <p>Un test contient cinq positions différentes. Pour valider la session, trouve le premier coup de quatre puzzles sur cinq sans indice. Recommence plus tard avec un autre échantillon pour vérifier la rétention.</p>
+      <div id="mastery-stats" class="stat-grid"></div>
+      <div class="challenge-card">
+        <div id="mastery-head" class="challenge-head">Aucun test en cours.</div>
+        <p id="mastery-prompt">Lance le test quand tu es prêt.</p>
+        <form id="mastery-form" class="move-answer">
+          <label class="visually-hidden" for="mastery-input">Premier coup calculé</label>
+          <input id="mastery-input" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="12" placeholder="Ton coup calculé" disabled>
+          <button id="mastery-submit" type="submit" disabled>Valider</button>
+        </form>
+        <div id="mastery-feedback" class="feedback" role="status" aria-live="polite"></div>
+        <div id="mastery-solution" class="sequence-text" hidden></div>
+        <div class="actions">
+          <button id="mastery-start" type="button">Commencer un test de cinq puzzles</button>
+          <button id="mastery-next" class="secondary" type="button" hidden>Question suivante</button>
+        </div>
+      </div>
+      <p class="source-note">La maîtrise est suivie sur cet appareil. Une validation de test confirme une réussite à cette session; elle ne prouve pas une acquisition définitive.</p>
     </section>
   </main>
 
@@ -276,6 +389,191 @@
       updateControls();
     }).catch((error) => setStatus("Stockfish n’a pas démarré : " + (error.message || "erreur inconnue"), "error"));
     renderMoves();
+  </script>
+
+  <script>
+  (function () {
+    "use strict";
+    const PUZZLES = [{"id":"rQcwG","rating":1921,"theme":"Technique de finale","fen":"8/R5pk/1p3r1p/4Q3/4P3/7P/5qPK/8 b - - 4 29","answer":"f6g6","line":["f6g6","a7g7","g6g7","e5f5","f2f5"],"note":"Motif principal : Technique de finale. Vérifie les réponses adverses avant de conclure."},{"id":"QCPaS","rating":1925,"theme":"Clouage","fen":"3r1r1k/b4Pp1/7q/1p1B4/p3PN2/P2p3R/1P1B3P/7K w - - 9 37","answer":"f4g6","line":["f4g6","h8h7","g6f8","d8f8","d2h6"],"note":"Motif principal : Clouage. Vérifie les réponses adverses avant de conclure."},{"id":"1o3Ma","rating":1934,"theme":"Fourchette","fen":"3r1rk1/pbq2pp1/2p5/4b1P1/7Q/P5P1/B3N2P/4R1K1 w - - 1 26","answer":"g5g6","line":["g5g6","f8e8","g6f7","c7f7","a2f7"],"note":"Motif principal : Fourchette. Vérifie les réponses adverses avant de conclure."},{"id":"2faAV","rating":1939,"theme":"Attaque découverte","fen":"r2qk2r/ppp1ppbp/6p1/8/4N3/3Q1nP1/PPP2PP1/2KR3R w kq - 0 13","answer":"d3b5","line":["d3b5","c7c6","d1d8"],"note":"Motif principal : Attaque découverte. Vérifie les réponses adverses avant de conclure."},{"id":"EradF","rating":1961,"theme":"Technique de finale","fen":"2R2Q2/p2k1p1p/4p3/4B3/8/6P1/bP1q1P1P/6K1 b - - 0 32","answer":"d2d1","line":["d2d1","g1g2","a2d5","f2f3","d1f3","g2h3","f3h5"],"note":"Motif principal : Technique de finale. Vérifie les réponses adverses avant de conclure."},{"id":"fEz5o","rating":1965,"theme":"Mat en deux","fen":"2b5/6rk/p2q1P1p/8/2QN3r/2P2R2/PP4P1/5RK1 b - - 2 38","answer":"g7g2","line":["g7g2","g1g2","d6h2"],"note":"Motif principal : Mat en deux. Vérifie les réponses adverses avant de conclure."},{"id":"ZHsnA","rating":1968,"theme":"Fourchette","fen":"8/p6k/7p/8/PPBp1PP1/K1b5/1rb4R/8 w - - 0 48","answer":"h2c2","line":["h2c2","b2c2","c4d3","h7g8","d3c2"],"note":"Motif principal : Fourchette. Vérifie les réponses adverses avant de conclure."},{"id":"bvOgR","rating":1972,"theme":"Déviation","fen":"r5k1/6p1/2p3Q1/2Pp2P1/p4Pnq/P4R2/6P1/2R3K1 b - - 0 30","answer":"h4h2","line":["h4h2","g1f1","h2h1","f1e2","h1g2"],"note":"Motif principal : Déviation. Vérifie les réponses adverses avant de conclure."},{"id":"Kirkc","rating":1972,"theme":"Technique de finale","fen":"8/ppq1bp1k/1n2p2p/3pP3/3P2N1/1P5P/P2Q1PP1/6K1 w - - 0 25","answer":"d2h6","line":["d2h6","h7g8","g4f6","e7f6","e5f6","c7c1","h6c1"],"note":"Motif principal : Technique de finale. Vérifie les réponses adverses avant de conclure."},{"id":"2sQdR","rating":1979,"theme":"Clouage","fen":"1kr3b1/p7/5p2/1p2pp2/qrP5/2NP1Q2/PP3PP1/1K1R3R b - - 1 29","answer":"a4a3","line":["a4a3","f3e2","a3c3"],"note":"Motif principal : Clouage. Vérifie les réponses adverses avant de conclure."},{"id":"7X01V","rating":1982,"theme":"Déviation","fen":"r1b2rk1/1p4p1/p1n2qQ1/4p3/P3P3/3B4/1p3PP1/3RK2R w K - 1 20","answer":"d3c4","line":["d3c4","f8f7","c4f7","f6f7","h1h8","g8h8","g6f7"],"note":"Motif principal : Déviation. Vérifie les réponses adverses avant de conclure."},{"id":"guaMZ","rating":2020,"theme":"Défense précise","fen":"2QR4/6pk/p1b5/2p3r1/8/5PK1/PPq3P1/8 w - - 4 38","answer":"g3h4","line":["g3h4","g5e5","d8h8","h7g6","c8c6"],"note":"Motif principal : Défense précise. Vérifie les réponses adverses avant de conclure."},{"id":"dXBu7","rating":2106,"theme":"Défense précise","fen":"r1r3k1/2q2pp1/7p/p7/5b2/P1p2N1P/1PQ2PP1/1BR3K1 w - - 0 30","answer":"c2h7","line":["c2h7","g8f8","c1e1"],"note":"Motif principal : Défense précise. Vérifie les réponses adverses avant de conclure."},{"id":"9ZyfB","rating":2116,"theme":"Fourchette","fen":"1r6/4kp2/p1p1p3/3pR3/5q1r/P4P2/1PP5/1K2R1Q1 w - - 4 33","answer":"g1a7","line":["g1a7","e7d8","a7b8"],"note":"Motif principal : Fourchette. Vérifie les réponses adverses avant de conclure."},{"id":"lY6ai","rating":2120,"theme":"Technique de finale","fen":"4r1k1/5p2/p1q2bp1/P2P3p/1Q5P/5PP1/6K1/1R1R4 b - - 0 34","answer":"e8e2","line":["e8e2","g2f1","c6c2"],"note":"Motif principal : Technique de finale. Vérifie les réponses adverses avant de conclure."},{"id":"JxJWL","rating":2130,"theme":"Fourchette","fen":"1br2rk1/p4ppp/2p1p3/3pNqB1/3Pb3/2P3QP/PP3PP1/R4RK1 b - - 0 18","answer":"f7f6","line":["f7f6","g5h6","f8f7","e5f7","b8g3"],"note":"Motif principal : Fourchette. Vérifie les réponses adverses avant de conclure."},{"id":"YS5D6","rating":2132,"theme":"Mat en deux","fen":"R7/pp4k1/6pp/3B1b2/nPK5/P2r4/3N4/5R2 b - - 2 37","answer":"a4b6","line":["a4b6","c4c5","d3d5"],"note":"Motif principal : Mat en deux. Vérifie les réponses adverses avant de conclure."},{"id":"q2cun","rating":2134,"theme":"Défense précise","fen":"8/8/8/8/5Kp1/2R4k/r6P/8 b - - 1 56","answer":"h3h4","line":["h3h4","c3c6","a2f2","f4e3","f2h2"],"note":"Motif principal : Défense précise. Vérifie les réponses adverses avant de conclure."},{"id":"9brtS","rating":2135,"theme":"Mat en deux","fen":"2k2b1r/pp3ppp/2p1pnb1/8/Q4BP1/2N4P/PPP1Bq2/2KR4 w - - 0 18","answer":"a4c6","line":["a4c6","b7c6","e2a6"],"note":"Motif principal : Mat en deux. Vérifie les réponses adverses avant de conclure."},{"id":"VYrkz","rating":2148,"theme":"Fourchette","fen":"2r3k1/p1r2pp1/3q3p/4NQ2/2R2P2/P3n3/6PP/1R4K1 w - - 0 30","answer":"f5c8","line":["f5c8","c7c8","c4c8","g8h7","c8h8","h7h8","e5f7","h8h7","f7d6"],"note":"Motif principal : Fourchette. Vérifie les réponses adverses avant de conclure."},{"id":"cNvFC","rating":2149,"theme":"Pièce piégée","fen":"r3r1k1/pp1bbppp/1q1p1n2/2p2PB1/4P3/2N2B2/PPP3PP/R2Q1R1K w - - 7 15","answer":"e4e5","line":["e4e5","d6e5","g5f6","e7f6","d1d7"],"note":"Motif principal : Pièce piégée. Vérifie les réponses adverses avant de conclure."},{"id":"RG6Kr","rating":2162,"theme":"Clouage","fen":"2q3k1/1br3b1/p3n1p1/1p1BPpP1/1P1P1P1Q/P6R/2rnNK2/7R w - - 3 35","answer":"h4h8","line":["h4h8","g8f7","h8g7","f7g7","h3h7","g7f8","h7h8","f8e7","h1h7","e6g7","h7g7"],"note":"Motif principal : Clouage. Vérifie les réponses adverses avant de conclure."},{"id":"bB7b1","rating":2174,"theme":"Calcul long","fen":"3r1rk1/pbq1bpp1/1p2pn1p/2p5/3P1n2/2PQ1NNP/PPBB1PP1/R3R1K1 w - - 7 18","answer":"d2f4","line":["d2f4","c7f4","g3h5","f4f5","d3f5"],"note":"Motif principal : Calcul long. Vérifie les réponses adverses avant de conclure."},{"id":"187ff","rating":2182,"theme":"Fourchette","fen":"5rk1/4b1rp/1Q1p2qp/1N1PN3/2P1P3/7P/PP2K3/4RR2 b - - 2 28","answer":"g6e4","line":["g6e4","e2d2","g7g2"],"note":"Motif principal : Fourchette. Vérifie les réponses adverses avant de conclure."},{"id":"khWSV","rating":2183,"theme":"Fourchette","fen":"r1b5/ppp1k1pp/2n5/3pp1NQ/2q5/4K1P1/PPPP4/RNB4R b - - 5 13","answer":"c4d4","line":["c4d4","e3f3","c8g4","h5g4","a8f8","f3g2","d4g4"],"note":"Motif principal : Fourchette. Vérifie les réponses adverses avant de conclure."},{"id":"GYhZa","rating":2197,"theme":"Sacrifice tactique","fen":"4r3/pp2r3/2pb4/3p4/3P1pR1/P1N1PK1k/1P2R3/8 w - - 0 34","answer":"e2h2","line":["e2h2","h3h2","g4h4","h2g1","c3e2","g1f1","h4h1"],"note":"Motif principal : Sacrifice tactique. Vérifie les réponses adverses avant de conclure."},{"id":"NGle0","rating":2201,"theme":"Gain décisif","fen":"5bk1/1R1r2pp/3pNn2/p3pP2/3pP3/3q3P/5PQ1/6K1 w - - 6 41","answer":"b7b8","line":["b7b8","d3b1","b8b1"],"note":"Motif principal : Gain décisif. Vérifie les réponses adverses avant de conclure."},{"id":"MHb6y","rating":2207,"theme":"Technique de finale","fen":"8/8/8/6p1/3k1p1P/4pP2/4K1P1/8 w - - 1 58","answer":"h4g5","line":["h4g5","d4e5","g2g3","e5f5","g3f4","f5f4","g5g6"],"note":"Motif principal : Technique de finale. Vérifie les réponses adverses avant de conclure."},{"id":"ZFMme","rating":2213,"theme":"Clouage","fen":"r5k1/p3P1b1/1q5r/1P2p3/P3Pp2/B1N2PpB/8/R4QRK b - - 2 28","answer":"b6e6","line":["b6e6","g1g3","f4g3","h1g1","h6h3"],"note":"Motif principal : Clouage. Vérifie les réponses adverses avant de conclure."},{"id":"PJSER","rating":2215,"theme":"Attaque découverte","fen":"r7/p6p/R2P1pp1/3rk3/8/8/5PPP/3R2K1 w - - 1 30","answer":"f2f4","line":["f2f4","e5e6","d6d7","e6d7","d1d5"],"note":"Motif principal : Attaque découverte. Vérifie les réponses adverses avant de conclure."},{"id":"jVWzt","rating":2217,"theme":"Clouage","fen":"r4rk1/ppP3p1/4pq2/2b1p2p/3nN1n1/2NP4/PPPQ1PPP/R1B2RK1 b - - 5 14","answer":"f6h4","line":["f6h4","h2h3","d4f3","g1h1","f3d2"],"note":"Motif principal : Clouage. Vérifie les réponses adverses avant de conclure."},{"id":"XL5Sv","rating":2219,"theme":"Sacrifice tactique","fen":"r3qrk1/ppp2ppp/2npb1n1/b2N2B1/3PP3/3B1N2/PP3PPP/R1Q2RK1 w - - 13 13","answer":"d5f6","line":["d5f6","g7f6","g5f6"],"note":"Motif principal : Sacrifice tactique. Vérifie les réponses adverses avant de conclure."},{"id":"rBQEt","rating":2220,"theme":"Technique de finale","fen":"1r1r4/3PQ3/p1B5/4pppp/5q1k/5P2/P4P1P/6RK w - - 0 41","answer":"g1g3","line":["g1g3","f4g3","f2g3"],"note":"Motif principal : Technique de finale. Vérifie les réponses adverses avant de conclure."},{"id":"6ZGuS","rating":2223,"theme":"Calcul long","fen":"2r1q1k1/pp3R1p/4p1pb/1b1p4/n2P4/1NP2Q2/P4RPP/6K1 w - - 8 22","answer":"f3f6","line":["f3f6","a4c3","f7e7","e8e7","f6e7"],"note":"Motif principal : Calcul long. Vérifie les réponses adverses avant de conclure."},{"id":"ocezv","rating":2230,"theme":"Sacrifice tactique","fen":"r4rk1/R2nq1pn/1p2p2p/1Pp1P3/2PpNP2/3Q2B1/6PP/R5K1 b - - 5 29","answer":"d7e5","line":["d7e5","a7e7","a8a1","d3f1","a1f1"],"note":"Motif principal : Sacrifice tactique. Vérifie les réponses adverses avant de conclure."},{"id":"W6B8s","rating":2231,"theme":"Gain décisif","fen":"r2q1rk1/pp1bb2p/2p3P1/3p4/8/2pBP3/PP3P1P/R2QK2R w KQ - 0 16","answer":"d1h5","line":["d1h5","g8g7","h5h7"],"note":"Motif principal : Gain décisif. Vérifie les réponses adverses avant de conclure."},{"id":"mMcCS","rating":2232,"theme":"Clouage","fen":"1r2B1k1/p5pp/8/5p1q/1Q1Rn3/1NP1Pb2/PP3PPP/5RK1 b - - 0 25","answer":"h5g4","line":["h5g4","e8f7","g8f7"],"note":"Motif principal : Clouage. Vérifie les réponses adverses avant de conclure."},{"id":"XKbrl","rating":2236,"theme":"Pièce en prise","fen":"r4rk1/1b3p2/p3pp1b/1pR1P2Q/1P1p4/P6R/q2N2PP/7K w - - 0 25","answer":"h5h6","line":["h5h6","a2a1","d2b1","a1b1","c5c1"],"note":"Motif principal : Pièce en prise. Vérifie les réponses adverses avant de conclure."},{"id":"HtVST","rating":2238,"theme":"Mat en trois","fen":"5r2/1p3kn1/2rQ2p1/q5P1/b3P3/5P1B/PP6/1K5R w - - 1 26","answer":"h3e6","line":["h3e6","g7e6","d6d7","f7g8","d7h7"],"note":"Motif principal : Mat en trois. Vérifie les réponses adverses avant de conclure."},{"id":"vLDbN","rating":2249,"theme":"Sacrifice tactique","fen":"2rr2k1/5ppp/pp1bq3/8/4P3/1P3R1P/PQ1B2P1/4R2K b - - 2 30","answer":"d6e5","line":["d6e5","d2c3","c8c3","f3c3","e6f6"],"note":"Motif principal : Sacrifice tactique. Vérifie les réponses adverses avant de conclure."},{"id":"Ut0kC","rating":2258,"theme":"Fourchette","fen":"2r5/5Rp1/1p5k/7P/p5B1/P1Nb4/KP1n1P2/8 b - - 4 38","answer":"c8c3","line":["c8c3","b2c3","d3c4","a2b2","c4f7"],"note":"Motif principal : Fourchette. Vérifie les réponses adverses avant de conclure."},{"id":"Sxa0M","rating":2266,"theme":"Gain décisif","fen":"r4rk1/ppqbppbp/2np2p1/8/N1PNn3/4BP2/PP2B1PP/R2Q1R1K w - - 0 13","answer":"d4b5","line":["d4b5","e4g3","h2g3"],"note":"Motif principal : Gain décisif. Vérifie les réponses adverses avant de conclure."},{"id":"MIeCJ","rating":2273,"theme":"Défense précise","fen":"r1r3k1/pb2ppbp/1p4p1/1B1q4/Q2n4/4BN2/PP3PPP/2RR2K1 w - - 2 20","answer":"c1c8","line":["c1c8","a8c8","e3d4","g7d4","d1d4","c8c1","b5f1"],"note":"Motif principal : Défense précise. Vérifie les réponses adverses avant de conclure."},{"id":"3i59Q","rating":2277,"theme":"Défense précise","fen":"k3rr2/pp6/2nQ4/3P4/4q1pp/2P1B3/PP3PPP/R4RK1 b - - 0 22","answer":"h4h3","line":["h4h3","d6g3","c6e5"],"note":"Motif principal : Défense précise. Vérifie les réponses adverses avant de conclure."},{"id":"Owzrv","rating":2297,"theme":"Enfilade","fen":"2r2k2/5pp1/1p1P4/4n1q1/1P6/5Q2/5PPP/3R2K1 w - - 1 34","answer":"f3h3","line":["f3h3","f7f5","h3h8","f8f7","h8c8"],"note":"Motif principal : Enfilade. Vérifie les réponses adverses avant de conclure."},{"id":"AAAFw","rating":2298,"theme":"Technique de finale","fen":"8/2p4p/2pk2p1/1p1P2P1/2P1K1P1/1P6/8/8 b - - 0 42","answer":"c6d5","line":["c6d5","c4d5","d6c5"],"note":"Motif principal : Technique de finale. Vérifie les réponses adverses avant de conclure."},{"id":"IGs0J","rating":2313,"theme":"Technique de finale","fen":"8/p3k2p/4n3/2R5/2PnR1PK/1P1r4/P6P/8 b - - 4 35","answer":"d4f3","line":["d4f3","h4h5","f3g5"],"note":"Motif principal : Technique de finale. Vérifie les réponses adverses avant de conclure."},{"id":"7nrsg","rating":2318,"theme":"Pion passé avancé","fen":"2r3k1/4b2p/PB4p1/4p3/4Pp2/7P/P1p1K1P1/2R5 w - - 1 42","answer":"e2d3","line":["e2d3","c8a8","a6a7"],"note":"Motif principal : Pion passé avancé. Vérifie les réponses adverses avant de conclure."},{"id":"1eFKW","rating":2324,"theme":"Coup calme","fen":"8/8/p5k1/1pRPK2p/1r6/8/8/8 w - - 0 57","answer":"d5d6","line":["d5d6","g6f7","c5c8","b4b1","d6d7"],"note":"Motif principal : Coup calme. Vérifie les réponses adverses avant de conclure."},{"id":"WSIph","rating":2342,"theme":"Zugzwang","fen":"8/8/4p3/1p1p4/1PpP2kP/2P5/5K2/8 w - - 1 45","answer":"f2e3","line":["f2e3","g4f5","e3f3","e6e5","d4e5"],"note":"Motif principal : Zugzwang. Vérifie les réponses adverses avant de conclure."}];
+    const LESSONS = [
+      {id:"observe",title:"1 · Observer",text:"Reconstitue la position à partir de la suite écrite. Repère les deux rois, les pièces attaquées, les menaces et les contraintes.",question:"Après un coup adverse, quel scan faire avant ton plan ?",choices:["Rechercher échecs, captures, menaces et pièces attaquées des deux camps.","Continuer mon plan initial sans relire la position.","Ne regarder que la pièce qui vient de bouger."],answer:0,transfer:"Nomme la menace du dernier coup, puis vérifie les autres pièces en prise."},
+      {id:"candidates",title:"2 · Proposer",text:"Ne choisis pas le premier coup plausible. Construis deux ou trois candidats avant de calculer.",question:"Que cherches-tu avec la méthode CCT ?",choices:["Échecs, captures, menaces, puis les coups de plan.","Seulement les attaques contre le roi.","Les coups les plus familiers de l’ouverture."],answer:0,transfer:"Annonce deux candidats et le but de chacun."},
+      {id:"refute",title:"3 · Réfuter",text:"Ta variante doit tenir contre la meilleure réponse adverse, pas seulement contre celle que tu espères.",question:"Après ton candidat, quelle réponse calculer ?",choices:["La défense adverse la plus forte, y compris échec, capture ou coup intermédiaire.","La réponse la plus naturelle uniquement.","Une réponse faible qui confirme mon idée."],answer:0,transfer:"Calcule mon coup → meilleure réponse → ma suite."},
+      {id:"compare",title:"4 · Comparer",text:"Compare les positions finales après les suites forcing. Évalue les deux camps, pas seulement ton avantage apparent.",question:"Quels critères comparer ?",choices:["Matériel, activité, sécurité des rois, faiblesses et initiative des deux camps.","Le nombre de coups que j’ai calculés.","La beauté de mon premier coup seulement."],answer:0,transfer:"Note un avantage et un risque pour chaque candidat."},
+      {id:"verify",title:"5 · Vérifier et apprendre",text:"Avant de jouer, cherche une réfutation. Après la partie, note ton idée avant Stockfish, puis compare ta variante au meilleur jeu.",question:"Comment consulter le moteur pour apprendre ?",choices:["Noter mon candidat et ma ligne, puis comparer avec l’analyse et rejouer l’erreur.","Afficher Stockfish avant de réfléchir et recopier son coup.","Regarder seulement le résultat."],answer:0,transfer:"Enregistre une cause précise et refais la position sans aide plus tard."}
+    ];
+    const STORAGE_KEY="supachess-noboard-training-v1";
+    const EXERCISES=PUZZLES.filter(function(p){return p.rating<=2000;});
+    let data=loadData();
+    let lessonIndex=0,lessonAnswered=false;
+    let exercise=null,exerciseGame=null,exercisePly=0,exerciseMistakes=0,exerciseMoves=[],exerciseIndex=-1;
+    let puzzle=null,puzzleGame=null,puzzleMistakes=0,previousPuzzleId=null;
+    let masteryDeck=[],masteryIndex=0,masteryScore=0,masteryAnswered=false,masteryActive=false;
+
+    function loadData(){
+      let value={};
+      try{value=JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}")||{};}catch(_){}
+      const defaults={lessons:[],solved:[],exercisesSolved:0,puzzleAttempts:0,puzzleCorrect:0,streak:0,bestStreak:0,masteryAttempts:0,masteryPasses:0,masteryBest:0,xp:0};
+      const result=Object.assign(defaults,value);
+      ["lessons","solved"].forEach(function(k){if(!Array.isArray(result[k]))result[k]=[];});
+      ["exercisesSolved","puzzleAttempts","puzzleCorrect","streak","bestStreak","masteryAttempts","masteryPasses","masteryBest","xp"].forEach(function(k){result[k]=Number.isFinite(Number(result[k]))?Math.max(0,Number(result[k])):0;});
+      return result;
+    }
+    function saveData(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(_){}}
+    function byId(id){return document.getElementById(id);}
+    function setFeedback(id,text,state){const el=byId(id);el.textContent=text;el.dataset.state=state||"";}
+    function escapeHtml(value){return String(value).replace(/[&<>"']/g,function(ch){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[ch];});}
+    function selectMode(name){
+      document.querySelectorAll("[data-mode]").forEach(function(button){button.setAttribute("aria-selected",button.dataset.mode===name?"true":"false");});
+      document.querySelectorAll("[data-mode-panel]").forEach(function(panel){panel.hidden=panel.dataset.modePanel!==name;});
+      if(name==="lessons")renderLesson();
+      if(name==="puzzles")renderPuzzleStats();
+      if(name==="mastery")renderMasteryStats();
+      if(name==="exercises")renderExerciseStats();
+    }
+    document.querySelectorAll("[data-mode]").forEach(function(button){button.addEventListener("click",function(){selectMode(button.dataset.mode);});});
+
+    function renderLessonProgress(){
+      const done=data.lessons.length;
+      byId("lesson-progress").innerHTML="<strong>"+done+" / "+LESSONS.length+" leçons validées</strong><div class=\"progress-track\"><span style=\"width:"+Math.round(done/LESSONS.length*100)+"%\"></span></div>";
+    }
+    function renderLesson(){
+      const content=byId("lesson-content"),feedback=byId("lesson-feedback"),actions=byId("lesson-actions");
+      if(data.lessons.length===LESSONS.length&&lessonIndex===0)lessonIndex=LESSONS.length-1;
+      const item=LESSONS[lessonIndex];
+      content.replaceChildren();
+      const step=document.createElement("div");step.className="lesson-step";step.textContent=item.title;content.appendChild(step);
+      const text=document.createElement("p");text.textContent=item.text;content.appendChild(text);
+      const question=document.createElement("h3");question.textContent=item.question;content.appendChild(question);
+      const options=document.createElement("div");options.className="option-list";
+      item.choices.forEach(function(choice,index){
+        const button=document.createElement("button");button.type="button";button.textContent=choice;
+        button.addEventListener("click",function(){
+          if(lessonAnswered)return;
+          if(index!==item.answer){setFeedback("lesson-feedback","Pas encore. Reconstitue la position à partir des coups écrits et réessaie.","error");return;}
+          lessonAnswered=true;
+          if(!data.lessons.includes(item.id)){data.lessons.push(item.id);data.xp+=10;saveData();}
+          setFeedback("lesson-feedback","Leçon validée. À retenir : "+item.transfer,"ok");
+          options.querySelectorAll("button").forEach(function(b){b.disabled=true;});
+          actions.replaceChildren();
+          const next=document.createElement("button");next.type="button";next.textContent=lessonIndex<LESSONS.length-1?"Leçon suivante":"Revoir le parcours";
+          next.addEventListener("click",function(){lessonIndex=lessonIndex<LESSONS.length-1?lessonIndex+1:0;lessonAnswered=false;renderLesson();});
+          actions.appendChild(next);renderLessonProgress();
+        });options.appendChild(button);
+      });
+      content.appendChild(options);renderLessonProgress();
+      if(data.lessons.includes(item.id)){setFeedback("lesson-feedback","Déjà validée. Tu peux la refaire pour consolider.","ok");}
+      else if(!lessonAnswered)setFeedback("lesson-feedback","Réponds avant de passer à la suite.","");
+      actions.replaceChildren();
+      if(data.lessons.includes(item.id)){
+        const next=document.createElement("button");next.type="button";next.textContent=lessonIndex<LESSONS.length-1?"Leçon suivante":"Revoir le parcours";
+        next.addEventListener("click",function(){lessonIndex=lessonIndex<LESSONS.length-1?lessonIndex+1:0;lessonAnswered=false;renderLesson();});actions.appendChild(next);
+      }
+    }
+
+    function normalizeSan(value){return String(value||"").trim().replace(/0-0-0/g,"O-O-O").replace(/0-0/g,"O-O").replace(/[+#?!]+$/g,"").toLowerCase();}
+    function uciOf(move){return move.from+move.to+(move.promotion||"");}
+    function resolveMove(chess,raw){
+      const value=String(raw||"").trim().replace(/\s+/g,"");if(!value)return null;
+      const legal=chess.moves({verbose:true});
+      if(/^[a-h][1-8][a-h][1-8][qrbn]?$/i.test(value))return legal.find(function(m){return uciOf(m).toLowerCase()===value.toLowerCase();})||null;
+      const target=normalizeSan(value);return legal.find(function(m){return normalizeSan(m.san)===target;})||null;
+    }
+    function applyUci(chess,uci){return chess.move({from:uci.slice(0,2),to:uci.slice(2,4),promotion:(uci[4]||"q").toLowerCase()});}
+    function sanLine(item){
+      const chess=new Chess(item.fen),sans=[];
+      item.line.forEach(function(uci){const move=applyUci(chess,uci);if(!move)throw new Error("Ligne de puzzle illégale: "+item.id+" "+uci);sans.push(move.san);});
+      return sans.join(" → ");
+    }
+    function shuffle(items){const copy=items.slice();for(let i=copy.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]];}return copy;}
+
+    function renderExerciseStats(){byId("exercise-progress").textContent="Exercices terminés : "+data.exercisesSolved+" · "+EXERCISES.length+" positions guidées de rating source ≤ 2000.";}
+    function startExercise(){
+      exerciseIndex=(exerciseIndex+1)%EXERCISES.length;exercise=EXERCISES[exerciseIndex];exerciseGame=new Chess(exercise.fen);exercisePly=0;exerciseMistakes=0;exerciseMoves=[];
+      byId("exercise-head").textContent="Exercice "+(exerciseIndex+1)+"/"+EXERCISES.length+" · "+exercise.theme+" · rating source "+exercise.rating;
+      byId("exercise-prompt").textContent="Calcule la suite forcing, puis écris le prochain coup de ta ligne.";
+      byId("exercise-sequence").textContent="Position mémorisée · "+(exercise.turn==="w"?"Blancs":"Noirs")+" jouent.";
+      byId("exercise-input").value="";byId("exercise-input").disabled=false;byId("exercise-submit").disabled=false;byId("exercise-next").hidden=true;byId("exercise-skip").hidden=false;
+      setFeedback("exercise-feedback","Une erreur donne un nouvel indice. La réponse n’est pas affichée automatiquement.","");byId("exercise-input").focus();renderExerciseStats();
+    }
+    byId("exercise-start").addEventListener("click",startExercise);byId("exercise-next").addEventListener("click",startExercise);
+    byId("exercise-skip").addEventListener("click",function(){
+      if(!exercise)return;byId("exercise-sequence").textContent=sanLine(exercise);byId("exercise-input").disabled=true;byId("exercise-submit").disabled=true;byId("exercise-skip").hidden=true;byId("exercise-next").hidden=false;setFeedback("exercise-feedback","Ligne consultée; cette position ne compte pas comme résolue.","");
+    });
+    byId("exercise-form").addEventListener("submit",function(event){
+      event.preventDefault();if(!exercise||!exerciseGame||exercisePly>=exercise.line.length)return;
+      const move=resolveMove(exerciseGame,byId("exercise-input").value),expected=exercise.line[exercisePly];
+      if(!move||uciOf(move)!==expected){
+        exerciseMistakes++;
+        const hint=exerciseMistakes===1?"Indice 1 : cherche d’abord les échecs, captures et menaces.":exerciseMistakes===2?"Indice 2 : motif à chercher — "+exercise.theme+".":"Indice 3 : compare les coups forcing et les pièces non défendues.";
+        setFeedback("exercise-feedback","Coup non retenu. "+hint,"error");byId("exercise-input").select();return;
+      }
+      const played=exerciseGame.move({from:move.from,to:move.to,promotion:move.promotion});exerciseMoves.push(played.san);exercisePly++;
+      let message="Bien joué : "+played.san+".";
+      if(exercisePly<exercise.line.length){const reply=applyUci(exerciseGame,exercise.line[exercisePly]);exerciseMoves.push(reply.san);exercisePly++;message+=" Réponse adverse : "+reply.san+". Reconstruis la position suivante.";}
+      byId("exercise-sequence").textContent=exerciseMoves.join(" → ");byId("exercise-input").value="";
+      if(exercisePly>=exercise.line.length){
+        data.exercisesSolved++;data.xp+=5;saveData();byId("exercise-input").disabled=true;byId("exercise-submit").disabled=true;byId("exercise-skip").hidden=true;byId("exercise-next").hidden=false;message+=" Suite complétée sans échiquier.";
+      }
+      setFeedback("exercise-feedback",message,"ok");renderExerciseStats();
+    });
+
+    function renderPuzzleStats(){byId("puzzle-stats").innerHTML="<div><strong>"+data.puzzleCorrect+"</strong><span>puzzles résolus</span></div><div><strong>"+data.puzzleAttempts+"</strong><span>tentatives</span></div><div><strong>"+data.streak+"</strong><span>série actuelle</span></div><div><strong>"+data.bestStreak+"</strong><span>meilleure série</span></div>";}
+    function startPuzzle(){
+      let next;do{next=PUZZLES[Math.floor(Math.random()*PUZZLES.length)];}while(PUZZLES.length>1&&next.id===previousPuzzleId);
+      puzzle=next;previousPuzzleId=puzzle.id;puzzleGame=new Chess(puzzle.fen);puzzleMistakes=0;
+      byId("puzzle-head").textContent="Rating source "+puzzle.rating+" · "+puzzle.theme+" · "+(puzzleGame.turn()==="w"?"Blancs":"Noirs")+" au trait";
+      byId("puzzle-prompt").textContent="Trouve le premier coup de la solution. Écris-le en notation algébrique standard ou en UCI.";
+      byId("puzzle-input").value="";byId("puzzle-input").disabled=false;byId("puzzle-submit").disabled=false;byId("puzzle-line").hidden=true;byId("puzzle-source").hidden=true;byId("puzzle-next").hidden=true;
+      setFeedback("puzzle-feedback","Pas d’échiquier, de flèches ni d’évaluation : calcule avant de répondre.","");byId("puzzle-input").focus();
+    }
+    byId("puzzle-start").addEventListener("click",startPuzzle);byId("puzzle-next").addEventListener("click",startPuzzle);
+    byId("puzzle-form").addEventListener("submit",function(event){
+      event.preventDefault();if(!puzzle||!puzzleGame)return;data.puzzleAttempts++;
+      const move=resolveMove(puzzleGame,byId("puzzle-input").value);
+      if(!move||uciOf(move)!==puzzle.answer){
+        puzzleMistakes++;data.streak=0;saveData();renderPuzzleStats();
+        const hint=puzzleMistakes===1?"Indice 1 : recherche un coup forcing.":puzzleMistakes===2?"Indice 2 : motif principal — "+puzzle.theme+".":"Indice 3 : compare les échecs et captures avant les coups de plan.";
+        setFeedback("puzzle-feedback","Ce coup n’est pas la solution retenue. "+hint,"error");byId("puzzle-input").select();return;
+      }
+      const played=puzzleGame.move({from:move.from,to:move.to,promotion:move.promotion});
+      data.puzzleCorrect++;data.streak++;data.bestStreak=Math.max(data.bestStreak,data.streak);data.xp+=10;if(!data.solved.includes(puzzle.id))data.solved.push(puzzle.id);saveData();renderPuzzleStats();
+      byId("puzzle-input").disabled=true;byId("puzzle-submit").disabled=true;byId("puzzle-next").hidden=false;
+      byId("puzzle-line").textContent="Ligne solution : "+sanLine(puzzle);byId("puzzle-line").hidden=false;
+      byId("puzzle-source").innerHTML='Source puzzle : <a href="https://lichess.org/training/'+encodeURIComponent(puzzle.id)+'" target="_blank" rel="noopener">Lichess · '+escapeHtml(puzzle.id)+'</a>';byId("puzzle-source").hidden=false;
+      setFeedback("puzzle-feedback","Résolu sans échiquier. Premier coup : "+played.san+". Compare maintenant ta variante à la ligne complète.","ok");
+    });
+
+    function renderMasteryStats(){byId("mastery-stats").innerHTML="<div><strong>"+data.masteryAttempts+"</strong><span>tests passés</span></div><div><strong>"+data.masteryPasses+"</strong><span>tests validés</span></div><div><strong>"+data.masteryBest+"/5</strong><span>meilleur résultat</span></div><div><strong>"+data.solved.length+"</strong><span>puzzles différents résolus</span></div><div><strong>"+data.xp+"</strong><span>XP NoBoardChess</span></div>";}
+    function startMastery(){masteryDeck=shuffle(PUZZLES).slice(0,5);masteryIndex=0;masteryScore=0;masteryAnswered=false;masteryActive=true;showMasteryQuestion();}
+    function showMasteryQuestion(){
+      const item=masteryDeck[masteryIndex];byId("mastery-head").textContent="Test "+(masteryIndex+1)+"/5";
+      byId("mastery-prompt").textContent="Sans indice : calcule et saisis le premier coup gagnant.";
+      byId("mastery-input").value="";byId("mastery-input").disabled=false;byId("mastery-submit").disabled=false;byId("mastery-next").hidden=true;byId("mastery-solution").hidden=true;masteryAnswered=false;setFeedback("mastery-feedback","","");byId("mastery-input").focus();
+    }
+    function finishMastery(){
+      masteryActive=false;data.masteryAttempts++;data.masteryBest=Math.max(data.masteryBest,masteryScore);
+      if(masteryScore>=4){data.masteryPasses++;data.xp+=25;}
+      saveData();renderMasteryStats();byId("mastery-head").textContent="Test terminé · "+masteryScore+"/5";
+      byId("mastery-prompt").textContent=masteryScore>=4?"Session validée. Reviens plus tard avec un autre échantillon pour vérifier la rétention.":"Pas encore validé. Revois les erreurs, puis recommence avec cinq positions différentes.";
+      byId("mastery-input").disabled=true;byId("mastery-submit").disabled=true;byId("mastery-next").hidden=true;byId("mastery-start").textContent="Recommencer avec cinq nouvelles positions";setFeedback("mastery-feedback",masteryScore>=4?"Maîtrise de session validée.":"Maîtrise à retravailler.","");
+    }
+    function showMasterySolution(){
+      const item=masteryDeck[masteryIndex],game=new Chess(item.fen),move=applyUci(game,item.answer);
+      byId("mastery-solution").textContent="Premier coup de la ligne : "+move.san+" · "+item.theme;byId("mastery-solution").hidden=false;
+    }
+    byId("mastery-start").addEventListener("click",startMastery);
+    byId("mastery-next").addEventListener("click",function(){masteryIndex++;if(masteryIndex>=masteryDeck.length)finishMastery();else showMasteryQuestion();});
+    byId("mastery-form").addEventListener("submit",function(event){
+      event.preventDefault();if(!masteryActive||masteryAnswered)return;
+      const item=masteryDeck[masteryIndex],position=new Chess(item.fen),move=resolveMove(position,byId("mastery-input").value),correct=!!move&&uciOf(move)===item.answer;
+      if(correct){masteryScore++;data.xp+=2;if(!data.solved.includes(item.id))data.solved.push(item.id);}
+      masteryAnswered=true;saveData();renderMasteryStats();showMasterySolution();
+      setFeedback("mastery-feedback",correct?"Correct. Point validé sans indice.":"Incorrect. Cette position ne rapporte pas de point; compare le premier coup de la ligne et note le motif.","");
+      byId("mastery-input").disabled=true;byId("mastery-submit").disabled=true;byId("mastery-next").hidden=false;byId("mastery-next").textContent=masteryIndex===masteryDeck.length-1?"Terminer le test":"Question suivante";
+    });
+    renderLesson();renderExerciseStats();renderPuzzleStats();renderMasteryStats();
+  })();
   </script>
 </body>
 </html>
