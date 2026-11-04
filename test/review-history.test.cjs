@@ -21,6 +21,7 @@ function createContext() {
     querySelectorAll() { return []; },
   };
   const context = vm.createContext({
+    window: {},
     document,
     localStorage: {
       getItem(key) { return storage.get(key) || null; },

@@ -3505,6 +3505,7 @@
     if (principleAnswered) return;
     const lesson = LESSONS[lessonIndex];
     if (!choice.correct) {
+      if (root.SupaChessAudio) root.SupaChessAudio.play("incorrect");
       attempts++;
       button.classList.add("incorrect");
       $("lesson-feedback").textContent = "Pas encore. Regarde les pièces actives et ce que l’adversaire menace.";
@@ -3512,6 +3513,7 @@
       return;
     }
     principleAnswered = true;
+    if (root.SupaChessAudio) root.SupaChessAudio.play("correct");
     button.classList.add("correct");
     for (const option of $("lesson-choices").querySelectorAll("button")) option.disabled = true;
     $("lesson-feedback").textContent = "Oui. Maintenant, trouve le coup qui met ce principe en pratique.";
@@ -3554,6 +3556,7 @@
     const uci = move.from + move.to + (move.promotion || "");
     const expectedSide = anticipatingBook ? "book" : "user";
     if (expected.side !== expectedSide || uci !== expected.uci) {
+      if (root.SupaChessAudio) root.SupaChessAudio.play("incorrect");
       game.undo();
       attempts++;
       clearSelection();
@@ -3565,6 +3568,7 @@
       runEngineComparison(true);
       return;
     }
+    if (root.SupaChessAudio) root.SupaChessAudio.play(game.in_check() ? "check" : (move.flags && (move.flags.includes("c") || move.flags.includes("e")) ? "capture" : "move"));
     sequenceIndex++;
     clearEvalBar();
     const anticipated = anticipatingBook;
@@ -3603,6 +3607,7 @@
           waitingForBook = false;
           return;
         }
+        if (root.SupaChessAudio) root.SupaChessAudio.play(game.in_check() ? "check" : (move.flags && (move.flags.includes("c") || move.flags.includes("e")) ? "capture" : "move"));
         sequenceIndex++;
         clearEvalBar();
         boardUI.lastMove = { from: move.from, to: move.to, san: move.san };
@@ -3624,6 +3629,7 @@
   }
 
   function finishLesson() {
+    if (root.SupaChessAudio) root.SupaChessAudio.play("complete");
     const lesson = LESSONS[lessonIndex];
     const reviewAttempt = reviewSession;
     let reviewResult = null;

@@ -593,6 +593,7 @@ async function playEngineMove() {
   const engineColor = state.chess.turn();
   const mv = state.chess.move(uciToMoveObj(res.bestmove));
   if (mv) {
+    if (window.SupaChessAudio) window.SupaChessAudio.play(state.chess.in_check() ? "check" : (mv.flags && (mv.flags.includes("c") || mv.flags.includes("e")) ? "capture" : "move"));
     boardUI.lastMove = { from: mv.from, to: mv.to };
     state.fenHistory.push(fenKey(state.chess.fen()));
     state.positionFenHistory.push(state.chess.fen());
@@ -870,6 +871,7 @@ function interceptMove(moveObj, cand) {
     return;
   }
   if (typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
+  if (window.SupaChessAudio) window.SupaChessAudio.play("incorrect");
   previewCandidate(cand);
   state.phase = "coach";
   state.pendingMove = { ...moveObj, uci: cand.uci, cand };
@@ -951,6 +953,7 @@ function commitUserMove(moveObj, cand, forced) {
   const fenBefore = state.chess.fen();
   const mv = state.chess.move(moveObj);
   if (!mv) return;
+  if (window.SupaChessAudio) window.SupaChessAudio.play(state.chess.in_check() ? "check" : (mv.flags && (mv.flags.includes("c") || mv.flags.includes("e")) ? "capture" : "move"));
   moveFeedback.clearPreview();
   const brilliant = isBrilliantCandidate(fenBefore, cand);
   const grade = moveGrade(cand ? cand.deltaCp : null, brilliant, cand?.rank === 1);

@@ -75,5 +75,5 @@ test("hides live engine candidates and board dots while solving a correction", (
 
   assert.equal(context.state.candidates.length, 0);
   assert.equal(context.boardUI.dots.length, 0);
-  assert.match(candidateList.innerHTML, /masqués pendant la correction/);
+  assert.match(candidateList.innerHTML, /masquées pendant la correction/);
 });

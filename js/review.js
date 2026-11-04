@@ -810,6 +810,9 @@ function reviewStartCorrectionExercises(items,headers={},analysis=null,moveGrade
   panel?.scrollIntoView({block:"start"});
 }
 
+function reviewHideCorrectionCandidates(){
+  reviewClearCorrectionCandidates("Bulles candidates : masquées pendant la correction.");
+}
 function reviewClearCorrectionCandidates(message){
   state.candidates=[];
   boardUI.dots=[];
