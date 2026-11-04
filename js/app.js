@@ -527,7 +527,7 @@ function abandonCurrentGame() {
   boardUI.legalTargets = [];
   boardUI.dots = [];
   if (typeof gamesAutoSave === "function") gamesAutoSave();
-  setStatus("Partie abandonnée — défaite enregistrée.");
+  setStatus("Partie terminée — défaite par abandon.");
   renderAll();
 }
 
@@ -1226,7 +1226,11 @@ function hideCoach() {
 
 /* ── Fin de partie ── */
 function checkGameOver() {
-  if (state.abandoned || state.stopped || state.timeExpiredColor) return true;
+  if (state.abandoned) {
+    setStatus("Partie terminée — défaite par abandon.");
+    return true;
+  }
+  if (state.stopped || state.timeExpiredColor) return true;
   const c = state.chess;
   if (!c.game_over()) return false;
   stopPlayerClock();
