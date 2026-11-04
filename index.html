@@ -7,6 +7,13 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="css/style.css?v=rank4-fuchsia-brilliant-violet-20261103-v1">
 <style>
+  .player-clocks { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0; }
+  .player-clock { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border:1px solid rgba(128,128,128,.4); border-radius:10px; background:rgba(0,0,0,.2); color:#f5f7fa; }
+  .player-clock strong { font-size:1.45rem; font-variant-numeric:tabular-nums; letter-spacing:.04em; }
+  .player-clock.is-active { border-color:#7bd394; box-shadow:0 0 0 2px rgba(123,211,148,.18); }
+  .player-clock.is-expired strong { color:#ff6b6b; }
+  .clock-control-status { grid-column:1/-1; margin:0; color:#aab5c0; font-size:.8rem; }
+  @media(max-width:520px){.player-clock{padding:8px;font-size:.9rem}.player-clock strong{font-size:1.2rem}}
   .supa-section { margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(128,128,128,.4); }
   .supa-head { font-weight: 600; font-size: .85em; opacity: .9; }
   .supa-model { font-weight: 400; font-size: .75em; opacity: .6; margin-left: 4px; }
@@ -165,6 +172,11 @@
         <div class="evalbar"><div id="evalbar-white" class="evalbar-white"></div></div>
         <div id="evalbar-label" class="evalbar-label">+0.00</div>
       </div>
+      <section class="player-clocks" aria-label="Pendules de la partie">
+        <div class="player-clock" data-clock-side="w"><span>Blancs</span><strong id="clock-white" aria-live="off">∞</strong></div>
+        <div class="player-clock" data-clock-side="b"><span>Noirs</span><strong id="clock-black" aria-live="off">∞</strong></div>
+        <p id="clock-control-status" class="clock-control-status" aria-live="polite">Temps de réflexion illimité pour chaque joueur.</p>
+      </section>
       <div id="engine-arrow-legend" class="engine-arrow-legend" role="list" aria-label="Légende des flèches moteur" hidden></div>
       <div id="move-feedback" class="move-feedback hidden" role="status" aria-live="polite" aria-atomic="true"></div>
       <div id="accuracy-badge" class="accuracy-badge">Précision — Blancs: — &nbsp;·&nbsp; Noirs: —</div>
@@ -241,6 +253,17 @@
           </select>
           <small class="setting-hint">Le temps choisi s’applique aussi à la réflexion de l’adversaire.</small>
         </label>
+        <label>Temps Blancs
+          <select id="sel-clock-white" class="btn select" aria-label="Temps de réflexion des Blancs">
+            <option value="0" selected>Illimité</option><option value="1">1 minute</option><option value="3">3 minutes</option><option value="5">5 minutes</option>
+          </select>
+        </label>
+        <label>Temps Noirs
+          <select id="sel-clock-black" class="btn select" aria-label="Temps de réflexion des Noirs">
+            <option value="0" selected>Illimité</option><option value="1">1 minute</option><option value="3">3 minutes</option><option value="5">5 minutes</option>
+          </select>
+        </label>
+        <small class="setting-hint">Chaque pendule est indépendante. Les réglages prennent effet à la prochaine partie.</small>
         <label for="sel-elo">Adversaire</label>
         <select id="sel-elo" class="btn select">
             <option value="1320">Elo moteur UCI 1320</option>
@@ -392,14 +415,14 @@
   <span id="registered-members-count" class="registered-members-count">Comptes inscrits : chargement…</span>
   <span id="unique-visitors-count" class="unique-visitors-count">Visiteurs uniques estimés : chargement…</span>
 </div>
-  <span class="site-version" aria-label="Version de SupaChess">Version SupaChess : 1.13.12485</span>
+  <span class="site-version" aria-label="Version de SupaChess">Version SupaChess : 1.13.12486</span>
 </footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="js/site-stats.js?v=unique-visitors-20261029"></script>
-<script src="js/profile.js?v=exclude-aided-games-20261102-v2"></script>
+<script src="js/profile.js?v=timed-game-types-20261104-v1"></script>
 <script src="js/sounds.js?v=profile-sounds-20261104"></script>
 <script src="vendor/chess.js"></script>
 <script src="js/engine.js?v=stockfish-worker-recovery-20261029"></script>
@@ -409,9 +432,9 @@
 <script src="js/appearance.js?v=appearance-options-20261102-v1"></script>
 <script src="js/analysis-settings.js?v=unassisted-arrows-lock-20261104-v1"></script>
 <script src="js/move-feedback.js?v=supa-brilliant-indicator-20261103-v1"></script>
-<script src="js/app.js?v=unassisted-game-20261104-v1"></script>
+<script src="js/app.js?v=player-clocks-20261104-v1"></script>
 <script src="js/diagnostic-undo-lock.js?v=unassisted-undo-lock-20261104-v1"></script>
-<script src="js/games.js?v=unassisted-pgn-tag-20261104-v1"></script>
+<script src="js/games.js?v=timed-games-20261104-v1"></script>
 <script src="js/tablebase.js?v=op1-partial-tablebase-20261027"></script>
 <script src="js/blindspots.js?v=pressure-defender-causes-20261030"></script>
   <script src="js/learning-loop.js"></script>
