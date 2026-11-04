@@ -610,6 +610,28 @@ function renderQualityTrendChart(samples,key,title,unit,color,fixedMax){
     '<text x="'+(left+plotWidth/2)+'" y="'+(height-5)+'" text-anchor="middle" fill="#f4f7fb" font-size="15">Date des parties (de la plus ancienne à la plus récente)</text>'+
     '<text x="18" y="'+(top+plotHeight/2)+'" transform="rotate(-90 18 '+(top+plotHeight/2)+')" text-anchor="middle" fill="#f4f7fb" font-size="15">'+(unit==='%'?'Précision (%)':'Moyenne par demi-coup (cp)')+'</text></svg></div>';
 }
+function summarizeAcplPerGame(games,range,now){
+  var selected=profileGamesForRange(Array.isArray(games)?games:[],range||'all',now);
+  var perGame=selected.map(function(game){
+    if(!game||!['1-0','0-1','1/2-1/2'].includes(String(game.result||''))||
+      game.abandoned||game.stopped||game.termination==='abandoned'||game.termination==='unterminated'||!profileGameWasUnaided(game))return null;
+    var color=resolveProfileUserColor(game);
+    if(!color)return null;
+    var losses=(Array.isArray(game.moveGrades)?game.moveGrades:[]).filter(function(move){
+      if(!move||move.color!==color||move.lossCp===null||move.lossCp===undefined||move.lossCp==='')return false;
+      var loss=Number(move.lossCp);
+      return Number.isFinite(loss)&&loss>=0;
+    }).map(function(move){return Number(move.lossCp);});
+    if(!losses.length)return null;
+    return {acpl:losses.reduce(function(sum,value){return sum+value;},0)/losses.length,moves:losses.length};
+  }).filter(function(item){return !!item;});
+  if(!perGame.length)return {average:null,games:0,moves:0};
+  return {
+    average:perGame.reduce(function(sum,item){return sum+item.acpl;},0)/perGame.length,
+    games:perGame.length,
+    moves:perGame.reduce(function(sum,item){return sum+item.moves;},0)
+  };
+}
 function renderQualityProgressPanel(games,range){
   var samples=qualityTrendSamples(games,range,Date.now());
   var selectedRange=profilePerformanceRanges().find(function(item){return item.key===range;})||profilePerformanceRanges()[5];
@@ -617,6 +639,7 @@ function renderQualityProgressPanel(games,range){
   var totalMeasuredLossMoves=withLoss.reduce(function(sum,item){return sum+item.lossMoves;},0);
   var totalMeasuredLossCp=withLoss.reduce(function(sum,item){return sum+item.totalLoss;},0);
   var overallMeanLossCp=totalMeasuredLossMoves?totalMeasuredLossCp/totalMeasuredLossMoves:null;
+  var acplPerGame=summarizeAcplPerGame(games,range,Date.now());
   var html='<section class="profile-quality-progress" aria-labelledby="profile-quality-progress-title" style="margin:16px 0;padding:16px;border:1px solid #52657d;border-radius:14px;background:#1b2638;color:#f4f7fb">'+
     '<h4 id="profile-quality-progress-title" style="margin-top:0">Surveillance de la progression de la qualité de jeu · '+selectedRange.aria+'</h4>';
   if(!samples.length)return html+'<p>Aucune partie terminée, datée et accompagnée d’une précision disponible pour cette période.</p></section>';
@@ -639,7 +662,7 @@ function renderQualityProgressPanel(games,range){
   html+='<p>Échantillon : '+samples.length+' partie(s) terminée(s) avec précision; '+withLoss.length+' partie(s) ont aussi des pertes en centipions calculables. Comparaison descriptive des groupes en début et en fin de période; elle ne constitue pas un Elo.</p>'+
     '<div class="profile-quality-trend-summary"><article><strong>Précision</strong><span>'+changeText(accuracyDelta,' point(s) de %',false)+'</span></article>'+
     '<article><strong>Évolution de la moyenne par demi-coup</strong><span>'+(withLoss.length?changeText(lossDelta,' cp',true):'Aucune perte moyenne par partie disponible.')+'</span></article></div>'+
-    '<p>Moyenne pondérée des parties sans aides : '+(overallMeanLossCp===null?'—':overallMeanLossCp.toFixed(1).replace('.',',')+' cp par demi-coup évalué')+' · total mesuré : '+(totalMeasuredLossMoves?totalMeasuredLossCp.toFixed(0)+' cp sur '+totalMeasuredLossMoves+' demi-coup(s) de '+withLoss.length+' partie(s)':'aucune perte CP mesurée')+'. Chaque point du graphique est la moyenne de cette partie, pas son total.</p>'+
+    '<p><strong>ACPL moyen par partie :</strong> '+(acplPerGame.average===null?'—':acplPerGame.average.toFixed(1).replace('.',',')+' cp')+' · '+acplPerGame.games+' partie(s) sans aides, terminée(s) et évaluée(s) ('+acplPerGame.moves+' demi-coup(s) mesuré(s)). Chaque partie pèse autant, quel que soit son nombre de coups évalués. Le total de centipions ne sert pas de moyenne.</p>'+
     '<div class="profile-quality-chart-grid">'+
     renderQualityTrendChart(samples,'accuracy','Précision Stockfish par partie','%','#7bd394',100)+
     (withLoss.length?renderQualityTrendChart(samples,'meanLoss','Perte moyenne par demi-coup évalué · une moyenne par partie','cp','#68b5ff',null):'<p>La courbe de perte en centipions apparaîtra dès que les analyses auront enregistré ces valeurs.</p>')+
