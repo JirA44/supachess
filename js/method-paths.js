@@ -25,6 +25,8 @@
           label.textContent = count + " leçons · " + anticipationExercises.length + " puzzles de réfutation";
         } else if (program === "Auto-évaluation · méthode Hikaru") {
           label.textContent = count + " leçons · " + anticipationExercises.length + " défis d’auto-évaluation";
+        } else if (program === "Carlsen · reconnaissance des motifs") {
+          label.textContent = count + " leçons · " + anticipationExercises.length + " rappels de motifs";
         } else {
           const subject = program === "Stockfish · comparer et vérifier" ? "positions de leçons analysables" : "leçons du parcours";
           label.textContent = count + " " + subject;
@@ -36,7 +38,9 @@
           ? count + " leçons et " + anticipationExercises.length + " puzzles"
           : program === "Auto-évaluation · méthode Hikaru"
             ? count + " leçons et " + anticipationExercises.length + " défis d’auto-évaluation"
-            : count + " leçons";
+            : program === "Carlsen · reconnaissance des motifs"
+              ? count + " leçons et " + anticipationExercises.length + " rappels de motifs"
+              : count + " leçons";
       path.setAttribute("aria-label", path.querySelector("h3").textContent + " · " + pathSummary);
     }
   }
