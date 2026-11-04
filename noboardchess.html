@@ -71,7 +71,7 @@
 <body>
   <main class="shell">
     <header>
-      <div class="brand">♞ Supa<span>Chess</span> · NoBoardChess</div>
+      <div class="brand">♞ Supa<span>Chess</span> · Sans échiquier</div>
       <a class="back" href="index.html">← Retour à SupaChess</a>
     </header>
     <section class="hero" aria-labelledby="page-title">
@@ -83,7 +83,7 @@
     </section>
 
 
-    <nav class="mode-tabs" role="tablist" aria-label="Modes NoBoardChess">
+    <nav class="mode-tabs" role="tablist" aria-label="Modes sans échiquier">
       <button type="button" role="tab" data-mode="games" aria-selected="true" aria-controls="mode-games">♟ Parties</button>
       <button type="button" role="tab" data-mode="lessons" aria-selected="false" aria-controls="mode-lessons">📘 Leçons</button>
       <button type="button" role="tab" data-mode="exercises" aria-selected="false" aria-controls="mode-exercises">✍️ Exercices</button>
@@ -120,7 +120,7 @@
       <h2 style="margin-top:24px">Partie en notation</h2>
       <div id="move-columns" class="move-columns" hidden><span>Coup</span><span id="white-heading">Blancs</span><span id="black-heading">Noirs</span></div>
       <div id="move-list" class="empty" aria-live="polite">La partie apparaîtra ici coup par coup, sans représentation de l’échiquier.</div>
-      <div class="foot"><span>Les coups sont joués sur la position légale réelle, même si elle reste cachée.</span><span>Version SupaChess : 1.13.14815</span></div>
+      <div class="foot"><span>Les coups sont joués sur la position légale réelle, même si elle reste cachée.</span><span>Version SupaChess : 1.13.14816</span></div>
     </section>
 
     <section class="panel mode-panel" id="mode-lessons" data-mode-panel="lessons" role="tabpanel" hidden>
@@ -362,7 +362,7 @@
       game.reset();
       playerColor = colorSelect.value;
       gameStarted = true;
-      game.header("Event", "SupaChess NoBoardChess");
+      game.header("Event", "SupaChess — Échecs sans échiquier");
       game.header("Site", "SupaChess");
       game.header("White", playerColor === "w" ? "Joueur 1" : "Stockfish");
       game.header("Black", playerColor === "b" ? "Joueur 1" : "Stockfish");
@@ -544,7 +544,7 @@
       setFeedback("puzzle-feedback","Résolu sans échiquier. Premier coup : "+played.san+". Compare maintenant ta variante à la ligne complète.","ok");
     });
 
-    function renderMasteryStats(){byId("mastery-stats").innerHTML="<div><strong>"+data.masteryAttempts+"</strong><span>tests passés</span></div><div><strong>"+data.masteryPasses+"</strong><span>tests validés</span></div><div><strong>"+data.masteryBest+"/5</strong><span>meilleur résultat</span></div><div><strong>"+data.solved.length+"</strong><span>puzzles différents résolus</span></div><div><strong>"+data.xp+"</strong><span>XP NoBoardChess</span></div>";}
+    function renderMasteryStats(){byId("mastery-stats").innerHTML="<div><strong>"+data.masteryAttempts+"</strong><span>tests passés</span></div><div><strong>"+data.masteryPasses+"</strong><span>tests validés</span></div><div><strong>"+data.masteryBest+"/5</strong><span>meilleur résultat</span></div><div><strong>"+data.solved.length+"</strong><span>puzzles différents résolus</span></div><div><strong>"+data.xp+"</strong><span>XP sans échiquier</span></div>";}
     function startMastery(){masteryDeck=shuffle(PUZZLES).slice(0,5);masteryIndex=0;masteryScore=0;masteryAnswered=false;masteryActive=true;showMasteryQuestion();}
     function showMasteryQuestion(){
       const item=masteryDeck[masteryIndex];byId("mastery-head").textContent="Test "+(masteryIndex+1)+"/5";
