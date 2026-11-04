@@ -3,8 +3,10 @@
 var db=null, auth=null;
 var GAME_TYPES = {
   puzzle: {label:'Puzzle', icon:'🧩', defaultRating:1200},
-  classic3s: {label:'Classique 3 s/coup', icon:'⚡', defaultRating:1200},
-  classic5s: {label:'Classique 5 s/coup', icon:'⏱️', defaultRating:1200}
+  classic1m: {label:'Classique 1 minute', icon:'⚡', defaultRating:1200, minutes:1},
+  classic3m: {label:'Classique 3 minutes', icon:'⏱️', defaultRating:1200, minutes:3},
+  classic5m: {label:'Classique 5 minutes', icon:'♟️', defaultRating:1200, minutes:5},
+  classicUnlimited: {label:'Classique sans limite', icon:'∞', defaultRating:1200, minutes:0}
 };
 function init(a,d){ auth=a; db=d; }
 function ensureUserProfile(user){
@@ -20,8 +22,10 @@ function ensureUserProfile(user){
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       stats:{
         puzzle:{rating:1200, wins:0, losses:0, draws:0, played:0},
-        classic3s:{rating:1200, wins:0, losses:0, draws:0, played:0},
-        classic5s:{rating:1200, wins:0, losses:0, draws:0, played:0}
+        classic1m:{rating:1200, wins:0, losses:0, draws:0, played:0},
+        classic3m:{rating:1200, wins:0, losses:0, draws:0, played:0},
+        classic5m:{rating:1200, wins:0, losses:0, draws:0, played:0},
+        classicUnlimited:{rating:1200, wins:0, losses:0, draws:0, played:0}
       },
       totalGames:0
     };
@@ -40,7 +44,35 @@ function updateStats(uid, gameType, result, delta){
   upd['totalGames']=firebase.firestore.FieldValue.increment(1);
   if(map[result]) upd[field+'.'+map[result]]=firebase.firestore.FieldValue.increment(1);
   if(delta) upd[field+'.rating']=firebase.firestore.FieldValue.increment(delta);
-  ref.set(upd,{merge:true});
+  return ref.set(upd,{merge:true});
+}
+function recordTimedGame(uid, gameType, result, opponentRating) {
+  if (!db || !uid || !GAME_TYPES[gameType] || GAME_TYPES[gameType].minutes === undefined ||
+      !['win','loss','draw'].includes(result)) return Promise.resolve(false);
+  var ref = db.collection('users').doc(uid);
+  return db.runTransaction(function(transaction) {
+    return transaction.get(ref).then(function(doc) {
+      var data = doc.exists ? doc.data() || {} : {};
+      var stats = data.stats && data.stats[gameType] || {};
+      var played = Math.max(0, Number(stats.played) || 0);
+      var rating = Math.max(0, Number(stats.rating) || 1200);
+      var opponent = Math.max(0, Number(opponentRating) || 1600);
+      var expected = 1 / (1 + Math.pow(10, (opponent - rating) / 400));
+      var actual = result === 'win' ? 1 : result === 'draw' ? 0.5 : 0;
+      var k = played < 20 ? 32 : 20;
+      var delta = Math.round(k * (actual - expected));
+      var field = 'stats.' + gameType + '.';
+      var updates = {};
+      updates[field + 'played'] = played + 1;
+      updates[field + 'wins'] = Math.max(0, Number(stats.wins) || 0) + (result === 'win' ? 1 : 0);
+      updates[field + 'losses'] = Math.max(0, Number(stats.losses) || 0) + (result === 'loss' ? 1 : 0);
+      updates[field + 'draws'] = Math.max(0, Number(stats.draws) || 0) + (result === 'draw' ? 1 : 0);
+      updates[field + 'rating'] = rating + delta;
+      updates.totalGames = Math.max(0, Number(data.totalGames) || 0) + 1;
+      transaction.set(ref, updates, { merge: true });
+      return true;
+    });
+  }).catch(function(){ return false; });
 }
 function searchUsers(query, limit){
   limit=limit||8;
@@ -67,7 +99,9 @@ function getTopRanking(gameType, limit){
     var out=[];
     snap.forEach(function(doc){
       var d=doc.data();
-      out.push({uid:doc.id, displayName:d.displayName, rating:(d.stats&&d.stats[gameType]&&d.stats[gameType].rating)||1200, stats:d.stats});
+      var stats=d.stats&&d.stats[gameType]||{};
+      if(!(Number(stats.played)>0))return;
+      out.push({uid:doc.id, displayName:d.displayName, rating:(Number(stats.rating)||1200), stats:d.stats});
     });
     return out;
   }).catch(function(){ return []; });
@@ -1037,11 +1071,21 @@ function renderProfileModal(data){
     var label=profileText('profile_game_'+k,GAME_TYPES[k].label);
     var games=Number(st&&st.played)||0;
     var summary=games?'<b>'+Number(st.rating||1200)+'</b> ELO · '+games+' '+profileText('profile_games','parties')+' ('+Number(st.wins||0)+' '+profileText('profile_wins','victoires')+' / '+Number(st.losses||0)+' '+profileText('profile_losses','défaites')+' / '+Number(st.draws||0)+' '+profileText('profile_draws','nulles')+')':profileText('profile_no_game_data','Aucune donnée de partie pour le moment');
-    html+='<div style="background:rgba(255,255,255,.06);padding:10px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><span>'+GAME_TYPES[k].icon+' '+escapeProfileText(label)+'</span><span>'+summary+'</span></div>';
+    var playButton=auth&&auth.currentUser&&auth.currentUser.uid===data.uid&&GAME_TYPES[k].minutes!==undefined
+      ?'<button type="button" data-play-clock="'+GAME_TYPES[k].minutes+'" style="padding:7px 11px;border-radius:8px;border:1px solid #4facfe;background:rgba(79,172,254,.16);color:#fff;font-weight:700;cursor:pointer">Jouer</button>':'';
+    html+='<div style="background:rgba(255,255,255,.06);padding:10px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><span>'+GAME_TYPES[k].icon+' '+escapeProfileText(label)+'</span><span>'+summary+'</span>'+playButton+'</div>';
   });
   html+='</div>';
   if(auth&&auth.currentUser&&auth.currentUser.uid===data.uid)html+=renderLocalLearningPanel(data);
+  if(auth&&auth.currentUser&&auth.currentUser.uid===data.uid)
+    html='<p style="margin:12px 0 0;color:#b8c7d9;font-size:.85em">Les boutons Jouer démarrent une partie sans aide contre Stockfish. Les pendules des Blancs et des Noirs sont réglées séparément.</p>'+html;
   box.innerHTML=html;
+  box.querySelectorAll('[data-play-clock]').forEach(function(button){
+    button.addEventListener('click',function(){
+      var minutes=Number(button.getAttribute('data-play-clock'))||0;
+      if(typeof window.SupaChessStartTimedGame==='function')window.SupaChessStartTimedGame(minutes);
+    });
+  });
   renderProfileSettings(box);
   bindLessonProgressRangeControls(box);
   bindProfilePerformanceRangeControls(box);
@@ -1120,7 +1164,7 @@ function initRankingSection(){
   var sec=document.createElement('section');
   sec.id='ranking-section';
   sec.style.cssText='margin:40px 0;padding:24px;background:rgba(0,0,0,.35);border-radius:16px;border:1px solid rgba(255,255,255,.1)';
-  sec.innerHTML='<h2 style="text-align:center;color:#ffd700;margin-bottom:16px">🏆 Classements Top — par type de jeu</h2><div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:16px"><button class="rank-tab" data-type="puzzle" style="padding:8px 16px;border-radius:20px;border:1px solid #4facfe;background:#4facfe;color:#fff;cursor:pointer">🧩 Puzzle</button><button class="rank-tab" data-type="classic3s" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">⚡ Classic 3s</button><button class="rank-tab" data-type="classic5s" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">⏱️ Classic 5s</button><button class="rank-tab" data-type="champions" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">♟ Champions · précision &amp; ACPL</button><button class="rank-tab" data-type="levels" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">🏅 Niveau atteint</button></div><div id="ranking-list" style="display:grid;gap:8px"></div>';
+  sec.innerHTML='<h2 style="text-align:center;color:#ffd700;margin-bottom:16px">🏆 Classements Top — par type de jeu</h2><div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:16px"><button class="rank-tab" data-type="puzzle" style="padding:8px 16px;border-radius:20px;border:1px solid #4facfe;background:#4facfe;color:#fff;cursor:pointer">🧩 Puzzle</button><button class="rank-tab" data-type="classic1m" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">⚡ 1 min</button><button class="rank-tab" data-type="classic3m" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">⏱️ 3 min</button><button class="rank-tab" data-type="classic5m" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">♟ 5 min</button><button class="rank-tab" data-type="classicUnlimited" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">∞ Sans limite</button><button class="rank-tab" data-type="champions" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">♟ Champions · précision &amp; ACPL</button><button class="rank-tab" data-type="levels" style="padding:8px 16px;border-radius:20px;border:1px solid #666;background:transparent;color:#fff;cursor:pointer">🏅 Niveau atteint</button></div><div id="ranking-list" style="display:grid;gap:8px"></div>';
   var footer=document.querySelector('.footer');
   if(footer) container.insertBefore(sec, footer);
   else container.appendChild(sec);
@@ -1171,7 +1215,7 @@ function initRankingSection(){
   sec.querySelectorAll('.rank-tab').forEach(function(b){ b.addEventListener('click', function(){ load(b.getAttribute('data-type')); }); });
   load('puzzle');
 }
-window.SupaProfiles={init:init, ensureUserProfile:ensureUserProfile, updateStats:updateStats, searchUsers:searchUsers, getTopRanking:getTopRanking, getTopLevelRanking:getTopLevelRanking, publishLearningLevel:publishLearningLevel, getProfile:getProfile, renderProfileModal:renderProfileModal, readLocalLearningProgress:readLocalLearningProgress, summarizeAccuracyGames:summarizeAccuracyGames, summarizeCentipawnLossGames:summarizeCentipawnLossGames, mergeProfileAnalysisGames:mergeProfileAnalysisGames, renderLocalLearningPanel:renderLocalLearningPanel, renderOwnProfileFallback:renderOwnProfileFallback, lessonProgressSeries:lessonProgressSeries, renderLessonProgressRangeChart:renderLessonProgressRangeChart, bindLessonProgressRangeControls:bindLessonProgressRangeControls, initSearchBar:initSearchBar, initRankingSection:initRankingSection, GAME_TYPES:GAME_TYPES};
+window.SupaProfiles={init:init, ensureUserProfile:ensureUserProfile, updateStats:updateStats, recordTimedGame:recordTimedGame, searchUsers:searchUsers, getTopRanking:getTopRanking, getTopLevelRanking:getTopLevelRanking, publishLearningLevel:publishLearningLevel, getProfile:getProfile, renderProfileModal:renderProfileModal, readLocalLearningProgress:readLocalLearningProgress, summarizeAccuracyGames:summarizeAccuracyGames, summarizeCentipawnLossGames:summarizeCentipawnLossGames, mergeProfileAnalysisGames:mergeProfileAnalysisGames, renderLocalLearningPanel:renderLocalLearningPanel, renderOwnProfileFallback:renderOwnProfileFallback, lessonProgressSeries:lessonProgressSeries, renderLessonProgressRangeChart:renderLessonProgressRangeChart, bindLessonProgressRangeControls:bindLessonProgressRangeControls, initSearchBar:initSearchBar, initRankingSection:initRankingSection, GAME_TYPES:GAME_TYPES};
 if(document&&typeof document.querySelector==='function'){
   if(document.readyState==='loading'&&typeof document.addEventListener==='function') document.addEventListener('DOMContentLoaded',initRankingSection,{once:true});
   else initRankingSection();
