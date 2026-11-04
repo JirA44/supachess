@@ -58,15 +58,15 @@
           <p class="method-path-count" data-method-count>Leçons du parcours en cours de comptage…</p>
           <button class="btn method-path-action" type="button" data-method-action="Fischer · préparation et précision">Explorer les leçons Fischer</button>
         </article>
-        <article class="method-path" data-method-path="Auto-réfutation · méthode Hikaru">
-          <div class="method-path-kicker">6 · Candidat, contre-attaque, vérification</div>
-          <h3>Routine d’auto-réfutation · méthode Hikaru</h3>
-          <p>Tu crois qu’un demi-coup est correct ? Ne le valide pas au feeling et ne le rejette pas sans raison : cherche la meilleure réponse adverse qui pourrait le réfuter, puis calcule les conséquences.</p>
-          <ol><li>Note ton candidat et son idée avant l’analyse.</li><li>Cherche les échecs, prises, menaces et coups intermédiaires de l’adversaire.</li><li>Calcule sa réponse la plus forte et tente de réfuter ta propre variante.</li><li>Compare ensuite avec Stockfish et explique le point précis qui confirme ou invalide ton idée.</li></ol>
+        <article class="method-path" data-method-path="Auto-évaluation · méthode Hikaru">
+          <div class="method-path-kicker">6 · Juger son demi-coup, puis tester</div>
+          <h3>Auto-évaluer son demi-coup · routine Hikaru</h3>
+          <p>La routine décrite ici ne cherche pas à deviner le prochain coup adverse. Elle commence par juger ton propre demi-coup : pourquoi pourrait-il être mauvais ? Une réponse adverse étudiée sert ensuite à tester ce diagnostic.</p>
+          <ol><li>Note ton demi-coup et l’idée qu’il poursuit.</li><li>Demande-toi ce qu’il laisse en prise, quelle menace il ignore ou quelle faiblesse il crée.</li><li>Formule une raison concrète pour laquelle ton coup pourrait être mauvais et compare une autre option.</li><li>Examine ensuite des réponses possibles, puis compare ton diagnostic à Stockfish.</li></ol>
           <p><small>Le parcours et ses exercices sont originaux; le nom désigne la routine demandée, pas une méthode officielle citée de Hikaru Nakamura.</small></p>
-          <p class="method-path-count" data-method-count>Leçons et puzzles en cours de comptage…</p>
-          <button class="btn method-path-action" type="button" data-method-action="Auto-réfutation · méthode Hikaru">Explorer les leçons d’auto-réfutation</button>
-          <button class="btn method-path-action" type="button" data-method-surprise="Auto-réfutation · méthode Hikaru">Puzzle surprise d’auto-réfutation</button>
+          <p class="method-path-count" data-method-count>Leçons et défis en cours de comptage…</p>
+          <button class="btn method-path-action" type="button" data-method-action="Auto-évaluation · méthode Hikaru">Explorer les leçons d’auto-évaluation</button>
+          <button class="btn method-path-action" type="button" data-method-surprise="Auto-évaluation · méthode Hikaru">Défi surprise d’auto-évaluation</button>
         </article>
         <article class="method-path" data-method-path="Tal · tactique et sacrifices à calculer">
           <div class="method-path-kicker">3 · Imagination et vérification</div>
@@ -212,13 +212,13 @@
           <div class="lesson-choices" id="lesson-choices"></div>
         </fieldset>
         <section class="lesson-reflection" id="lesson-reflection" aria-labelledby="lesson-reflection-title" hidden>
-          <h3 id="lesson-reflection-title">Avant Stockfish : calcule ta propre variante</h3>
-          <p>Écris ton candidat, puis le meilleur demi-coup adverse que tu crains et ta réponse prévue. Stockfish vérifiera ensuite les lignes ; il ne devinera pas ton raisonnement. Rien n’est enregistré avant que tu ajoutes la position à ta révision locale.</p>
+          <h3 id="lesson-reflection-title">Avant Stockfish : juge ton demi-coup</h3>
+          <p>Écris ton demi-coup candidat et l’idée visée, puis indique pourquoi il pourrait être incorrect. Tu n’as pas à deviner le choix adverse : Stockfish et les variantes servent ensuite à éprouver ton diagnostic. Rien n’est enregistré avant que tu ajoutes la position à ta révision locale.</p>
           <label for="lesson-reflection-candidate">Mon coup candidat et son idée</label>
           <textarea id="lesson-reflection-candidate" rows="2" maxlength="400" placeholder="Ex. je joue … pour créer telle menace."></textarea>
-          <label for="lesson-reflection-reply">La réponse adverse la plus gênante, puis ma suite</label>
-          <textarea id="lesson-reflection-reply" rows="2" maxlength="400" placeholder="Ex. l’adversaire répond … ; je prévois …"></textarea>
-          <button class="btn" id="lesson-reflection-submit" type="button">Valider mon calcul et afficher Stockfish</button>
+          <label for="lesson-reflection-reply">Pourquoi mon demi-coup pourrait-il être mauvais ?</label>
+          <textarea id="lesson-reflection-reply" rows="2" maxlength="400" placeholder="Ex. je laisse peut-être une pièce sans défense ou manque une meilleure option."></textarea>
+          <button class="btn" id="lesson-reflection-submit" type="button">Valider mon auto-évaluation et afficher Stockfish</button>
           <p id="lesson-reflection-status" role="status" aria-live="polite"></p>
         </section>
         <div class="lesson-reflection-review" id="lesson-reflection-review" hidden>
@@ -252,7 +252,7 @@
     </section>
     <p class="lesson-note">Les exercices sont rédigés pour SupaChess. Chaque FEN et chaque demi-coup des lignes étudiées sont vérifiés par les tests; les variantes Stockfish restent dépendantes du temps de recherche.</p>
   </main>
-<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14809</footer>
+<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14810</footer>
 
   <script src="vendor/chess.js"></script>
   <script src="js/engine.js"></script>
@@ -261,7 +261,7 @@
   <script src="js/appearance.js?v=profile-settings-20261103"></script>
   <script src="js/analysis-settings.js?v=profile-settings-20261103"></script>
   <script src="js/sounds.js?v=profile-sounds-20261104"></script>
-  <script src="js/book-lessons.js?v=auto-refutation-hikaru-20261104-v1"></script>
+  <script src="js/book-lessons.js?v=auto-evaluation-hikaru-20261104-v2"></script>
   <script src="js/stockfish-study-lab.js?v=auto-generated-audit-practice-20261101-v2"></script>
   <script src="js/method-paths.js?v=auto-refutation-hikaru-20261104-v1"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
