@@ -280,6 +280,7 @@ function applyLevelDiagnosticLock() {
   syncDotsButton();
   syncMoveDotsButton();
   syncEvalBarToggle();
+  syncBestMoveButton();
   if (typeof renderBoard === "function") renderBoard();
 }
 window.addEventListener("supachess:level-diagnostic-change", applyLevelDiagnosticLock);
@@ -1277,14 +1278,19 @@ function renderAll() { renderBoard(); renderCandidatesList(); renderHistory(); r
 function syncBestMoveButton() {
   const button = $("btn-best-move");
   if (!button) return;
+  const replayButton = $("btn-replay-quit");
+  const replayActive = replayButton && !replayButton.classList.contains("hidden");
   if (state.unassistedGame) {
     button.disabled = true;
     button.title = "Meilleur coup masqué pendant une partie sans aide";
     return;
   }
+  if (isDiagnosticControlLockActive() && !replayActive) {
+    button.disabled = true;
+    button.title = "Meilleur coup masqué pendant le diagnostic de niveau";
+    return;
+  }
   button.title = "Jouer le meilleur demi-coup Stockfish";
-  const replayButton = $("btn-replay-quit");
-  const replayActive = replayButton && !replayButton.classList.contains("hidden");
   const allowedTurn = isManualMode() || state.chess.turn() === state.userColor;
   const replayReady = replayActive && typeof window.reviewPlayBestHalfMove === "function";
   button.disabled = button.dataset.pending === "true" || (replayReady
@@ -1701,6 +1707,7 @@ $("btn-best-move").addEventListener("click", () => {
     } else setStatus("Le mode relecture n’a pas chargé le calcul du meilleur demi-coup.");
     return;
   }
+  if (isDiagnosticControlLockActive()) return;
   if (!["userTurn", "coach"].includes(state.phase) || (!isManualMode() && state.chess.turn() !== state.userColor)) return;
   const best = state.candidates.find((candidate) => candidate.rank === 1) || state.candidates[0];
   if (!best) return;
