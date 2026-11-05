@@ -524,11 +524,9 @@ async function reviewRun(options = {}) {
     rows.forEach((row) => {
       const stats = sideStats[row.color];
       stats.moves++;
-      if (Number.isInteger(row.rank)) {
-        stats.ranked++;
-        if (row.rank <= 1) stats.top1++;
-        if (row.rank <= 2) stats.top2++;
-      }
+      stats.ranked++;
+      if (row.rank === 1) stats.top1++;
+      if (Number.isInteger(row.rank) && row.rank <= 2) stats.top2++;
       if (Number.isFinite(row.accuracy)) {
         stats.accuracyMoves++;
         if (row.accuracy > 60) stats.accuracyAbove60++;
