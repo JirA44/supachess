@@ -985,12 +985,22 @@ function renderMoveGradeSummary() {
       const count = state.moveGradeHistory.filter((entry) => entry.color === color && entry.category === key).length;
       const button = document.createElement("button");
       button.type = "button";
+      const cell = document.createElement("div");
+      cell.className = "move-grade-table-cell grade-" + key;
+      cell.dataset.grade = key;
+      cell.dataset.color = color;
+      cell.setAttribute("role", "cell");
       button.className = "move-grade-count-value";
       button.dataset.moveGradeColor = color;
       button.disabled = count === 0;
-      button.setAttribute("role", "cell");
+      button.setAttribute("aria-label", name + " des " + (color === "w" ? "Blancs" : "Noirs") + " : " + count + (count === 1 ? " demi-coup; aller à sa position" : " demi-coups; aller à la première position"));
       button.innerHTML = '<strong data-grade-count>' + (count ? "+" + count : "0") + '</strong>';
-      row.appendChild(button);
+      button.addEventListener("click", () => {
+        const first = state.moveGradeHistory.find((entry) => entry.color === color && entry.category === key);
+        if (first && typeof window.reviewMoveGradeOccurrence === "function") window.reviewMoveGradeOccurrence(first.ply);
+      });
+      cell.appendChild(button);
+      row.appendChild(cell);
     }
     table.appendChild(row);
   }
