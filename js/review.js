@@ -20,8 +20,8 @@ const REVIEW_MOVE_CLASSES = [
   { id: "unrated", symbol: "…", label: "Non évalué" },
 ];
 
-const reviewState = { fens: [], moves: [], grades: [], moveGrades: [], correctionExercises: [], currentHeaders: {}, gameSummary: null, exercise: null, running: false, returnState: null, modalReturnFocus: null, variation: null, bestMovePending: false };
-window.SupaChessClearReviewAccuracy = () => { reviewState.gameSummary = null; };
+const reviewState = { fens: [], moves: [], grades: [], moveGrades: [], correctionExercises: [], currentHeaders: {}, gameSummary: null, sessionStats: null, exercise: null, running: false, returnState: null, modalReturnFocus: null, variation: null, bestMovePending: false };
+window.SupaChessClearReviewAccuracy = () => { reviewState.gameSummary = null; reviewState.sessionStats = null; };
 
 function trapModalKeys(modal, close) {
   modal.addEventListener("keydown", (event) => {
@@ -440,14 +440,16 @@ async function reviewRun(options = {}) {
   // Analyse SF de chaque position (score POV trait).
   const cps = [];
   const positionLines = [];
+  const positionCandidates = [];
   try {
     for (let i = 0; i < fens.length; i++) {
       reviewSetProgress(`Analyse Stockfish… coup ${Math.min(i + 1, moves.length)}/${moves.length}`);
       const tmp = new Chess(fens[i]);
-      if (tmp.game_over()) { cps.push(tmp.in_checkmate() ? -1000 : 0); positionLines.push(null); continue; }
+      if (tmp.game_over()) { cps.push(tmp.in_checkmate() ? -1000 : 0); positionLines.push(null); positionCandidates.push([]); continue; }
       const res = await reviewAnalyzePosition({ fen: fens[i], multipv: 2, movetime: 400, elo: 0 }, Math.min(i + 1, moves.length), moves.length);
       cps.push(res.lines.length ? clampCpFromLine(res.lines[0]) : 0);
       positionLines.push(res.lines[0] || null);
+      positionCandidates.push(Array.isArray(res.lines) ? res.lines : []);
     }
   } catch (e) {
     reviewSetProgress("Erreur d'analyse : " + e);
@@ -470,7 +472,10 @@ async function reviewRun(options = {}) {
     // Retain only scores with fully comparable CP evaluations.
 
     const uciMove = moves[i].from + moves[i].to + (moves[i].promotion || "");
-    const bestMove = positionLines[i]?.pv?.[0] === uciMove;
+    const candidates = positionCandidates[i] || [];
+    const rankIndex = candidates.findIndex((line) => line && Array.isArray(line.pv) && line.pv[0] === uciMove);
+    const rank = rankIndex >= 0 ? rankIndex + 1 : null;
+    const bestMove = rank === 1;
     const blindspot = typeof ChessBlindspots !== "undefined"
       ? ChessBlindspots.tacticalMisses(fens[i], uciMove, { lossCp: delta * 100 }) : null;
     const cpEvidence = typeof SupaChessCentipawns !== "undefined"
@@ -486,12 +491,15 @@ async function reviewRun(options = {}) {
     const comparableCentipawnScores = positionLines[i] && positionLines[i + 1]
       && positionLines[i].mate === null && positionLines[i + 1].mate === null
       && Number.isFinite(positionLines[i].scoreCp) && Number.isFinite(positionLines[i + 1].scoreCp);
-    if (comparableCentipawnScores) accs[moves[i].color].push(moveAccuracyPct(before, after));
+    const moveAccuracy = comparableCentipawnScores ? moveAccuracyPct(before, after) : null;
+    if (moveAccuracy !== null) accs[moves[i].color].push(moveAccuracy);
     rows.push({
       n: Math.floor(i / 2) + 1,
       color: moves[i].color,
       san: moves[i].san,
       bestMove,
+      rank,
+      accuracy: moveAccuracy,
       delta: displayDelta === null ? null : +displayDelta.toFixed(2),
       tag: displayDelta === null ? "" : reviewTagOf(displayDelta),
       diagnostics: blindspot && blindspot.status === "OK" ? blindspot.diagnostics : [],
@@ -509,6 +517,26 @@ async function reviewRun(options = {}) {
       headers: { ...headers },
       players: [{ color: "w", accuracy: accW }, { color: "b", accuracy: accB }],
     };
+    const sideStats = {
+      w: { moves: 0, ranked: 0, top1: 0, top2: 0, accuracyMoves: 0, accuracyAbove60: 0, accuracyAbove75: 0, accuracyAbove90: 0 },
+      b: { moves: 0, ranked: 0, top1: 0, top2: 0, accuracyMoves: 0, accuracyAbove60: 0, accuracyAbove75: 0, accuracyAbove90: 0 },
+    };
+    rows.forEach((row) => {
+      const stats = sideStats[row.color];
+      stats.moves++;
+      if (Number.isInteger(row.rank)) {
+        stats.ranked++;
+        if (row.rank <= 1) stats.top1++;
+        if (row.rank <= 2) stats.top2++;
+      }
+      if (Number.isFinite(row.accuracy)) {
+        stats.accuracyMoves++;
+        if (row.accuracy > 60) stats.accuracyAbove60++;
+        if (row.accuracy > 75) stats.accuracyAbove75++;
+        if (row.accuracy > 90) stats.accuracyAbove90++;
+      }
+    });
+    reviewState.sessionStats = sideStats;
     window.SupaChessRenderAccuracy?.();
   }
 
