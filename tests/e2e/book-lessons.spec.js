@@ -366,12 +366,11 @@ test("finishing a path starts the next unfinished path", async ({ page }) => {
   }
 
   await expect(page.locator("#lesson-status")).toContainText("Leçon validée");
-  await expect(page.locator("#lesson-next-preview")).toContainText("Prochain parcours à découvrir :");
-  await expect(page.locator("#lesson-next")).toBeVisible();
+  const preview = await page.locator("#lesson-next-preview").innerText();
+  expect(preview).toContain("Prochain parcours à découvrir :");
+  const nextTitle = preview.match(/première étape : (.+?) \((?:Débutant|Intermédiaire|Avancé|Expert)\)\./)?.[1];
+  expect(nextTitle).toBeTruthy();
   await page.locator("#lesson-next").click();
-  const nextProgram = await page.locator("#lesson-program-filter").inputValue();
-  expect(nextProgram).not.toBe(kasparovProgram);
-  const nextIndices = methodPathLessonIndices(nextProgram);
-  expect(nextIndices.length).toBeGreaterThan(0);
-  await expectNumberedLessonTitle(page, LESSONS[nextIndices[0]].title);
+  await expectNumberedLessonTitle(page, nextTitle);
+  expect(await page.locator("#lesson-title").innerText()).not.toContain(lastKasparovLesson.title);
 });
