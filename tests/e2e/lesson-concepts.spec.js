@@ -4,7 +4,7 @@ test('filters the chess concept glossary, validates a concept and opens related 
   await page.goto('/book-lessons.html');
   const glossary = page.locator('#lesson-concept-glossary');
   await expect(glossary).toBeVisible();
-  await glossary.locator('summary').click();
+  await glossary.locator('> summary').click();
   await expect(page.locator('#lesson-concept-card-list .lesson-concept-card')).toHaveCount(80);
   await expect(page.locator('#lesson-concept-count')).toContainText('80 concepts');
 
