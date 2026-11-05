@@ -406,7 +406,7 @@ async function reviewAnalyzePosition(options, moveNumber, totalMoves) {
   throw new Error("Stockfish n’a pas pu terminer l’analyse après une nouvelle tentative.");
 }
 
-async function reviewBuildSessionStats(rows) {
+function reviewBuildSessionStats(rows) {
   const stats = {
     w: { moves: 0, ranked: 0, top1: 0, top2: 0, accuracyMoves: 0, accuracyAbove60: 0, accuracyAbove75: 0, accuracyAbove90: 0 },
     b: { moves: 0, ranked: 0, top1: 0, top2: 0, accuracyMoves: 0, accuracyAbove60: 0, accuracyAbove75: 0, accuracyAbove90: 0 },
@@ -428,7 +428,7 @@ async function reviewBuildSessionStats(rows) {
   return stats;
 }
 
-function reviewRun(options = {}) {
+async function reviewRun(options = {}) {
   if (reviewState.running) return false;
   reviewSetPlayerClocksHidden(true);
   const pgnText = document.getElementById("pgn-input").value.trim();
