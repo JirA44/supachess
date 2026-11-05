@@ -10,6 +10,11 @@ test('searches chess concepts and opens related academy lessons', async ({ page 
   await page.locator('#lesson-concept-search').fill('développement');
   await expect(page.locator('#lesson-concept-card-list .lesson-concept-card:visible')).toHaveCount(1);
   await page.locator('#lesson-concept-card-list [data-lesson-concept-search="Développement"]').click();
+  await expect(page.locator('#lesson-concept-filter')).toHaveValue('development');
   await expect(page.locator('#lesson-search')).toHaveValue('Développement');
+  await expect(page.locator('#lesson-catalog .lesson-catalog-button')).not.toHaveCount(0);
+
+  await page.locator('#lesson-concept-filter').selectOption('pawn-break');
+  await expect(page.locator('#lesson-search')).toHaveValue('Rupture centrale');
   await expect(page.locator('#lesson-catalog .lesson-catalog-button')).not.toHaveCount(0);
 });
