@@ -238,7 +238,7 @@ test("learning paths explain their progression and open matching lessons", async
   await expect(page.locator("#lesson-program-filter")).toHaveValue("");
   await expectNumberedLessonTitle(page, "Stockfish · Lire une évaluation avec le bon repère");
   await expect(page.locator("#lesson-next")).toBeVisible();
-  await expect(page.locator("#lesson-next")).toContainText("Leçon suivante");
+  await expect(page.locator("#lesson-next")).toHaveText("Passer sans valider");
   await expect(page.locator("#lesson-catalog .lesson-catalog-button:not(.anticipation-exercise)").first()).toBeVisible();
   await expect(page.locator("#lesson-reflection")).toBeVisible();
   await expect(page.locator("#lesson-engine-analyze")).toBeHidden();
