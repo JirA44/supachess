@@ -9,7 +9,7 @@ let currentOverlay = {
   querySelector() { return null; },
   remove() { this.removed = true; currentOverlay = null; },
 };
-const profileContent = { innerHTML: "", querySelectorAll() { return []; }, querySelector() { return null; } };
+const profileContent = { innerHTML: "", querySelectorAll() { return []; }, querySelector() { return null; }, prepend() {}, appendChild() {} };
 const document = {
   getElementById(id) {
     if (id === "profile-modal") return currentOverlay;
