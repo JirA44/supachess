@@ -57,6 +57,10 @@ function reviewHideModal() {
 
 /* Point d'entrée (bouton "Analyser PGN (Supa)" ou panneau Parties). */
 function reviewStart(pgn, headers = {}) {
+  // A fresh PGN analysis must leave any replay/correction session first.
+  if (reviewState.returnState || reviewState.exercise || window.SupaChessIsCorrectionExercise?.()) {
+    reviewRestoreAfterReplay();
+  }
   const source = pgn || "";
   const suppliedHeaders = headers && typeof headers === "object" ? headers : {};
   let parsedHeaders = {};
@@ -1177,6 +1181,15 @@ function reviewHandleExerciseSquareClick(square){
   return true;
 }
 
+function reviewClearCorrectionResumeParams(){
+  if(typeof window==="undefined"||!window.history||typeof URL==="undefined")return;
+  const url=new URL(window.location.href);
+  const resumeKeys=["resume-exercises","resume-correction-game","resume-correction-profile"];
+  if(!resumeKeys.some((key)=>url.searchParams.has(key)))return;
+  [...resumeKeys,"focus-category","focus-ply"].forEach((key)=>url.searchParams.delete(key));
+  window.history.replaceState(window.history.state,"",url.pathname+(url.search?url.search:"")+url.hash);
+}
+
 function reviewExitCorrectionExercises(){
   reviewState.exercise=null;
   reviewRestoreAfterReplay();
@@ -1211,12 +1224,14 @@ function reviewBeginReplay() {
 }
 
 function reviewRestoreAfterReplay() {
+  const wasCorrection = Boolean(reviewState.exercise) || Boolean(window.SupaChessIsCorrectionExercise?.());
   const exercisePanel = document.getElementById("review-exercise-panel");
   if (exercisePanel) exercisePanel.classList.add("hidden");
   reviewState.exercise = null;
   const saved = reviewState.returnState;
   if (!saved) {
     window.setSupaCorrectionExerciseMode?.(false);
+    if (wasCorrection) reviewClearCorrectionResumeParams();
     return;
   }
   const nextGen = state.gen + 1; // invalidate any analysis started by the replay
@@ -1237,6 +1252,7 @@ function reviewRestoreAfterReplay() {
   document.getElementById("replay-bar").classList.remove("hidden");
   reviewSetReplayControls(false);
   window.setSupaCorrectionExerciseMode?.(false);
+  if (wasCorrection) reviewClearCorrectionResumeParams();
   renderAll();
   if (["engineThinking", "analyzing"].includes(state.phase)) startTurn();
 }

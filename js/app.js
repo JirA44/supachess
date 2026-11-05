@@ -583,6 +583,7 @@ function abandonCurrentGame() {
 
 function stopCurrentGame() {
   if (state.phase === "init" || state.phase === "gameover") return;
+  try { state.engine?.stop?.(); } catch (_) {}
   stopPlayerClock();
   state.gen++;
   state.abandoned = false;

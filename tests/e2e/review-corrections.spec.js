@@ -253,3 +253,74 @@ test('resumes the first unresolved diagnostic move from its profile category cou
   await expect(page.locator('#review-exercise-heading')).toContainText('Exercice 1/1');
   expect(await page.evaluate(()=>state.chess.fen())).toBe('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
 });
+
+test('stopping a game stops Stockfish and saves an unfinished result',async({page})=>{
+  await page.goto('/index.html');
+  await expect(page.locator('body')).toHaveAttribute('data-engine-ready','1',{timeout:30000});
+  await page.evaluate(()=>{
+    const select=document.getElementById('sel-color');
+    if(select)select.value='b';
+    window.__stopCount=0;
+    state.engine.analyze=()=>new Promise(()=>{});
+    state.engine.stop=()=>{window.__stopCount+=1;};
+  });
+  await page.click('#btn-new');
+  await expect.poll(()=>page.evaluate(()=>['analyzing','engineThinking'].includes(state.phase))).toBe(true);
+  await expect(page.locator('#btn-stop-game')).toBeEnabled();
+  await page.click('#btn-stop-game');
+  await expect.poll(()=>page.evaluate(()=>({
+    stopped:state.stopped,
+    phase:state.phase,
+    stopCount:window.__stopCount,
+    saved:gamesLoad().some(game=>game.stopped&&game.result==='*')
+  }))).toEqual({stopped:true,phase:'gameover',stopCount:1,saved:true});
+  await expect(page.locator('#status-line')).toContainText('Partie arrêtée — résultat non décidé');
+  await expect(page.locator('#games-list')).toContainText('Arrêtée — sans résultat');
+});
+
+test('quitting correction clears resume state and opening PGN analysis replaces the correction board',async({page})=>{
+  await page.addInitScript(()=>{
+    const pgn='1. f3 e5';
+    localStorage.setItem('supachess_reviewed_pgns',JSON.stringify([{
+      id:'resume-reset-game',pgn,white:'Alice',black:'Bob',result:'*',
+      correctionExercises:[{
+        fen:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+        bestUci:'e2e4',bestScoreCp:12,bestMate:null,ply:1,moveNumber:1,color:'w',
+        playedSan:'f3',classification:'mistake',lossCp:65
+      }],
+      moveGrades:[{ply:1,color:'w',category:'mistake'},{ply:2,color:'b',category:'unrated'}]
+    }]));
+    localStorage.setItem('supachess_games',JSON.stringify([{
+      id:'resume-reset-game',date:'2026-11-05T00:00:00.000Z',pgn,result:'*',
+      white:'Alice',black:'Bob'
+    }]));
+  });
+  await page.goto('/index.html?resume-exercises=resume-reset-game');
+  await expect(page.locator('body')).toHaveAttribute('data-engine-ready','1',{timeout:30000});
+  const exercisePanel=page.locator('#review-exercise-panel');
+  await expect(exercisePanel).toBeVisible({timeout:10000});
+  await page.click('#btn-review-exercise-quit');
+  await expect(exercisePanel).toBeHidden();
+  await expect.poll(()=>page.evaluate(()=>window.SupaChessIsCorrectionExercise())).toBe(false);
+  await expect.poll(()=>page.evaluate(()=>location.search)).toBe('');
+  await page.reload();
+  await expect(page.locator('body')).toHaveAttribute('data-engine-ready','1',{timeout:30000});
+  await expect(exercisePanel).toBeHidden();
+
+  await page.click('.game-row [data-act="correct"]');
+  await expect(exercisePanel).toBeVisible();
+  await page.click('.game-row [data-act="analyse"]');
+  await expect(page.locator('#pgn-modal')).toBeVisible();
+  await expect(page.locator('#pgn-input')).toHaveValue('1. f3 e5');
+  await expect(exercisePanel).toBeHidden();
+  await expect.poll(()=>page.evaluate(()=>window.SupaChessIsCorrectionExercise())).toBe(false);
+  await page.evaluate(()=>{reviewAskSupa=async()=>{};});
+  await page.click('#btn-run-review');
+  await page.waitForFunction(()=>!reviewState.running&&reviewState.moves.length===2&&state.replayIdx===2,null,{timeout:45000});
+  const expected=new Chess();
+  expected.move('f3');
+  expected.move('e5');
+  expect(await page.evaluate(()=>state.chess.fen())).toBe(expected.fen());
+  await expect(exercisePanel).toBeHidden();
+  await expect.poll(()=>page.evaluate(()=>window.SupaChessIsCorrectionExercise())).toBe(false);
+});
