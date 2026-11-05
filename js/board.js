@@ -20,35 +20,51 @@ class BoardUI {
     this.legalTargets = [];
     this.legalTargetHints = {}; // destination -> {quality, capture, san, evaluation}
     this.showMoveDots = true;
-    this.dragFrom = null;
-    this.el.addEventListener("dragstart", (event) => {
-      const piece = event.target.closest(".piece");
+    this.pointerGesture = null;
+    this.suppressPointerClick = false;
+    this.el.addEventListener("pointerdown", (event) => {
       const square = event.target.closest(".sq");
-      if (!piece || !square) { event.preventDefault(); return; }
-      this.dragFrom = square.dataset.square;
-      if (event.dataTransfer) {
-        event.dataTransfer.effectAllowed = "move";
-        event.dataTransfer.setData("text/plain", this.dragFrom);
-      }
+      if (!square || !this.el.contains(square) || square.dataset.hasPiece !== "true" ||
+          event.isPrimary === false || (event.button !== undefined && event.button !== 0)) return;
+      this.pointerGesture = {
+        id: event.pointerId,
+        from: square.dataset.square,
+        x: event.clientX,
+        y: event.clientY,
+        dragging: false,
+      };
+      try { this.el.setPointerCapture(event.pointerId); } catch (_) {}
     });
-    this.el.addEventListener("dragover", (event) => {
-      if (this.dragFrom && event.target.closest(".sq")) {
-        event.preventDefault();
-        if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-      }
+    this.el.addEventListener("pointermove", (event) => {
+      const gesture = this.pointerGesture;
+      if (!gesture || gesture.id !== event.pointerId) return;
+      if (!gesture.dragging && Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) < 6) return;
+      gesture.dragging = true;
+      this.el.classList.add("is-dragging");
+      this.el.querySelector(`.sq[data-square="${gesture.from}"]`)?.classList.add("dragging-source");
+      if (event.cancelable) event.preventDefault();
     });
-    this.el.addEventListener("drop", (event) => {
-      const target = event.target.closest(".sq");
-      const from = this.dragFrom || event.dataTransfer?.getData("text/plain");
-      const to = target && target.dataset.square;
-      this.dragFrom = null;
-      if (!from || !to || from === to) return;
-      event.preventDefault();
-      event.stopPropagation();
-      this.onSquareClick(from);
+    this.el.addEventListener("pointerup", (event) => {
+      const gesture = this.pointerGesture;
+      if (!gesture || gesture.id !== event.pointerId) return;
+      this.pointerGesture = null;
+      this.el.classList.remove("is-dragging");
+      this.el.querySelector(".dragging-source")?.classList.remove("dragging-source");
+      if (!gesture.dragging) return;
+      const target = document.elementFromPoint(event.clientX, event.clientY)?.closest(".sq");
+      const to = target && this.el.contains(target) ? target.dataset.square : null;
+      if (!to || to === gesture.from) return;
+      if (event.cancelable) event.preventDefault();
+      this.suppressPointerClick = true;
+      setTimeout(() => { this.suppressPointerClick = false; }, 0);
+      if (this.selected !== gesture.from) this.onSquareClick(gesture.from);
       this.onSquareClick(to);
     });
-    this.el.addEventListener("dragend", () => { this.dragFrom = null; });
+    this.el.addEventListener("pointercancel", () => {
+      this.pointerGesture = null;
+      this.el.classList.remove("is-dragging");
+      this.el.querySelector(".dragging-source")?.classList.remove("dragging-source");
+    });
   }
 
   setFlipped(f) { this.flipped = f; }
@@ -65,6 +81,7 @@ class BoardUI {
         const cell = document.createElement("div");
         cell.className = "sq " + ((r + c) % 2 === 0 ? "light" : "dark");
         cell.dataset.square = sq;
+        cell.dataset.hasPiece = board[r][c] ? "true" : "false";
         const piece = board[r][c];
         if (piece) {
           const span = document.createElement("span");
@@ -155,7 +172,15 @@ class BoardUI {
           fl.textContent = String.fromCharCode(97 + c);
           cell.appendChild(fl);
         }
-        cell.addEventListener("click", () => this.onSquareClick(sq));
+        cell.addEventListener("click", (event) => {
+          if (this.suppressPointerClick) {
+            this.suppressPointerClick = false;
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+          }
+          this.onSquareClick(sq);
+        });
         this.el.appendChild(cell);
       }
     }

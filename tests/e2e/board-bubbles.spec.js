@@ -289,3 +289,34 @@ test('SupaEngine brilliant signal adds a violet marker for a legal move outside 
   expect(marked.label).toContain('SupaEngine');
   expect(marked.label).toContain('Coup brillant repéré');
 });
+
+test("pieces drag to legal squares with pointer input on a narrow board", async ({ page }) => {
+  await page.goto("/index.html");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.evaluate(() => {
+    state.chess.reset();
+    boardUI.flipped = false;
+    boardUI.selected = null;
+    boardUI.lastMove = null;
+    boardUI.onSquareClick = (square) => {
+      if (!boardUI.selected) {
+        boardUI.selected = square;
+        boardUI.render(state.chess);
+        return;
+      }
+      const move = state.chess.move({ from: boardUI.selected, to: square, promotion: "q" });
+      boardUI.selected = null;
+      if (move) boardUI.lastMove = { from: move.from, to: move.to, san: move.san };
+      boardUI.render(state.chess);
+    };
+    boardUI.render(state.chess);
+  });
+  const from = await page.locator('.sq[data-square="e2"]').boundingBox();
+  const to = await page.locator('.sq[data-square="e4"]').boundingBox();
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 5 });
+  await page.mouse.up();
+  await expect(page.locator('.sq[data-square="e4"] .piece.w')).toHaveCount(1);
+  await expect(page.locator('.sq[data-square="e2"] .piece')).toHaveCount(0);
+});
