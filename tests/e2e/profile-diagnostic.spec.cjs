@@ -107,3 +107,61 @@ test("completed diagnostic profile renders labeled charts and legends in Chromiu
     contentType: "image/png",
   });
 });
+
+
+test("profile activity heatmap counts dated events and switches years on mobile", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("supachess_games", JSON.stringify([
+      { id: "game-2026", date: "2026-01-05T12:00:00.000Z", userColor: "w", moveGrades: [] },
+      { id: "game-2025", date: "2025-01-02T12:00:00.000Z", userColor: "w", moveGrades: [] },
+    ]));
+    localStorage.setItem("supachess_reviewed_pgns", JSON.stringify([
+      { id: "analysis-2026", pgn: "[Event \"Test\"]", analyzedAt: "2026-01-06T12:00:00.000Z" },
+    ]));
+    localStorage.setItem("supachess-book-lessons-v1", JSON.stringify({
+      "lesson-2026": { completed: true, completedAt: "2026-01-05T12:00:00.000Z" },
+    }));
+    localStorage.setItem("supachess-correction-progress-v1", JSON.stringify({
+      "game-2026:12": { gameId: "game-2026", ply: 12, category: "blunder", completedAt: "2026-01-07T12:00:00.000Z" },
+    }));
+  });
+  await page.route("https://www.gstatic.com/firebasejs/**", (route) => route.fulfill({
+    status: 200, contentType: "text/javascript", body: "",
+  }));
+  await page.route("**/js/engine.js", (route) => route.fulfill({
+    status: 200,
+    contentType: "text/javascript",
+    body: `class StockfishEngine {
+      constructor() { this.engineName = "Test Engine"; this.ready = Promise.resolve(); }
+      async analyze() { return { bestmove: null, lines: [] }; }
+    }
+    function parseInfoLine() { return null; }`,
+  }));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/index.html");
+  await page.evaluate(() => {
+    document.body.insertAdjacentHTML("beforeend", window.SupaProfiles.renderLocalLearningPanel({}));
+  });
+
+  const chart = page.locator(".profile-activity-section");
+  await expect(chart).toContainText("Activité SupaChess");
+  await expect(chart.locator(".profile-activity-summary")).toContainText("4 activités");
+  await expect(chart.locator(".profile-activity-summary")).toContainText("3 jours actifs");
+  await expect(chart.locator('[data-activity-day="2026-01-05"]')).toHaveAttribute("data-level", "2");
+  await expect(chart.locator('[data-activity-day="2026-01-06"]')).toHaveAttribute("data-level", "1");
+  await expect(chart.locator('[data-activity-day="2026-01-07"]')).toHaveAttribute("data-level", "1");
+
+  await chart.getByRole("button", { name: "2025" }).click();
+  await expect(chart.getByRole("button", { name: "2025" })).toHaveAttribute("aria-pressed", "true");
+  await expect(chart.locator(".profile-activity-summary")).toContainText("1 activité");
+  await expect(chart.locator(".profile-activity-summary")).toContainText("1 jour actif");
+  const widths = await page.evaluate(() => ({
+    viewport: window.innerWidth,
+    page: document.documentElement.scrollWidth,
+    graph: document.querySelector(".profile-activity-scroll").clientWidth,
+    graphContent: document.querySelector(".profile-activity-scroll").scrollWidth,
+  }));
+  expect(widths.page).toBeLessThanOrEqual(widths.viewport);
+  expect(widths.graphContent).toBeGreaterThan(widths.graph);
+  await expect(chart.locator(".profile-activity-note")).toContainText("ne sont pas répartis artificiellement");
+});

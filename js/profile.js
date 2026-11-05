@@ -293,6 +293,28 @@ function readLocalLearningProgress(data){
   if(!Array.isArray(games))games=[];
   if(!Array.isArray(playedGames))playedGames=[];
   var savedCorrectionProgress=readCorrectionProgress();
+  var activityEvents=[];
+  function addActivity(dateValue,type){
+    if(dateValue===null||dateValue===undefined||dateValue==='')return;
+    var date=dateValue instanceof Date?dateValue:
+      (typeof dateValue==='number'||/^\\d{10,13}$/.test(String(dateValue)))?new Date(Number(dateValue)):new Date(dateValue);
+    if(!Number.isFinite(date.getTime())||date.getTime()>Date.now())return;
+    var key=date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
+    activityEvents.push({date:key,type:type});
+  }
+  playedGames.forEach(function(game){addActivity(game&&game.date,'game');});
+  games.forEach(function(game){addActivity(game&&game.analyzedAt,'analysis');});
+  recordsActivityFromLessons();
+  function recordsActivityFromLessons(){
+    Object.keys(lessons).forEach(function(id){
+      var progress=lessons[id];
+      if(progress&&progress.completed)addActivity(progress.completedAt,'lesson');
+    });
+  }
+  Object.keys(savedCorrectionProgress).forEach(function(key){
+    var record=savedCorrectionProgress[key];
+    if(record&&typeof record==='object')addActivity(record.completedAt,'correction');
+  });
   var correctedStats={inaccuracy:0,mistake:0,blunder:0};
   Object.keys(savedCorrectionProgress).forEach(function(key){
     var record=savedCorrectionProgress[key];
@@ -351,7 +373,7 @@ function readLocalLearningProgress(data){
     endgameMastered:completedCount(endgames,'completed'),
     tacticMastered:Math.max(completedCount(tactics,'completedCategories'),legacyTacticMastered),
     accuracyGames:accuracyGames,
-    accuracySummary:summarizeAccuracyGames(playedGames),playedGames:playedGames,
+    accuracySummary:summarizeAccuracyGames(playedGames),playedGames:playedGames,activityEvents:activityEvents,
     correctedStats:correctedStats,
     brilliantWithoutAids:brilliantWithoutAids
   };
@@ -1000,6 +1022,79 @@ function bindLessonProgressRangeControls(container){
   });
 }
 
+function renderProfileActivityContent(events,year){
+  year=Number(year)||new Date().getFullYear();
+  var byDay={},total=0,activeDays=0;
+  var typeLabels={game:'Partie jouée',analysis:'Partie analysée',lesson:'Leçon terminée',correction:'Correction terminée'};
+  (Array.isArray(events)?events:[]).forEach(function(event){
+    if(!event||typeof event.date!=='string'||event.date.slice(0,4)!==String(year))return;
+    var day=byDay[event.date]||(byDay[event.date]={total:0,types:{}});
+    day.total++;total++;day.types[event.type]=(day.types[event.type]||0)+1;
+  });
+  var start=new Date(year,0,1),shift=(start.getDay()+6)%7;
+  start.setDate(start.getDate()-shift);
+  var end=new Date(year,11,31);
+  var weekCount=Math.ceil((Math.round((end-start)/86400000)+1)/7);
+  var monthNames=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+  var months='';
+  for(var month=0;month<12;month++){
+    var first=new Date(year,month,1),column=Math.floor((Math.round((first-start)/86400000))/7)+1;
+    months+='<span style="grid-column:'+column+'">'+monthNames[month]+'</span>';
+  }
+  var labels=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  var dayLabels=labels.map(function(label){return '<span aria-hidden="true">'+label+'</span>';}).join('');
+  var cells='';
+  for(var week=0;week<weekCount;week++)for(var dow=0;dow<7;dow++){
+    var date=new Date(start);date.setDate(start.getDate()+week*7+dow);
+    if(date.getFullYear()!==year){cells+='<span class="profile-activity-cell is-outside" aria-hidden="true"></span>';continue;}
+    var key=year+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
+    var value=byDay[key],count=value?value.total:0;
+    var level=count===0?0:count===1?1:count<=3?2:count<=6?3:4;
+    var details=value?Object.keys(value.types).map(function(type){return value.types[type]+' '+(typeLabels[type]||'activité(s)');}).join(', '):'Aucune activité enregistrée';
+    var dateLabel=date.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    var description=dateLabel+' : '+count+' activité'+(count===1?'':'s')+(value?' ('+details+')':' — '+details);
+    cells+='<span class="profile-activity-cell" data-activity-day="'+key+'" data-level="'+level+'" title="'+escapeProfileText(description)+'" aria-label="'+escapeProfileText(description)+'"></span>';
+    if(count)activeDays++;
+  }
+  var content='<div class="profile-activity-summary" aria-live="polite"><strong>'+total.toLocaleString('fr-FR')+' activité'+(total===1?'':'s')+'</strong><span>'+activeDays.toLocaleString('fr-FR')+' jour'+(activeDays===1?' actif':'s actifs')+'</span></div>'+
+    '<div class="profile-activity-scroll" tabindex="0" aria-label="Graphique d’activité de '+year+'; faire défiler horizontalement pour voir tous les mois">'+
+    '<div class="profile-activity-months" style="grid-template-columns:repeat('+weekCount+',12px)">'+months+'</div>'+
+    '<div class="profile-activity-calendar">'+
+    '<div class="profile-activity-weekdays">'+dayLabels+'</div>'+
+    '<div class="profile-activity-grid" role="img" aria-label="Activité quotidienne de janvier à décembre '+year+'" style="grid-template-columns:repeat('+weekCount+',12px)">'+cells+'</div></div></div>'+
+    '<div class="profile-activity-legend" aria-label="Légende du nombre d’activités par jour"><span>Moins</span><i data-level="0"></i><i data-level="1"></i><i data-level="2"></i><i data-level="3"></i><i data-level="4"></i><span>Plus</span></div>';
+  return content;
+}
+function renderProfileActivityChart(events){
+  var currentYear=new Date().getFullYear(),years={};
+  years[currentYear]=true;
+  (Array.isArray(events)?events:[]).forEach(function(event){
+    var year=Number(String(event&&event.date||'').slice(0,4));
+    if(Number.isInteger(year)&&year>=1900&&year<=currentYear)years[year]=true;
+  });
+  var ordered=Object.keys(years).map(Number).sort(function(a,b){return b-a;});
+  var data=escapeProfileText(JSON.stringify(events||[]));
+  return '<section class="profile-activity-section" aria-labelledby="profile-activity-title" data-activity-events="'+data+'">'+
+    '<div class="profile-activity-heading"><div><h4 id="profile-activity-title">Activité SupaChess</h4><p>Activités datées enregistrées sur cet appareil, jour par jour.</p></div></div>'+
+    '<div class="profile-activity-years" role="group" aria-label="Choisir l’année du graphique">'+ordered.map(function(year){return '<button type="button" class="profile-activity-year" data-profile-activity-year="'+year+'" aria-pressed="'+String(year===currentYear)+'">'+year+'</button>';}).join('')+'</div>'+
+    '<div class="profile-activity-content">'+renderProfileActivityContent(events,currentYear)+'</div>'+
+    '<p class="profile-activity-note">Les parties, analyses, leçons terminées et corrections avec date sont comptées. Les anciens totaux sans date ne sont pas répartis artificiellement.</p></section>';
+}
+function handleProfileActivityYearClick(event){
+  var button=event.target&&event.target.closest?event.target.closest('[data-profile-activity-year]'):null;
+  if(!button)return;
+  var section=button.closest('.profile-activity-section');
+  if(!section)return;
+  var events=[];
+  try{events=JSON.parse(section.getAttribute('data-activity-events')||'[]');}catch(_e){events=[];}
+  var year=Number(button.getAttribute('data-profile-activity-year'))||new Date().getFullYear();
+  section.querySelectorAll('[data-profile-activity-year]').forEach(function(item){
+    var selected=item===button;
+    item.setAttribute('aria-pressed',String(selected));
+  });
+  var content=section.querySelector('.profile-activity-content');
+  if(content)content.innerHTML=renderProfileActivityContent(events,year);
+}
 function renderLocalLearningPanel(data){
   var local=readLocalLearningProgress(data);
   var labels={brilliant:profileText('profile_category_brilliant','Brillant'),best:profileText('profile_category_best','Meilleurs coups'),'very-good':profileText('profile_category_very_good','Très bons coups'),good:profileText('profile_category_good','Bons coups'),ok:profileText('profile_category_ok','Coups corrects'),inaccuracy:profileText('profile_category_inaccuracy','Imprécisions'),mistake:profileText('profile_category_mistake','Erreurs'),blunder:profileText('profile_category_blunder','Gaffes'),unrated:profileText('profile_category_unrated','Non évalués')};
@@ -1046,6 +1141,7 @@ function renderLocalLearningPanel(data){
     (xpRange.total!==null?'<strong class="profile-xp-level-count">'+Number(xpRange.current).toLocaleString('fr-FR')+' / '+Number(xpRange.total).toLocaleString('fr-FR')+' XP '+profileText('profile_xp_this_level','dans ce niveau')+'</strong>':'')+
     '<small>'+escapeProfileText(profileText('profile_xp_to_next','Progression vers le niveau suivant'))+': '+Math.round(xpPercent)+'%'+(nextXP!==null?' · '+profileText('profile_next_level_at','prochain niveau à')+' '+Number(nextXP).toLocaleString('fr-FR')+' XP · '+profileText('profile_xp_remaining','XP restantes pour atteindre le niveau suivant')+' : '+xpRemaining+' XP':'')+'</small></div>'+
     '<div class="profile-learning-stats"><div><strong>'+local.completed.length+' / '+local.attempted.length+'</strong><span>'+profileText('profile_lessons_mastered_attempted','leçons maîtrisées / commencées')+'</span></div><div><strong>'+local.moveExercises+'</strong><span>'+profileText('profile_correction_moves','demi-coups à revoir')+'</span></div><div><strong>'+local.puzzlesSolved+'</strong><span>'+profileText('profile_puzzles_solved','problèmes résolus')+'</span></div><div><strong>'+local.practiceSessions+'</strong><span>'+profileText('profile_practice_sessions','séances d’entraînement')+'</span></div></div>'+
+    renderProfileActivityChart(local.activityEvents)+
     renderProfilePerformancePanel(local.performanceGames)+
     renderExerciseCharts(local)+renderDiagnosticProfile()+renderCorrectionProgressSummary(local)+
     '<h4>'+profileText('profile_mastery_title','Maîtrise et progression')+'</h4><ul class="profile-mastery-list">'+training.map(function(item){var label=escapeProfileText(item.label);var value='<strong>'+item.value+'</strong>';return '<li>'+(item.href?'<a class="profile-mastery-link" href="'+item.href+'" aria-label="'+label+' : '+item.value+'">'+label+value+'</a>':'<div class="profile-mastery-entry">'+label+value+'</div>')+'</li>';}).join('')+'</ul>'+
@@ -1244,8 +1340,9 @@ function initRankingSection(){
   sec.querySelectorAll('.rank-tab').forEach(function(b){ b.addEventListener('click', function(){ load(b.getAttribute('data-type')); }); });
   load('puzzle');
 }
-window.SupaProfiles={init:init, ensureUserProfile:ensureUserProfile, updateStats:updateStats, recordTimedGame:recordTimedGame, searchUsers:searchUsers, getTopRanking:getTopRanking, getTopLevelRanking:getTopLevelRanking, publishLearningLevel:publishLearningLevel, getProfile:getProfile, renderProfileModal:renderProfileModal, readLocalLearningProgress:readLocalLearningProgress, summarizeAccuracyGames:summarizeAccuracyGames, summarizeCentipawnLossGames:summarizeCentipawnLossGames, mergeProfileAnalysisGames:mergeProfileAnalysisGames, renderLocalLearningPanel:renderLocalLearningPanel, renderOwnProfileFallback:renderOwnProfileFallback, lessonProgressSeries:lessonProgressSeries, renderLessonProgressRangeChart:renderLessonProgressRangeChart, bindLessonProgressRangeControls:bindLessonProgressRangeControls, initSearchBar:initSearchBar, initRankingSection:initRankingSection, GAME_TYPES:GAME_TYPES};
+window.SupaProfiles={init:init, ensureUserProfile:ensureUserProfile, updateStats:updateStats, recordTimedGame:recordTimedGame, searchUsers:searchUsers, getTopRanking:getTopRanking, getTopLevelRanking:getTopLevelRanking, publishLearningLevel:publishLearningLevel, getProfile:getProfile, renderProfileModal:renderProfileModal, readLocalLearningProgress:readLocalLearningProgress, summarizeAccuracyGames:summarizeAccuracyGames, summarizeCentipawnLossGames:summarizeCentipawnLossGames, mergeProfileAnalysisGames:mergeProfileAnalysisGames, renderLocalLearningPanel:renderLocalLearningPanel, renderOwnProfileFallback:renderOwnProfileFallback, lessonProgressSeries:lessonProgressSeries, renderLessonProgressRangeChart:renderLessonProgressRangeChart, bindLessonProgressRangeControls:bindLessonProgressRangeControls, renderProfileActivityChart:renderProfileActivityChart, renderProfileActivityContent:renderProfileActivityContent, initSearchBar:initSearchBar, initRankingSection:initRankingSection, GAME_TYPES:GAME_TYPES};
 if(document&&typeof document.querySelector==='function'){
+  document.addEventListener('click',handleProfileActivityYearClick);
   if(document.readyState==='loading'&&typeof document.addEventListener==='function') document.addEventListener('DOMContentLoaded',initRankingSection,{once:true});
   else initRankingSection();
 }
