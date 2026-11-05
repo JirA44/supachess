@@ -406,7 +406,29 @@ async function reviewAnalyzePosition(options, moveNumber, totalMoves) {
   throw new Error("Stockfish n’a pas pu terminer l’analyse après une nouvelle tentative.");
 }
 
-async function reviewRun(options = {}) {
+async function reviewBuildSessionStats(rows) {
+  const stats = {
+    w: { moves: 0, ranked: 0, top1: 0, top2: 0, accuracyMoves: 0, accuracyAbove60: 0, accuracyAbove75: 0, accuracyAbove90: 0 },
+    b: { moves: 0, ranked: 0, top1: 0, top2: 0, accuracyMoves: 0, accuracyAbove60: 0, accuracyAbove75: 0, accuracyAbove90: 0 },
+  };
+  (Array.isArray(rows) ? rows : []).forEach((row) => {
+    if (!row || !stats[row.color]) return;
+    const side = stats[row.color];
+    side.moves++;
+    side.ranked++;
+    if (row.rank === 1) side.top1++;
+    if (Number.isInteger(row.rank) && row.rank <= 2) side.top2++;
+    if (Number.isFinite(row.accuracy)) {
+      side.accuracyMoves++;
+      if (row.accuracy > 60) side.accuracyAbove60++;
+      if (row.accuracy > 75) side.accuracyAbove75++;
+      if (row.accuracy > 90) side.accuracyAbove90++;
+    }
+  });
+  return stats;
+}
+
+function reviewRun(options = {}) {
   if (reviewState.running) return false;
   reviewSetPlayerClocksHidden(true);
   const pgnText = document.getElementById("pgn-input").value.trim();
@@ -517,24 +539,7 @@ async function reviewRun(options = {}) {
       headers: { ...headers },
       players: [{ color: "w", accuracy: accW }, { color: "b", accuracy: accB }],
     };
-    const sideStats = {
-      w: { moves: 0, ranked: 0, top1: 0, top2: 0, accuracyMoves: 0, accuracyAbove60: 0, accuracyAbove75: 0, accuracyAbove90: 0 },
-      b: { moves: 0, ranked: 0, top1: 0, top2: 0, accuracyMoves: 0, accuracyAbove60: 0, accuracyAbove75: 0, accuracyAbove90: 0 },
-    };
-    rows.forEach((row) => {
-      const stats = sideStats[row.color];
-      stats.moves++;
-      stats.ranked++;
-      if (row.rank === 1) stats.top1++;
-      if (Number.isInteger(row.rank) && row.rank <= 2) stats.top2++;
-      if (Number.isFinite(row.accuracy)) {
-        stats.accuracyMoves++;
-        if (row.accuracy > 60) stats.accuracyAbove60++;
-        if (row.accuracy > 75) stats.accuracyAbove75++;
-        if (row.accuracy > 90) stats.accuracyAbove90++;
-      }
-    });
-    reviewState.sessionStats = sideStats;
+    reviewState.sessionStats = reviewBuildSessionStats(rows);
     window.SupaChessRenderAccuracy?.();
   }
 
