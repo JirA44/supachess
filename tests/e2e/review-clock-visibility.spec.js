@@ -6,6 +6,7 @@ test('hides player clocks in PGN review and restores them for a new game', async
 
   await page.evaluate(() => reviewStart('[Event "Clock visibility"]\n[White "A"]\n[Black "B"]\n\n1. e4 e5 *'));
   await expect(page.locator('.player-clocks')).toBeHidden();
+  await expect(page.locator('.player-clocks')).toHaveCSS('display', 'none');
 
   await page.evaluate(() => reviewHideModal());
   await page.getByRole('button', { name: 'Nouvelle partie' }).click();
