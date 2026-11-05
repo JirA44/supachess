@@ -20,7 +20,11 @@ test('colors white and black player names in both accuracy summaries', async ({ 
   await page.evaluate(() => reviewStart('', { White: 'WIDBIFS', Black: 'Javokhir_Sindarov05' }));
 
   for (const selector of ['#accuracy-badge', '#stat-accuracy']) {
-    await expect(page.locator(selector).locator('.accuracy-player-w')).toHaveText('WIDBIFS');
-    await expect(page.locator(selector).locator('.accuracy-player-b')).toHaveText('Javokhir_Sindarov05');
+    await expect(page.locator(selector).locator('.accuracy-player-w')).toContainText('(Blanc) WIDBIFS');
+    await expect(page.locator(selector).locator('.accuracy-player-b')).toContainText('(Noir) Javokhir_Sindarov05');
+    await expect(page.locator(selector).locator('.accuracy-player-dot-w')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    await expect(page.locator(selector).locator('.accuracy-player-dot-w')).toHaveCSS('border-top-color', 'rgb(0, 0, 0)');
+    await expect(page.locator(selector).locator('.accuracy-player-dot-b')).toHaveCSS('background-color', 'rgb(0, 0, 0)');
+    await expect(page.locator(selector).locator('.accuracy-player-dot-b')).toHaveCSS('border-top-color', 'rgb(255, 255, 255)');
   }
 });
