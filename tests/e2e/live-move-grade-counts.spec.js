@@ -1,6 +1,7 @@
 const { test, expect } = require('@playwright/test');
 
 test('live move-grade counters update for both players and roll back on undo', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('supachess-level-diagnostic', JSON.stringify({ active: false, completed: true })));
   await page.goto('/index.html');
   await expect(page.locator('body')).toHaveAttribute('data-engine-ready', '1', { timeout: 30000 });
   const counts = page.locator('#move-grade-summary [data-color] [data-grade-count]');
