@@ -1690,7 +1690,8 @@ function accuracyHtml() {
     return [["w", headers.White || "Blancs"], ["b", headers.Black || "Noirs"]].map(([color, name]) => {
       const player = players.find((item) => item && item.color === color);
       const value = player && Number.isFinite(player.accuracy) ? player.accuracy : null;
-      const playerLabel = `<span class="accuracy-player-label accuracy-player-${color}">${esc(name)}</span>`;
+      const playerSide = color === "w" ? "Blanc" : "Noir";
+      const playerLabel = `<span class="accuracy-player-label accuracy-player-${color}"><span class="accuracy-player-dot accuracy-player-dot-${color}" aria-hidden="true"></span><span class="accuracy-player-side">(${playerSide})</span> ${esc(name)}</span>`;
       return value === null
         ? `${playerLabel}: <span style="color:var(--text-dim)">—</span>`
         : `${playerLabel}: <span style="color:${accColor(value)};font-weight:600">${formatAccuracyPct(value)}%</span>`;
