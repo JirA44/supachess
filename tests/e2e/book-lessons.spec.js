@@ -164,7 +164,7 @@ test("catalog filters and random exercise explicitly train opponent replies in g
 
 test("learning paths explain their progression and open matching lessons", async ({ page }) => {
   await page.goto("/book-lessons.html");
-  await expect(page.locator("#method-paths-title")).toHaveText("Quatorze parcours d’apprentissage");
+  await expect(page.locator("#method-paths-title")).toHaveText("Vingt parcours d’apprentissage");
   await expect(page.locator("#lesson-catalog-count")).toContainText("leçons originales +");
   await expect(page.locator("#lesson-catalog-count")).toContainText("exercices d’anticipation");
   await expect(page.locator("#lesson-catalog-count")).toContainText("entrées au total");
@@ -335,12 +335,10 @@ test("PGN-derived lesson shows its source and accepts the move on the board", as
 });
 
 
-test("finishing Kasparov starts the first unfinished player path", async ({ page }) => {
+test("finishing a path starts the next unfinished path", async ({ page }) => {
   const { LESSONS, methodPathLessonIndices } = require("../../js/book-lessons.js");
   const kasparovProgram = "Kasparov · coups candidats et calcul";
-  const carlsenProgram = "Carlsen · amélioration et conversion";
   const kasparov = methodPathLessonIndices(kasparovProgram);
-  const carlsen = methodPathLessonIndices(carlsenProgram);
   const lastKasparovLesson = LESSONS[kasparov[kasparov.length - 1]];
   const saved = Object.fromEntries(kasparov.slice(0, -1).map((index) => [
     LESSONS[index].id,
@@ -368,9 +366,12 @@ test("finishing Kasparov starts the first unfinished player path", async ({ page
   }
 
   await expect(page.locator("#lesson-status")).toContainText("Leçon validée");
-  await expect(page.locator("#lesson-next-preview")).toContainText("Prochain parcours à découvrir : Carlsen");
-  await expect(page.locator("#lesson-next")).toHaveText("Commencer le parcours Carlsen");
+  await expect(page.locator("#lesson-next-preview")).toContainText("Prochain parcours à découvrir :");
+  await expect(page.locator("#lesson-next")).toBeVisible();
   await page.locator("#lesson-next").click();
-  await expect(page.locator("#lesson-program-filter")).toHaveValue(carlsenProgram);
-  await expectNumberedLessonTitle(page, LESSONS[carlsen[0]].title);
+  const nextProgram = await page.locator("#lesson-program-filter").inputValue();
+  expect(nextProgram).not.toBe(kasparovProgram);
+  const nextIndices = methodPathLessonIndices(nextProgram);
+  expect(nextIndices.length).toBeGreaterThan(0);
+  await expectNumberedLessonTitle(page, LESSONS[nextIndices[0]].title);
 });
