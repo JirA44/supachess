@@ -1587,9 +1587,32 @@ function ensureSessionStatRows() {
 
 function renderStats() {
   ensureSessionStatRows();
+  const reviewed = typeof reviewState !== "undefined" ? reviewState.sessionStats : null;
+  const rate = (count, total, lowerBound = false) => total
+    ? `${lowerBound ? "≥ " : ""}${Math.round((count / total) * 100)} % (${count}/${total})`
+    : "—";
+  if (reviewed) {
+    $("stat-moves").textContent = `Blancs ${reviewed.w.moves} · Noirs ${reviewed.b.moves}`;
+    $("stat-moves").title = "Demi-coups présents dans la partie analysée.";
+    $("stat-top1").textContent = `Blancs ${rate(reviewed.w.top1, reviewed.w.ranked)} · Noirs ${rate(reviewed.b.top1, reviewed.b.ranked)}`;
+    for (const [id, threshold] of [["stat-top3", 3], ["stat-top5", 5], ["stat-top10", 10], ["stat-top25", 25], ["stat-top50", 50]]) {
+      $(""+id).textContent = `Blancs ${rate(reviewed.w.top2, reviewed.w.ranked, threshold > 2)} · Noirs ${rate(reviewed.b.top2, reviewed.b.ranked, threshold > 2)}`;
+      $(""+id).title = threshold > 2
+        ? "Borne minimale : cette partie a été analysée avec les deux premières lignes Stockfish seulement."
+        : "";
+    }
+    for (const [id, threshold] of [["stat-accuracy-60", 60], ["stat-accuracy-75", 75], ["stat-accuracy-90", 90]]) {
+      $(""+id).textContent = `Blancs ${rate(reviewed.w[`accuracyAbove${threshold}`], reviewed.w.accuracyMoves)} · Noirs ${rate(reviewed.b[`accuracyAbove${threshold}`], reviewed.b.accuracyMoves)}`;
+    }
+    $("stat-intercepts").textContent = "—";
+    $("stat-intercepts").title = "Non mesuré dans un PGN importé.";
+    $("stat-forced").textContent = "—";
+    $("stat-forced").title = "Non mesuré dans un PGN importé.";
+    return;
+  }
   const s = state.stats;
   $("stat-moves").textContent = s.moves;
-  const rate = (count, total) => total ? `${Math.round((count / total) * 100)} % (${count}/${total})` : "—";
+  $("stat-moves").removeAttribute("title");
   $("stat-top1").textContent = rate(s.top1, s.rankedMoves);
   $("stat-top3").textContent = rate(s.top3, s.rankedMoves);
   $("stat-top5").textContent = rate(s.top5, s.rankedMoves);
@@ -1602,7 +1625,6 @@ function renderStats() {
   $("stat-intercepts").textContent = s.intercepts;
   $("stat-forced").textContent = s.forced;
 }
-
 function recordSessionMoveSample(cand, color) {
   const rank = cand && Number.isInteger(cand.rank) ? cand.rank : null;
   const rankKnown = rank !== null || state.candidateRankCoverageComplete;
