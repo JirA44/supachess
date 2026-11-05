@@ -50,6 +50,7 @@ function isLevelDiagnosticActive() {
   return Boolean(diagnostic && diagnostic.active);
 }
 let correctionExerciseModeActive = false;
+let correctionModeRestore = null;
 function isUnassistedAidLockActive() { return state.unassistedGame && !correctionExerciseModeActive; }
 function isDiagnosticControlLockActive() {
   return isLevelDiagnosticActive() && !correctionExerciseModeActive;
@@ -286,7 +287,50 @@ function applyLevelDiagnosticLock() {
 window.addEventListener("supachess:level-diagnostic-change", applyLevelDiagnosticLock);
 window.applyLevelDiagnosticLock = applyLevelDiagnosticLock;
 window.setSupaCorrectionExerciseMode = function(active) {
-  correctionExerciseModeActive = Boolean(active);
+  const nextActive = Boolean(active);
+  if (nextActive && !correctionExerciseModeActive) {
+    let storedPreferences = null;
+    try {
+      storedPreferences = {
+        dots: localStorage.getItem(DOTS_STORAGE_KEY),
+        moveDots: localStorage.getItem(MOVE_DOTS_STORAGE_KEY),
+        evalBar: localStorage.getItem(EVALBAR_PREFERENCE_KEY),
+      };
+    } catch (_) {}
+    correctionModeRestore = {
+      showDots: boardUI.showDots,
+      showMoveDots: boardUI.showMoveDots,
+      storedPreferences,
+    };
+    correctionExerciseModeActive = true;
+    boardUI.showDots = true;
+    boardUI.showMoveDots = true;
+    try {
+      localStorage.setItem(DOTS_STORAGE_KEY, "true");
+      localStorage.setItem(MOVE_DOTS_STORAGE_KEY, "true");
+      localStorage.setItem(EVALBAR_PREFERENCE_KEY, "true");
+    } catch (_) {}
+  } else if (!nextActive && correctionExerciseModeActive) {
+    correctionExerciseModeActive = false;
+    const restore = correctionModeRestore;
+    correctionModeRestore = null;
+    if (restore) {
+      boardUI.showDots = restore.showDots;
+      boardUI.showMoveDots = restore.showMoveDots;
+      if (restore.storedPreferences) {
+        try {
+          [
+            [DOTS_STORAGE_KEY, restore.storedPreferences.dots],
+            [MOVE_DOTS_STORAGE_KEY, restore.storedPreferences.moveDots],
+            [EVALBAR_PREFERENCE_KEY, restore.storedPreferences.evalBar],
+          ].forEach(([key, value]) => {
+            if (value === null) localStorage.removeItem(key);
+            else localStorage.setItem(key, value);
+          });
+        } catch (_) {}
+      }
+    }
+  }
   applyLevelDiagnosticLock();
 };
 window.addEventListener("storage", (event) => {
