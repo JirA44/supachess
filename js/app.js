@@ -986,16 +986,19 @@ function renderMoveGradeSummary() {
       const button = document.createElement("button");
       button.type = "button";
       const cell = document.createElement("div");
-      cell.className = "move-grade-table-cell grade-" + key;
-      cell.dataset.grade = key;
+      cell.className = "move-grade-table-cell";
       cell.dataset.color = color;
       cell.setAttribute("role", "cell");
+      const gradeCell = document.createElement("div");
+      gradeCell.className = "move-grade-table-grade grade-" + key;
+      gradeCell.dataset.grade = key;
       button.className = "move-grade-count-value";
       button.dataset.moveGradeColor = color;
       button.disabled = count === 0;
       button.setAttribute("aria-label", name + " des " + (color === "w" ? "Blancs" : "Noirs") + " : " + count + (count === 1 ? " demi-coup; aller à sa position" : " demi-coups; aller à la première position"));
       button.innerHTML = '<strong data-grade-count>' + (count ? "+" + count : "0") + '</strong>';
-      cell.appendChild(button);
+      gradeCell.appendChild(button);
+      cell.appendChild(gradeCell);
       row.appendChild(cell);
     }
     table.appendChild(row);
