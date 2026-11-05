@@ -81,16 +81,18 @@ test('offers 50-point FIDE-like levels through 3450 and reports the running-accu
 });
 
 
-test('offers gradual 100-point engine levels from 1600 to 2400', async ({ page }) => {
+test('offers gradual engine levels and reports only observed accuracy for the selected setting', async ({ page }) => {
   await page.goto('/index.html');
   const levels = await page.locator('#sel-elo option').evaluateAll(options =>
-    options.map(option => Number(option.value)).filter(value => value >= 1600 && value <= 2400)
+    options.map(option => Number(option.value)).filter(value => value >= 1400 && value <= 3450)
   );
-  expect(levels).toEqual([1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400]);
-  for (const [elo, accuracy] of [[1700, '54–64 %'], [1800, '56–66 %'], [1900, '58–68 %'], [2100, '62–72 %'], [2200, '64–74 %'], [2300, '66–76 %']]) {
-    await expect(page.locator('#sel-elo option[value="' + elo + '"]')).toContainText(accuracy);
-  }
+  expect(levels).toEqual([
+    1400,1500,1600,1700,1800,1900,2000,2100,2200,2300,
+    2400,2450,2500,2550,2600,2650,2700,2750,2800,2850,2900,2950,3000,3050,3100,3150,3200,3250,3300,3350,3400,3450
+  ]);
   await page.locator('#sel-movetime').selectOption('3000');
   await page.locator('#sel-elo').selectOption('2200');
   await expect(page.locator('#opponent-fide-estimate')).toContainText('2 200 Elo FIDE-like');
+  await expect(page.locator('#opponent-accuracy-estimate')).toContainText('Précision non prédite');
+  await expect(page.locator('.opponent-fide-note')).toContainText('La plage observée ne garantit pas les résultats futurs');
 });
