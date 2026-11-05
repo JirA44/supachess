@@ -2,6 +2,7 @@ const { test, expect } = require("@playwright/test");
 
 test("analyzed PGN populates session progress without inventing unavailable ranks", async ({ page }) => {
   await page.goto("/index.html");
+  await page.waitForFunction(() => document.body.dataset.engineReady === "1");
   const rendered = await page.evaluate(() => {
     if (typeof reviewBuildSessionStats !== "function" || typeof renderStats !== "function") return false;
     reviewState.sessionStats = reviewBuildSessionStats([
