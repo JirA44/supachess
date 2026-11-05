@@ -20,7 +20,7 @@ async function showCheckmate(page, moves, flipped, kingSquare, direction, status
   const king = page.locator(`.sq[data-square="${kingSquare}"] .piece.checkmate-king`);
   await expect(king).toHaveClass(new RegExp(`checkmate-king-fall-${direction}`));
   await expect(king).toHaveCSS('animation-name', `supa-king-topple-${direction}`);
-  await expect(page.locator('#status')).toContainText(statusText);
+  await expect(page.locator('#status-line')).toContainText(statusText);
 }
 
 test('mated white king falls toward the white side', async ({ page }) => {
