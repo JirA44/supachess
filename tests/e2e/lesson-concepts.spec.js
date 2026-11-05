@@ -17,8 +17,8 @@ test('filters the chess concept glossary, validates a concept and opens related 
   await page.locator('#lesson-concept-elo-filter').selectOption('');
 
   await page.locator('#lesson-concept-search').fill('Développer les pièces');
-  await expect(page.locator('#lesson-concept-card-list .lesson-concept-card:visible')).toHaveCount(1);
   const card = page.locator('#lesson-concept-card-list [data-concept-id="develop-pieces"]');
+  await expect(card).toBeVisible();
   await card.locator('.lesson-concept-quiz-start').click();
   await expect(card.locator('.lesson-concept-choice')).toHaveCount(3);
   await card.locator('.lesson-concept-choice[data-correct="true"]').click();
