@@ -50,7 +50,7 @@ test("filtered lesson numbers are consecutive and completed lessons open in view
   const completed = cards.filter({ hasText: "Activer le roi avant le pion" });
   await expect(completed).toContainText("✓ Passée");
   await completed.click();
-  await expect(page.locator("#lesson-title")).toHaveText("1. Activer le roi avant le pion");
+  await expect(page.locator("#lesson-title")).toHaveText("✓ 1. Activer le roi avant le pion");
   await expect(page.locator(".lesson-workspace")).toBeInViewport();
   await expect(page.locator("#lesson-status")).toContainText("À toi de jouer");
 });
@@ -169,7 +169,7 @@ test("learning paths explain their progression and open matching lessons", async
   await expect(page.locator("#lesson-catalog-count")).toContainText("exercices d’anticipation");
   await expect(page.locator("#lesson-catalog-count")).toContainText("entrées au total");
   const cards = page.locator(".method-path");
-  await expect(cards).toHaveCount(14);
+  await expect(cards).toHaveCount(20);
 
   const paths = [
     ["Carlsen · amélioration et conversion", "Explorer les leçons Carlsen"],
@@ -367,7 +367,7 @@ test("finishing Kasparov starts the first unfinished player path", async ({ page
     }
   }
 
-  await expect(page.locator("#lesson-status")).toContainText("Leçon terminée");
+  await expect(page.locator("#lesson-status")).toContainText("Leçon validée");
   await expect(page.locator("#lesson-next-preview")).toContainText("Prochain parcours à découvrir : Carlsen");
   await expect(page.locator("#lesson-next")).toHaveText("Commencer le parcours Carlsen");
   await page.locator("#lesson-next").click();
