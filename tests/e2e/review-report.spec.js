@@ -185,7 +185,7 @@ test('PGN analysis automatically opens replay and keeps previous/next controls v
   });
   expect(result).toBe(true);
   await expect(page.locator('#replay-bar')).toBeVisible();
-  await expect(page.locator('#replay-label')).toHaveText('Coup 0/1');
+  await expect(page.locator('#replay-label')).toHaveText('Coup 1/1');
   await expect(page.locator('#btn-replay-prev')).toBeEnabled();
   await expect(page.locator('#btn-replay-next')).toBeEnabled();
   await page.keyboard.press('ArrowRight');
