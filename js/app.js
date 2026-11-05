@@ -995,10 +995,6 @@ function renderMoveGradeSummary() {
       button.disabled = count === 0;
       button.setAttribute("aria-label", name + " des " + (color === "w" ? "Blancs" : "Noirs") + " : " + count + (count === 1 ? " demi-coup; aller à sa position" : " demi-coups; aller à la première position"));
       button.innerHTML = '<strong data-grade-count>' + (count ? "+" + count : "0") + '</strong>';
-      button.addEventListener("click", () => {
-        const first = state.moveGradeHistory.find((entry) => entry.color === color && entry.category === key);
-        if (first && typeof window.reviewMoveGradeOccurrence === "function") window.reviewMoveGradeOccurrence(first.ply);
-      });
       cell.appendChild(button);
       row.appendChild(cell);
     }
