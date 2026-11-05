@@ -317,7 +317,7 @@ test('quitting correction clears resume state and opening PGN analysis replaces 
   await page.evaluate(()=>{reviewAskSupa=async()=>{};});
   await page.click('#btn-run-review');
   await page.waitForFunction(()=>!reviewState.running&&reviewState.moves.length===2&&state.replayIdx===2,null,{timeout:45000});
-  expect(await page.evaluate(()=>state.chess.fen())).toBe('rnbqkbnr/pppp1ppp/8/4p3/8/5P2/PPPPP1PP/RNBQKBNR w KQkq - 0 2');
+  expect(await page.evaluate(()=>state.chess.fen())).toBe('rnbqkbnr/pppp1ppp/8/4p3/8/5P2/PPPPP1PP/RNBQKBNR w KQkq e6 0 2');
   await expect(exercisePanel).toBeHidden();
   await expect.poll(()=>page.evaluate(()=>window.SupaChessIsCorrectionExercise())).toBe(false);
 });
