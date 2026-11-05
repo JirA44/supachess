@@ -660,12 +660,14 @@ body {
   .sq .piece.checkmate-king-fall-top {
     animation: none;
   }
-  .sq .piece.checkmate-king-fall-bottom {
+  .sq .piece.checkmate-king-fall-bottom,
+  .sq .piece.checkmate-king-fallen.checkmate-fall-bottom {
     transform-origin: center bottom;
     transform: perspective(260px) rotateX(88deg) translateY(10px) scale(.76);
     filter: brightness(.78);
   }
-  .sq .piece.checkmate-king-fall-top {
+  .sq .piece.checkmate-king-fall-top,
+  .sq .piece.checkmate-king-fallen.checkmate-fall-top {
     transform-origin: center top;
     transform: perspective(260px) rotateX(-88deg) translateY(-10px) scale(.76);
     filter: brightness(.78);
