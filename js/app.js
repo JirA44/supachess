@@ -30,6 +30,7 @@ const state = {
   moveGradeHistory: [], // demi-coups joués avec catégorie, révisée après analyse moteur
   clockMs: { w: 0, b: 0 },
   clockRemainingMs: { w: 0, b: 0 },
+  clocksEnabled: false,
   clockActiveColor: null,
   clockStartedAt: 0,
   clockIntervalId: null,
@@ -350,6 +351,7 @@ window.addEventListener("storage", (event) => {
 function thresholdCp() { return Math.round(parseFloat($("sel-threshold").value) * 100); }
 function movetime() { return parseInt($("sel-movetime").value, 10); }
 const PLAYER_CLOCK_SETTINGS_KEY = "supachess-player-clocks-v1";
+let pendingTimedGameMinutes = null;
 function restorePlayerClockSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(PLAYER_CLOCK_SETTINGS_KEY) || "{}");
@@ -419,7 +421,7 @@ function stopPlayerClock(color) {
 }
 function startPlayerClock(color) {
   stopPlayerClock();
-  if (!color || state.phase === "gameover" || !state.clockMs[color]) { renderPlayerClocks(); return; }
+  if (!state.clocksEnabled || !color || state.phase === "gameover" || !state.clockMs[color]) { renderPlayerClocks(); return; }
   state.clockActiveColor = color;
   state.clockStartedAt = Date.now();
   state.clockIntervalId = window.setInterval(() => {
@@ -457,7 +459,7 @@ window.SupaChessStartTimedGame = function(minutes) {
   const modal = $("profile-modal");
   if (modal) modal.remove();
   if (document.body.dataset.engineReady === "1" && state.phase !== "init") newGame({ unassisted: true });
-  else sessionStorage.setItem("supachess-pending-clock-game-v1", value);
+  else pendingTimedGameMinutes = value;
 };
 function opponentElo() { return parseInt($("sel-elo").value, 10); }
 function isManualMode() { return $("sel-elo").value === "manual"; }
@@ -508,18 +510,21 @@ async function init() {
   $("engine-label").textContent = state.engine.engineName + " (NNUE) — prêt";
   document.body.dataset.engineReady = "1";
   const resumeUnaided = sessionStorage.getItem("supachess-unassisted-game-active-v1") === "true";
-  const queuedClockMinutes = sessionStorage.getItem("supachess-pending-clock-game-v1");
+  const queuedClockMinutes = pendingTimedGameMinutes;
+  pendingTimedGameMinutes = null;
+  // Discard legacy session flags so an old profile click cannot launch a timed game on a later visit.
+  try { sessionStorage.removeItem("supachess-pending-clock-game-v1"); } catch (_) {}
   if (queuedClockMinutes !== null) {
     $("sel-clock-white").value = queuedClockMinutes;
     $("sel-clock-black").value = queuedClockMinutes;
-    sessionStorage.removeItem("supachess-pending-clock-game-v1");
     newGame({ unassisted: false });
-  } else newGame({ unassisted: resumeUnaided, resume: resumeUnaided });
+  } else newGame({ unassisted: resumeUnaided, resume: resumeUnaided, clocksEnabled: false });
   document.dispatchEvent(new Event("supachess:engine-ready"));
 }
 
 function newGame(options = {}) {
   stopPlayerClock();
+  state.clocksEnabled = options.clocksEnabled !== false;
   state.undoCount = 0;
   state.timeExpiredColor = null;
   state.timeRankSubmitted = false;

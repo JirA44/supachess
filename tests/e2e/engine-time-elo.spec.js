@@ -96,3 +96,24 @@ test('offers gradual engine levels and reports only observed accuracy for the se
   await expect(page.locator('#opponent-accuracy-estimate')).toContainText('Précision non prédite');
   await expect(page.locator('.opponent-fide-note')).toContainText('la plage observée ne garantit pas les résultats futurs');
 });
+
+
+test('does not start a one-minute game automatically on page load', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("supachess-player-clocks-v1", JSON.stringify({ w: "1", b: "1" }));
+    // A value left by an older build must be ignored and cleared.
+    sessionStorage.setItem("supachess-pending-clock-game-v1", "1");
+  });
+  await page.goto("/index.html");
+  await expect.poll(() => page.locator("body").getAttribute("data-engine-ready"), { timeout: 30000 }).toBe("1");
+
+  await expect.poll(() => page.evaluate(() => state.clockActiveColor)).toBeNull();
+  await expect(page.locator("#clock-white")).toHaveText("1:00");
+  await expect(page.locator("#clock-black")).toHaveText("1:00");
+  await expect(page.locator("#clock-control-status")).toContainText("arrêtée");
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem("supachess-pending-clock-game-v1"))).toBeNull();
+
+  await page.getByRole("button", { name: "Nouvelle partie" }).click();
+  await expect.poll(() => page.evaluate(() => state.clockActiveColor)).toBe("w");
+  await expect(page.locator("#clock-control-status")).toContainText("pendule en cours");
+});
