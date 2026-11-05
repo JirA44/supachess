@@ -27,8 +27,8 @@ test("Rook cutoff lesson asks for the principle, then plays the line on the boar
   await expect(page.locator("#lesson-explanation")).toContainText("À réutiliser dans tes parties");
   await expect(page.locator("#lesson-next-preview")).toBeVisible();
   await expect(page.locator("#lesson-next")).toBeVisible();
-  await expect(page.locator("#lesson-status")).toContainText("✓ Leçon terminée");
-  await expect(page.locator('.lesson-catalog-button[aria-current="true"]')).toContainText("✓ Terminée");
+  await expect(page.locator("#lesson-status")).toContainText("✓ Leçon validée");
+  await expect(page.locator('.lesson-catalog-button[aria-current="true"]')).toContainText("✓ Passée");
 });
 
 
@@ -48,7 +48,7 @@ test("filtered lesson numbers are consecutive and completed lessons open in view
   expect(titles.slice(0, 4).map((title) => Number(title.match(/^(\d+)\./)?.[1]))).toEqual([1, 2, 3, 4]);
 
   const completed = cards.filter({ hasText: "Activer le roi avant le pion" });
-  await expect(completed).toContainText("Terminée · à revoir quand tu veux");
+  await expect(completed).toContainText("✓ Passée");
   await completed.click();
   await expect(page.locator("#lesson-title")).toHaveText("1. Activer le roi avant le pion");
   await expect(page.locator(".lesson-workspace")).toBeInViewport();
@@ -98,7 +98,7 @@ test("Stockfish evaluation bar can be toggled and follows a real engine analysis
   await toggle.click();
   await expect(toggle).toHaveText("Barre d’évaluation : On");
   await expect(evalWidget).toBeVisible();
-  await page.getByRole("button", { name: "Comparer tous les coups avec Stockfish" }).click();
+  await page.locator("#lesson-engine-analyze").click();
   await expect(page.locator("#lesson-engine-status")).toContainText("Stockfish a évalué", { timeout: 30000 });
   await expect(page.locator("#lesson-engine-lines .lesson-engine-line").first()).toContainText("meilleur de cette recherche");
   await expect(page.locator("#lesson-engine-lines .lesson-engine-line").first()).toContainText("Suite calculée");
@@ -162,14 +162,14 @@ test("catalog filters and random exercise explicitly train opponent replies in g
 });
 
 
-test("eight learning paths explain their progression and open matching lessons", async ({ page }) => {
+test("learning paths explain their progression and open matching lessons", async ({ page }) => {
   await page.goto("/book-lessons.html");
-  await expect(page.locator("#method-paths-title")).toHaveText("Neuf parcours d’apprentissage");
+  await expect(page.locator("#method-paths-title")).toHaveText("Quatorze parcours d’apprentissage");
   await expect(page.locator("#lesson-catalog-count")).toContainText("leçons originales +");
   await expect(page.locator("#lesson-catalog-count")).toContainText("exercices d’anticipation");
   await expect(page.locator("#lesson-catalog-count")).toContainText("entrées au total");
   const cards = page.locator(".method-path");
-  await expect(cards).toHaveCount(9);
+  await expect(cards).toHaveCount(14);
 
   const paths = [
     ["Carlsen · amélioration et conversion", "Explorer les leçons Carlsen"],
@@ -295,7 +295,7 @@ test("Stockfish path opens its beginner lesson and accepts a legal board move", 
 
 test("Stockfish board preview returns to a playable lesson and keeps next-step navigation visible", async ({ page }) => {
   await page.goto("/book-lessons.html?lesson=develop-before-attack");
-  await page.getByRole("button", { name: "Développer le cavalier vers le centre" }).click();
+  await page.locator("#lesson-choices").getByRole("button", { name: "Développer le cavalier vers le centre" }).click();
   await page.locator("#lesson-engine-analyze").click();
   const firstPreview = page.locator("#lesson-engine-lines .lesson-engine-preview").first();
   await expect(firstPreview).toBeVisible({ timeout: 30000 });
