@@ -579,7 +579,7 @@ body {
 #btn-evalbar-toggle:disabled{opacity:.72;cursor:not-allowed}
 
 /* Annual activity heatmap: date-only local events, readable on narrow screens. */
-.profile-activity-section { margin: 16px 0; padding: 14px; border: 1px solid #52657d; border-radius: 12px; background: rgba(0,0,0,.12); color: #f4f7fb; }
+.profile-activity-section { box-sizing:border-box; width:100%; min-width:0; max-width:100%; margin:16px 0; padding:14px; border:1px solid #52657d; border-radius:12px; background:rgba(0,0,0,.12); color:#f4f7fb; overflow:hidden; }
 .profile-activity-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
 .profile-activity-heading h4 { margin:0 0 4px; font-size:1.05rem; color:#f4f7fb; }
 .profile-activity-heading p,.profile-activity-note { margin:0; color:#d3deeb; font-size:.88rem; line-height:1.45; }
@@ -591,7 +591,7 @@ body {
 .profile-activity-summary { display:flex; flex-wrap:wrap; gap:6px 14px; align-items:baseline; margin:8px 0 10px; color:#e5edf7; }
 .profile-activity-summary strong { color:#9bf0b4; font-size:1.02rem; }
 .profile-activity-summary span { color:#d3deeb; }
-.profile-activity-scroll { max-width:100%; overflow-x:auto; padding:4px 2px 9px; overscroll-behavior-inline:contain; }
+.profile-activity-scroll { box-sizing:border-box; width:100%; min-width:0; max-width:100%; overflow-x:auto; padding:4px 2px 9px; overscroll-behavior-inline:contain; }
 .profile-activity-months { display:grid; gap:3px; width:max-content; min-width:max-content; height:18px; margin-left:38px; color:#d3deeb; font-size:.72rem; line-height:1.1; }
 .profile-activity-months span { white-space:nowrap; }
 .profile-activity-calendar { display:flex; align-items:flex-start; gap:7px; width:max-content; }
