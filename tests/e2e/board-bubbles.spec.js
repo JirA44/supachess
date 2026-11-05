@@ -291,7 +291,9 @@ test('SupaEngine brilliant signal adds a violet marker for a legal move outside 
 });
 
 test("pieces drag to legal squares with pointer input on a narrow board", async ({ page }) => {
+  await preparePracticeMode(page);
   await page.goto("/index.html");
+  await page.waitForFunction(() => document.body.dataset.engineReady === "1");
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => {
     state.chess.reset();
