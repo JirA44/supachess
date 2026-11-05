@@ -139,6 +139,7 @@ test("profile activity heatmap counts dated events and switches years on mobile"
   }));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/index.html");
+  await expect(page.locator('script[src*="js/profile.js"]')).toHaveAttribute("src", /profile-activity-last365-20261105-v1/);
   await page.evaluate(() => {
     window.__profileActivityBaselinePageWidth = document.documentElement.scrollWidth;
     document.body.insertAdjacentHTML("beforeend", window.SupaProfiles.renderLocalLearningPanel({}));
