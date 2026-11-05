@@ -1720,7 +1720,7 @@ syncDotsButton();
 syncMoveDotsButton();
 $("btn-abandon-diagnostic")?.addEventListener("click", abandonLevelDiagnostic);
 $("btn-dots").addEventListener("click", () => {
-  if (isDiagnosticControlLockActive() || state.unassistedGame) return;
+  if (isDiagnosticControlLockActive() || isUnassistedAidLockActive()) return;
   boardUI.showDots = !boardUI.showDots;
   if (!correctionExerciseModeActive && boardUI.showDots && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
   localStorage.setItem(DOTS_STORAGE_KEY, String(boardUI.showDots));
@@ -1728,7 +1728,7 @@ $("btn-dots").addEventListener("click", () => {
   renderBoard();
 });
 $("btn-move-dots").addEventListener("click", () => {
-  if (isDiagnosticControlLockActive() || state.unassistedGame) return;
+  if (isDiagnosticControlLockActive() || isUnassistedAidLockActive()) return;
   boardUI.showMoveDots = !boardUI.showMoveDots;
   if (!correctionExerciseModeActive && boardUI.showMoveDots && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
   localStorage.setItem(MOVE_DOTS_STORAGE_KEY, String(boardUI.showMoveDots));
