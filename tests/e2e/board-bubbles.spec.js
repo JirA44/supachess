@@ -78,7 +78,7 @@ test('board stylesheet cache key includes the full-size stacked bubble styles', 
   await preparePracticeMode(page);
   await page.goto('/index.html');
   const stylesheet = page.locator('link[href*="css/style.css"]');
-  await expect(stylesheet).toHaveAttribute('href', /piece-pointer-drag-20261105-v2/);
+  await expect(stylesheet).toHaveAttribute('href', /checkmate-king-fall-20261105-v1/);
 });
 
 
