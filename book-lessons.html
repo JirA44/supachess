@@ -7,6 +7,7 @@
   <title>SupaChess Académie — La route vers l’excellence</title>
   <link rel="stylesheet" href="css/style.css?v=piece-pointer-drag-20261105-v2">
   <link rel="stylesheet" href="css/book-lessons.css?v=spaced-transfer-revisions-20261101">
+  <link rel="stylesheet" href="css/lesson-concepts.css?v=concept-glossary-20261105-v1">
   <link rel="stylesheet" href="css/method-paths.css?v=methods-player-lessons-20261028">
 <style>.lesson-settings-shortcuts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.lesson-settings-shortcuts .btn{font-size:.9rem}@media(max-width:600px){.lesson-topbar{flex-wrap:wrap}.lesson-settings-shortcuts{order:3;width:100%;justify-content:center}}</style>
 </head>
@@ -236,6 +237,129 @@
         <button class="btn lesson-surprise" id="lesson-surprise" type="button">Exercice au hasard</button>
       </div>
     </section>
+    <details class="lesson-concept-glossary" id="lesson-concept-glossary">
+      <summary>Glossaire des concepts d’échecs</summary>
+      <p class="lesson-concept-intro">Comprends l’idée, apprends à la reconnaître sur l’échiquier, puis ouvre les leçons associées pour la mettre en pratique.</p>
+      <div class="lesson-concept-tools">
+        <label for="lesson-concept-search">Rechercher un concept</label>
+        <input id="lesson-concept-search" type="search" placeholder="Ex. initiative, cases faibles, calcul">
+      </div>
+      <div class="lesson-concept-grid" id="lesson-concept-card-list">
+        <article class="lesson-concept-card">
+          <h3>Développement et coordination</h3>
+          <p><strong>Idée :</strong> sortir les pièces vers des cases utiles et les faire travailler ensemble.</p>
+          <p><strong>À repérer :</strong> pièces encore au départ, cases centrales contrôlées et pièces qui se défendent mutuellement.</p>
+          <p><strong>À éviter :</strong> rejouer plusieurs fois la même pièce sans raison pendant que d’autres restent inactives.</p>
+          <button class="btn mini" type="button" data-lesson-concept-search="Développement">Leçons associées</button>
+        </article>
+        <article class="lesson-concept-card">
+          <h3>Contrôle du centre</h3>
+          <p><strong>Idée :</strong> contrôler les cases centrales directement ou à distance pour faciliter les déplacements et les ruptures.</p>
+          <p><strong>À repérer :</strong> qui contrôle e4, d4, e5 et d5, et quelles pièces profitent de ces cases.</p>
+          <p><strong>À éviter :</strong> pousser un pion central sans calculer les prises et les cases laissées faibles.</p>
+          <button class="btn mini" type="button" data-lesson-concept-search="centre">Leçons associées</button>
+        </article>
+        <article class="lesson-concept-card">
+          <h3>Tempo et initiative</h3>
+          <p><strong>Idée :</strong> un tempo est un coup disponible; l’initiative donne le choix des menaces auxquelles l’adversaire doit répondre.</p>
+          <p><strong>À repérer :</strong> les coups qui développent avec menace, gagnent du temps ou obligent une réponse précise.</p>
+          <p><strong>À éviter :</strong> poursuivre une attaque si l’adversaire peut gagner un tempo en attaquant une pièce importante.</p>
+          <button class="btn mini" type="button" data-lesson-concept-search="Gain de temps">Leçons associées</button>
+        </article>
+        <article class="lesson-concept-card">
+          <h3>Sécurité du roi</h3>
+          <p><strong>Idée :</strong> protéger le roi tout en évitant d’affaiblir inutilement les cases autour de lui.</p>
+          <p><strong>À repérer :</strong> lignes ouvertes, échecs possibles, défenseurs du roi et pions qui ont avancé.</p>
+          <p><strong>À éviter :</strong> lancer les pions du roque sans vérifier les lignes et diagonales que cela ouvre.</p>
+          <button class="btn mini" type="button" data-lesson-concept-search="Sécurité du roi">Leçons associées</button>
+        </article>
+        <article class="lesson-concept-card">
+          <h3>Coups candidats : échecs, prises, menaces</h3>
+          <p><strong>Idée :</strong> comparer plusieurs coups plausibles avant de choisir, en examinant d’abord les coups forcés.</p>
+          <p><strong>À repérer :</strong> tous les échecs et toutes les prises légales, puis les menaces créées par chaque candidat.</p>
+          <p><strong>À éviter :</strong> s’arrêter au premier coup séduisant sans le comparer aux réponses adverses.</p>
+          <button class="btn mini" type="button" data-lesson-concept-search="coups candidats">Leçons associées</button>
+        </article>
+        <article class="lesson-concept-card">
+          <h3>Prophylaxie et menaces adverses</h3>
+          <p><strong>Idée :</strong> tenir compte du meilleur projet adverse et parfois le prévenir avant qu’il ne devienne dangereux.</p>
+          <p><strong>À repérer :</strong> après le dernier coup adverse, demande-toi ce qu’il menace et quelle pièce ou case est visée.</p>
+          <p><strong>À éviter :</strong> jouer uniquement selon son propre plan en ignorant une menace immédiate.</p>
+          <button class="btn mini" type="button" data-lesson-concept-search="anticiper l’adversaire">Leçons associées</button>
+        </article>
+        <article class="lesson-concept-card">
+          <h3>Pièce en prise et pièce non protégée</h3>
+          <p><strong>Idée :</strong> une pièce attaquée ou sans défense peut devenir une cible, même si elle n’est pas encore capturée.</p>
+          <p><strong>À repérer :</strong> compte les attaquants et défenseurs, puis vérifie les prises et les intermédiaires possibles.</p>
+          <p><strong>À éviter :</strong> compter seulement les pièces qui attaquent sans regarder l’ordre des prises.</p>
+          <button class="btn mini" type="button" data-lesson-concept-search="pièces en prise">Leçons associées</button>
+        </article>
+        <article class="lesson-concept-card">
+          <h3>Attaquants, défenseurs et surcharge</h3>
+          <p><strong>Idée :</strong> une pièce défend parfois plusieurs cibles; elle ne peut pas toujours remplir toutes ses tâches.</p>
+          <p><strong>À repérer :</strong> les pièces qui défendent plusieurs pièces ou cases importantes et les échanges qui les détournent.</p>
+          <p><strong>À éviter :</strong> conclure qu’une pièce est protégée sans vérifier si son défenseur est cloué ou surchargé.</p>
+          <button class="btn mini" type="button" data-lesson-concept-search="défense">Leçons associées</button>
+        </article>
+        <article class="lesson-concept-card">
+          <h3>Fourchette</h3>
+          <p><strong>Idée :</strong> une pièce attaque deux cibles en même temps; un échec peut rendre la menace particulièrement forte.</p>
+          <p><strong>À repérer :</strong> les cases où une pièce peut attaquer le roi et une autre cible de valeur.</p>
+          <p><strong>À éviter :</strong> annoncer un gain avant d’avoir calculé les réponses, les reprises et les cases de fuite.</p>
+          <button class="btn mini" type="button" data-lesson-concept-search="Fourchette">Leçons associées</button>
+        </article>
+        <article class="lesson-concept-card">
+          <h3>Clouage</h3>
+          <p><strong>Idée :</strong> une pièce attaquée peut être gênée dans ses déplacements par une pièce ou une case plus importante derrière elle.</p>
+          <p><strong>À repérer :</strong> la ligne entre l’attaquant, la pièce clouée et la cible située derrière.</p>
+          <p><strong>À éviter :</strong> croire qu’une pièce clouée ne peut jamais bouger; calcule les conséquences concrètes.</p>
+          <button class="btn mini" type="button" data-lesson-concept-search="Clouage">Leçons associées</button>
+        </article>
+        <article class="lesson-concept-card">
+          <h3>Coup intermédiaire</h3>
+          <p><strong>Idée :</strong> intercaler une menace forcée, souvent un échec, avant une reprise attendue.</p>
+          <p><strong>À repérer :</strong> dans une séquence d’échanges, demande-toi si un échec ou une attaque change l’ordre des coups.</p>
+          <p><strong>À éviter :</strong> reprendre automatiquement sans chercher les coups forcing des deux camps.</p>
+          <button class="btn mini" type="button" data-lesson-concept-search="Coup intermédiaire">Leçons associées</button>
+        </article>
+        <article class="lesson-concept-card">
+          <h3>Structure de pions</h3>
+          <p><strong>Idée :</strong> la forme des pions détermine des cases fortes, des faiblesses, des colonnes et des plans de rupture.</p>
+          <p><strong>À repérer :</strong> pions isolés, doublés, arriérés, passés et cases qu’ils ne peuvent plus contrôler.</p>
+          <p><strong>À éviter :</strong> créer une faiblesse permanente pour gagner un pion sans calculer les compensations.</p>
+          <button class="btn mini" type="button" data-lesson-concept-search="Structure de pions">Leçons associées</button>
+        </article>
+        <article class="lesson-concept-card">
+          <h3>Rupture de pions</h3>
+          <p><strong>Idée :</strong> avancer un pion pour échanger la structure et ouvrir des lignes à ses pièces.</p>
+          <p><strong>À repérer :</strong> les échanges de pions possibles et les pièces qui gagneraient des lignes ou des cases après la rupture.</p>
+          <p><strong>À éviter :</strong> ouvrir la position si tes pièces sont moins actives ou si ton roi est moins en sécurité.</p>
+          <button class="btn mini" type="button" data-lesson-concept-search="Rupture centrale">Leçons associées</button>
+        </article>
+        <article class="lesson-concept-card">
+          <h3>Case forte et avant-poste</h3>
+          <p><strong>Idée :</strong> une case difficile à contester par les pions peut accueillir durablement une pièce active.</p>
+          <p><strong>À repérer :</strong> une case avancée soutenue par un pion, que les pions adverses ne peuvent plus chasser.</p>
+          <p><strong>À éviter :</strong> installer une pièce sur une case forte si elle n’a ni cible ni rôle utile.</p>
+          <button class="btn mini" type="button" data-lesson-concept-search="case forte">Leçons associées</button>
+        </article>
+        <article class="lesson-concept-card">
+          <h3>Colonne ouverte et activité des tours</h3>
+          <p><strong>Idée :</strong> une colonne sans pion peut offrir aux tours une voie d’infiltration vers les rangées adverses.</p>
+          <p><strong>À repérer :</strong> les colonnes ouvertes ou semi-ouvertes, les cases d’entrée et les cibles derrière les pions.</p>
+          <p><strong>À éviter :</strong> placer une tour sur une colonne sans pouvoir l’occuper ou y créer une pression concrète.</p>
+          <button class="btn mini" type="button" data-lesson-concept-search="Coordination des pièces">Leçons associées</button>
+        </article>
+        <article class="lesson-concept-card">
+          <h3>Roi actif et conversion en finale</h3>
+          <p><strong>Idée :</strong> en finale, le roi devient une pièce de combat et peut soutenir les pions ou couper le roi adverse.</p>
+          <p><strong>À repérer :</strong> courses de pions, opposition, cases d’entrée du roi et activité des tours.</p>
+          <p><strong>À éviter :</strong> pousser un pion passé sans vérifier si le roi adverse peut l’arrêter.</p>
+          <button class="btn mini" type="button" data-lesson-concept-search="finale">Leçons associées</button>
+        </article>
+      </div>
+      <p class="lesson-concept-status" id="lesson-concept-status" role="status" aria-live="polite"></p>
+    </details>
     <nav class="lesson-catalog" id="lesson-catalog" aria-label="Choisir une leçon ou un exercice"></nav>
 
     <section class="lesson-workspace" aria-labelledby="lesson-title">
@@ -309,7 +433,7 @@
     </section>
     <p class="lesson-note">Les exercices sont rédigés pour SupaChess. Chaque FEN et chaque demi-coup des lignes étudiées sont vérifiés par les tests; les variantes Stockfish restent dépendantes du temps de recherche.</p>
   </main>
-<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14835</footer>
+<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14847</footer>
 
   <script src="vendor/chess.js"></script>
   <script src="js/engine.js"></script>
@@ -319,6 +443,7 @@
   <script src="js/analysis-settings.js?v=profile-settings-20261103"></script>
   <script src="js/sounds.js?v=profile-sounds-20261104"></script>
   <script src="js/book-lessons.js?v=finale-position-source-20261105-v1"></script>
+  <script src="js/lesson-concepts.js?v=concept-glossary-20261105-v1"></script>
   <script src="js/stockfish-study-lab.js?v=auto-generated-audit-practice-20261101-v2"></script>
   <script src="js/method-paths.js?v=opponent-halfmove-study-20261104-v1"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
