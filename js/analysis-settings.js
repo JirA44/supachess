@@ -35,8 +35,9 @@
     root.dataset.engineArrows = String(preferences.showArrows && !trainingAidsLocked());
     document.querySelectorAll(".analysis-toggle[data-setting]").forEach(button => {
       const value = Boolean(preferences[button.dataset.setting]);
-      button.setAttribute("aria-checked", String(value));
-      button.setAttribute("aria-pressed", String(value));
+      const effectiveValue = button.dataset.setting === "showArrows" && trainingAidsLocked() ? false : value;
+      button.setAttribute("aria-checked", String(effectiveValue));
+      button.setAttribute("aria-pressed", String(effectiveValue));
       const locked = button.dataset.setting === "showArrows" && trainingAidsLocked();
       button.disabled = locked;
       if (locked) button.title = "Flèches désactivées pendant le diagnostic ou une partie sans aide";
