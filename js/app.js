@@ -524,6 +524,8 @@ async function init() {
 
 function newGame(options = {}) {
   stopPlayerClock();
+  const playerClocks = document.querySelector(".player-clocks");
+  if (playerClocks) playerClocks.hidden = false;
   state.clocksEnabled = options.clocksEnabled !== false;
   state.undoCount = 0;
   state.timeExpiredColor = null;
