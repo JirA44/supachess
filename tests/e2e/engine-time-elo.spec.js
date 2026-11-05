@@ -94,5 +94,5 @@ test('offers gradual engine levels and reports only observed accuracy for the se
   await page.locator('#sel-elo').selectOption('2200');
   await expect(page.locator('#opponent-fide-estimate')).toContainText('2 200 Elo FIDE-like');
   await expect(page.locator('#opponent-accuracy-estimate')).toContainText('Précision non prédite');
-  await expect(page.locator('.opponent-fide-note')).toContainText('La plage observée ne garantit pas les résultats futurs');
+  await expect(page.locator('.opponent-fide-note')).toContainText('la plage observée ne garantit pas les résultats futurs');
 });
