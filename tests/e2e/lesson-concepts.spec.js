@@ -6,7 +6,7 @@ test('filters the chess concept glossary, validates a concept and opens related 
   await expect(glossary).toBeVisible();
   await glossary.locator('summary').first().click();
   await expect(page.locator('#lesson-concept-card-list .lesson-concept-card')).toHaveCount(80);
-  await expect(page.locator('#lesson-concept-count')).toContainText('80 concepts');
+  await expect(page.locator('#lesson-concept-count')).toContainText(/80 (?:concepts|concept\(s\))/);
 
   await page.locator('#lesson-concept-family-filter').selectOption('endgames');
   await expect(page.locator('#lesson-concept-card-list .lesson-concept-card:visible')).toHaveCount(8);
