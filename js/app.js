@@ -332,6 +332,8 @@ window.setSupaCorrectionExerciseMode = function(active) {
     }
   }
   applyLevelDiagnosticLock();
+  window.dispatchEvent(new Event("supachess:correction-mode-change"));
+  document.dispatchEvent(new Event("supachess:correction-mode-change"));
 };
 window.addEventListener("storage", (event) => {
   if (event.key !== LEVEL_DIAGNOSTIC_KEY) return;
@@ -605,6 +607,7 @@ const UNASSISTED_MODE_KEY = "supachess-unassisted-game-active-v1";
 const UNASSISTED_PREFS_KEY = "supachess-unassisted-game-restore-v1";
 function isUnassistedGameModeActive() { return Boolean(state.unassistedGame && !correctionExerciseModeActive); }
 window.SupaChessIsUnassistedGame = isUnassistedGameModeActive;
+window.SupaChessIsCorrectionExercise = () => correctionExerciseModeActive;
 function syncUndoButton() {
   const button = $("btn-undo");
   if (!button) return;
@@ -612,18 +615,25 @@ function syncUndoButton() {
   const reached = state.undoCount >= limit;
   const engineBusy = state.phase === "engineThinking" || state.phase === "analyzing";
   const diagnosticLocked = isDiagnosticControlLockActive();
-  button.textContent = "Annuler mon demi-coup (" + state.undoCount + "/" + limit + ")";
-  button.disabled = state.unassistedGame || diagnosticLocked || engineBusy || reached;
-  button.title = state.unassistedGame
-    ? "Annulation désactivée pendant une partie sans aide"
-    : diagnosticLocked
-      ? "Annulation désactivée pendant le diagnostic"
-      : engineBusy
-        ? "Attends la fin de l’analyse ou du coup adverse avant d’annuler"
-        : reached
-          ? "Limite de trois annulations atteinte pour cette partie"
-          : "Annuler votre dernier demi-coup et la réponse du moteur (" + (limit - state.undoCount) + " restante(s))";
+  const correctionMode = correctionExerciseModeActive && typeof window.reviewUndoCorrectionExercise === "function";
+  const noMoveToUndo = correctionMode && state.chess.history().length === 0;
+  button.textContent = correctionMode ? "Annuler le demi-coup" : "Annuler mon demi-coup (" + state.undoCount + "/" + limit + ")";
+  button.disabled = correctionMode
+    ? engineBusy || noMoveToUndo
+    : isUnassistedAidLockActive() || diagnosticLocked || engineBusy || reached;
+  button.title = correctionMode
+    ? noMoveToUndo ? "Joue un demi-coup avant de pouvoir l’annuler" : "Annuler le demi-coup joué dans l’exercice de correction"
+    : isUnassistedAidLockActive()
+      ? "Annulation désactivée pendant une partie sans aide"
+      : diagnosticLocked
+        ? "Annulation désactivée pendant le diagnostic"
+        : engineBusy
+          ? "Attends la fin de l’analyse ou du coup adverse avant d’annuler"
+          : reached
+            ? "Limite de trois annulations atteinte pour cette partie"
+            : "Annuler votre dernier demi-coup et la réponse du moteur (" + (limit - state.undoCount) + " restante(s))";
 }
+window.SupaChessSyncUndoButton = syncUndoButton;
 function setUnassistedGameMode(active, options = {}) {
   const wasActive = state.unassistedGame;
   if (active && !wasActive && !options.resume) {
@@ -1318,7 +1328,7 @@ function checkGameOver() {
 }
 
 /* ── Rendu ── */
-function renderAll() { renderBoard(); renderCandidatesList(); renderHistory(); renderStats(); renderMoveGradeSummary(); syncBestMoveButton(); }
+function renderAll() { renderBoard(); renderCandidatesList(); renderHistory(); renderStats(); renderMoveGradeSummary(); syncBestMoveButton(); syncUndoButton(); }
 function syncBestMoveButton() {
   const button = $("btn-best-move");
   if (!button) return;
@@ -1793,9 +1803,13 @@ $("btn-cancel").addEventListener("click", () => {
   setStatus("À vous de jouer.");
 });
 $("btn-undo").addEventListener("click", () => {
-  if (state.unassistedGame) return;
   if (state.phase === "engineThinking" || state.phase === "analyzing") return;
-  if (typeof window.reviewUndoCorrectionExercise === "function" && window.reviewUndoCorrectionExercise()) return;
+  if (correctionExerciseModeActive) {
+    if (typeof window.reviewUndoCorrectionExercise === "function") window.reviewUndoCorrectionExercise();
+    syncUndoButton();
+    return;
+  }
+  if (isUnassistedAidLockActive() || isDiagnosticControlLockActive()) return;
   if (state.undoCount >= 3) {
     setStatus("Limite de trois annulations atteinte pour cette partie.");
     syncUndoButton();
