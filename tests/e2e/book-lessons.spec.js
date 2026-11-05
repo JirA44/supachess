@@ -170,6 +170,10 @@ test("learning paths explain their progression and open matching lessons", async
   await expect(page.locator("#lesson-catalog-count")).toContainText("entrées au total");
   const cards = page.locator(".method-path");
   await expect(cards).toHaveCount(20);
+  const filterOptions = await page.locator("#lesson-program-filter option").allTextContents();
+  for (const program of await cards.evaluateAll((items) => items.map((item) => item.dataset.methodPath))) {
+    expect(filterOptions).toContain(program);
+  }
 
   const paths = [
     ["Carlsen · amélioration et conversion", "Explorer les leçons Carlsen"],
@@ -368,9 +372,12 @@ test("finishing a path starts the next unfinished path", async ({ page }) => {
   await expect(page.locator("#lesson-status")).toContainText("Leçon validée");
   const preview = await page.locator("#lesson-next-preview").innerText();
   expect(preview).toContain("Prochain parcours à découvrir :");
-  const nextTitle = preview.match(/première étape : (.+?) \((?:Débutant|Intermédiaire|Avancé|Expert)\)\./)?.[1];
-  expect(nextTitle).toBeTruthy();
+  const beforeTitle = await page.locator("#lesson-title").innerText();
   await page.locator("#lesson-next").click();
-  await expectNumberedLessonTitle(page, nextTitle);
-  expect(await page.locator("#lesson-title").innerText()).not.toContain(lastKasparovLesson.title);
+  const nextProgram = await page.locator("#lesson-program-filter").inputValue();
+  expect(nextProgram).not.toBe(kasparovProgram);
+  const nextIndices = methodPathLessonIndices(nextProgram);
+  expect(nextIndices.length).toBeGreaterThan(0);
+  await expectNumberedLessonTitle(page, LESSONS[nextIndices[0]].title);
+  expect(await page.locator("#lesson-title").innerText()).not.toBe(beforeTitle);
 });
