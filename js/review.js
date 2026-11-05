@@ -700,14 +700,12 @@ function reviewRenderLocal(rows, accW, accB, headers) {
 }
 
 function reviewSyncSelectedPly(ply) {
-  document.querySelectorAll("#review-report .review-ply").forEach((item) => {
-    const selected = Number(item.dataset.reviewPly) === ply;
-    item.classList.toggle("selected", selected);
-    const link = item.querySelector(".review-ply-link");
-    if (link) {
-      if (selected) link.setAttribute("aria-current", "step");
-      else link.removeAttribute("aria-current");
-    }
+  document.querySelectorAll("#review-report .review-ply[data-review-ply]").forEach((item) => {
+    item.classList.toggle("selected", Number(item.dataset.reviewPly) === ply);
+  });
+  document.querySelectorAll("#review-report .review-ply-link[data-review-ply]").forEach((link) => {
+    if (Number(link.dataset.reviewPly) === ply) link.setAttribute("aria-current", "step");
+    else link.removeAttribute("aria-current");
   });
 }
 
@@ -1242,6 +1240,31 @@ function reviewRestoreAfterReplay() {
   renderAll();
   if (["engineThinking", "analyzing"].includes(state.phase)) startTurn();
 }
+
+function reviewMoveGradeOccurrence(ply) {
+  if (!Number.isInteger(Number(ply)) || Number(ply) < 1) return;
+  if (reviewState.fens.length > 1 && reviewState.moves.length) {
+    reviewJumpToPly(Number(ply));
+    return;
+  }
+  const moves = state.chess.history({ verbose: true });
+  const fens = state.positionFenHistory || [];
+  if (!moves.length || fens.length < moves.length + 1) return;
+  reviewState.fens = fens.slice(0, moves.length + 1);
+  reviewState.moves = moves;
+  reviewState.moveGrades = state.moveGradeHistory.map((entry) => ({ ...entry }));
+  reviewState.grades = moves.map((move, index) => {
+    const entry = state.moveGradeHistory.find((grade) => grade.ply === index + 1);
+    return entry ? { deltaCp: entry.lossCp, brilliant: entry.category === "brilliant",
+      category: entry.category, evaluation: entry.evaluation || "—" } : null;
+  });
+  reviewState.currentHeaders = { White: "Blancs", Black: "Noirs", Result: "*" };
+  reviewState.returnState = null;
+  document.getElementById("review-panel").classList.remove("hidden");
+  reviewBeginReplay();
+  reviewJumpToPly(Number(ply));
+}
+window.reviewMoveGradeOccurrence = reviewMoveGradeOccurrence;
 
 function reviewJumpToPly(ply) {
   reviewBeginReplay();
