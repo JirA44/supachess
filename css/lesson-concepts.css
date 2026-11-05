@@ -1,0 +1,45 @@
+.lesson-concept-glossary {
+  margin: 10px 0 14px;
+  border: 1px solid rgba(143, 182, 217, .45);
+  border-radius: 10px;
+  background: rgba(16, 27, 39, .72);
+  overflow: hidden;
+}
+.lesson-concept-glossary > summary {
+  padding: 12px 14px;
+  color: #d9efff;
+  font-weight: 800;
+  cursor: pointer;
+}
+.lesson-concept-intro { margin: 0; padding: 0 14px 10px; color: #c1ccda; }
+.lesson-concept-tools { padding: 0 14px 12px; }
+.lesson-concept-tools input {
+  width: min(100%, 420px);
+  padding: 8px 10px;
+  border: 1px solid rgba(143, 182, 217, .5);
+  border-radius: 7px;
+  background: #111b27;
+  color: #f4f7fb;
+}
+.lesson-concept-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
+  gap: 10px;
+  padding: 0 14px 14px;
+}
+.lesson-concept-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid rgba(143, 182, 217, .28);
+  border-radius: 8px;
+  background: rgba(255,255,255,.035);
+}
+.lesson-concept-card[hidden] { display: none !important; }
+.lesson-concept-card h3 { margin: 0; color: #e5f2ff; font-size: 1rem; }
+.lesson-concept-card p { margin: 0; color: #d2d9e3; font-size: .88rem; line-height: 1.45; }
+.lesson-concept-card p strong { color: #fff; }
+.lesson-concept-card .btn { align-self: flex-start; margin-top: auto; }
+.lesson-concept-status { min-height: 1.2em; padding: 0 14px 12px; color: #b7c7d8; font-size: .85rem; }
