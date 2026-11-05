@@ -554,6 +554,8 @@ function newGame(options = {}) {
   state.evalHistory = [];
   state.userColor = $("sel-color").value;
   boardUI.setFlipped(state.userColor === "b");
+  boardUI.mateFall = null;
+  boardUI.mateFallAnimated = false;
   boardUI.selected = null;
   boardUI.lastMove = null;
   boardUI.dots = [];
@@ -1323,6 +1325,21 @@ function checkGameOver() {
   if (state.stopped || state.timeExpiredColor) return true;
   const c = state.chess;
   if (!c.game_over()) return false;
+  boardUI.mateFall = null;
+  boardUI.mateFallAnimated = false;
+  if (c.in_checkmate()) {
+    const matedColor = c.turn();
+    const pieces = c.board();
+    for (let row = 0; row < pieces.length && !boardUI.mateFall; row++) {
+      for (let file = 0; file < pieces[row].length; file++) {
+        const piece = pieces[row][file];
+        if (piece && piece.type === "k" && piece.color === matedColor) {
+          boardUI.mateFall = { color: matedColor, square: String.fromCharCode(97 + file) + (8 - row) };
+          break;
+        }
+      }
+    }
+  }
   stopPlayerClock();
   state.phase = "gameover";
   const abandonButton = $("btn-abandon-game");
