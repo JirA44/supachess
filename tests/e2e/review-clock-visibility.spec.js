@@ -12,3 +12,15 @@ test('hides player clocks in PGN review and restores them for a new game', async
   await page.getByRole('button', { name: 'Nouvelle partie' }).click();
   await expect(page.locator('.player-clocks')).toBeVisible();
 });
+
+test('colors white and black player names in both accuracy summaries', async ({ page }) => {
+  await page.goto('/index.html');
+  await expect.poll(() => page.locator('body').getAttribute('data-engine-ready'), { timeout: 30000 }).toBe('1');
+
+  await page.evaluate(() => reviewStart('', { White: 'WIDBIFS', Black: 'Javokhir_Sindarov05' }));
+
+  for (const selector of ['#accuracy-badge', '#stat-accuracy']) {
+    await expect(page.locator(selector).locator('.accuracy-player-w')).toHaveText('WIDBIFS');
+    await expect(page.locator(selector).locator('.accuracy-player-b')).toHaveText('Javokhir_Sindarov05');
+  }
+});
