@@ -33,13 +33,13 @@ class BoardUI {
         y: event.clientY,
         dragging: false,
       };
-      try { this.el.setPointerCapture(event.pointerId); } catch (_) {}
     });
     this.el.addEventListener("pointermove", (event) => {
       const gesture = this.pointerGesture;
       if (!gesture || gesture.id !== event.pointerId) return;
       if (!gesture.dragging && Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) < 6) return;
       gesture.dragging = true;
+      try { this.el.setPointerCapture(event.pointerId); } catch (_) {}
       this.el.classList.add("is-dragging");
       this.el.querySelector(`.sq[data-square="${gesture.from}"]`)?.classList.add("dragging-source");
       if (event.cancelable) event.preventDefault();
@@ -86,7 +86,6 @@ class BoardUI {
         if (piece) {
           const span = document.createElement("span");
           span.className = "piece " + piece.color;
-          span.draggable = piece.color === chess.turn();
           span.textContent = UNICODE_PIECES[piece.color][piece.type];
           cell.appendChild(span);
         }

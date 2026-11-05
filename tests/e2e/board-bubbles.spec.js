@@ -78,7 +78,7 @@ test('board stylesheet cache key includes the full-size stacked bubble styles', 
   await preparePracticeMode(page);
   await page.goto('/index.html');
   const stylesheet = page.locator('link[href*="css/style.css"]');
-  await expect(stylesheet).toHaveAttribute('href', /move-quality-review-navigation-20261105-v1/);
+  await expect(stylesheet).toHaveAttribute('href', /piece-pointer-drag-20261105-v2/);
 });
 
 
