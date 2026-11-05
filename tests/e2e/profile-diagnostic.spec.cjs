@@ -145,6 +145,7 @@ test("profile activity heatmap counts dated events and switches years on mobile"
   });
 
   const chart = page.locator(".profile-activity-section");
+  await expect(chart.getByRole("button", { name: "Les 12 derniers mois" })).toHaveAttribute("aria-pressed", "true");
   await expect(chart).toContainText("Activité SupaChess");
   await expect(chart.locator(".profile-activity-summary")).toContainText("4 activités");
   await expect(chart.locator(".profile-activity-summary")).toContainText("3 jours actifs");

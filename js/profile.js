@@ -1022,32 +1022,40 @@ function bindLessonProgressRangeControls(container){
   });
 }
 
-function renderProfileActivityContent(events,year){
-  year=Number(year)||new Date().getFullYear();
+function renderProfileActivityContent(events,period){
+  var currentYear=new Date().getFullYear(),rolling=String(period)==='last365';
+  var year=Number(period)||currentYear,now=new Date();
+  now.setHours(0,0,0,0);
+  var start=rolling?new Date(now):new Date(year,0,1);
+  if(rolling)start.setDate(start.getDate()-364);
+  var end=rolling?new Date(now):new Date(year,11,31);
+  var startKey=start.getFullYear()+'-'+String(start.getMonth()+1).padStart(2,'0')+'-'+String(start.getDate()).padStart(2,'0');
+  var endKey=end.getFullYear()+'-'+String(end.getMonth()+1).padStart(2,'0')+'-'+String(end.getDate()).padStart(2,'0');
   var byDay={},total=0,activeDays=0;
   var typeLabels={game:'Partie jouée',analysis:'Partie analysée',lesson:'Leçon terminée',correction:'Correction terminée'};
   (Array.isArray(events)?events:[]).forEach(function(event){
-    if(!event||typeof event.date!=='string'||event.date.slice(0,4)!==String(year))return;
+    if(!event||typeof event.date!=='string'||event.date<startKey||event.date>endKey)return;
     var day=byDay[event.date]||(byDay[event.date]={total:0,types:{}});
     day.total++;total++;day.types[event.type]=(day.types[event.type]||0)+1;
   });
-  var start=new Date(year,0,1),shift=(start.getDay()+6)%7;
-  start.setDate(start.getDate()-shift);
-  var end=new Date(year,11,31);
-  var weekCount=Math.ceil((Math.round((end-start)/86400000)+1)/7);
+  var first=new Date(start),shift=(first.getDay()+6)%7;
+  first.setDate(first.getDate()-shift);
+  var weekCount=Math.ceil((Math.round((end-first)/86400000)+1)/7);
   var monthNames=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
-  var months='';
-  for(var month=0;month<12;month++){
-    var first=new Date(year,month,1),column=Math.floor((Math.round((first-start)/86400000))/7)+1;
-    months+='<span style="grid-column:'+column+'">'+monthNames[month]+'</span>';
+  var months='',monthCursor=new Date(start.getFullYear(),start.getMonth(),1);
+  while(monthCursor<=end){
+    var marker=monthCursor<start?start:monthCursor;
+    var column=Math.floor(Math.round((marker-first)/86400000)/7)+1;
+    months+='<span style="grid-column:'+column+'">'+monthNames[monthCursor.getMonth()]+'</span>';
+    monthCursor=new Date(monthCursor.getFullYear(),monthCursor.getMonth()+1,1);
   }
   var labels=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
   var dayLabels=labels.map(function(label){return '<span aria-hidden="true">'+label+'</span>';}).join('');
   var cells='';
   for(var week=0;week<weekCount;week++)for(var dow=0;dow<7;dow++){
-    var date=new Date(start);date.setDate(start.getDate()+week*7+dow);
-    if(date.getFullYear()!==year){cells+='<span class="profile-activity-cell is-outside" aria-hidden="true"></span>';continue;}
-    var key=year+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
+    var date=new Date(first);date.setDate(first.getDate()+week*7+dow);
+    if(date<start||date>end){cells+='<span class="profile-activity-cell is-outside" aria-hidden="true"></span>';continue;}
+    var key=date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
     var value=byDay[key],count=value?value.total:0;
     var level=count===0?0:count===1?1:count<=3?2:count<=6?3:4;
     var details=value?Object.keys(value.types).map(function(type){return value.types[type]+' '+(typeLabels[type]||'activité(s)');}).join(', '):'Aucune activité enregistrée';
@@ -1056,12 +1064,13 @@ function renderProfileActivityContent(events,year){
     cells+='<span class="profile-activity-cell" data-activity-day="'+key+'" data-level="'+level+'" title="'+escapeProfileText(description)+'" aria-label="'+escapeProfileText(description)+'"></span>';
     if(count)activeDays++;
   }
-  var content='<div class="profile-activity-summary" aria-live="polite"><strong>'+total.toLocaleString('fr-FR')+' activité'+(total===1?'':'s')+'</strong><span>'+activeDays.toLocaleString('fr-FR')+' jour'+(activeDays===1?' actif':'s actifs')+'</span></div>'+
-    '<div class="profile-activity-scroll" tabindex="0" aria-label="Graphique d’activité de '+year+'; faire défiler horizontalement pour voir tous les mois">'+
+  var periodLabel=rolling?'les 12 derniers mois':String(year);
+  var content='<div class="profile-activity-summary" aria-live="polite"><strong>'+total.toLocaleString('fr-FR')+' activité'+(total===1?'':'s')+'</strong><span>'+activeDays.toLocaleString('fr-FR')+' jour'+(activeDays===1?' actif':'s actifs')+' · '+periodLabel+'</span></div>'+
+    '<div class="profile-activity-scroll" tabindex="0" aria-label="Graphique d’activité de '+periodLabel+'; faire défiler horizontalement pour voir tous les mois">'+
     '<div class="profile-activity-months" style="grid-template-columns:repeat('+weekCount+',12px)">'+months+'</div>'+
     '<div class="profile-activity-calendar">'+
     '<div class="profile-activity-weekdays">'+dayLabels+'</div>'+
-    '<div class="profile-activity-grid" role="img" aria-label="Activité quotidienne de janvier à décembre '+year+'" style="grid-template-columns:repeat('+weekCount+',12px)">'+cells+'</div></div></div>'+
+    '<div class="profile-activity-grid" role="img" aria-label="Activité quotidienne de '+periodLabel+'" style="grid-template-columns:repeat('+weekCount+',12px)">'+cells+'</div></div></div>'+
     '<div class="profile-activity-legend" aria-label="Légende du nombre d’activités par jour"><span>Moins</span><i data-level="0"></i><i data-level="1"></i><i data-level="2"></i><i data-level="3"></i><i data-level="4"></i><span>Plus</span></div>';
   return content;
 }
@@ -1076,8 +1085,8 @@ function renderProfileActivityChart(events){
   var data=escapeProfileText(JSON.stringify(events||[]));
   return '<section class="profile-activity-section" aria-labelledby="profile-activity-title" data-activity-events="'+data+'">'+
     '<div class="profile-activity-heading"><div><h4 id="profile-activity-title">Activité SupaChess</h4><p>Activités datées enregistrées sur cet appareil, jour par jour.</p></div></div>'+
-    '<div class="profile-activity-years" role="group" aria-label="Choisir l’année du graphique">'+ordered.map(function(year){return '<button type="button" class="profile-activity-year" data-profile-activity-year="'+year+'" aria-pressed="'+String(year===currentYear)+'">'+year+'</button>';}).join('')+'</div>'+
-    '<div class="profile-activity-content">'+renderProfileActivityContent(events,currentYear)+'</div>'+
+    '<div class="profile-activity-years" role="group" aria-label="Choisir la période du graphique"><button type="button" class="profile-activity-year" data-profile-activity-year="last365" aria-label="Les 12 derniers mois" aria-pressed="true">12 derniers mois</button>'+ordered.map(function(year){return '<button type="button" class="profile-activity-year" data-profile-activity-year="'+year+'" aria-pressed="false">'+year+'</button>';}).join('')+'</div>'+
+    '<div class="profile-activity-content">'+renderProfileActivityContent(events,'last365')+'</div>'+
     '<p class="profile-activity-note">Les parties, analyses, leçons terminées et corrections avec date sont comptées. Les anciens totaux sans date ne sont pas répartis artificiellement.</p></section>';
 }
 function handleProfileActivityYearClick(event){
@@ -1087,13 +1096,13 @@ function handleProfileActivityYearClick(event){
   if(!section)return;
   var events=[];
   try{events=JSON.parse(section.getAttribute('data-activity-events')||'[]');}catch(_e){events=[];}
-  var year=Number(button.getAttribute('data-profile-activity-year'))||new Date().getFullYear();
+  var period=button.getAttribute('data-profile-activity-year')||String(new Date().getFullYear());
   section.querySelectorAll('[data-profile-activity-year]').forEach(function(item){
     var selected=item===button;
     item.setAttribute('aria-pressed',String(selected));
   });
   var content=section.querySelector('.profile-activity-content');
-  if(content)content.innerHTML=renderProfileActivityContent(events,year);
+  if(content)content.innerHTML=renderProfileActivityContent(events,period);
 }
 function renderLocalLearningPanel(data){
   var local=readLocalLearningProgress(data);
