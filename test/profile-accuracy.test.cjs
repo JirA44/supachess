@@ -9,7 +9,7 @@ let currentOverlay = {
   querySelector() { return null; },
   remove() { this.removed = true; currentOverlay = null; },
 };
-const profileContent = { innerHTML: "" };
+const profileContent = { innerHTML: "", querySelectorAll() { return []; }, querySelector() { return null; } };
 const document = {
   getElementById(id) {
     if (id === "profile-modal") return currentOverlay;
@@ -148,18 +148,22 @@ test("profile shows exercise charts from saved correction data without a complet
 });
 
 test("profile reports move-type percentages averaged equally across completed games", () => {
-  const moves = (category, count, color = "w") => Array.from({ length: count }, () => ({ category, color }));
+  const moves = (category, count, color = "w") => Array.from({ length: count }, () => ({ category, color, noTrainingAids: true }));
   values.set("supachess_games", JSON.stringify([
     {
       id: "game-short",
       result: "1-0",
       userColor: "w",
+      trainingAidsUsed: false,
+      pgn: '[SupaChessUserColor "w"]\n[SupaChessTrainingAidsUsed "false"]',
       moveGrades: [...moves("brilliant", 1), ...moves("good", 1), ...moves("brilliant", 1, "b")],
     },
     {
       id: "game-long",
       result: "0-1",
       userColor: "w",
+      trainingAidsUsed: false,
+      pgn: '[SupaChessUserColor "w"]\n[SupaChessTrainingAidsUsed "false"]',
       moveGrades: [...moves("brilliant", 1), ...moves("blunder", 9)],
     },
     { id: "unfinished", result: "*", userColor: "w", moveGrades: moves("brilliant", 8) },
@@ -168,8 +172,8 @@ test("profile reports move-type percentages averaged equally across completed ga
   values.delete("supachess-level-diagnostic");
 
   const html = window.SupaProfiles.renderLocalLearningPanel({});
-  assert.match(html, /Moyenne calculée sur 2 parties terminées avec coups classés/);
-  assert.match(html, /Moyenne calculée sur 2 parties terminées/);
+  assert.match(html, /Moyenne calculée sur 2 parties terminées sans aides, avec coups classés/);
+  assert.match(html, /Moyenne calculée sur 2 parties terminées sans aides/);
   assert.match(html, /Coups brillants/);
   assert.match(html, /30,0 %/);
   assert.match(html, /Bons coups/);
@@ -244,14 +248,14 @@ test("profile lesson progression renders the six period buttons when completion 
 test("centipawn-loss rate averages the percentage of measured player half-moves per completed game", () => {
   const summary = window.SupaProfiles.summarizeCentipawnLossGames([
     { ...game(1, 80, 70, "w", "1-0"), moveGrades: [
-      { ply: 1, color: "w", lossCp: 12 },
-      { ply: 2, color: "b", lossCp: 40 },
-      { ply: 3, color: "w", lossCp: 0 },
+      { ply: 1, color: "w", lossCp: 12, noTrainingAids: true },
+      { ply: 2, color: "b", lossCp: 40, noTrainingAids: true },
+      { ply: 3, color: "w", lossCp: 0, noTrainingAids: true },
     ] },
     { ...game(2, 80, 70, "w", "0-1"), moveGrades: [
-      { ply: 1, color: "w", lossCp: 5 },
-      { ply: 2, color: "w", lossCp: 0 },
-      { ply: 3, color: "w", lossCp: 0 },
+      { ply: 1, color: "w", lossCp: 5, noTrainingAids: true },
+      { ply: 2, color: "w", lossCp: 0, noTrainingAids: true },
+      { ply: 3, color: "w", lossCp: 0, noTrainingAids: true },
     ] },
     { ...game(1, 80, 70, "w", "*"), moveGrades: [{ ply: 1, color: "w", lossCp: 20 }] },
     { ...game(1, 80, 70, "w", "1-0"), moveGrades: [{ ply: 1, color: "w", category: "best" }] },
