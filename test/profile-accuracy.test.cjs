@@ -21,6 +21,7 @@ const document = {
       style: {},
       listeners: {},
       addEventListener(name, callback) { this.listeners[name] = callback; },
+      setAttribute(name, value) { this.attributes = this.attributes || {}; this.attributes[name] = String(value); },
       querySelector() { return { addEventListener() {} }; },
     };
     Object.defineProperty(element, "innerHTML", {
