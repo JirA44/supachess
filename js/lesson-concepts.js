@@ -227,6 +227,7 @@
             const previous = progress[concept.id] || { attempts: 0, passed: false };
             progress[concept.id] = { attempts: (Number(previous.attempts)||0)+1, passed: true, lastSuccess: Date.now() };
             saveProgress();
+            if (status) status.textContent = conceptProgressText();
             start.textContent = "Réviser le test";
             content.appendChild(createText("p","lesson-concept-result is-correct","Réussi. " + concept.idea + " — Reviens-y plus tard pour confirmer que le concept est durablement acquis."));
           } else {
