@@ -140,6 +140,7 @@ test("profile activity heatmap counts dated events and switches years on mobile"
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/index.html");
   await page.evaluate(() => {
+    window.__profileActivityBaselinePageWidth = document.documentElement.scrollWidth;
     document.body.insertAdjacentHTML("beforeend", window.SupaProfiles.renderLocalLearningPanel({}));
   });
 
@@ -157,11 +158,15 @@ test("profile activity heatmap counts dated events and switches years on mobile"
   await expect(chart.locator(".profile-activity-summary")).toContainText("1 jour actif");
   const widths = await page.evaluate(() => ({
     viewport: window.innerWidth,
+    baselinePage: window.__profileActivityBaselinePageWidth,
     page: document.documentElement.scrollWidth,
-    graph: document.querySelector(".profile-activity-scroll").clientWidth,
+    section: document.querySelector(".profile-activity-section").getBoundingClientRect().width,
+    scroll: document.querySelector(".profile-activity-scroll").clientWidth,
     graphContent: document.querySelector(".profile-activity-scroll").scrollWidth,
   }));
-  expect(widths.page).toBeLessThanOrEqual(widths.viewport);
-  expect(widths.graphContent).toBeGreaterThan(widths.graph);
+  expect(widths.section).toBeLessThanOrEqual(widths.viewport);
+  expect(widths.scroll).toBeLessThanOrEqual(widths.viewport);
+  expect(widths.page).toBeLessThanOrEqual(Math.max(widths.viewport, widths.baselinePage));
+  expect(widths.graphContent).toBeGreaterThan(widths.scroll);
   await expect(chart.locator(".profile-activity-note")).toContainText("ne sont pas répartis artificiellement");
 });

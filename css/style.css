@@ -579,7 +579,7 @@ body {
 #btn-evalbar-toggle:disabled{opacity:.72;cursor:not-allowed}
 
 /* Annual activity heatmap: date-only local events, readable on narrow screens. */
-.profile-activity-section { box-sizing:border-box; width:100%; min-width:0; max-width:100%; margin:16px 0; padding:14px; border:1px solid #52657d; border-radius:12px; background:rgba(0,0,0,.12); color:#f4f7fb; overflow:hidden; }
+.profile-activity-section { box-sizing:border-box; width:min(100%,calc(100vw - 32px)); min-width:0; max-width:100%; margin:16px 0; padding:14px; border:1px solid #52657d; border-radius:12px; background:rgba(0,0,0,.12); color:#f4f7fb; overflow:hidden; }
 .profile-activity-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
 .profile-activity-heading h4 { margin:0 0 4px; font-size:1.05rem; color:#f4f7fb; }
 .profile-activity-heading p,.profile-activity-note { margin:0; color:#d3deeb; font-size:.88rem; line-height:1.45; }
