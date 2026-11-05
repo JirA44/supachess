@@ -21,6 +21,8 @@ class BoardUI {
     this.legalTargetHints = {}; // destination -> {quality, capture, san, evaluation}
     this.showMoveDots = true;
     this.pointerGesture = null;
+    this.mateFall = null;
+    this.mateFallAnimated = false;
     this.suppressPointerClick = false;
     this.el.addEventListener("pointerdown", (event) => {
       const square = event.target.closest(".sq");
@@ -87,6 +89,17 @@ class BoardUI {
           const span = document.createElement("span");
           span.className = "piece " + piece.color;
           span.textContent = UNICODE_PIECES[piece.color][piece.type];
+          if (piece.type === "k" && this.mateFall?.square === sq && this.mateFall.color === piece.color) {
+            const bottomColor = this.flipped ? "b" : "w";
+            const direction = piece.color === bottomColor ? "bottom" : "top";
+            cell.classList.add("checkmate-king-square");
+            span.classList.add("checkmate-king");
+            span.classList.add(this.mateFallAnimated
+              ? "checkmate-king-fallen"
+              : "checkmate-king-fall-" + direction);
+            span.classList.add("checkmate-fall-" + direction);
+            this.mateFallAnimated = true;
+          }
           cell.appendChild(span);
         }
         if (this.selected === sq) cell.classList.add("selected");
