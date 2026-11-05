@@ -55,12 +55,18 @@ function reviewHideModal() {
   else document.getElementById("btn-analyze-pgn").focus();
 }
 
+function reviewSetPlayerClocksHidden(hidden) {
+  const clocks = document.querySelector(".player-clocks");
+  if (clocks) clocks.hidden = Boolean(hidden);
+}
+
 /* Point d'entrée (bouton "Analyser PGN (Supa)" ou panneau Parties). */
 function reviewStart(pgn, headers = {}) {
   // A fresh PGN analysis must leave any replay/correction session first.
   if (reviewState.returnState || reviewState.exercise || window.SupaChessIsCorrectionExercise?.()) {
     reviewRestoreAfterReplay();
   }
+  reviewSetPlayerClocksHidden(true);
   const source = pgn || "";
   const suppliedHeaders = headers && typeof headers === "object" ? headers : {};
   let parsedHeaders = {};
@@ -402,6 +408,7 @@ async function reviewAnalyzePosition(options, moveNumber, totalMoves) {
 
 async function reviewRun(options = {}) {
   if (reviewState.running) return false;
+  reviewSetPlayerClocksHidden(true);
   const pgnText = document.getElementById("pgn-input").value.trim();
   if (!pgnText) { alert("Collez un PGN d'abord."); return false; }
   const game = new Chess();
@@ -1206,6 +1213,7 @@ function reviewSetReplayControls(active) {
 
 function reviewBeginReplay() {
   if (reviewState.returnState) return;
+  reviewSetPlayerClocksHidden(true);
   reviewState.variation = null;
   document.getElementById("replay-bar").classList.remove("hidden");
   reviewSetReplayControls(true);
