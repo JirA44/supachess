@@ -1241,31 +1241,6 @@ function reviewRestoreAfterReplay() {
   if (["engineThinking", "analyzing"].includes(state.phase)) startTurn();
 }
 
-function reviewMoveGradeOccurrence(ply) {
-  if (!Number.isInteger(Number(ply)) || Number(ply) < 1) return;
-  if (reviewState.fens.length > 1 && reviewState.moves.length) {
-    reviewJumpToPly(Number(ply));
-    return;
-  }
-  const moves = state.chess.history({ verbose: true });
-  const fens = state.positionFenHistory || [];
-  if (!moves.length || fens.length < moves.length + 1) return;
-  reviewState.fens = fens.slice(0, moves.length + 1);
-  reviewState.moves = moves;
-  reviewState.moveGrades = state.moveGradeHistory.map((entry) => ({ ...entry }));
-  reviewState.grades = moves.map((move, index) => {
-    const entry = state.moveGradeHistory.find((grade) => grade.ply === index + 1);
-    return entry ? { deltaCp: entry.lossCp, brilliant: entry.category === "brilliant",
-      category: entry.category, evaluation: entry.evaluation || "—" } : null;
-  });
-  reviewState.currentHeaders = { White: "Blancs", Black: "Noirs", Result: "*" };
-  reviewState.returnState = null;
-  document.getElementById("review-panel").classList.remove("hidden");
-  reviewBeginReplay();
-  reviewJumpToPly(Number(ply));
-}
-window.reviewMoveGradeOccurrence = reviewMoveGradeOccurrence;
-
 function reviewJumpToPly(ply) {
   reviewBeginReplay();
   document.getElementById("replay-bar").classList.remove("hidden");
