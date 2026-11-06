@@ -295,10 +295,8 @@ function applyLevelDiagnosticLock() {
   }
   if (!active && diagnostic && diagnostic.active === false && !diagnostic.aidsRestored &&
       (diagnostic.aidsInitialized || levelDiagnosticLockWasActive)) {
-    boardUI.showDots = typeof diagnostic.restoreDots === "boolean"
-      ? diagnostic.restoreDots : localStorage.getItem(DOTS_STORAGE_KEY) !== "false";
-    boardUI.showMoveDots = typeof diagnostic.restoreMoveDots === "boolean"
-      ? diagnostic.restoreMoveDots : localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false";
+    boardUI.showDots = true;
+    boardUI.showMoveDots = true;
     const restoreEvalBar = typeof diagnostic.restoreEvalBar === "boolean"
       ? diagnostic.restoreEvalBar : localStorage.getItem(EVALBAR_PREFERENCE_KEY) !== "false";
     try {
@@ -1996,6 +1994,7 @@ $("btn-fen").addEventListener("click", () => {
   startTurn();
 });
 
+applyLevelDiagnosticLock();
 refreshLevelDiagnosticProgress();
 init();
 
