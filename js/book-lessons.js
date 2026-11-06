@@ -3724,7 +3724,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     const completedOriginal = LESSONS.filter((lesson) => lesson.kind !== "anticipation" && completionCount(progress[lesson.id]) > 0).length;
     const completedAnticipation = LESSONS.filter((lesson) => lesson.kind === "anticipation" && completionCount(progress[lesson.id]) > 0).length;
     const completedEntries = LESSONS.filter((lesson) => completionCount(progress[lesson.id]) > 0).length;
-    const principleLabels = [...new Set(LESSONS.map((lesson) => String(lesson.principle || "").trim().replace(/\\s+/g, " ").toLocaleLowerCase("fr")).filter(Boolean))];
+    const principleLabels = [...new Set(LESSONS.map((lesson) => String(lesson.principle || "").trim().replace(/\s+/g, " ").toLocaleLowerCase("fr")).filter(Boolean))];
     const masteredLessons = LESSONS.filter((lesson) => lesson.kind !== "anticipation" && Number(progress[lesson.id] && progress[lesson.id].review && progress[lesson.id].review.streak) >= 3).length;
     const competencySummary = summarizeCompetencies();
     const academyCounts = {
