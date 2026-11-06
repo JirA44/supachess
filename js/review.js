@@ -62,7 +62,8 @@ function reviewSetPlayerClocksHidden(hidden) {
 
 /* Point d'entrée (bouton "Analyser PGN (Supa)" ou panneau Parties). */
 function reviewStart(pgn, headers = {}) {
-  // A fresh PGN analysis must leave any replay/correction session first.
+  window.deactivateLevelDiagnosticForReview?.("analyse PGN");
+  // A fresh PGN analysis must leave any replay/correction session first;
   if (reviewState.returnState || reviewState.exercise || window.SupaChessIsCorrectionExercise?.()) {
     reviewRestoreAfterReplay();
   }
@@ -801,6 +802,7 @@ async function reviewCorrectPgn(pgn,headers={},resumeTarget=null){
     if(status)status.textContent="Une analyse est déjà en cours. Attends sa fin avant de lancer une correction.";
     return false;
   }
+  window.deactivateLevelDiagnosticForReview?.("correction");
   const saved=reviewHistoryLoad().find((item)=>
     item.pgn.replace(/\r\n?/g,"\n").trim()===normalized);
   const correctionTarget=reviewCorrectionTargetForPgn(normalized,saved,resumeTarget);
@@ -1254,6 +1256,7 @@ function reviewSetReplayControls(active) {
 }
 
 function reviewBeginReplay() {
+  window.deactivateLevelDiagnosticForReview?.("relecture");
   if (reviewState.returnState) return;
   reviewSetPlayerClocksHidden(true);
   reviewState.variation = null;
