@@ -220,6 +220,7 @@ function deactivateLevelDiagnosticForReview(reason) {
   };
   try { localStorage.setItem(LEVEL_DIAGNOSTIC_KEY, JSON.stringify(endedEarly)); } catch (_) {}
   applyLevelDiagnosticLock();
+  window.dispatchEvent(new Event("supachess:level-diagnostic-change"));
   return true;
 }
 window.deactivateLevelDiagnosticForReview = deactivateLevelDiagnosticForReview;
@@ -301,7 +302,7 @@ function applyLevelDiagnosticLock() {
     boardUI.showDots = false;
     boardUI.showMoveDots = false;
   }
-  if (isUnassistedAidLockActive()) {
+  if (active || isUnassistedAidLockActive()) {
     boardUI.showDots = false;
     boardUI.showMoveDots = false;
     try {
