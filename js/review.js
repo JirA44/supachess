@@ -208,6 +208,7 @@ function reviewHistorySave(pgn, headers = {}, correctionExercises = [], analysis
     return false;
   }
   reviewHistoryRender("PGN enregistré sur cet appareil.");
+  if (typeof gamesRenderPanel === "function") gamesRenderPanel();
   return true;
 }
 
@@ -636,6 +637,33 @@ function reviewCorrectionExercisesHtml(items){
   </section>`;
 }
 
+function reviewAcplMetrics(rows) {
+  const values = (color) => (Array.isArray(rows) ? rows : [])
+    .filter((row) => row && row.color === color && Number.isFinite(row.lossCp))
+    .map((row) => row.lossCp);
+  const average = (color) => {
+    const losses = values(color);
+    return losses.length ? losses.reduce((sum, loss) => sum + loss, 0) / losses.length : null;
+  };
+  const white = average("w");
+  const black = average("b");
+  return {
+    white,
+    black,
+    difference: white === null || black === null ? null : Math.abs(white - black),
+    moreAccurateColor: white === null || black === null || white === black ? null : white < black ? "w" : "b",
+  };
+}
+window.SupaChessReviewAcplMetrics = reviewAcplMetrics;
+function reviewAcplDifferenceHtml(rows) {
+  const metrics = reviewAcplMetrics(rows);
+  const format = (value) => value === null ? "—" : value.toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const difference = metrics.difference === null ? "indisponible" : format(metrics.difference) + " cp";
+  const moreAccurate = metrics.moreAccurateColor === "w" ? " · ACPL plus basse : Blancs"
+    : metrics.moreAccurateColor === "b" ? " · ACPL plus basse : Noirs"
+    : metrics.difference === 0 ? " · égalité" : "";
+  return `<div class="review-acpl-difference"><strong>ACPL Blancs/Noirs :</strong> ${format(metrics.white)} / ${format(metrics.black)} cp · <strong>écart par partie :</strong> ${difference}${moreAccurate}<br><small>Une ACPL plus basse signifie moins de centipions perdus en moyenne par demi-coup mesuré.</small></div>`;
+}
 function reviewRenderLocal(rows, accW, accB, headers) {
   rows.forEach((row, i) => {
     row.classification = reviewClassOf(row, reviewState.grades[i]);
@@ -732,6 +760,7 @@ function reviewRenderLocal(rows, accW, accB, headers) {
       <h3>Bilan Stockfish (local)</h3>
       <div class="review-meta">${esc(headers.White || "Blancs")} vs ${esc(headers.Black || "Noirs")} — ${esc(headers.Result || "*")}</div>
       ${accuracyGap}
+      ${reviewAcplDifferenceHtml(rows)}
       <div class="review-player-grid">${playerCard("w", headers.White || "Blancs", accW)}${playerCard("b", headers.Black || "Noirs", accB)}</div>
       <div id="review-acpl-summary"><strong>Perte moyenne (ACPL)</strong> ${averageLossCp}${measuredLosses.length?" cp · "+measuredLosses.length+" demi-coup(s) mesuré(s)":""}</div>
       ${worst.length ? `<div class="review-worst"><strong>Moments clés :</strong> ${worst.map(moveLabel).map(esc).join(" · ")}</div>`
