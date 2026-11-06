@@ -1979,12 +1979,15 @@ $("btn-pgn").addEventListener("click", () => {
   if (state.chess.history().length === 0) { alert("Aucun coup joué."); return; }
   const d = new Date();
   const pad = (n) => String(n).padStart(2, "0");
+  const playerName = typeof gamesCurrentPlayerName === "function" ? gamesCurrentPlayerName() : "Joueur";
   state.chess.header(
     "Event", "SupaChess entraînement",
     "Site", "https://jira44.github.io/supachess/",
     "Date", `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`,
-    "White", state.userColor === "w" ? "Joueur" : "Stockfish 19",
-    "Black", state.userColor === "b" ? "Joueur" : "Stockfish 19",
+    "White", state.userColor === "w" ? playerName : "Stockfish 19",
+    "Black", state.userColor === "b" ? playerName : "Stockfish 19",
+    "SupaChessPlayerName", playerName,
+    "SupaChessUserColor", state.userColor,
     "SupaChessTrainingAidsUsed", typeof gamesTrainingAidsActive === "function" && gamesTrainingAidsActive() ? "true" : "false",
     "SupaChessUnassistedMode", state.unassistedGame ? "true" : "false"
   );
