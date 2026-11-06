@@ -47,7 +47,7 @@ function makeGameContext(currentUser) {
     console,
   });
   const source = fs.readFileSync(path.join(__dirname, "../js/games.js"), "utf8");
-  vm.runInContext(source + "\nglobalThis.testBuildPgn = gamesBuildPgn;", context);
+  vm.runInContext(source + "\nglobalThis.testBuildPgn = gamesBuildPgn; globalThis.testGamesLoad = gamesLoad; globalThis.testEnsureGameNumber = gamesEnsureCurrentNumber;", context);
   context.state = {
     userColor: "w",
     chess: {
@@ -90,7 +90,7 @@ test("PGN player names are sanitized and guest games keep a generic label", () =
 
 
 test("legacy games receive stable unique sequential numbers and the next played game continues the sequence", () => {
-  const { context } = makeGameContext(null);
+  const { context, tags } = makeGameContext(null);
   const legacy = [
     { id: "legacy-1", pgn: "" },
     { id: "legacy-2", pgn: "" },
@@ -103,5 +103,5 @@ test("legacy games receive stable unique sequential numbers and the next played 
   assert.deepEqual(secondRead, [1, 2, 3]);
   assert.equal(context.testEnsureGameNumber(), 4);
   context.testBuildPgn("*");
-  assert.equal(context.tags.SupaChessGameNumber, "4");
+  assert.equal(tags.SupaChessGameNumber, "4");
 });
