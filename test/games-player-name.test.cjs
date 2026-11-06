@@ -31,7 +31,12 @@ function makeGameContext(currentUser) {
   const context = vm.createContext({
     window,
     document,
-    localStorage: { getItem: () => "[]", setItem() {} },
+    localStorage: {
+      values: new Map(),
+      getItem(key) { return this.values.has(key) ? this.values.get(key) : null; },
+      setItem(key, value) { this.values.set(key, String(value)); },
+      removeItem(key) { this.values.delete(key); },
+    },
     Date,
     Math,
     Number,
@@ -81,4 +86,22 @@ test("PGN player names are sanitized and guest games keep a generic label", () =
   const guest = makeGameContext(null);
   guest.context.testBuildPgn("*");
   assert.equal(guest.tags.White, "Joueur");
+});
+
+
+test("legacy games receive stable unique sequential numbers and the next played game continues the sequence", () => {
+  const { context } = makeGameContext(null);
+  const legacy = [
+    { id: "legacy-1", pgn: "" },
+    { id: "legacy-2", pgn: "" },
+    { id: "legacy-3", pgn: "" },
+  ];
+  context.localStorage.setItem("supachess_games", JSON.stringify(legacy));
+  const firstRead = Array.from(context.testGamesLoad(), (game) => game.gameNumber);
+  const secondRead = Array.from(context.testGamesLoad(), (game) => game.gameNumber);
+  assert.deepEqual(firstRead, [1, 2, 3]);
+  assert.deepEqual(secondRead, [1, 2, 3]);
+  assert.equal(context.testEnsureGameNumber(), 4);
+  context.testBuildPgn("*");
+  assert.equal(context.tags.SupaChessGameNumber, "4");
 });
