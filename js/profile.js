@@ -620,6 +620,14 @@ function renderQualityTrendChart(samples,key,title,unit,color,fixedMax){
     var detail=key==='accuracy'?point.value.toFixed(1)+' %':' moyenne de '+point.value.toFixed(1)+' cp par demi-coup évalué · total mesuré '+Number(point.item.totalLoss||0).toFixed(0)+' cp';
     return '<circle cx="'+point.x.toFixed(1)+'" cy="'+point.y.toFixed(1)+'" r="4.5" fill="'+color+'" stroke="#101827" stroke-width="1.5"><title>Partie '+(index+1)+' · '+date+' · '+detail+(point.item.lossMoves?' · '+point.item.lossMoves+' demi-coups évalués':'')+'</title></circle>';
   }).join('');
+  var valueLabels=key==='accuracy'?points.map(function(point,index){
+    var labelY=point.y-10;
+    if(labelY<top+10)labelY=point.y+21;
+    if(labelY>top+plotHeight-4)labelY=point.y-10;
+    var fontSize=points.length>30?9:(points.length>18?10:12);
+    return '<text x="'+point.x.toFixed(1)+'" y="'+labelY.toFixed(1)+'" text-anchor="middle" fill="#fff" font-size="'+fontSize+'" font-weight="700" stroke="#101827" stroke-width="3" paint-order="stroke">'+Math.round(point.value)+'%</text>';
+  }).join(''):'';
+
   var dateIndexes=samples.length<2?[0]:[0,Math.floor((samples.length-1)/2),samples.length-1];
   var dateLabels=Array.from(new Set(dateIndexes)).map(function(index){
     var label=new Date(samples[index].timestamp).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'});
@@ -628,7 +636,7 @@ function renderQualityTrendChart(samples,key,title,unit,color,fixedMax){
   return '<div class="profile-quality-chart-wrap"><h5>'+title+'</h5>'+
     '<svg viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+title+'. Axe horizontal : date des parties. Axe vertical : '+(unit==='%'?'précision en pourcentage':'perte moyenne par demi-coup évalué, en centipions')+'; chaque point est une partie sans aides; '+points.length+' parties avec valeur mesurée." style="display:block;width:100%;height:auto;min-height:220px">'+
     grid+'<line x1="'+left+'" y1="'+top+'" x2="'+left+'" y2="'+(top+plotHeight)+'" stroke="#dce6f2"/><line x1="'+left+'" y1="'+(top+plotHeight)+'" x2="'+(width-right)+'" y2="'+(top+plotHeight)+'" stroke="#dce6f2"/>'+
-    (line?'<polyline points="'+line+'" fill="none" stroke="'+color+'" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>':'')+circles+dateLabels+
+    (line?'<polyline points="'+line+'" fill="none" stroke="'+color+'" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>':'')+circles+valueLabels+dateLabels+
     '<text x="'+(left+plotWidth/2)+'" y="'+(height-5)+'" text-anchor="middle" fill="#f4f7fb" font-size="15">Date des parties (de la plus ancienne à la plus récente)</text>'+
     '<text x="18" y="'+(top+plotHeight/2)+'" transform="rotate(-90 18 '+(top+plotHeight/2)+')" text-anchor="middle" fill="#f4f7fb" font-size="15">'+(unit==='%'?'Précision (%)':'Moyenne par demi-coup (cp)')+'</text></svg></div>';
 }
