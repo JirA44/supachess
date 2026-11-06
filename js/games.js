@@ -18,6 +18,19 @@ function gamesStore(arr) {
   try { localStorage.setItem(GAMES_KEY, JSON.stringify(arr)); } catch (_e) { /* quota */ }
 }
 
+function gamesCurrentPlayerName() {
+  let user = null;
+  try {
+    const auth = window.firebase && typeof window.firebase.auth === "function" ? window.firebase.auth() : null;
+    user = auth && auth.currentUser;
+  } catch (_) {}
+  const displayName = user && typeof user.displayName === "string" ? user.displayName.trim() : "";
+  const emailName = user && typeof user.email === "string" ? user.email.split("@")[0].trim() : "";
+  const rawName = displayName || emailName || "Joueur";
+  return rawName.replace(/["\\\u0000-\u001f\u007f]/g, "").trim().slice(0, 80) || "Joueur";
+}
+window.gamesCurrentPlayerName = gamesCurrentPlayerName;
+
 function gamesTrainingAidsActive() {
   const ui = typeof boardUI === "object" ? boardUI : {};
   const arrows = window.SupaAnalysisSettings && typeof window.SupaAnalysisSettings.showArrows === "function"
@@ -47,6 +60,7 @@ function gamesNewEntry() {
     manualMode: manual,
     clockMs: { ...(state.clockMs || { w: 0, b: 0 }) },
     userColor: state.userColor,
+    playerName: gamesCurrentPlayerName(),
     stockfishRatingEstimate: Number.isFinite(estimate) ? estimate : null,
     stockfishRatingSource: Number.isFinite(estimate) ? "supachess-engine-setting-v1" : null,
     stockfishSettingElo: hasEngineSetting ? setting : null,
@@ -174,12 +188,18 @@ function gamesResult() {
 function gamesBuildPgn(result) {
   const d = new Date();
   const pad = (n) => String(n).padStart(2, "0");
+  const detectedPlayerName = gamesCurrentPlayerName();
+  if (detectedPlayerName !== "Joueur" || !currentGameMetadata.playerName) {
+    currentGameMetadata.playerName = detectedPlayerName;
+  }
+  const playerName = currentGameMetadata.playerName || "Joueur";
   state.chess.header(
     "Event", "SupaChess entraînement",
     "Site", "https://jira44.github.io/supachess/",
     "Date", `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`,
-    "White", state.userColor === "w" ? "Joueur" : "Stockfish 19",
-    "Black", state.userColor === "b" ? "Joueur" : "Stockfish 19",
+    "White", state.userColor === "w" ? playerName : "Stockfish 19",
+    "Black", state.userColor === "b" ? playerName : "Stockfish 19",
+    "SupaChessPlayerName", playerName,
     "Result", result
   );
   if (state.abandoned) state.chess.header("Termination", "abandoned");
