@@ -1769,7 +1769,7 @@ function accuracyDifferenceHtml(white, black, whiteLabel, blackLabel) {
   if (!Number.isFinite(white) || !Number.isFinite(black)) return "";
   const difference = Math.abs(white - black);
   const leadingLabel = difference < 0.005 ? "égalité" : esc(white > black ? whiteLabel : blackLabel);
-  return `<span class="accuracy-difference"> · Écart de précision : <strong>${formatAccuracyPct(difference)} points</strong> (${leadingLabel})</span>`;
+  return `<span class="accuracy-difference"> · Écart de précision : <strong>${formatAccuracyPct(difference)} %</strong> (${leadingLabel})</span>`;
 }
 function accuracyHtml() {
   const review = typeof reviewState !== "undefined" ? reviewState : null;
