@@ -315,7 +315,14 @@ function reviewHistoryRender(statusText) {
   list.innerHTML = items.length ? items.map((item) => {
     const when = item.analyzedAt ? new Date(item.analyzedAt).toLocaleDateString("fr-FR") : "";
     const title = `${item.white || "Blancs"} vs ${item.black || "Noirs"}`;
-    const detail = [item.event, item.result, when].filter(Boolean).join(" · ");
+    const players = Array.isArray(item.analysis?.players) ? item.analysis.players : [];
+    const whiteAccuracy = players.find((player) => player && player.color === "w")?.accuracy;
+    const blackAccuracy = players.find((player) => player && player.color === "b")?.accuracy;
+    const gap = Number.isFinite(whiteAccuracy) && Number.isFinite(blackAccuracy)
+      ? Math.abs(whiteAccuracy - blackAccuracy) : null;
+    const gapDetail = gap === null ? "" :
+      `Écart de précision : ${gap.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} points (${whiteAccuracy === blackAccuracy ? "égalité" : "en faveur de " + (whiteAccuracy > blackAccuracy ? item.white || "Blancs" : item.black || "Noirs")})`;
+    const detail = [item.event, item.result, when, gapDetail].filter(Boolean).join(" · ");
     return `<div class="review-history-row" data-review-history-id="${esc(item.id)}">
       <div class="review-history-meta"><strong>${esc(title)}</strong>${detail ? `<br><small>${esc(detail)}</small>` : ""}${reviewHistoryMoveButtons(item)}</div>
       <span class="review-history-actions">
