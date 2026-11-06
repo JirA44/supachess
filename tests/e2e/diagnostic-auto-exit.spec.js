@@ -22,7 +22,7 @@ test.beforeEach(async ({ page }) => {
       restoreDots: true,
       restoreMoveDots: true,
       restoreEvalBar: true,
-      aidsInitialized: false,
+      aidsInitialized: true,
     }));
   });
   await page.goto('/index.html');
