@@ -422,7 +422,7 @@ function gamesRenderPanel() {
       (g.accuracyB != null ? g.accuracyB + "%" : "—");
     const gap = Number.isFinite(g.accuracyW) && Number.isFinite(g.accuracyB)
       ? Math.abs(g.accuracyW - g.accuracyB) : null;
-    const gapLabel = gap === null ? "" : ` · écart ${gap.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} points (${g.accuracyW === g.accuracyB ? "égalité" : "en faveur des " + (g.accuracyW > g.accuracyB ? "Blancs" : "Noirs")})`;
+    const gapLabel = gap === null ? "" : ` · écart ${gap.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} % (${g.accuracyW === g.accuracyB ? "égalité" : "en faveur des " + (g.accuracyW > g.accuracyB ? "Blancs" : "Noirs")})`;
     const resultLabel = g.abandoned ? "Défaite par abandon" : g.stopped ? "Arrêtée — sans résultat" : g.result;
     const gameNumber = Number.isSafeInteger(Number(g.gameNumber)) && Number(g.gameNumber) > 0 ? Number(g.gameNumber) : index + 1;
     const engineDetails = gamesEngineRowDetails(g);
