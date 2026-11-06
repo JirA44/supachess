@@ -716,10 +716,14 @@ function reviewRenderLocal(rows, accW, accB, headers) {
   const averageLossCp = measuredLosses.length
     ? (measuredLosses.reduce((sum, loss) => sum + loss, 0) / measuredLosses.length).toLocaleString("fr-FR", { maximumFractionDigits: 1 })
     : "indisponible";
+  const accuracyGap = Number.isFinite(accW) && Number.isFinite(accB)
+    ? `<div class="review-accuracy-difference"><strong>Écart de précision :</strong> ${Math.abs(accW - accB).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} points (${accW === accB ? "égalité" : "en faveur de " + esc(accW > accB ? headers.White || "Blancs" : headers.Black || "Noirs")})</div>`
+    : `<div class="review-accuracy-difference"><strong>Écart de précision :</strong> non calculable avec les données disponibles.</div>`;
   document.getElementById("review-report").innerHTML = `
     <div class="review-local">
       <h3>Bilan Stockfish (local)</h3>
       <div class="review-meta">${esc(headers.White || "Blancs")} vs ${esc(headers.Black || "Noirs")} — ${esc(headers.Result || "*")}</div>
+      ${accuracyGap}
       <div class="review-player-grid">${playerCard("w", headers.White || "Blancs", accW)}${playerCard("b", headers.Black || "Noirs", accB)}</div>
       <div id="review-acpl-summary"><strong>Perte moyenne (ACPL)</strong> ${averageLossCp}${measuredLosses.length?" cp · "+measuredLosses.length+" demi-coup(s) mesuré(s)":""}</div>
       ${worst.length ? `<div class="review-worst"><strong>Moments clés :</strong> ${worst.map(moveLabel).map(esc).join(" · ")}</div>`
