@@ -620,12 +620,13 @@ function renderQualityTrendChart(samples,key,title,unit,color,fixedMax){
     var detail=key==='accuracy'?point.value.toFixed(1)+' %':' moyenne de '+point.value.toFixed(1)+' cp par demi-coup évalué · total mesuré '+Number(point.item.totalLoss||0).toFixed(0)+' cp';
     return '<circle cx="'+point.x.toFixed(1)+'" cy="'+point.y.toFixed(1)+'" r="4.5" fill="'+color+'" stroke="#101827" stroke-width="1.5"><title>Partie '+(index+1)+' · '+date+' · '+detail+(point.item.lossMoves?' · '+point.item.lossMoves+' demi-coups évalués':'')+'</title></circle>';
   }).join('');
-  var valueLabels=key==='accuracy'?points.map(function(point,index){
+  var valueLabels=(key==='accuracy'||key==='meanLoss')?points.map(function(point,index){
     var labelY=point.y-10;
     if(labelY<top+10)labelY=point.y+21;
     if(labelY>top+plotHeight-4)labelY=point.y-10;
-    var fontSize=points.length>30?9:(points.length>18?10:12);
-    return '<text x="'+point.x.toFixed(1)+'" y="'+labelY.toFixed(1)+'" text-anchor="middle" fill="#fff" font-size="'+fontSize+'" font-weight="700" stroke="#101827" stroke-width="3" paint-order="stroke">'+Math.round(point.value)+'%</text>';
+    var fontSize=points.length>30?8:(points.length>18?9:(points.length>10?10:11));
+    var label=key==='accuracy'?Math.round(point.value)+'%':point.value.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' ACPL';
+    return '<text x="'+point.x.toFixed(1)+'" y="'+labelY.toFixed(1)+'" text-anchor="middle" fill="#fff" font-size="'+fontSize+'" font-weight="700" stroke="#101827" stroke-width="3" paint-order="stroke">'+label+'</text>';
   }).join(''):'';
 
   var dateIndexes=samples.length<2?[0]:[0,Math.floor((samples.length-1)/2),samples.length-1];
