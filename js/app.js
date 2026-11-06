@@ -1743,7 +1743,8 @@ function accuracyHtml() {
         ? `${playerLabel}: <span style="color:var(--text-dim)">—</span>`
         : `${playerLabel}: <span style="color:${accColor(value)};font-weight:600">${formatAccuracyPct(value)}%</span>`;
     });
-    parts.push(accuracyDifferenceHtml(values.w, values.b, headers.White || "Blancs", headers.Black || "Noirs"));
+    const difference = accuracyDifferenceHtml(values.w, values.b, headers.White || "Blancs", headers.Black || "Noirs");
+    if (difference) parts.push(difference);
     return parts.join(" &nbsp;·&nbsp; ");
   }
   const youAreWhite = state.userColor === "w";
@@ -1760,7 +1761,8 @@ function accuracyHtml() {
       : "";
     return `${esc(label)}: <span style="color:${accColor(value)};font-weight:600">${formatAccuracyPct(value)}%</span>${moveNote}`;
   });
-  parts.push(accuracyDifferenceHtml(values.w, values.b, labels.w, labels.b));
+  const difference = accuracyDifferenceHtml(values.w, values.b, labels.w, labels.b);
+  if (difference) parts.push(difference);
   return parts.join(" &nbsp;·&nbsp; ");
 }
 function renderAccuracy() {
