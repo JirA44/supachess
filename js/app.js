@@ -1718,6 +1718,12 @@ function formatAccuracyPct(value) {
 function accColor(v) {
   return v >= 90 ? "var(--green)" : v >= 80 ? "var(--yellow)" : v >= 60 ? "var(--orange)" : "var(--red)";
 }
+function accuracyDifferenceHtml(white, black, whiteLabel, blackLabel) {
+  if (!Number.isFinite(white) || !Number.isFinite(black)) return "";
+  const difference = Math.abs(white - black);
+  const leadingLabel = difference < 0.005 ? "égalité" : esc(white > black ? whiteLabel : blackLabel);
+  return `<span class="accuracy-difference"> · Écart de précision : <strong>${formatAccuracyPct(difference)} points</strong> (${leadingLabel})</span>`;
+}
 function accuracyHtml() {
   const review = typeof reviewState !== "undefined" ? reviewState : null;
   const summary = review ? review.gameSummary : null;
@@ -1726,29 +1732,35 @@ function accuracyHtml() {
   if (summary || exercise || headers.White || headers.Black) {
     const players = Array.isArray(summary?.players) ? summary.players :
       (Array.isArray(exercise?.analysis?.players) ? exercise.analysis.players : []);
-    return [["w", headers.White || "Blancs"], ["b", headers.Black || "Noirs"]].map(([color, name]) => {
+    const values = {};
+    const parts = [["w", headers.White || "Blancs"], ["b", headers.Black || "Noirs"]].map(([color, name]) => {
       const player = players.find((item) => item && item.color === color);
       const value = player && Number.isFinite(player.accuracy) ? player.accuracy : null;
+      values[color] = value;
       const playerSide = color === "w" ? "Blanc" : "Noir";
       const playerLabel = `<span class="accuracy-player-label accuracy-player-${color}"><span class="accuracy-player-dot accuracy-player-dot-${color}" aria-hidden="true"></span><span class="accuracy-player-side">(${playerSide})</span> ${esc(name)}</span>`;
       return value === null
         ? `${playerLabel}: <span style="color:var(--text-dim)">—</span>`
         : `${playerLabel}: <span style="color:${accColor(value)};font-weight:600">${formatAccuracyPct(value)}%</span>`;
-    }).join(" &nbsp;·&nbsp; ");
+    });
+    parts.push(accuracyDifferenceHtml(values.w, values.b, headers.White || "Blancs", headers.Black || "Noirs"));
+    return parts.join(" &nbsp;·&nbsp; ");
   }
   const youAreWhite = state.userColor === "w";
-  const parts = [["w", youAreWhite ? "Blancs (toi)" : "Blancs (SF)"],
-                 ["b", youAreWhite ? "Noirs (SF)" : "Noirs (toi)"]].map(([c, label]) => {
-    const v = avgAccuracy(state.accuracy[c]);
-    if (v === null) return `${esc(label)}: <span style="color:var(--text-dim)">—</span>`;
+  const labels = { w: youAreWhite ? "Blancs (toi)" : "Blancs (SF)", b: youAreWhite ? "Noirs (SF)" : "Noirs (toi)" };
+  const values = { w: avgAccuracy(state.accuracy.w), b: avgAccuracy(state.accuracy.b) };
+  const parts = [["w", labels.w], ["b", labels.b]].map(([color, label]) => {
+    const value = values[color];
+    if (value === null) return `${esc(label)}: <span style="color:var(--text-dim)">—</span>`;
     const last = state.accuracy.lastMove;
-    const moveNote = last && last.color === c
+    const moveNote = last && last.color === color
       ? last.delta === null
         ? ` · première moyenne : ${formatAccuracyPct(last.average)}%`
         : ` · ${last.delta >= 0 ? "+" : "−"}${formatAccuracyPct(Math.abs(last.delta))}% de précision moyenne sur ce demi-coup`
       : "";
-    return `${esc(label)}: <span style="color:${accColor(v)};font-weight:600">${formatAccuracyPct(v)}%</span>${moveNote}`;
+    return `${esc(label)}: <span style="color:${accColor(value)};font-weight:600">${formatAccuracyPct(value)}%</span>${moveNote}`;
   });
+  parts.push(accuracyDifferenceHtml(values.w, values.b, labels.w, labels.b));
   return parts.join(" &nbsp;·&nbsp; ");
 }
 function renderAccuracy() {
