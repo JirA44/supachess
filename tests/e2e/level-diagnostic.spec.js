@@ -17,8 +17,8 @@ test('turning the diagnostic off reactivates both move aids even if saved prefer
   const panel = page.locator('#review-insights-panel');
   const toggle = panel.locator('[data-level-diagnostic-toggle]');
   await expect(toggle).toHaveText('Diagnostic actif — arrêter');
-  await expect(page.locator('#btn-dots')).toBeEnabled();
-  await expect(page.locator('#btn-move-dots')).toBeEnabled();
+  await expect(page.locator('#btn-dots')).toBeDisabled();
+  await expect(page.locator('#btn-move-dots')).toBeDisabled();
 
   const whileLocked = await page.evaluate(() => {
     boardUI.dots = [{ square: 'e4', label: '★1', quality: 'best' }];
@@ -47,7 +47,7 @@ test('turning the diagnostic off reactivates both move aids even if saved prefer
   });
 });
 
-test('level diagnostic leaves candidate and legal-move hint controls switchable', async ({ page }) => {
+test('level diagnostic keeps all visual aids disabled until it ends', async ({ page }) => {
   await page.addInitScript(() => {
     if (sessionStorage.getItem('level-diagnostic-e2e-seeded')) return;
     localStorage.clear();
@@ -62,10 +62,9 @@ test('level diagnostic leaves candidate and legal-move hint controls switchable'
   await expect(page.locator('#level-diagnostic-banner')).toContainText('activé par défaut');
   await expect(page.locator('#level-diagnostic-banner')).toContainText('0/10');
   await expect(panel.locator('[data-level-diagnostic-status]')).toContainText('0/10');
-  await expect(page.locator('#btn-dots')).toBeEnabled();
-  await expect(page.locator('#btn-move-dots')).toBeEnabled();
-  await expect(page.locator('#btn-dots')).toBeEnabled();
-  await expect(page.locator('#btn-move-dots')).toBeEnabled();
+  await expect(page.locator('#btn-dots')).toBeDisabled();
+  await expect(page.locator('#btn-move-dots')).toBeDisabled();
+  await expect(page.locator('#btn-evalbar-toggle')).toBeDisabled();
   await expect(panel.locator('[data-level-diagnostic-status]')).toContainText('0/10');
   const hiddenHints = await page.evaluate(() => {
     boardUI.dots = [{ square: 'e4', label: '★1', quality: 'best' }];
@@ -81,8 +80,8 @@ test('level diagnostic leaves candidate and legal-move hint controls switchable'
   expect(hiddenHints).toEqual({ bubbles: 0, legalPoints: 0, candidateSetting: false, legalSetting: false });
 
   await page.reload();
-  await expect(page.locator('#btn-dots')).toBeEnabled();
-  await expect(page.locator('#btn-move-dots')).toBeEnabled();
+  await expect(page.locator('#btn-dots')).toBeDisabled();
+  await expect(page.locator('#btn-move-dots')).toBeDisabled();
   await expect(panel.locator('[data-level-diagnostic-status]')).toContainText('0/10');
   await page.evaluate(() => {
     const diagnostic = JSON.parse(localStorage.getItem('supachess-level-diagnostic'));
@@ -100,11 +99,12 @@ test('level diagnostic leaves candidate and legal-move hint controls switchable'
   await expect(panel.locator('[data-level-diagnostic-status]')).toContainText('Diagnostic terminé sur 10 parties');
   await expect(page.locator('#btn-dots')).toBeEnabled();
   await expect(page.locator('#btn-move-dots')).toBeEnabled();
+  await expect(page.locator('#btn-evalbar-toggle')).toBeEnabled();
   await expect(page.locator('#btn-dots')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#btn-move-dots')).toHaveAttribute('aria-pressed', 'true');
 
   await toggle.click();
-  await expect(page.locator('#btn-dots')).toBeEnabled();
+  await expect(page.locator('#btn-dots')).toBeDisabled();
   await expect(toggle).toHaveText('Diagnostic actif — arrêter');
   await toggle.click();
   await expect(page.locator('#btn-dots')).toBeEnabled();

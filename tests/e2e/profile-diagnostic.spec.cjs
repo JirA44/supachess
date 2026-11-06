@@ -38,10 +38,11 @@ test("profile diagnostic action starts a fresh ten-game assessment", async ({ pa
     JSON.parse(localStorage.getItem("supachess-level-diagnostic")).restoreDots
   )).toBe(true);
   await expect(page).toHaveURL(/#level-diagnostic-banner$/);
-  await expect(page.locator("#btn-dots")).toBeEnabled();
+  await expect(page.locator("#btn-dots")).toBeDisabled();
   await expect(page.locator("#btn-dots")).toHaveAttribute("aria-pressed", "false");
-  await expect(page.locator("#btn-move-dots")).toBeEnabled();
+  await expect(page.locator("#btn-move-dots")).toBeDisabled();
   await expect(page.locator("#btn-move-dots")).toHaveAttribute("aria-pressed", "false");
+  await expect(page.locator("#btn-evalbar-toggle")).toBeDisabled();
 });
 
 
