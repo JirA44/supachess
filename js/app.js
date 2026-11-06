@@ -107,7 +107,7 @@ function countCompletedDiagnosticGames(diagnostic) {
     if (!Array.isArray(games)) return 0;
     const counted = new Set();
     for (const game of games) {
-      if (!game || !game.id || game.abandoned || game.termination === "abandoned" || !["1-0", "0-1", "1/2-1/2"].includes(game.result)) continue;
+      if (!game || !game.id || game.trainingAidsUsed === true || game.abandoned || game.termination === "abandoned" || !["1-0", "0-1", "1/2-1/2"].includes(game.result)) continue;
       if (!Number(game.stats && game.stats.moves)) continue;
       const startedAt = Number.parseInt(String(game.id), 10);
       const playedAgainstStockfish = /stockfish/i.test(String(game.engineName || "")) ||
@@ -364,9 +364,6 @@ window.setSupaCorrectionExerciseMode = function(active) {
 };
 window.addEventListener("storage", (event) => {
   if (event.key !== LEVEL_DIAGNOSTIC_KEY) return;
-  const active = isDiagnosticControlLockActive();
-  if (!active && levelDiagnosticLockWasActive) {
-  }
   applyLevelDiagnosticLock();
 });
 
