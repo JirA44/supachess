@@ -293,13 +293,18 @@ function applyLevelDiagnosticLock() {
     moveFeedback.clearPreview();
     hideCoach();
   }
-  if (!active && diagnostic && diagnostic.active === false && diagnostic.aidsInitialized && !diagnostic.aidsRestored) {
-    boardUI.showDots = Boolean(diagnostic.restoreDots);
-    boardUI.showMoveDots = Boolean(diagnostic.restoreMoveDots);
+  if (!active && diagnostic && diagnostic.active === false && !diagnostic.aidsRestored &&
+      (diagnostic.aidsInitialized || levelDiagnosticLockWasActive)) {
+    boardUI.showDots = typeof diagnostic.restoreDots === "boolean"
+      ? diagnostic.restoreDots : localStorage.getItem(DOTS_STORAGE_KEY) !== "false";
+    boardUI.showMoveDots = typeof diagnostic.restoreMoveDots === "boolean"
+      ? diagnostic.restoreMoveDots : localStorage.getItem(MOVE_DOTS_STORAGE_KEY) !== "false";
+    const restoreEvalBar = typeof diagnostic.restoreEvalBar === "boolean"
+      ? diagnostic.restoreEvalBar : localStorage.getItem(EVALBAR_PREFERENCE_KEY) !== "false";
     try {
       localStorage.setItem(DOTS_STORAGE_KEY, String(boardUI.showDots));
       localStorage.setItem(MOVE_DOTS_STORAGE_KEY, String(boardUI.showMoveDots));
-      localStorage.setItem(EVALBAR_PREFERENCE_KEY, String(Boolean(diagnostic.restoreEvalBar)));
+      localStorage.setItem(EVALBAR_PREFERENCE_KEY, String(restoreEvalBar));
       diagnostic = { ...diagnostic, aidsRestored: true };
       localStorage.setItem(LEVEL_DIAGNOSTIC_KEY, JSON.stringify(diagnostic));
     } catch (_) {}
