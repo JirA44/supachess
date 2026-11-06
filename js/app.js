@@ -1980,6 +1980,7 @@ $("btn-pgn").addEventListener("click", () => {
   const d = new Date();
   const pad = (n) => String(n).padStart(2, "0");
   const playerName = typeof gamesCurrentPlayerName === "function" ? gamesCurrentPlayerName() : "Joueur";
+  const gameNumber = typeof gamesCurrentNumber === "function" ? gamesCurrentNumber() : null;
   state.chess.header(
     "Event", "SupaChess entraînement",
     "Site", "https://jira44.github.io/supachess/",
@@ -1987,6 +1988,7 @@ $("btn-pgn").addEventListener("click", () => {
     "White", state.userColor === "w" ? playerName : "Stockfish 19",
     "Black", state.userColor === "b" ? playerName : "Stockfish 19",
     "SupaChessPlayerName", playerName,
+    "SupaChessGameNumber", gameNumber == null ? "" : String(gameNumber),
     "SupaChessUserColor", state.userColor,
     "SupaChessTrainingAidsUsed", typeof gamesTrainingAidsActive === "function" && gamesTrainingAidsActive() ? "true" : "false",
     "SupaChessUnassistedMode", state.unassistedGame ? "true" : "false"

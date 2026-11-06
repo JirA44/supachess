@@ -7,12 +7,66 @@ const GAMES_KEY = "supachess_games";
 let currentGameId = null;
 let currentGameMetadata = {};
 
+const GAMES_SEQUENCE_KEY = "supachess_game_sequence_v1";
+
 function gamesLoad() {
   try {
     const a = JSON.parse(localStorage.getItem(GAMES_KEY) || "[]");
-    return Array.isArray(a) ? a : [];
+    return Array.isArray(a) ? gamesEnsureGameNumbers(a) : [];
   } catch (_e) { return []; }
 }
+
+function gamesEnsureGameNumbers(games) {
+  if (!Array.isArray(games)) return [];
+  const used = new Set();
+  let maxExisting = 0;
+  let changed = false;
+  for (const game of games) {
+    if (!game || typeof game !== "object") continue;
+    const number = Number(game.gameNumber);
+    if (Number.isSafeInteger(number) && number > 0 && !used.has(number)) {
+      used.add(number);
+      maxExisting = Math.max(maxExisting, number);
+    } else {
+      game.gameNumber = null;
+      changed = true;
+    }
+  }
+  let sequence = 0;
+  try { sequence = Math.max(0, Math.floor(Number(localStorage.getItem(GAMES_SEQUENCE_KEY)) || 0)); } catch (_) {}
+  let next = Math.max(sequence, maxExisting);
+  for (const game of games) {
+    if (!game || typeof game !== "object" || Number.isSafeInteger(Number(game.gameNumber)) && Number(game.gameNumber) > 0) continue;
+    game.gameNumber = ++next;
+    changed = true;
+  }
+  if (next > sequence) {
+    try { localStorage.setItem(GAMES_SEQUENCE_KEY, String(next)); } catch (_) {}
+  }
+  if (changed) gamesStore(games);
+  return games;
+}
+
+function gamesNextNumber(games) {
+  const list = Array.isArray(games) ? games : gamesLoad();
+  const maxExisting = list.reduce((max, game) => {
+    const number = Number(game && game.gameNumber);
+    return Number.isSafeInteger(number) && number > max ? number : max;
+  }, 0);
+  let sequence = 0;
+  try { sequence = Math.max(0, Math.floor(Number(localStorage.getItem(GAMES_SEQUENCE_KEY)) || 0)); } catch (_) {}
+  const next = Math.max(sequence, maxExisting) + 1;
+  try { localStorage.setItem(GAMES_SEQUENCE_KEY, String(next)); } catch (_) {}
+  return next;
+}
+
+function gamesEnsureCurrentNumber() {
+  const current = Number(currentGameMetadata && currentGameMetadata.gameNumber);
+  if (Number.isSafeInteger(current) && current > 0) return current;
+  currentGameMetadata.gameNumber = gamesNextNumber(gamesLoad());
+  return currentGameMetadata.gameNumber;
+}
+window.gamesCurrentNumber = gamesEnsureCurrentNumber;
 
 function gamesStore(arr) {
   try { localStorage.setItem(GAMES_KEY, JSON.stringify(arr)); } catch (_e) { /* quota */ }
@@ -48,6 +102,7 @@ window.gamesMarkTrainingAidUsed = gamesMarkTrainingAidUsed;
 
 function gamesNewEntry() {
   currentGameId = Date.now() + "-" + Math.random().toString(36).slice(2, 7);
+  const gameNumber = gamesNextNumber(gamesLoad());
   const manual = typeof isManualMode === "function" && isManualMode();
   const setting = !manual && typeof opponentElo === "function" ? opponentElo() : null;
   const thinkTime = !manual && typeof opponentThinkTime === "function" ? opponentThinkTime() : null;
@@ -61,6 +116,7 @@ function gamesNewEntry() {
     clockMs: { ...(state.clockMs || { w: 0, b: 0 }) },
     userColor: state.userColor,
     playerName: gamesCurrentPlayerName(),
+    gameNumber,
     stockfishRatingEstimate: Number.isFinite(estimate) ? estimate : null,
     stockfishRatingSource: Number.isFinite(estimate) ? "supachess-engine-setting-v1" : null,
     stockfishSettingElo: hasEngineSetting ? setting : null,
@@ -188,6 +244,7 @@ function gamesResult() {
 function gamesBuildPgn(result) {
   const d = new Date();
   const pad = (n) => String(n).padStart(2, "0");
+  const gameNumber = gamesEnsureCurrentNumber();
   const detectedPlayerName = gamesCurrentPlayerName();
   if (detectedPlayerName !== "Joueur" || !currentGameMetadata.playerName) {
     currentGameMetadata.playerName = detectedPlayerName;
@@ -200,6 +257,7 @@ function gamesBuildPgn(result) {
     "White", state.userColor === "w" ? playerName : "Stockfish 19",
     "Black", state.userColor === "b" ? playerName : "Stockfish 19",
     "SupaChessPlayerName", playerName,
+    "SupaChessGameNumber", String(gameNumber),
     "Result", result
   );
   if (state.abandoned) state.chess.header("Termination", "abandoned");
@@ -366,10 +424,11 @@ function gamesRenderPanel() {
       ? Math.abs(g.accuracyW - g.accuracyB) : null;
     const gapLabel = gap === null ? "" : ` · écart ${gap.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} points (${g.accuracyW === g.accuracyB ? "égalité" : "en faveur des " + (g.accuracyW > g.accuracyB ? "Blancs" : "Noirs")})`;
     const resultLabel = g.abandoned ? "Défaite par abandon" : g.stopped ? "Arrêtée — sans résultat" : g.result;
+    const gameNumber = Number.isSafeInteger(Number(g.gameNumber)) && Number(g.gameNumber) > 0 ? Number(g.gameNumber) : index + 1;
     const engineDetails = gamesEngineRowDetails(g);
     const halfMoveCount = gamesHalfMoveCount(g);
     return `<div class="game-row" data-id="${esc(g.id)}">
-      <span class="game-meta">${esc(when)} · <strong>${esc(resultLabel)}</strong> · ${halfMoveCount} demi-coup${halfMoveCount > 1 ? "s" : ""} · préc. B/N ${esc(acc)}${esc(gapLabel)}${esc(gamesAcplDetailsForPgn(g.pgn))}${engineDetails ? `<small class="game-engine-details">${esc(engineDetails)}</small>` : ""}</span>
+      <span class="game-meta">Partie n°${gameNumber} · ${esc(when)} · <strong>${esc(resultLabel)}</strong> · ${halfMoveCount} demi-coup${halfMoveCount > 1 ? "s" : ""} · préc. B/N ${esc(acc)}${esc(gapLabel)}${esc(gamesAcplDetailsForPgn(g.pgn))}${engineDetails ? `<small class="game-engine-details">${esc(engineDetails)}</small>` : ""}</span>
       <span class="game-actions">
         <button class="btn mini" data-act="correct" title="Aller à la première erreur à corriger">Corriger</button>
         <button class="btn mini" data-act="dl" title="Télécharger le PGN">⬇ PGN</button>
