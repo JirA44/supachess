@@ -60,16 +60,35 @@ test("diagnostic keeps aid controls switchable while coaching stays off", async 
   await expect(page.locator("#btn-best-move")).toBeDisabled();
 
   await page.evaluate(() => {
-    const id = String(Date.now()) + "-aided";
-    localStorage.setItem("supachess_games", JSON.stringify([{
-      id,
+    const started = Date.now();
+    const game = (id, aids) => ({
+      id: String(started) + "-" + id,
       engineName: "Stockfish 19",
       stockfishRatingSource: "supachess-engine-setting-v1",
       result: "1-0",
       stats: { moves: 2 },
-      trainingAidsUsed: true
-    }]));
+      ...(aids === "unknown" ? {} : { trainingAidsUsed: aids })
+    });
+    localStorage.setItem("supachess_games", JSON.stringify([
+      game("aided", true),
+      game("unknown", "unknown")
+    ]));
     refreshLevelDiagnosticProgress();
   });
   await expect(page.locator("#level-diagnostic-banner")).toContainText("0/10 parties terminées");
+
+  await page.evaluate(() => {
+    const games = JSON.parse(localStorage.getItem("supachess_games"));
+    games.push({
+      id: String(Date.now()) + "-confirmed-unaided",
+      engineName: "Stockfish 19",
+      stockfishRatingSource: "supachess-engine-setting-v1",
+      result: "1-0",
+      stats: { moves: 2 },
+      trainingAidsUsed: false
+    });
+    localStorage.setItem("supachess_games", JSON.stringify(games));
+    refreshLevelDiagnosticProgress();
+  });
+  await expect(page.locator("#level-diagnostic-banner")).toContainText("1/10 parties terminées");
 });
