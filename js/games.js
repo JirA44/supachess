@@ -320,11 +320,14 @@ function gamesRenderPanel() {
       d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
     const acc = (g.accuracyW != null ? g.accuracyW + "%" : "—") + " / " +
       (g.accuracyB != null ? g.accuracyB + "%" : "—");
+    const gap = Number.isFinite(g.accuracyW) && Number.isFinite(g.accuracyB)
+      ? Math.abs(g.accuracyW - g.accuracyB) : null;
+    const gapLabel = gap === null ? "" : ` · écart ${gap.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} points (${g.accuracyW === g.accuracyB ? "égalité" : "en faveur des " + (g.accuracyW > g.accuracyB ? "Blancs" : "Noirs")})`;
     const resultLabel = g.abandoned ? "Défaite par abandon" : g.stopped ? "Arrêtée — sans résultat" : g.result;
     const engineDetails = gamesEngineRowDetails(g);
     const halfMoveCount = gamesHalfMoveCount(g);
     return `<div class="game-row" data-id="${esc(g.id)}">
-      <span class="game-meta">${esc(when)} · <strong>${esc(resultLabel)}</strong> · ${halfMoveCount} demi-coup${halfMoveCount > 1 ? "s" : ""} · préc. B/N ${esc(acc)}${engineDetails ? `<small class="game-engine-details">${esc(engineDetails)}</small>` : ""}</span>
+      <span class="game-meta">${esc(when)} · <strong>${esc(resultLabel)}</strong> · ${halfMoveCount} demi-coup${halfMoveCount > 1 ? "s" : ""} · préc. B/N ${esc(acc)}${esc(gapLabel)}${engineDetails ? `<small class="game-engine-details">${esc(engineDetails)}</small>` : ""}</span>
       <span class="game-actions">
         <button class="btn mini" data-act="correct" title="Aller à la première erreur à corriger">Corriger</button>
         <button class="btn mini" data-act="dl" title="Télécharger le PGN">⬇ PGN</button>
