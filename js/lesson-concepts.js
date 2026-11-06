@@ -288,6 +288,10 @@
     }
     if (count) count.textContent = visible + " concept(s) affiché(s) sur " + CONCEPTS.length + " · " + FAMILIES.length + " familles.";
     if (status) status.textContent = conceptProgressText();
+    const passedConcepts = CONCEPTS.filter((item) => progress[item.id]?.passed).length;
+    const conceptCounts = { total: CONCEPTS.length, families: FAMILIES.length, passed: passedConcepts };
+    window.SupaChessAcademyConceptCounts = conceptCounts;
+    window.dispatchEvent(new CustomEvent("supachess:academy-concept-counts", { detail: conceptCounts }));
   }
   function applySelectedConcept() {
     if (!conceptFilter || !lessonSearch) return;

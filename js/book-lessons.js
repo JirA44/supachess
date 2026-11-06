@@ -3724,6 +3724,23 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     const completedOriginal = LESSONS.filter((lesson) => lesson.kind !== "anticipation" && completionCount(progress[lesson.id]) > 0).length;
     const completedAnticipation = LESSONS.filter((lesson) => lesson.kind === "anticipation" && completionCount(progress[lesson.id]) > 0).length;
     const completedEntries = LESSONS.filter((lesson) => completionCount(progress[lesson.id]) > 0).length;
+    const principleLabels = [...new Set(LESSONS.map((lesson) => String(lesson.principle || "").trim().replace(/\s+/g, " ").toLocaleLowerCase("fr")).filter(Boolean))];
+    const masteredLessons = LESSONS.filter((lesson) => lesson.kind !== "anticipation" && Number(progress[lesson.id] && progress[lesson.id].review && progress[lesson.id].review.streak) >= 3).length;
+    const competencySummary = summarizeCompetencies();
+    const academyCounts = {
+      lessons: originalLessonCount,
+      completedLessons: completedOriginal,
+      anticipation: anticipationCount,
+      completedAnticipation,
+      totalEntries: LESSONS.length,
+      principleCount: principleLabels.length,
+      masteredLessons,
+      competencies: competencySummary.length,
+      masteredCompetencies: competencySummary.filter((item) => item.mastered > 0).length,
+      complexPositions: LESSONS.filter((lesson) => /complex|très complexe|calcul profond/i.test([lesson.title, lesson.category, lesson.program].join(" "))).length
+    };
+    root.SupaChessAcademyLessonCounts = academyCounts;
+    root.dispatchEvent(new CustomEvent("supachess:academy-lessons-counts", { detail: academyCounts }));
     $("lesson-catalog-count").textContent = visibleLessons.length + " affiché(s) · " + originalLessonCount +
       " leçons originales + " + anticipationCount + " exercices d’anticipation · " + LESSONS.length +
       " entrées au total · " + completedEntries + " terminés. · Leçons terminées : " + completedOriginal + "/" + originalLessonCount +
