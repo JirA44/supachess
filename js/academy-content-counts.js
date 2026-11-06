@@ -61,9 +61,13 @@
       if (!Number.isFinite(total)) throw new Error("Catalogue introuvable");
       set("puzzles", total);
       setText("puzzles", "Puzzles tactiques disponibles");
+      const status = document.querySelector("[data-academy-summary-status]");
+      if (status) status.textContent = "Compteurs actualisés depuis les catalogues chargés; l’avancement est conservé sur cet appareil.";
     } catch (_) {
       set("puzzles", NaN);
       setText("puzzles", "Catalogue tactique indisponible hors connexion");
+      const status = document.querySelector("[data-academy-summary-status]");
+      if (status) status.textContent = "Compteurs locaux actualisés; le catalogue des puzzles est indisponible pour le moment.";
     }
   };
 
@@ -73,7 +77,5 @@
   window.addEventListener("supachess:academy-concept-counts", (event) => updateConcepts(event.detail));
   updateLessons(window.SupaChessAcademyLessonCounts);
   updateConcepts(window.SupaChessAcademyConceptCounts);
-  const status = document.querySelector("[data-academy-summary-status]");
-  if (status) status.textContent = "Compteurs actualisés depuis les catalogues chargés; l’avancement est conservé sur cet appareil.";
   loadPuzzleCount();
 })();
