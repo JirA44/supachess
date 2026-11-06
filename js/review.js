@@ -323,7 +323,7 @@ function reviewHistoryRender(statusText) {
     const gap = Number.isFinite(whiteAccuracy) && Number.isFinite(blackAccuracy)
       ? Math.abs(whiteAccuracy - blackAccuracy) : null;
     const gapDetail = gap === null ? "" :
-      `Écart de précision : ${gap.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} points (${whiteAccuracy === blackAccuracy ? "égalité" : "en faveur de " + (whiteAccuracy > blackAccuracy ? item.white || "Blancs" : item.black || "Noirs")})`;
+      `Écart de précision : ${gap.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} % (${whiteAccuracy === blackAccuracy ? "égalité" : "en faveur de " + (whiteAccuracy > blackAccuracy ? item.white || "Blancs" : item.black || "Noirs")})`;
     const detail = [item.event, item.result, when, gapDetail].filter(Boolean).join(" · ");
     return `<div class="review-history-row" data-review-history-id="${esc(item.id)}">
       <div class="review-history-meta"><strong>${esc(title)}</strong>${detail ? `<br><small>${esc(detail)}</small>` : ""}${reviewHistoryMoveButtons(item)}</div>
@@ -753,7 +753,7 @@ function reviewRenderLocal(rows, accW, accB, headers) {
     ? (measuredLosses.reduce((sum, loss) => sum + loss, 0) / measuredLosses.length).toLocaleString("fr-FR", { maximumFractionDigits: 1 })
     : "indisponible";
   const accuracyGap = Number.isFinite(accW) && Number.isFinite(accB)
-    ? `<div class="review-accuracy-difference"><strong>Écart de précision :</strong> ${Math.abs(accW - accB).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} points (${accW === accB ? "égalité" : "en faveur de " + esc(accW > accB ? headers.White || "Blancs" : headers.Black || "Noirs")})</div>`
+    ? `<div class="review-accuracy-difference"><strong>Écart de précision :</strong> ${Math.abs(accW - accB).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} % (${accW === accB ? "égalité" : "en faveur de " + esc(accW > accB ? headers.White || "Blancs" : headers.Black || "Noirs")})</div>`
     : `<div class="review-accuracy-difference"><strong>Écart de précision :</strong> non calculable avec les données disponibles.</div>`;
   document.getElementById("review-report").innerHTML = `
     <div class="review-local">
