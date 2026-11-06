@@ -304,6 +304,28 @@ function gamesRenderStockfishEstimate() {
     ". Indicateur relatif aux réglages de SupaChess, non calibré officiellement FIDE.";
 }
 
+function gamesAcplDetailsForPgn(pgn) {
+  const normalize = (value) => String(value || "").replace(/\r\n?/g, "\n").trim();
+  let reviewed = null;
+  try {
+    const saved = JSON.parse(localStorage.getItem("supachess_reviewed_pgns") || "[]");
+    if (Array.isArray(saved)) reviewed = saved.find((item) => normalize(item && item.pgn) === normalize(pgn)) || null;
+  } catch (_) {}
+  const grades = reviewed && Array.isArray(reviewed.moveGrades) ? reviewed.moveGrades : [];
+  const average = (color) => {
+    const values = grades.filter((grade) => grade && grade.color === color &&
+      grade.lossCp !== null && grade.lossCp !== undefined && Number.isFinite(Number(grade.lossCp)))
+      .map((grade) => Number(grade.lossCp));
+    return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+  };
+  const white = average("w");
+  const black = average("b");
+  const format = (value) => value === null ? "—" : value.toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const gap = white === null || black === null ? null : Math.abs(white - black);
+  const advantage = gap === null || gap === 0 ? "" : " (" + (white < black ? "Blancs" : "Noirs") + " plus précis)";
+  return " · ACPL B/N : " + format(white) + " / " + format(black) + " cp · écart : " + format(gap) + " cp" + advantage;
+}
+window.gamesAcplDetailsForPgn = gamesAcplDetailsForPgn;
 function gamesRenderPanel() {
   const wrap = document.getElementById("games-list");
   if (!wrap) return;
@@ -327,7 +349,7 @@ function gamesRenderPanel() {
     const engineDetails = gamesEngineRowDetails(g);
     const halfMoveCount = gamesHalfMoveCount(g);
     return `<div class="game-row" data-id="${esc(g.id)}">
-      <span class="game-meta">${esc(when)} · <strong>${esc(resultLabel)}</strong> · ${halfMoveCount} demi-coup${halfMoveCount > 1 ? "s" : ""} · préc. B/N ${esc(acc)}${esc(gapLabel)}${engineDetails ? `<small class="game-engine-details">${esc(engineDetails)}</small>` : ""}</span>
+      <span class="game-meta">${esc(when)} · <strong>${esc(resultLabel)}</strong> · ${halfMoveCount} demi-coup${halfMoveCount > 1 ? "s" : ""} · préc. B/N ${esc(acc)}${esc(gapLabel)}${esc(gamesAcplDetailsForPgn(g.pgn))}${engineDetails ? `<small class="game-engine-details">${esc(engineDetails)}</small>` : ""}</span>
       <span class="game-actions">
         <button class="btn mini" data-act="correct" title="Aller à la première erreur à corriger">Corriger</button>
         <button class="btn mini" data-act="dl" title="Télécharger le PGN">⬇ PGN</button>
