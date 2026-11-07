@@ -472,7 +472,7 @@ test("the evaluation bar calculates Stockfish on enable and refreshes for every 
   const source = fs.readFileSync(path.join(__dirname, "../js/book-lessons.js"), "utf8");
   assert.match(source, /function scheduleLessonEvaluation\(delay = 420\)/);
   const toggleStart = source.indexOf('$("lesson-eval-toggle").addEventListener("click"');
-  const toggleEnd = source.indexOf('\n  $("lesson-engine-analyze")', toggleStart);
+  const toggleEnd = source.indexOf('$("lesson-review-save")', toggleStart);
   assert.ok(toggleStart >= 0 && toggleEnd > toggleStart, "the evaluation toggle handler should exist");
   assert.match(source.slice(toggleStart, toggleEnd), /scheduleLessonEvaluation\(0\)/,
     "turning the bar on should start an evaluation immediately");
