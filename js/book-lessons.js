@@ -3587,6 +3587,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   let reviewJustFinished = false;
   let lessonEngine = null;
   let enginePreview = null;
+  let engineAnalysisFen = null;
   let analysisToken = 0;
   const engineCache = new Map();
   let showEvalBar = false;
@@ -3970,6 +3971,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     const lesson = LESSONS[lessonIndex];
     game = setupGame(lesson, Chess);
     sequenceIndex = 0;
+    engineAnalysisFen = null;
     selectedSquare = null;
     attempts = 0;
     hintsUsed = 0;
@@ -4094,6 +4096,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     }
     if (root.SupaChessAudio) root.SupaChessAudio.play(game.in_check() ? "check" : (move.flags && (move.flags.includes("c") || move.flags.includes("e")) ? "capture" : "move"));
     sequenceIndex++;
+    invalidateLessonEngineLines();
     clearEvalBar();
     const anticipated = anticipatingBook;
     anticipatingBook = false;
@@ -4134,6 +4137,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
         }
         if (root.SupaChessAudio) root.SupaChessAudio.play(game.in_check() ? "check" : (move.flags && (move.flags.includes("c") || move.flags.includes("e")) ? "capture" : "move"));
         sequenceIndex++;
+        invalidateLessonEngineLines();
         clearEvalBar();
         boardUI.lastMove = { from: move.from, to: move.to, san: move.san };
         appendMove(move.san, "Ligne du livre");
@@ -4294,11 +4298,41 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   function showHint() {
     if (!game || reviewSession) return;
     const lesson = LESSONS[lessonIndex];
-    const hint = lesson.hints[Math.min(hintsUsed, lesson.hints.length - 1)];
+    let hint = lesson.hints[Math.min(hintsUsed, lesson.hints.length - 1)];
+    const planned = getPlannedLessonMove(game.fen());
+    const analysis = engineCache.get(game.fen());
+    const engineBest = analysis && analysis.choices && analysis.choices[0];
+    if (planned && engineBest && planned.uci !== engineBest.uci) {
+      hint += " À cette position, la ligne pédagogique prévoit " + planned.san +
+        "; le top 1 de cette recherche Stockfish est " + engineBest.san +
+        ". Compare leurs conséquences : le top moteur n’est pas automatiquement la réponse attendue par cette ligne.";
+    }
     hintsUsed++;
     attempts++;
     $("lesson-feedback").textContent = "Indice : " + hint;
     updateProgressLabel();
+  }
+
+  function getPlannedLessonMove(fen) {
+    const lesson = LESSONS[lessonIndex];
+    const action = lesson && lesson.sequence && lesson.sequence[sequenceIndex];
+    if (!game || !action || !fen) return null;
+    const position = new Chess(fen);
+    const move = position.move({
+      from: action.uci.slice(0, 2),
+      to: action.uci.slice(2, 4),
+      promotion: action.uci.slice(4) || "q",
+    });
+    return move ? { action: action, uci: action.uci, san: move.san } : null;
+  }
+
+  function invalidateLessonEngineLines() {
+    const panel = $("lesson-engine-analysis");
+    engineAnalysisFen = null;
+    if (!panel || panel.hidden) return;
+    $("lesson-engine-lines").replaceChildren();
+    $("lesson-engine-status").textContent =
+      "La position a changé. Les anciennes variantes ont été retirées; actualise la comparaison pour analyser cette position.";
   }
 
   function updateProgressLabel() {
@@ -4327,6 +4361,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   }
 
   function previewEngineLine(choice) {
+    if (!choice || !choice.fen || engineAnalysisFen !== choice.fen) return;
     const preview = new Chess(choice.fen);
     let last = null;
     for (const uci of choice.pv.slice(0, 5)) {
@@ -4345,6 +4380,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   function renderEngineChoices(result, fen) {
     const list = $("lesson-engine-lines");
     list.textContent = "";
+    engineAnalysisFen = fen;
     const settings = window.SupaAnalysisSettings;
     const maxLines = settings ? settings.getMultiPv() : result.choices.length;
     result.choices.slice(0, maxLines).forEach((choice) => {
@@ -4375,7 +4411,21 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
       list.appendChild(item);
     });
     const depth = result.choices.reduce((max, choice) => Math.max(max, choice.depth), 0);
-    $("lesson-engine-status").textContent = "Stockfish a évalué " + result.choices.length + " ligne(s); " + Math.min(result.choices.length, maxLines) + " affichée(s) selon le réglage Multi‑PV, sur " + result.legalCount + " coups légaux. Profondeur maximale " + depth + ". L’évaluation dépend de la recherche et ne constitue pas seule une explication humaine.";
+    const planned = getPlannedLessonMove(fen);
+    const best = result.choices[0];
+    let alignment = "";
+    if (planned && best) {
+      if (planned.uci === best.uci) {
+        alignment = "Concordance : la séquence pédagogique et le top 1 de cette recherche proposent " + planned.san + ". ";
+      } else {
+        const plannedRank = result.choices.findIndex((choice) => choice.uci === planned.uci);
+        alignment = "Écart à cette position : la séquence pédagogique prévoit " + planned.san +
+          (plannedRank >= 0 ? " (rang " + (plannedRank + 1) + " dans les lignes affichées)" : " (non présent dans les lignes affichées)") +
+          ", tandis que le top 1 de cette recherche est " + best.san +
+          ". La ligne pédagogique et le classement moteur ne sont pas équivalents. ";
+      }
+    }
+    $("lesson-engine-status").textContent = alignment + "Stockfish a évalué " + result.choices.length + " ligne(s); " + Math.min(result.choices.length, maxLines) + " affichée(s) selon le réglage Multi‑PV, sur " + result.legalCount + " coups légaux. Profondeur maximale " + depth + ". L’évaluation dépend de la recherche et ne constitue pas seule une explication humaine.";
     $("lesson-engine-analysis").hidden = false;
   }
 
