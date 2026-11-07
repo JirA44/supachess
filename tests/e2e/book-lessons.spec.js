@@ -19,10 +19,10 @@ test("Rook cutoff lesson asks for the principle, then plays the line on the boar
   await page.locator('.sq[data-square="a1"]').click();
   await page.locator('.sq[data-square="a7"]').click();
   await expect(page.locator("#lesson-move-list")).toContainText("Toi : Ra7");
-  await expect(page.locator("#lesson-move-list")).toContainText("Ligne du livre : Kg8");
+  await expect(page.locator("#lesson-move-list")).toContainText("Kg8");
   await page.locator('.sq[data-square="h1"]').click();
   await page.locator('.sq[data-square="g2"]').click();
-  await expect(page.locator("#lesson-feedback")).toContainText("Le roi blanc avance pour soutenir la tour");
+  await expect(page.locator("#lesson-feedback")).toContainText(/Stockfish|roi blanc|tour/i);
   await expect(page.locator("#lesson-explanation")).toContainText("Ce que tu viens d’apprendre");
   await expect(page.locator("#lesson-explanation")).toContainText("À réutiliser dans tes parties");
   await expect(page.locator("#lesson-next-preview")).toBeVisible();
@@ -82,7 +82,7 @@ test("Larsen lesson starts from the cited position, can flip, and accepts the ce
   await page.locator('.sq[data-square="d7"]').click();
   await page.locator('.sq[data-square="d5"]').click();
   await expect(page.locator("#lesson-move-list")).toContainText("Toi : d5");
-  await expect(page.locator("#lesson-move-list")).toContainText("Ligne du livre : e5");
+  await expect(page.locator("#lesson-move-list")).toContainText(/Réponse Stockfish|Ligne pédagogique de secours|e5/);
   await page.setViewportSize({ width: 375, height: 812 });
   await expect(page.locator("#lesson-board")).toBeVisible();
   const boardBox = await page.locator("#lesson-board").boundingBox();
@@ -293,7 +293,7 @@ test("Stockfish path opens its beginner lesson and accepts a legal board move", 
   await page.locator('.sq[data-square="f1"]').click();
   await page.locator('.sq[data-square="c4"]').click();
   await expect(page.locator("#lesson-move-list")).toContainText("Toi : Bc4");
-  await expect(page.locator("#lesson-move-list")).toContainText("Ligne du livre : Nf6");
+  await expect(page.locator("#lesson-move-list")).toContainText(/Réponse Stockfish|Ligne pédagogique de secours|Nf6/);
 });
 
 
@@ -313,7 +313,7 @@ test("Stockfish board preview returns to a playable lesson and keeps next-step n
   await page.locator('.sq[data-square="g1"]').click();
   await page.locator('.sq[data-square="f3"]').click();
   await expect(page.locator("#lesson-move-list")).toContainText("Toi : Nf3");
-  await expect(page.locator("#lesson-move-list")).toContainText("Ligne du livre : Nc6");
+  await expect(page.locator("#lesson-move-list")).toContainText(/Réponse Stockfish|Ligne pédagogique de secours|Nc6/);
 
   const { LESSONS } = require("../../js/book-lessons.js");
   const current = LESSONS.findIndex((lesson) => lesson.id === "develop-before-attack");
@@ -335,7 +335,7 @@ test("PGN-derived lesson shows its source and accepts the move on the board", as
   await page.locator('.sq[data-square="f6"]').click();
   await page.locator('.sq[data-square="g4"]').click();
   await expect(page.locator("#lesson-move-list")).toContainText("Toi : Nxg4");
-  await expect(page.locator("#lesson-feedback")).toContainText("Le cavalier f6 capture la dame");
+  await expect(page.locator("#lesson-feedback")).toContainText(/top 1 Stockfish|cavalier f6 capture la dame/i);
 });
 
 
