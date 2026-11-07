@@ -3597,10 +3597,11 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     const fill = $("lesson-evalbar-white");
     const label = $("lesson-eval-label");
     if (!bar || !fill || !label) return;
+    const pending = showEvalBar && Boolean(game) && !reviewSession && !enginePreview;
     fill.style.height = "50%";
     bar.setAttribute("aria-valuenow", "50");
-    bar.setAttribute("aria-valuetext", "Évaluation non calculée");
-    label.textContent = "À analyser";
+    bar.setAttribute("aria-valuetext", pending ? "Évaluation Stockfish en cours" : "Évaluation non calculée");
+    label.textContent = pending ? "Calcul Stockfish…" : "À analyser";
   }
 
   function markEvalBarUnavailable(message) {
