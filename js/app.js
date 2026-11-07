@@ -632,6 +632,7 @@ function abandonCurrentGame() {
   state.abandoned = true;
   state.stopped = false;
   state.phase = "gameover";
+  syncPauseButton();
   const abandonButton = $("btn-abandon-game");
   const stopButton = $("btn-stop-game");
   if (abandonButton) abandonButton.disabled = true;
@@ -1409,6 +1410,7 @@ function checkGameOver() {
   state.paused = false;
   state.pauseResumePhase = null;
   state.phase = "gameover";
+  syncPauseButton();
   const abandonButton = $("btn-abandon-game");
   const stopButton = $("btn-stop-game");
   if (abandonButton) abandonButton.disabled = true;
