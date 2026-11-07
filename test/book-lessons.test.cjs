@@ -470,6 +470,6 @@ test("the current lesson corpus includes multiple levels and different-complexit
 
 test("catalog refresh uses the existing competency summary helper", () => {
   const source = fs.readFileSync(path.join(__dirname, "../js/book-lessons.js"), "utf8");
-  assert.match(source, /const competencySummary = lessonCompetencySummary\\(LESSONS, progress\\);/);
-  assert.doesNotMatch(source, /\\bsummarizeCompetencies\\s*\\(/);
+  assert.match(source, /const competencySummary = lessonCompetencySummary\(LESSONS, progress\);/);
+  assert.doesNotMatch(source, /\bsummarizeCompetencies\s*\(/);
 });
