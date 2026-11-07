@@ -12,6 +12,8 @@ const state = {
   candidateFen: null,
   systemBrilliantCandidates: [],
   phase: "init",         // init | analyzing | userTurn | coach | engineThinking | gameover
+  paused: false,
+  pauseResumePhase: null,
   abandoned: false,
   stopped: false,
   undoCount: 0,
@@ -451,7 +453,7 @@ function renderPlayerClocks() {
     const white = remainingFor("w");
     const black = remainingFor("b");
     status.textContent = "Blancs : " + white + " · Noirs : " + black +
-      (state.clockActiveColor ? " · pendule en cours" : " · arrêtée");
+      (state.paused ? " · en pause" : state.clockActiveColor ? " · pendule en cours" : " · arrêtée");
   }
 }
 function stopPlayerClock(color) {
@@ -468,7 +470,7 @@ function stopPlayerClock(color) {
 }
 function startPlayerClock(color) {
   stopPlayerClock();
-  if (!state.clocksEnabled || !color || state.phase === "gameover" || !state.clockMs[color]) { renderPlayerClocks(); return; }
+  if (state.paused || !state.clocksEnabled || !color || state.phase === "gameover" || !state.clockMs[color]) { renderPlayerClocks(); return; }
   state.clockActiveColor = color;
   state.clockStartedAt = Date.now();
   state.clockIntervalId = window.setInterval(() => {
@@ -479,10 +481,12 @@ function startPlayerClock(color) {
   renderPlayerClocks();
 }
 function finishOnTime(color) {
-  if (state.phase === "gameover" || state.clockActiveColor !== color) return;
+  if (state.paused || state.phase === "gameover" || state.clockActiveColor !== color) return;
   stopPlayerClock(color);
   state.clockRemainingMs[color] = 0;
   state.timeExpiredColor = color;
+  state.paused = false;
+  state.pauseResumePhase = null;
   state.phase = "gameover";
   state.gen++;
   state.pendingMove = null;
@@ -571,6 +575,8 @@ async function init() {
 
 function newGame(options = {}) {
   stopPlayerClock();
+  state.paused = false;
+  state.pauseResumePhase = null;
   const playerClocks = document.querySelector(".player-clocks");
   if (playerClocks) playerClocks.hidden = false;
   state.clocksEnabled = options.clocksEnabled !== false;
@@ -580,6 +586,7 @@ function newGame(options = {}) {
   state.clockMs = { w: selectedClockMs("w"), b: selectedClockMs("b") };
   state.clockRemainingMs = { ...state.clockMs };
   setUnassistedGameMode(Boolean(options.unassisted), { resume: Boolean(options.resume) });
+  if (!options.resume) setNewGameAidsOff();
   window.SupaReplayHistory = null;
   state.abandoned = false;
   state.stopped = false;
@@ -587,6 +594,7 @@ function newGame(options = {}) {
   const stopButton = $("btn-stop-game");
   if (abandonButton) abandonButton.disabled = false;
   if (stopButton) stopButton.disabled = false;
+  syncPauseButton();
   state.gen++;
   moveFeedback.clear();
   state.moveGradeHistory = [];
@@ -617,11 +625,14 @@ function newGame(options = {}) {
 
 function abandonCurrentGame() {
   if (state.phase === "init" || state.phase === "gameover") return;
+  state.paused = false;
+  state.pauseResumePhase = null;
   stopPlayerClock();
   state.gen++;
   state.abandoned = true;
   state.stopped = false;
   state.phase = "gameover";
+  syncPauseButton();
   const abandonButton = $("btn-abandon-game");
   const stopButton = $("btn-stop-game");
   if (abandonButton) abandonButton.disabled = true;
@@ -639,6 +650,8 @@ function abandonCurrentGame() {
 
 function stopCurrentGame() {
   if (state.phase === "init" || state.phase === "gameover") return;
+  state.paused = false;
+  state.pauseResumePhase = null;
   try { state.engine?.stop?.(); } catch (_) {}
   stopPlayerClock();
   state.gen++;
@@ -756,10 +769,14 @@ function fenKey(fen) { return fen.split(" ").slice(0, 4).join(" "); }
 
 /* ── Boucle de jeu ── */
 async function startTurn() {
-  if (checkGameOver()) return;
+  if (state.paused || checkGameOver()) { syncPauseButton(); return; }
   if (isManualMode() || state.chess.turn() === state.userColor) {
+    state.phase = "analyzing";
+    syncPauseButton();
     await analyzeForUser();
   } else {
+    state.phase = "engineThinking";
+    syncPauseButton();
     await playEngineMove();
   }
 }
@@ -1118,6 +1135,7 @@ function findPreviouslyEvaluatedMove(fen, uci) {
 }
 
 function onSquareClick(sq) {
+  if (state.paused) return;
   if (typeof reviewHandleExerciseSquareClick === "function" && reviewHandleExerciseSquareClick(sq)) return;
   if (state.phase !== "userTurn") return;
   const piece = state.chess.get(sq);
@@ -1365,6 +1383,7 @@ function hideCoach() {
 
 /* ── Fin de partie ── */
 function checkGameOver() {
+  if (state.paused) return true;
   if (state.abandoned) {
     setStatus("Partie terminée — défaite par abandon.");
     return true;
@@ -1388,7 +1407,10 @@ function checkGameOver() {
     }
   }
   stopPlayerClock();
+  state.paused = false;
+  state.pauseResumePhase = null;
   state.phase = "gameover";
+  syncPauseButton();
   const abandonButton = $("btn-abandon-game");
   const stopButton = $("btn-stop-game");
   if (abandonButton) abandonButton.disabled = true;
@@ -1409,7 +1431,64 @@ function checkGameOver() {
 }
 
 /* ── Rendu ── */
-function renderAll() { renderBoard(); renderCandidatesList(); renderHistory(); renderStats(); renderMoveGradeSummary(); syncBestMoveButton(); syncUndoButton(); }
+function renderAll() { renderBoard(); renderCandidatesList(); renderHistory(); renderStats(); renderMoveGradeSummary(); syncBestMoveButton(); syncUndoButton(); syncPauseButton(); }
+function syncPauseButton() {
+  const button = $("btn-pause-game");
+  if (!button) return;
+  const playable = state.phase !== "init" && state.phase !== "gameover";
+  button.disabled = !playable;
+  button.setAttribute("aria-pressed", String(state.paused));
+  button.textContent = state.paused ? "Reprendre la partie" : "Mettre en pause";
+  button.title = state.paused ? "Reprendre la partie et la pendule" : "Mettre en pause la partie et la pendule";
+}
+function toggleGamePause() {
+  if (state.phase === "init" || state.phase === "gameover") return;
+  if (!state.paused) {
+    state.pauseResumePhase = state.phase;
+    state.paused = true;
+    state.gen++;
+    try { state.engine?.stop?.(); } catch (_) {}
+    stopPlayerClock();
+    setStatus("Partie en pause. Clique sur « Reprendre la partie » pour continuer.");
+    syncPauseButton();
+    renderPlayerClocks();
+    return;
+  }
+  const resumePhase = state.pauseResumePhase;
+  state.paused = false;
+  state.pauseResumePhase = null;
+  syncPauseButton();
+  if (resumePhase === "coach") {
+    state.phase = "coach";
+    startPlayerClock(state.chess.turn());
+    setStatus("Partie reprise — examine le conseil ou poursuis ton coup.");
+    return;
+  }
+  if (resumePhase === "userTurn") {
+    state.phase = "userTurn";
+    startPlayerClock(state.chess.turn());
+    setStatus("Partie reprise — à toi de jouer.");
+    renderAll();
+    return;
+  }
+  state.phase = resumePhase === "engineThinking" ? "engineThinking" : "userTurn";
+  startTurn();
+}
+$("btn-pause-game")?.addEventListener("click", toggleGamePause);
+function setNewGameAidsOff() {
+  boardUI.showDots = false;
+  boardUI.showMoveDots = false;
+  try {
+    localStorage.setItem(DOTS_STORAGE_KEY, "false");
+    localStorage.setItem(MOVE_DOTS_STORAGE_KEY, "false");
+    localStorage.setItem(EVALBAR_PREFERENCE_KEY, "false");
+  } catch (_) {}
+  window.SupaAnalysisSettings?.set("showArrows", false);
+  syncDotsButton();
+  syncMoveDotsButton();
+  syncEvalBarToggle();
+  renderBoard();
+}
 function syncBestMoveButton() {
   const button = $("btn-best-move");
   if (!button) return;
@@ -1890,7 +1969,7 @@ $("btn-best-move").addEventListener("click", () => {
 function onOpponentSettingsChange() {
   updateOpponentFideEstimate();
   // Recalcule aussi si le niveau ou le temps change pendant une partie.
-  if (state.phase === "gameover" || state.phase === "init") return;
+  if (state.paused || state.phase === "gameover" || state.phase === "init") return;
   state.gen++;
   state.pendingMove = null;
   hideCoach();
@@ -1909,12 +1988,14 @@ for (const id of ["sel-clock-white", "sel-clock-black"]) {
 }
 updateOpponentFideEstimate();
 $("btn-force").addEventListener("click", () => {
+  if (state.paused) return;
   if (!state.unassistedGame && state.pendingMove) {
     const { from, to, promotion, cand } = state.pendingMove;
     commitUserMove({ from, to, promotion }, cand, true);
   }
 });
 $("btn-cancel").addEventListener("click", () => {
+  if (state.paused) return;
   state.pendingMove = null;
   state.phase = "userTurn";
   startPlayerClock(state.chess.turn());
@@ -1922,7 +2003,7 @@ $("btn-cancel").addEventListener("click", () => {
   setStatus("À vous de jouer.");
 });
 $("btn-undo").addEventListener("click", () => {
-  if (state.phase === "engineThinking" || state.phase === "analyzing") return;
+  if (state.paused || state.phase === "engineThinking" || state.phase === "analyzing") return;
   if (correctionExerciseModeActive) {
     if (typeof window.reviewUndoCorrectionExercise === "function") window.reviewUndoCorrectionExercise();
     syncUndoButton();
