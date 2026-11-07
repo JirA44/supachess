@@ -3964,6 +3964,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     $("lesson-engine-lines").textContent = "";
     lessonIndex = index;
     engineSequence = null;
+    $("lesson-status").removeAttribute("data-stockfish-uci");
     reviewSession = options.review && options.reviewTargetId
       ? { targetId: options.reviewTargetId, exerciseId: LESSONS[index].id, exerciseLevel: LESSONS[index].level }
       : null;
@@ -4087,10 +4088,6 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     const positionFen = game.fen();
     const cached = engineCache.get(positionFen);
     const engineBest = cached && cached.choices && cached.choices[0];
-    if (!reviewSession && !stockfishCoachMode && !engineBest && !engineFailureFens.has(positionFen)) {
-      $("lesson-status").textContent = "Stockfish calcule le meilleur coup de cette position. Attends la fin de l’analyse avant de jouer.";
-      return;
-    }
     const inputColor = anticipatingBook ? (lesson.color === "w" ? "b" : "w") : lesson.color;
     if (game.turn() !== inputColor) return;
     const piece = game.get(square);
@@ -4131,9 +4128,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
       expected = engineSequence[sequenceIndex];
       switchedToEngineLine = true;
     }
-    const accepted = engineIsAuthoritative
-      ? isStockfishTopMove
-      : Boolean(expected && expected.side === expectedSide && expected.uci === uci);
+    const accepted = isStockfishTopMove || Boolean(expected && expected.side === expectedSide && expected.uci === uci);
     if (!accepted) {
       if (root.SupaChessAudio) root.SupaChessAudio.play("incorrect");
       game.undo();
@@ -4141,8 +4136,10 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
       clearSelection();
       renderBoard();
       $("lesson-feedback").textContent = engineBest && engineIsAuthoritative
-        ? "Stockfish recommande " + engineBest.san + " comme top 1 pour cette position. Cette réponse fait foi pour l’exercice; la ligne pédagogique reste un exemple secondaire."
-        : "Stockfish est indisponible pour cette position. La leçon utilise exceptionnellement sa ligne pédagogique de secours.";
+        ? "Stockfish recommande " + engineBest.san + " comme coup prioritaire. Cette réponse ou la ligne pédagogique prévue permettent de continuer; compare leurs conséquences."
+        : engineFailureFens.has(positionFen)
+          ? "Stockfish est indisponible pour cette position; la ligne pédagogique sert de secours."
+          : "Cette réponse ne suit pas la séquence pédagogique. Stockfish calcule encore la position; compare les variantes puis réessaie.";
       updateProgressLabel();
       if (!cached) runEngineComparison(false);
       return;
@@ -4157,8 +4154,14 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     boardUI.lastMove = { from: move.from, to: move.to, san: move.san };
     appendMove(move.san, anticipated ? "Réponse adverse anticipée" : "Toi");
     $("lesson-feedback").textContent = switchedToEngineLine
-      ? "Bien joué : le top 1 Stockfish est retenu. La suite de l’exercice suit maintenant sa variante calculée."
-      : (engineIsAuthoritative ? "Stockfish confirme le meilleur coup de cette recherche. " : "Stockfish indisponible : ligne pédagogique de secours. ") + expected.explanation;
+      ? "Bien joué : le top 1 Stockfish est prioritaire. La suite suit sa variante calculée."
+      : (engineIsAuthoritative && !isStockfishTopMove
+        ? "La ligne pédagogique est acceptée comme variante secondaire. Stockfish préfère " + engineBest.san + ". "
+        : engineIsAuthoritative
+          ? "Stockfish confirme le coup prioritaire de cette recherche. "
+          : engineFailureFens.has(positionFen)
+            ? "Stockfish indisponible : ligne pédagogique de secours. "
+            : "Ligne pédagogique acceptée pendant le calcul Stockfish. ") + expected.explanation;
     renderBoard();
     updateProgressLabel();
     advanceSequence();
@@ -4359,8 +4362,8 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     const analysis = engineCache.get(game.fen());
     const engineBest = analysis && analysis.choices && analysis.choices[0];
     if (planned && engineBest && planned.uci !== engineBest.uci) {
-      hint += " Stockfish top 1 (" + engineBest.san + ") fait foi pour la réussite. Le coup de la ligne pédagogique (" +
-        planned.san + ") reste secondaire; compare les conséquences des deux coups.";
+      hint += " Stockfish top 1 (" + engineBest.san + ") est le coup prioritaire. La ligne pédagogique (" +
+        planned.san + ") reste une variante secondaire acceptée; compare les conséquences.";
     }
     hintsUsed++;
     attempts++;
@@ -4385,6 +4388,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   function invalidateLessonEngineLines() {
     const panel = $("lesson-engine-analysis");
     engineAnalysisFen = null;
+    $("lesson-status").removeAttribute("data-stockfish-uci");
     if (!panel || panel.hidden) return;
     $("lesson-engine-lines").replaceChildren();
     $("lesson-engine-status").textContent =
@@ -4475,9 +4479,9 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
         alignment = "Concordance : la séquence pédagogique et le top 1 de cette recherche proposent " + planned.san + ". ";
       } else {
         const plannedRank = result.choices.findIndex((choice) => choice.uci === planned.uci);
-        alignment = "Priorité de réussite : le top 1 Stockfish (" + best.san + ") fait foi. La ligne pédagogique source prévoit " +
-          planned.san + (plannedRank >= 0 ? " (rang " + (plannedRank + 1) + " dans les lignes affichées)" : " (hors des lignes affichées)") +
-          " et reste un exemple secondaire. ";
+        alignment = "Priorité : Stockfish top 1 (" + best.san + "). La ligne pédagogique source prévoit " +
+          planned.san + (plannedRank >= 0 ? " (rang " + (plannedRank + 1) + " dans les lignes affichées)" : " hors des lignes affichées") +
+          "; elle reste acceptée comme variante secondaire. ";
       }
     }
     $("lesson-engine-status").textContent = alignment + "Stockfish a évalué " + result.choices.length + " ligne(s); " + Math.min(result.choices.length, maxLines) + " affichée(s) selon le réglage Multi‑PV, sur " + result.legalCount + " coups légaux. Profondeur maximale " + depth + ". L’évaluation dépend de la recherche et ne constitue pas seule une explication humaine.";
@@ -4540,6 +4544,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
       if (!automatic) renderEngineChoices(result, fen);
       if (showEvalBar) renderEvalBar(result);
       $("lesson-engine-status").setAttribute("data-source", "stockfish-19");
+      $("lesson-status").setAttribute("data-stockfish-uci", result.choices[0].uci);
       if (automatic && game && game.fen() === fen && !enginePreview) {
         $("lesson-status").textContent = "Stockfish top 1 : " + result.choices[0].san +
           ". Joue ce coup pour suivre la variante de référence.";
@@ -4557,6 +4562,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
       if (token === analysisToken) {
         const message = "Évaluation Stockfish indisponible : " + (error && error.message ? error.message : "le moteur n’a pas répondu.");
         engineFailureFens.add(fen);
+        if (game && game.fen() === fen) $("lesson-status").removeAttribute("data-stockfish-uci");
         if (automatic && showEvalBar) markEvalBarUnavailable(message);
         else $("lesson-engine-status").textContent = message;
         if (automatic && game && game.fen() === fen) {
