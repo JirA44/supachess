@@ -3590,6 +3590,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   let analysisToken = 0;
   const engineCache = new Map();
   let showEvalBar = false;
+  let lessonEvalTimer = null;
 
   function clearEvalBar() {
     const bar = $("lesson-evalbar");
@@ -3600,6 +3601,43 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     bar.setAttribute("aria-valuenow", "50");
     bar.setAttribute("aria-valuetext", "Évaluation non calculée");
     label.textContent = "À analyser";
+  }
+
+  function markEvalBarUnavailable(message) {
+    const bar = $("lesson-evalbar");
+    const label = $("lesson-eval-label");
+    if (bar) {
+      bar.setAttribute("aria-valuenow", "50");
+      bar.setAttribute("aria-valuetext", "Évaluation Stockfish indisponible");
+    }
+    if (label) label.textContent = "Indisponible";
+    const status = $("lesson-engine-status");
+    if (status) status.textContent = message;
+  }
+
+  function scheduleLessonEvaluation(delay = 420) {
+    if (lessonEvalTimer !== null) {
+      root.clearTimeout(lessonEvalTimer);
+      lessonEvalTimer = null;
+    }
+    if (!showEvalBar || !game || reviewSession || enginePreview) return;
+    if (stockfishCoachMode && !stockfishReflection) {
+      $("lesson-eval-label").textContent = "Après réflexion";
+      $("lesson-evalbar").setAttribute("aria-valuetext", "L’évaluation sera disponible après ta réflexion.");
+      return;
+    }
+    const fen = game.fen();
+    const cached = engineCache.get(fen);
+    if (cached && cached.choices && cached.choices.length) {
+      renderEvalBar(cached);
+      return;
+    }
+    $("lesson-eval-label").textContent = "Calcul Stockfish…";
+    $("lesson-evalbar").setAttribute("aria-valuetext", "Évaluation Stockfish en cours");
+    lessonEvalTimer = root.setTimeout(() => {
+      lessonEvalTimer = null;
+      if (showEvalBar && game && game.fen() === fen && !enginePreview) runEngineComparison(true);
+    }, delay);
   }
 
   function renderEvalBar(result) {
@@ -3881,6 +3919,10 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
       root.clearTimeout(bookReplyTimer);
       bookReplyTimer = null;
     }
+    if (lessonEvalTimer !== null) {
+      root.clearTimeout(lessonEvalTimer);
+      lessonEvalTimer = null;
+    }
     analysisToken++;
     enginePreview = null;
     $("lesson-engine-analysis").hidden = true;
@@ -3966,6 +4008,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     renderBoard();
     updateProgressLabel();
     $("lesson-status").textContent = "À toi de jouer les " + (lesson.color === "w" ? "Blancs" : "Noirs") + ".";
+    scheduleLessonEvaluation();
   }
 
   function renderChoices(lesson) {
@@ -4045,7 +4088,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
         ? "Cette réponse légale ne correspond pas à la réponse de la ligne étudiée. Compare les variantes avec Stockfish et cherche les menaces forcées."
         : "Ce coup légal ne suit pas la ligne pédagogique. Compare-le aux autres options avec Stockfish, puis vérifie les indices sur l’échiquier.";
       updateProgressLabel();
-      runEngineComparison(true);
+      runEngineComparison(false);
       return;
     }
     if (root.SupaChessAudio) root.SupaChessAudio.play(game.in_check() ? "check" : (move.flags && (move.flags.includes("c") || move.flags.includes("e")) ? "capture" : "move"));
@@ -4060,6 +4103,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     renderBoard();
     updateProgressLabel();
     advanceSequence();
+    scheduleLessonEvaluation();
   }
 
   function advanceSequence() {
@@ -4096,6 +4140,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
         waitingForBook = false;
         renderBoard();
         advanceSequence();
+        scheduleLessonEvaluation();
       }, 420);
       return;
     }
@@ -4340,32 +4385,51 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   };
 
   async function runEngineComparison(automatic) {
-    if (!game || reviewSession) return;
+    if (!game || reviewSession || (automatic && !showEvalBar)) return;
     const fen = game.fen();
     const token = ++analysisToken;
     const panel = $("lesson-engine-analysis");
     const button = $("lesson-engine-analyze");
-    panel.hidden = false;
-    button.disabled = true;
-    button.textContent = "Stockfish analyse…";
-    $("lesson-engine-status").textContent = "Analyse des coups légaux avec Stockfish 19…";
+    if (!automatic) {
+      panel.hidden = false;
+      button.disabled = true;
+      button.textContent = "Stockfish analyse…";
+      $("lesson-engine-status").textContent = "Analyse des coups légaux avec Stockfish 19…";
+    } else {
+      $("lesson-eval-label").textContent = "Calcul Stockfish…";
+      $("lesson-evalbar").setAttribute("aria-valuetext", "Évaluation Stockfish en cours");
+    }
     try {
       let result = engineCache.get(fen);
-      if (!result) {
-        if (!lessonEngine) lessonEngine = new StockfishEngine("vendor/stockfish-19-lite-single.js");
-        await lessonEngine.ready;
-        if (token !== analysisToken || !game || game.fen() !== fen) return;
-        const legalCount = game.moves({ verbose: true }).length;
-        const preferredLines = window.SupaAnalysisSettings ? window.SupaAnalysisSettings.getMultiPv() : legalCount;
-        const response = await lessonEngine.analyze({ fen: fen, multipv: Math.min(legalCount, preferredLines), movetime: 1800, elo: 0 });
-        result = buildEngineChoices(fen, response.lines, Chess);
-        engineCache.set(fen, result);
+      const legalCount = game.moves({ verbose: true }).length;
+      if (legalCount === 0) {
+        result = {
+          legalCount: 0,
+          choices: [{ scoreCp: game.in_checkmate() ? -100000 : 0, mate: game.in_checkmate() ? -1 : null }]
+        };
+      } else {
+        const configuredLines = window.SupaAnalysisSettings ? Number(window.SupaAnalysisSettings.getMultiPv()) : legalCount;
+        const requestedLines = Math.max(1, Math.min(legalCount, Number.isFinite(configuredLines) ? configuredLines : legalCount));
+        if (!result || !result.choices || !result.choices.length || (!automatic && result.choices.length < requestedLines)) {
+          if (!lessonEngine) lessonEngine = new StockfishEngine("vendor/stockfish-19-lite-single.js");
+          await lessonEngine.ready;
+          if (token !== analysisToken || !game || game.fen() !== fen) return;
+          const response = await lessonEngine.analyze({
+            fen: fen,
+            multipv: automatic ? 1 : requestedLines,
+            movetime: automatic ? 900 : 1800,
+            elo: 0
+          });
+          result = buildEngineChoices(fen, response.lines, Chess);
+          if (!result.choices.length) throw new Error("Stockfish n’a fourni aucune variante exploitable.");
+          engineCache.set(fen, result);
+        }
       }
       if (token !== analysisToken || !game || game.fen() !== fen) return;
-      renderEngineChoices(result, fen);
+      if (!automatic) renderEngineChoices(result, fen);
       renderEvalBar(result);
       $("lesson-engine-status").setAttribute("data-source", "stockfish-19");
-      if (stockfishCoachMode && stockfishReflection) {
+      if (!automatic && stockfishCoachMode && stockfishReflection) {
         const bestLine = result.choices[0] ? result.choices[0].sanLine.join(" ") : "aucune variante disponible";
         $("lesson-reflection-review").hidden = false;
         $("lesson-reflection-summary").textContent = LESSONS[lessonIndex] && LESSONS[lessonIndex].program === SELF_EVALUATION_PROGRAM
@@ -4375,9 +4439,13 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
         renderStockfishReviewQueue();
       }
     } catch (error) {
-      if (token === analysisToken) $("lesson-engine-status").textContent = "Analyse indisponible : " + (error && error.message ? error.message : "le moteur n’a pas répondu.");
-    } finally {
       if (token === analysisToken) {
+        const message = "Évaluation Stockfish indisponible : " + (error && error.message ? error.message : "le moteur n’a pas répondu.");
+        if (automatic) markEvalBarUnavailable(message);
+        else $("lesson-engine-status").textContent = message;
+      }
+    } finally {
+      if (token === analysisToken && !automatic) {
         button.disabled = false;
         button.textContent = "Actualiser la comparaison Stockfish";
       }
@@ -4470,11 +4538,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     $("lesson-eval-widget").hidden = !showEvalBar;
     $("lesson-eval-toggle").setAttribute("aria-pressed", String(showEvalBar));
     $("lesson-eval-toggle").textContent = "Barre d’évaluation : " + (showEvalBar ? "On" : "Off");
-    if (showEvalBar && game) {
-      const cached = engineCache.get(game.fen());
-      if (cached) renderEvalBar(cached);
-      else clearEvalBar();
-    }
+    if (showEvalBar && game) scheduleLessonEvaluation(0);
   });
     $("lesson-engine-analyze").addEventListener("click", () => runEngineComparison(false));
   $("lesson-review-save").addEventListener("click", () => {
@@ -4508,6 +4572,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     $("lesson-engine-return").hidden = true;
     $("lesson-status").textContent = "Leçon reprise à la position de l’exercice. Continue la séquence.";
     renderBoard();
+    scheduleLessonEvaluation(0);
   });
   $("lesson-flip").addEventListener("click", () => {
     flipped = !flipped;
