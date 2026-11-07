@@ -4545,7 +4545,8 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
       if (showEvalBar) renderEvalBar(result);
       $("lesson-engine-status").setAttribute("data-source", "stockfish-19");
       $("lesson-status").setAttribute("data-stockfish-uci", result.choices[0].uci);
-      if (automatic && game && game.fen() === fen && !enginePreview) {
+      if (automatic && game && game.fen() === fen && !enginePreview &&
+          sequenceIndex < currentLessonSequence().length) {
         $("lesson-status").textContent = "Stockfish top 1 : " + result.choices[0].san +
           ". Joue ce coup pour suivre la variante de référence.";
       }
