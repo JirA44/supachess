@@ -468,6 +468,31 @@ test("the current lesson corpus includes multiple levels and different-complexit
   )).differentComplexity >= 100);
 });
 
+test("the evaluation bar calculates Stockfish on enable and refreshes for every lesson position", () => {
+  const source = fs.readFileSync(path.join(__dirname, "../js/book-lessons.js"), "utf8");
+  assert.match(source, /function scheduleLessonEvaluation\(delay = 420\)/);
+  const toggleStart = source.indexOf('$("lesson-eval-toggle").addEventListener("click"');
+  const toggleEnd = source.indexOf('\n  $("lesson-engine-analyze")', toggleStart);
+  assert.ok(toggleStart >= 0 && toggleEnd > toggleStart, "the evaluation toggle handler should exist");
+  assert.match(source.slice(toggleStart, toggleEnd), /scheduleLessonEvaluation\(0\)/,
+    "turning the bar on should start an evaluation immediately");
+  const loadStart = source.indexOf("function loadLesson(");
+  const loadEnd = source.indexOf("\n  function renderChoices", loadStart);
+  assert.match(source.slice(loadStart, loadEnd), /scheduleLessonEvaluation\(\)/,
+    "loading a lesson should evaluate its initial position when the bar is on");
+  const moveStart = source.indexOf("function onSquareClick(");
+  const moveEnd = source.indexOf("\n  function advanceSequence", moveStart);
+  assert.match(source.slice(moveStart, moveEnd), /scheduleLessonEvaluation\(\)/,
+    "a played move should schedule an evaluation for the resulting position");
+  const sequenceStart = source.indexOf("function advanceSequence(");
+  const sequenceEnd = source.indexOf("\n  function appendMove", sequenceStart);
+  assert.match(source.slice(sequenceStart, sequenceEnd), /scheduleLessonEvaluation\(\)/,
+    "an automatic book reply should refresh the evaluation too");
+  assert.match(source, /async function runEngineComparison\(automatic\)/);
+  assert.match(source, /multipv: automatic \? 1 : requestedLines/);
+  assert.match(source, /movetime: automatic \? 900 : 1800/);
+});
+
 test("catalog refresh uses the existing competency summary helper", () => {
   const source = fs.readFileSync(path.join(__dirname, "../js/book-lessons.js"), "utf8");
   assert.match(source, /const competencySummary = lessonCompetencySummary\(LESSONS, progress\);/);
