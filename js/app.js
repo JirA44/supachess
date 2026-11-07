@@ -160,37 +160,44 @@ function syncLevelDiagnosticBanner() {
   const banner = $("level-diagnostic-banner");
   if (!banner) return;
   const diagnostic = readLevelDiagnostic();
-  const abandonButton = $("btn-abandon-diagnostic");
-  const setAbandonVisible = (visible) => { if (abandonButton) abandonButton.hidden = !visible; };
+  const toggle = $("btn-abandon-diagnostic");
+  const setToggle = (visible, active, label, disabled = false) => {
+    if (!toggle) return;
+    toggle.hidden = !visible;
+    toggle.disabled = disabled;
+    toggle.textContent = label;
+    toggle.setAttribute("aria-pressed", String(active));
+    toggle.title = active ? "Désactiver le diagnostic de niveau" : "Activer ou relancer le diagnostic de niveau";
+  };
   if (!diagnostic) {
-    setAbandonVisible(true);
+    setToggle(true, false, "Activer le diagnostic");
     banner.hidden = false;
-    banner.textContent = "Diagnostic de niveau activé par défaut : termine 10 parties contre Stockfish. Le coaching et les aides visuelles restent désactivés pendant le diagnostic."
+    banner.textContent = "Diagnostic désactivé. Active-le pour établir un repère de niveau sur 10 parties terminées contre Stockfish.";
     return;
   }
   if (diagnostic.active && correctionExerciseModeActive) {
-    setAbandonVisible(false);
+    setToggle(false, true, "Diagnostic en pause", true);
     banner.hidden = false;
     banner.textContent = "Diagnostic en pause pendant la correction. Il reprendra à la fin de l’exercice.";
   } else if (diagnostic.active) {
-    setAbandonVisible(true);
+    setToggle(true, true, "Désactiver le diagnostic");
     const count = countCompletedDiagnosticGames(diagnostic);
     banner.hidden = false;
     const prefix = diagnostic.defaultActivation ? "Diagnostic de niveau activé par défaut : " : "Diagnostic actif : ";
     const totalEligible = countEligibleStockfishGames();
     const earlierOrUncounted = Math.max(0, totalEligible - count);
-    banner.textContent = prefix + count + "/10 parties terminées contre Stockfish depuis son activation. Repère global : " + totalEligible + " partie(s) admissible(s) dans l’historique; " + earlierOrUncounted + " ne sont pas retenues dans ce diagnostic. Le coaching, les bulles, les points chauds/froids et la barre d’évaluation restent désactivés."
+    banner.textContent = prefix + count + "/10 parties terminées contre Stockfish depuis son activation. Repère global : " + totalEligible + " partie(s) admissible(s) dans l’historique; " + earlierOrUncounted + " ne sont pas retenues dans ce diagnostic. Le coaching, les bulles, les points chauds/froids et la barre d’évaluation restent désactivés.";
   } else if (diagnostic.completed) {
-    setAbandonVisible(false);
+    setToggle(true, false, "Relancer le diagnostic");
     banner.hidden = false;
     banner.textContent = "Diagnostic terminé : " + (diagnostic.analyzedGamesAtCompletion || 10) +
-      " parties terminées contre Stockfish. Les aides sont réactivées. Consulte le bilan et les exercices ciblés."
+      " parties terminées contre Stockfish. Les aides sont réactivées. Consulte le bilan et les exercices ciblés.";
   } else if (diagnostic.endedEarly) {
-    setAbandonVisible(false);
+    setToggle(true, false, "Activer le diagnostic");
     banner.hidden = false;
-    banner.textContent = "Diagnostic interrompu avant 10 parties. Les aides sont réactivées; le bilan de niveau reste à confirmer.";
+    banner.textContent = "Diagnostic désactivé avant 10 parties. Les aides sont réactivées; le bilan de niveau reste à confirmer.";
   } else {
-    setAbandonVisible(false);
+    setToggle(true, false, "Activer le diagnostic");
     banner.hidden = true;
   }
 }
@@ -321,8 +328,8 @@ function applyLevelDiagnosticLock() {
   }
   if (!active && diagnostic && diagnostic.active === false && !diagnostic.aidsRestored &&
       (diagnostic.aidsInitialized || levelDiagnosticLockWasActive)) {
-    boardUI.showDots = true;
-    boardUI.showMoveDots = true;
+    boardUI.showDots = typeof diagnostic.restoreDots === "boolean" ? diagnostic.restoreDots : true;
+    boardUI.showMoveDots = typeof diagnostic.restoreMoveDots === "boolean" ? diagnostic.restoreMoveDots : true;
     const restoreEvalBar = typeof diagnostic.restoreEvalBar === "boolean"
       ? diagnostic.restoreEvalBar : localStorage.getItem(EVALBAR_PREFERENCE_KEY) !== "false";
     try {
@@ -1926,7 +1933,15 @@ $("btn-abandon-game")?.addEventListener("click", abandonCurrentGame);
 $("btn-stop-game")?.addEventListener("click", stopCurrentGame);
 syncDotsButton();
 syncMoveDotsButton();
-$("btn-abandon-diagnostic")?.addEventListener("click", abandonLevelDiagnostic);
+$("btn-abandon-diagnostic")?.addEventListener("click", () => {
+  const diagnostic = readLevelDiagnostic();
+  if (diagnostic && diagnostic.active) abandonLevelDiagnostic();
+  else {
+    startLevelDiagnostic();
+    applyLevelDiagnosticLock();
+    window.dispatchEvent(new Event("supachess:level-diagnostic-change"));
+  }
+});
 $("btn-dots").addEventListener("click", () => {
   if (isUnassistedAidLockActive() || isDiagnosticControlLockActive()) return;
   boardUI.showDots = !boardUI.showDots;
