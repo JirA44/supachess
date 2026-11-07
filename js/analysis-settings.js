@@ -49,7 +49,7 @@
     if (output) output.textContent = String(preferences.multiPv);
   }
   function update(key, value) {
-    if (key === "showArrows" && trainingAidsLocked()) return;
+    if (key === "showArrows" && trainingAidsLocked() && Boolean(value)) return;
     if (key === "multiPv") preferences.multiPv = Math.max(1, Math.min(4, Number(value) || defaults.multiPv));
     else if (Object.prototype.hasOwnProperty.call(defaults, key) && key !== "multiPv") preferences[key] = Boolean(value);
     else return;
