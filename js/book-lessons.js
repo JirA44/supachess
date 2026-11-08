@@ -3615,6 +3615,94 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   }
 ]);
 
+  // Transfer and counterexample exercises for signal recognition.
+  LESSONS.push(...[
+  {
+    "id": "pattern-signals-edge-knight-variation",
+    "program": "Carlsen · reconnaissance des motifs",
+    "title": "Confirmer le piège du cavalier dans une autre position",
+    "category": "Signaux · Mobilité et pièces enfermées",
+    "level": "Intermédiaire",
+    "author": "SupaChess Académie",
+    "book": "Parcours original SupaChess",
+    "reference": "Leçon originale · Position de transfert",
+    "fen": "6k1/bp6/8/8/N7/2B5/1P6/7K b - - 0 1",
+    "color": "b",
+    "question": "Après …b5, comment vérifier que le cavalier a4 n’a aucune retraite sûre ?",
+    "choices": [
+      {
+        "text": "b2 et c3 sont occupées; le fou a7 contrôle b6 et c5.",
+        "correct": true
+      },
+      {
+        "text": "Le cavalier est au bord, donc il est forcément perdu.",
+        "correct": false
+      },
+      {
+        "text": "Il suffit de compter les pièces sans vérifier les cases de fuite.",
+        "correct": false
+      }
+    ],
+    "principle": "Le pion b5 attaque le cavalier a4. Ses quatre destinations sont b2, c3, c5 et b6 : deux sont occupées par les Blancs, les deux autres sont contrôlées par le fou a7.",
+    "transfer": "Retrouve le même schéma dans une nouvelle géométrie, puis vérifie les cases et les pièces qui les contrôlent.",
+    "pitfall": "Ne mémorise pas le coup g5 du premier exercice comme une recette.",
+    "pitfallReason": "Le motif se transfère par la mobilité et les cases contrôlées; le coup concret dépend de la position.",
+    "hints": [
+      "Écris les quatre sauts possibles depuis a4.",
+      "Vérifie l’occupation de b2 et c3, puis la diagonale du fou a7."
+    ],
+    "sequence": [
+      {
+        "side": "user",
+        "uci": "b7b5",
+        "explanation": "…b5 attaque le cavalier; les quatre sorties sont soit occupées, soit contrôlées."
+      }
+    ]
+  },
+  {
+    "id": "pattern-signals-edge-knight-safe-exit",
+    "program": "Carlsen · reconnaissance des motifs",
+    "title": "Ne pas confondre cavalier de bord et cavalier piégé",
+    "category": "Signaux · Vérifier avant de conclure",
+    "level": "Intermédiaire",
+    "author": "SupaChess Académie",
+    "book": "Parcours original SupaChess",
+    "reference": "Leçon originale · Contre-exemple de transfert",
+    "fen": "k7/6p1/8/8/7N/8/8/K7 b - - 0 1",
+    "color": "b",
+    "question": "Après …g5, le cavalier h4 est attaqué. Est-il piégé ?",
+    "choices": [
+      {
+        "text": "Non : f5 et g6 restent des cases de fuite libres et non attaquées.",
+        "correct": true
+      },
+      {
+        "text": "Oui : tout cavalier sur la colonne h est piégé.",
+        "correct": false
+      },
+      {
+        "text": "On ne peut pas le savoir sans compter le matériel.",
+        "correct": false
+      }
+    ],
+    "principle": "…g5 attaque le cavalier, mais celui-ci peut encore aller en f5 ou g6. Le signal « cavalier au bord » invite à vérifier; il ne prouve pas qu’il est piégé.",
+    "transfer": "Sépare l’alerte du verdict : énumère les sorties, vérifie qui les contrôle et calcule la réponse adverse avant de conclure.",
+    "pitfall": "Ne transforme pas un motif appris en règle automatique.",
+    "pitfallReason": "Une sortie sûre suffit à invalider l’idée que la pièce est enfermée.",
+    "hints": [
+      "Le cavalier h4 a quatre sauts possibles.",
+      "f5 et g6 sont libres; vérifie si une pièce noire les attaque."
+    ],
+    "sequence": [
+      {
+        "side": "user",
+        "uci": "g7g5",
+        "explanation": "…g5 attaque le cavalier, mais f5 et g6 restent des sorties sûres : il n’est pas piégé dans cette position."
+      }
+    ]
+  }
+]);
+
   // Generated Stockfish practice entries are stored locally and loaded only in this browser.
   const STOCKFISH_DERIVED_KEY = "supachess-stockfish-derived-lessons-v1";
   try {
