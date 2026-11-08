@@ -407,7 +407,7 @@
       hints: ["La tour peut parcourir la colonne d sans obstacle.", "Choisis une case d’infiltration avancée, puis vérifie qu’elle n’est pas attaquée par le roi."],
       sequence: [
         { side: "user", uci: "d1d7", explanation: "Rd7 utilise la colonne ouverte pour pénétrer sur la septième rangée." },
-        { side: "book", uci: "g8f7", explanation: "Le roi se rapproche sans pouvoir attaquer la tour en d7." }
+        { side: "book", uci: "g8f8", explanation: "Le roi se déplace; la tour conserve son infiltration sur la septième rangée." }
       ]
     },
     {
