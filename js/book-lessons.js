@@ -4833,6 +4833,158 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     return true;
   };
 
+  LESSONS.push(
+    {
+      id: "weak-signal-knight-h5",
+      kind: "method",
+      level: "Intermédiaire",
+      title: "Lire un signal faible : le cavalier h5",
+      category: "Stratégie · mobilité et cases de fuite",
+      program: "SupaChess · lire les signaux faibles",
+      author: "SupaChess Académie",
+      book: "Leçon originale SupaChess",
+      fen: "k7/8/7P/7n/7B/4P3/6P1/K5R1 w - - 0 1",
+      color: "w",
+      question: "Quel indice justifie de chercher un plan de restriction avant de conclure à un gain ?",
+      choices: [
+        { text: "Le cavalier h5 n’a que quatre cases de saut; il faut vérifier si chacune offre une retraite sûre après g4.", correct: true },
+        { text: "Tout cavalier au bord est automatiquement perdu, quelle que soit la position.", correct: false },
+        { text: "Comme il n’y a pas d’échec, il suffit d’avancer un pion sans calculer la réponse.", correct: false }
+      ],
+      principle: "Un cavalier au bord est un signal, pas une conclusion. Ici, g4 attaque le cavalier h5; ses quatre sorties f4, f6, g3 et g7 doivent être examinées séparément.",
+      transfer: "Repère une pièce à mobilité réduite, énumère ses cases légales, puis note lesquelles sont contrôlées, occupées ou protégées. Vérifie aussi si la poussée qui ferme une sortie affaiblit ton roi ou une autre case.",
+      pitfall: "Ne joue pas g4 uniquement parce que le cavalier est sur le bord. Le plan ne fonctionne que si la meilleure réponse adverse laisse une cible réellement gagnable.",
+      hints: [
+        "Le cavalier h5 peut sauter en f4, f6, g3 ou g7.",
+        "Après g4, compare chaque sortie avec les pièces et pions blancs qui la contrôlent."
+      ],
+      sequence: [
+        { side: "user", uci: "g2g4", explanation: "g4 attaque le cavalier et teste ses sorties; ce coup de pion ne prouve pas encore que le cavalier est perdu." },
+        { side: "book", uci: "h5f4", explanation: "Le cavalier choisit f4. La case est contrôlée par le pion blanc e3." },
+        { side: "user", uci: "e3f4", explanation: "exf4 capture le cavalier parce que la case de retraite était contrôlée." }
+      ]
+    },
+    {
+      id: "weak-signal-knight-f6",
+      kind: "method",
+      level: "Avancé",
+      title: "Calculer la sortie f6",
+      category: "Stratégie · restriction et vérification",
+      program: "SupaChess · lire les signaux faibles",
+      author: "SupaChess Académie",
+      book: "Exercice original SupaChess",
+      fen: "k7/8/7P/7n/7B/4P3/6P1/K5R1 w - - 0 1",
+      color: "w",
+      question: "Après g4 et …Cf6, comment vérifier si la retraite du cavalier est sûre ?",
+      choices: [
+        { text: "Regarder si le fou h4 peut prendre en f6 et comparer cette réponse aux autres sorties.", correct: true },
+        { text: "Considérer f6 comme sûre parce que le cavalier a quitté le bord.", correct: false },
+        { text: "Prendre le pion h5 immédiatement, même si le cavalier n’y est plus.", correct: false }
+      ],
+      principle: "Une case de fuite doit être évaluée après le coup adverse. Le fou h4 contrôle la diagonale g5–f6 et peut capturer le cavalier.",
+      transfer: "Pour chaque retraite candidate, visualise la position après la réponse adverse et cherche les captures simples, les pièces qui la contrôlent et les éventuels contre-jeux.",
+      pitfall: "Ne compte pas une case comme sûre parce qu’elle est légale : une pièce peut légalement entrer sur une case contrôlée et y être prise.",
+      hints: [
+        "Trace la diagonale du fou depuis h4.",
+        "Après …Cf6, teste Fxf6 avant de choisir une autre réponse."
+      ],
+      sequence: [
+        { side: "user", uci: "g2g4", explanation: "La poussée attaque le cavalier et force l’examen de ses retraites." },
+        { side: "book", uci: "h5f6", explanation: "…Cf6 est une sortie légale, mais elle arrive sur une case contrôlée par le fou h4." },
+        { side: "user", uci: "h4f6", explanation: "Fxf6 capture le cavalier. Le contrôle d’une case de fuite transforme le signal en plan concret." }
+      ]
+    },
+    {
+      id: "weak-signal-knight-g3",
+      kind: "method",
+      level: "Avancé",
+      title: "Voir la tour derrière le pion",
+      category: "Stratégie · coordination et mobilité",
+      program: "SupaChess · lire les signaux faibles",
+      author: "SupaChess Académie",
+      book: "Exercice original SupaChess",
+      fen: "k7/8/7P/7n/7B/4P3/6P1/K5R1 w - - 0 1",
+      color: "w",
+      question: "Après g4 et …Cg3, quelle pièce rend cette case de fuite vulnérable ?",
+      choices: [
+        { text: "La tour g1, dont la colonne est libérée quand le pion quitte g2.", correct: true },
+        { text: "Le roi a1, qui peut capturer un cavalier en g3 en un seul coup.", correct: false },
+        { text: "Le pion h6, qui attaque directement g3.", correct: false }
+      ],
+      principle: "La poussée g2–g4 a aussi une conséquence moins visible : elle dégage la colonne g et révèle le contrôle de la tour sur g3.",
+      transfer: "Quand tu avances un pion, observe les lignes et diagonales qui s’ouvrent derrière lui. Le coup peut créer une menace indirecte ou libérer une pièce déjà en batterie.",
+      pitfall: "Ne regarde pas seulement la pièce qui avance; vérifie les lignes révélées, les cases laissées libres et les pièces qui défendent à distance.",
+      hints: [
+        "Le pion blanc vient de quitter g2.",
+        "Depuis g1, la tour peut atteindre g3 si le chemin est libre."
+      ],
+      sequence: [
+        { side: "user", uci: "g2g4", explanation: "En plus d’attaquer le cavalier, le pion libère la colonne g." },
+        { side: "book", uci: "h5g3", explanation: "…Cg3 entre sur une case contrôlée par la tour g1." },
+        { side: "user", uci: "g1g3", explanation: "Txg3 capture le cavalier grâce à la ligne libérée par le pion." }
+      ]
+    },
+    {
+      id: "weak-signal-knight-g7",
+      kind: "method",
+      level: "Expert",
+      title: "Compter la prise du pion h6",
+      category: "Stratégie · cases de fuite",
+      program: "SupaChess · lire les signaux faibles",
+      author: "SupaChess Académie",
+      book: "Exercice original SupaChess",
+      fen: "k7/8/7P/7n/7B/4P3/6P1/K5R1 w - - 0 1",
+      color: "w",
+      question: "Après g4 et …Cg7, quel pion contrôle la dernière sortie du cavalier ?",
+      choices: [
+        { text: "Le pion h6 peut capturer en g7 : hxg7.", correct: true },
+        { text: "Le pion e3 peut capturer en g7.", correct: false },
+        { text: "Le cavalier n’a aucune sortie légale vers g7.", correct: false }
+      ],
+      principle: "Une bonne carte des sorties suit les contrôles de toutes les pièces, pas seulement celles qui viennent de bouger.",
+      transfer: "Pour chaque case de fuite, nomme la pièce qui pourrait capturer ou repousser le cavalier et vérifie que cette réponse est légale.",
+      pitfall: "N’annonce pas un piège tant qu’une case de retraite n’a pas été examinée avec toutes les défenses et contre-menaces.",
+      hints: [
+        "Le pion blanc h6 attaque g7.",
+        "Après …Cg7, vérifie la capture du pion de la colonne h."
+      ],
+      sequence: [
+        { side: "user", uci: "g2g4", explanation: "La poussée attaque le cavalier et révèle les options dont il dispose." },
+        { side: "book", uci: "h5g7", explanation: "…Cg7 est légal, mais la case est contrôlée par le pion h6." },
+        { side: "user", uci: "h6g7", explanation: "hxg7 prend le cavalier sur sa case de retraite." }
+      ]
+    },
+    {
+      id: "weak-signal-not-proof",
+      kind: "method",
+      level: "Avancé",
+      title: "Un signal n’est pas encore une preuve",
+      category: "Stratégie · restriction et contre-exemple",
+      program: "SupaChess · lire les signaux faibles",
+      author: "SupaChess Académie",
+      book: "Exercice original SupaChess",
+      fen: "k7/8/7P/7n/8/4P3/6P1/K7 w - - 0 1",
+      color: "w",
+      question: "Que peut-on conclure avant d’avoir calculé les cases de fuite ?",
+      choices: [
+        { text: "Le cavalier est excentré, mais g4 ne l’enferme pas automatiquement : certaines cases de fuite ne sont pas contrôlées.", correct: true },
+        { text: "Le cavalier est perdu parce qu’un cavalier au bord n’a que quatre cases.", correct: false },
+        { text: "Il faut capturer le cavalier en h5 avec le pion g4.", correct: false }
+      ],
+      principle: "Un indice positionnel produit une hypothèse; le calcul la confirme ou la réfute. Sans le fou h4 et la tour g1, …Cf6 et …Cg3 offrent ici des retraites non contrôlées.",
+      transfer: "Teste aussi les contre-exemples : retire mentalement un défenseur, change une case occupée, puis vérifie si ton plan tient encore.",
+      pitfall: "Ne transforme jamais « cavalier au bord » en règle automatique. La mobilité réelle dépend de la position complète et des réponses adverses.",
+      hints: [
+        "Dans cette position, le fou h4 et la tour g1 ne sont pas présents.",
+        "Après g4, vérifie si …Cf6 peut réellement être capturé."
+      ],
+      sequence: [
+        { side: "user", uci: "g2g4", explanation: "g4 attaque h5, mais il faut maintenant trouver une sortie sûre au cavalier." },
+        { side: "book", uci: "h5f6", explanation: "…Cf6 est légal et n’est contrôlé ni par un fou en h4 ni par une tour en g1. Le signal ne suffit donc pas à prouver un piège." }
+      ]
+    }
+  );
+
   renderCatalog();
   const searchParams = new URLSearchParams(location.search);
   const requestedLesson = searchParams.get("lesson");
