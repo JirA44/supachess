@@ -337,4 +337,96 @@
     if (conceptFilter) conceptFilter.value = "";
   });
   renderCards();
+
+  const weakSignalCombinationLessons = [
+    {
+      id: "engine-derived-weak-signal-combination-knight-fork",
+      level: "Intermédiaire",
+      title: "Combiner roi exposé et fourchette",
+      category: "Tactique · Combinaison de signaux faibles",
+      author: "SupaChess Académie",
+      program: "Signaux faibles · combinaisons d’attaques",
+      book: "Parcours original SupaChess",
+      reference: "Position pédagogique originale",
+      fen: "6k1/8/2N5/5q2/8/8/8/K7 w - - 0 1",
+      color: "w",
+      question: "Deux indices se renforcent : quel coup exploite à la fois le roi exposé et la dame placée sur une case de fourchette ?",
+      choices: [
+        { text: "Ne7+, puis prendre la dame si le roi s’écarte", correct: true },
+        { text: "Déplacer le roi blanc vers le centre", correct: false },
+        { text: "Reculer le cavalier sans créer de menace", correct: false }
+      ],
+      principle: "Un roi exposé et une dame située à portée du cavalier deviennent une combinaison : Ne7+ attaque le roi et la dame en même temps.",
+      transfer: "Avant de jouer, repère séparément la sécurité du roi, les cases contrôlées par le cavalier et les pièces adverses qui pourraient être attaquées avec échec.",
+      hints: [
+        "Premier signal : le roi noir est près du centre de l’action. Deuxième signal : la dame noire se trouve sur une case que le cavalier peut atteindre.",
+        "Cherche un coup de cavalier qui donne échec tout en attaquant la dame."
+      ],
+      sequence: [
+        { side: "user", uci: "c6e7", explanation: "Ne7+ est une fourchette : le cavalier attaque le roi g8 et la dame f5." },
+        { side: "book", uci: "g8h8", explanation: "Le roi doit répondre à l’échec; la dame reste attaquée." },
+        { side: "user", uci: "e7f5", explanation: "Le cavalier prend la dame. La combinaison vient de deux indices simples repérés ensemble." }
+      ]
+    },
+    {
+      id: "engine-derived-weak-signal-combination-queen-alignment",
+      level: "Avancé",
+      title: "Relier alignement et pièce protectrice",
+      category: "Tactique · Combinaison de signaux faibles",
+      author: "SupaChess Académie",
+      program: "Signaux faibles · combinaisons d’attaques",
+      book: "Parcours original SupaChess",
+      reference: "Position pédagogique originale",
+      fen: "4k3/3q4/8/1B6/8/8/8/K2R4 w - - 0 1",
+      color: "w",
+      question: "La dame et le roi sont alignés sur la colonne d. Quelle pièce rend la prise de la dame sûre ?",
+      choices: [
+        { text: "Le fou b5 contrôle d7 et empêche le roi de reprendre la tour", correct: true },
+        { text: "Le roi blanc a1 protège directement d7", correct: false },
+        { text: "La tour peut prendre la dame parce qu’une dame alignée est toujours perdue", correct: false }
+      ],
+      principle: "Rxd7 gagne la dame parce que le fou b5 protège la case d7. Le roi e8 ne peut pas capturer la tour sur une case contrôlée par le fou.",
+      transfer: "Quand tu vois une pièce alignée avec le roi, vérifie le défenseur de la case de prise et les réponses légales du roi avant de conclure.",
+      hints: [
+        "Repère la ligne entre la tour d1, la dame d7 et le roi e8; puis trace la diagonale du fou b5.",
+        "Après Rxd7, demande-toi si Kxd7 est légal."
+      ],
+      sequence: [
+        { side: "user", uci: "d1d7", explanation: "Rxd7 prend la dame. Le fou b5 contrôle d7; le roi ne peut donc pas reprendre." },
+        { side: "book", uci: "e8f8", explanation: "Le roi s’écarte. La dame a été perdue parce que l’alignement et la protection de la case ont été combinés." }
+      ]
+    },
+    {
+      id: "engine-derived-weak-signal-combination-protected-queen",
+      level: "Avancé",
+      title: "Combiner échec, dame en prise et tour protectrice",
+      category: "Tactique · Combinaison de signaux faibles",
+      author: "SupaChess Académie",
+      program: "Signaux faibles · combinaisons d’attaques",
+      book: "Parcours original SupaChess",
+      reference: "Position pédagogique originale",
+      fen: "6k1/5q2/8/3Q4/8/8/8/K4R2 w - - 0 1",
+      color: "w",
+      question: "La dame noire est accessible, mais quel détail empêche le roi de la reprendre après la capture avec échec ?",
+      choices: [
+        { text: "La tour f1 protège la case f7 sur toute la colonne", correct: true },
+        { text: "Le roi blanc a1 contrôle f7", correct: false },
+        { text: "Le roi noir ne peut jamais capturer une dame", correct: false }
+      ],
+      principle: "Qxf7+ gagne la dame : la tour f1 protège f7. Le roi noir ne peut pas capturer la dame sur cette case contrôlée.",
+      transfer: "Combine les indices : dame accessible, échec au roi, pièce protectrice qui interdit la reprise. Vérifie toujours la ligne de défense jusqu’à la case de capture.",
+      hints: [
+        "Le coup candidat prend la dame en donnant échec.",
+        "Compte les cases de la colonne f entre la tour et la dame; vérifie ensuite si Kxf7 est légal."
+      ],
+      sequence: [
+        { side: "user", uci: "d5f7", explanation: "Qxf7+ prend la dame et donne échec; la tour f1 protège la dame en f7." },
+        { side: "book", uci: "g8h8", explanation: "Le roi s’écarte. Kxf7 est illégal, car la tour blanche contrôle f7." }
+      ]
+    }
+  ];
+  if (window.SupaChessAcademy?.addDerivedLessons) {
+    window.SupaChessAcademy.addDerivedLessons(weakSignalCombinationLessons);
+  }
+
 })();
