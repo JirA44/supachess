@@ -1522,7 +1522,7 @@ function syncBestMoveButton() {
   if (!button) return;
   const replayButton = $("btn-replay-quit");
   const replayActive = replayButton && !replayButton.classList.contains("hidden");
-  const replayReady = replayActive && typeof window.reviewPlayBestHalfMove === "function";
+  const replayReady = replayActive && Boolean(state.engine) && typeof window.reviewPlayBestHalfMove === "function";
   if (state.unassistedGame && !replayReady) {
     button.disabled = true;
     button.title = "Meilleur coup masqué pendant une partie sans aide";
@@ -1536,10 +1536,13 @@ function syncBestMoveButton() {
   button.title = replayReady
     ? "Remplacer le demi-coup affiché par le meilleur coup Stockfish dans une variante temporaire"
     : "Jouer le meilleur demi-coup Stockfish";
+  if (replayReady) {
+    button.disabled = button.dataset.pending === "true";
+    return;
+  }
   const allowedTurn = isManualMode() || state.chess.turn() === state.userColor;
-  button.disabled = button.dataset.pending === "true" || (replayReady
-    ? !["userTurn", "coach"].includes(state.phase)
-    : !["userTurn", "coach"].includes(state.phase) || !allowedTurn || !state.candidates.length);
+  button.disabled = button.dataset.pending === "true" || !["userTurn", "coach"].includes(state.phase) ||
+    !allowedTurn || !state.candidates.length;
 }
 function renderBoard() {
   const multipv = window.SupaAnalysisSettings?.getMultiPv() || 4;
