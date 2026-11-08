@@ -5,6 +5,234 @@
   const LARSEN_PDF = "https://masterinchess.com/Media/2024/07/Larsen%20Best%20Move%20Guide.pdf";
   const LESSONS = [
     {
+      id: "comparison-thinking-01-position-diagnosis",
+      kind: "method",
+      level: "Débutant",
+      title: "01 · Diagnostiquer avant de calculer",
+      category: "Méthode · maîtres et Stockfish",
+      program: "Étude comparée · maîtres et Stockfish",
+      author: "SupaChess Académie",
+      book: "Parcours pédagogique original",
+      reference: "Position pédagogique Ruy Lopez · sans attribution historique",
+      fen: "r1bqkb1r/1ppp1ppp/p1n2n2/4p3/B3P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 5",
+      color: "w",
+      question: "Quelle démarche convient avant de choisir un coup dans cette position ?",
+      choices: [
+        { text: "Réciter les échecs, prises et menaces, puis jouer le premier candidat.", correct: false },
+        { text: "Diagnostiquer sécurité, activité et structure, puis proposer des candidats adaptés.", correct: true },
+        { text: "Deviner le prochain coup des Noirs et ne calculer que cette réponse.", correct: false }
+      ],
+      principle: "Une position se comprend d’abord par ses éléments durables et dynamiques : sécurité des rois, activité des pièces, centre et plans. Les coups forcing sont examinés quand ils sont pertinents.",
+      transfer: "Avant d’ouvrir le moteur, écris un diagnostic en une phrase, deux candidats et le but de chacun.",
+      pitfall: "Ne confonds pas un inventaire tactique utile avec une méthode complète de décision.",
+      hints: ["Regarde d’abord le roi blanc et les pièces qui n’ont pas encore joué.", "Le roque est un candidat naturel ici; il ne devient pas automatiquement le meilleur dans toutes les positions."],
+      sequence: [
+        { side: "user", uci: "e1g1", explanation: "Le roque met le roi à l’abri et termine le développement du roi." },
+        { side: "book", uci: "b7b5", explanation: "Les Noirs gagnent un tempo sur le fou; la nouvelle position impose un nouveau diagnostic." },
+        { side: "user", uci: "a4b3", explanation: "Le fou se met à l’abri. Après chaque réponse, réévalue la position au lieu de suivre un plan figé." }
+      ]
+    },
+    {
+      id: "comparison-thinking-02-update-after-opponent",
+      kind: "method",
+      level: "Débutant",
+      title: "02 · Réviser son plan après le coup adverse",
+      category: "Méthode · maîtres et Stockfish",
+      program: "Étude comparée · maîtres et Stockfish",
+      author: "SupaChess Académie",
+      book: "Parcours pédagogique original",
+      reference: "Position pédagogique Ruy Lopez · suite légale de l’exercice 01",
+      fen: "r1bqkb1r/2pp1ppp/p1n2n2/1p2p3/B3P3/5N2/PPPP1PPP/RNBQ1RK1 w kq - 0 6",
+      color: "w",
+      question: "Après ...b5, quel est le changement concret à traiter d’abord ?",
+      choices: [
+        { text: "Le fou a4 est attaqué et doit être sauvé ou justifié par un calcul.", correct: true },
+        { text: "Il faut lancer une attaque de roi sans tenir compte du fou.", correct: false },
+        { text: "Il faut automatiquement échanger les dames.", correct: false }
+      ],
+      principle: "Un grand joueur met à jour son évaluation après chaque coup. Ici, ...b5 attaque le fou; la réponse résout ce problème tout en préservant les options stratégiques.",
+      transfer: "Nomme ce que le dernier coup a changé, puis compare une réponse directe et toute contre-menace concrète.",
+      pitfall: "Ne continue pas le plan prévu comme si le coup adverse n’avait rien changé.",
+      hints: ["Repère la pièce blanche visée par le pion b5.", "Compare le retrait du fou avec une contre-menace et vérifie si elle gagne vraiment un tempo."],
+      sequence: [
+        { side: "user", uci: "a4b3", explanation: "Le fou quitte l’attaque du pion b5 et conserve sa diagonale." },
+        { side: "book", uci: "d7d6", explanation: "Les Noirs consolident le centre; les Blancs peuvent reprendre leur développement." },
+        { side: "user", uci: "c2c3", explanation: "Les Blancs préparent d4 et donnent une case de repli au fou." }
+      ]
+    },
+    {
+      id: "comparison-thinking-03-quiet-plan",
+      kind: "method",
+      level: "Débutant",
+      title: "03 · Voir un plan calme dans l’Italienne",
+      category: "Méthode · maîtres et Stockfish",
+      program: "Étude comparée · maîtres et Stockfish",
+      author: "SupaChess Académie",
+      book: "Parcours pédagogique original",
+      reference: "Position pédagogique Italienne · choix entre développement et rupture",
+      fen: "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4",
+      color: "w",
+      question: "Quel candidat prépare le développement et garde plusieurs options centrales ?",
+      choices: [
+        { text: "Sortir la dame pour attaquer un pion sans calcul.", correct: false },
+        { text: "Jouer d3, puis choisir entre c3 et un développement rapide selon la réponse.", correct: true },
+        { text: "Pousser immédiatement un pion de l’aile.", correct: false }
+      ],
+      principle: "Un coup utile n’a pas besoin de créer une menace immédiate. d3 soutient e4 et prépare le développement; les suites concrètes déterminent si ce plan convient.",
+      transfer: "Dans une position calme, formule un plan et une amélioration de pièce avant de chercher une tactique.",
+      pitfall: "Ne classe pas un coup comme passif simplement parce qu’il ne donne ni échec ni capture.",
+      hints: ["Évalue la stabilité du pion e4 et le développement du fou f1.", "Un plan calme doit quand même être testé contre les ruptures et prises adverses."],
+      sequence: [
+        { side: "user", uci: "d2d3", explanation: "Le pion consolide e4 et libère le fou c1." },
+        { side: "book", uci: "f8c5", explanation: "Le fou noir s’active sur la diagonale; identifie son influence avant de poursuivre." },
+        { side: "user", uci: "c2c3", explanation: "Les Blancs préparent d4 et construisent leur centre." }
+      ]
+    },
+    {
+      id: "comparison-thinking-04-calculate-break",
+      kind: "method",
+      level: "Intermédiaire",
+      title: "04 · Calculer une rupture centrale",
+      category: "Méthode · maîtres et Stockfish",
+      program: "Étude comparée · maîtres et Stockfish",
+      author: "SupaChess Académie",
+      book: "Parcours pédagogique original",
+      reference: "Position pédagogique Ruy Lopez · calcul de la rupture d4",
+      fen: "r1bqkb1r/1ppp1ppp/p1n2n2/4p3/B3P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 5",
+      color: "w",
+      question: "Quel candidat forcing mérite ici un calcul concret de la structure centrale ?",
+      choices: [
+        { text: "Pousser d4, puis calculer ...exd4 et les reprises possibles.", correct: true },
+        { text: "Jouer un coup d’aile sans comparer les conséquences centrales.", correct: false },
+        { text: "S’arrêter au premier coup légal qui développe une pièce.", correct: false }
+      ],
+      principle: "Une rupture centrale change l’espace, les lignes et les structures de pions. On calcule la meilleure défense et les reprises avant d’évaluer la position obtenue.",
+      transfer: "Pour chaque rupture, écris la meilleure prise adverse, ta reprise et la contre-ressource adverse la plus forte.",
+      pitfall: "Ne suppose pas que l’adversaire doit reprendre de la manière qui t’arrange.",
+      hints: ["Après d4, examine ...exd4.", "Après Nxd4, cherche les coups forcing noirs avant d’évaluer le centre."],
+      sequence: [
+        { side: "user", uci: "d2d4", explanation: "La rupture ouvre le centre; il faut calculer la réponse la plus directe." },
+        { side: "book", uci: "e5d4", explanation: "Les Noirs prennent le pion central." },
+        { side: "user", uci: "f3d4", explanation: "Le cavalier reprend et développe une pièce avec tempo." },
+        { side: "book", uci: "f8b4", explanation: "Le fou donne échec sur la diagonale désormais ouverte." },
+        { side: "user", uci: "b1c3", explanation: "Le cavalier interpose et développe; compare la position résultante." }
+      ]
+    },
+    {
+      id: "comparison-thinking-05-forcing-resource",
+      kind: "method",
+      level: "Intermédiaire",
+      title: "05 · Quand le balayage tactique devient prioritaire",
+      category: "Méthode · maîtres et Stockfish",
+      program: "Étude comparée · maîtres et Stockfish",
+      author: "SupaChess Académie",
+      book: "Parcours pédagogique original",
+      reference: "Position pédagogique · échec intermédiaire et reprise",
+      fen: "r1bqk2r/1ppp1ppp/p1n2n2/8/Bb1NP3/2N5/PPP2PPP/R1BQKB1R b KQkq - 2 7",
+      color: "b",
+      question: "Quel candidat forcing doit être calculé avant les coups de plan ?",
+      choices: [
+        { text: "Reculer le fou sans vérifier les pièces attaquées.", correct: false },
+        { text: "Bxc3+ : examiner la reprise et la réponse qui suit.", correct: true },
+        { text: "Pousser un pion de l’aile parce que la position est fermée.", correct: false }
+      ],
+      principle: "Ici, l’échec et la prise changent immédiatement la position. Le balayage tactique devient prioritaire parce qu’il existe une ressource forcing concrète.",
+      transfer: "Après tout échec ou échange candidat, calcule les réponses légales, les reprises et les coups intermédiaires des deux camps.",
+      pitfall: "La présence d’un coup forcing ne dispense pas d’évaluer la position finale ni le matériel.",
+      hints: ["Le fou b4 peut prendre le cavalier c3 avec échec.", "Après bxc3, vérifie la rupture ...d5 et la reprise éventuelle du cavalier f6."],
+      sequence: [
+        { side: "user", uci: "b4c3", explanation: "Le fou capture le cavalier avec échec." },
+        { side: "book", uci: "b2c3", explanation: "Le pion reprend et élimine l’échec." },
+        { side: "user", uci: "d7d5", explanation: "Les Noirs ouvrent le centre; il faut calculer la prise blanche." },
+        { side: "book", uci: "e4d5", explanation: "Le pion e4 prend en d5." },
+        { side: "user", uci: "f6d5", explanation: "Le cavalier reprend le pion; le bilan doit inclure les pièces échangées et l’initiative." }
+      ]
+    },
+    {
+      id: "comparison-thinking-06-convert-advantage",
+      kind: "method",
+      level: "Avancé",
+      title: "06 · Évaluer une ligne forcing, pas seulement le premier coup",
+      category: "Méthode · maîtres et Stockfish",
+      program: "Étude comparée · maîtres et Stockfish",
+      author: "SupaChess Académie",
+      book: "Parcours pédagogique original",
+      reference: "Position pédagogique · dame contre tour tactiquement gagnée",
+      fen: "4r1k1/8/8/8/8/8/4Q3/6K1 w - - 0 1",
+      color: "w",
+      question: "Après Qxe8+, que faut-il comparer avant de conclure que la combinaison fonctionne ?",
+      choices: [
+        { text: "Seulement le fait que le premier coup donne échec.", correct: false },
+        { text: "La meilleure réponse du roi, le matériel final et la sécurité de la dame.", correct: true },
+        { text: "Le nombre de coups de la variante, sans regarder la position finale.", correct: false }
+      ],
+      principle: "Une ligne forcing se juge à son terme : matériel, sécurité des rois, pièces restantes et possibilité de convertir. Le score moteur aide à comparer, mais n’est pas l’explication humaine.",
+      transfer: "Avant l’analyse moteur, note la position finale de ta variante; ensuite compare-la à la meilleure défense Stockfish.",
+      pitfall: "Ne confonds pas un échec spectaculaire avec une combinaison gagnante confirmée.",
+      hints: ["La dame peut capturer la tour en e8 avec échec.", "Après la réponse du roi, cherche une suite légale et vérifie la sécurité de la dame blanche."],
+      sequence: [
+        { side: "user", uci: "e2e8", explanation: "La dame prend la tour avec échec." },
+        { side: "book", uci: "g8g7", explanation: "Le roi quitte l’échec; il reste à vérifier la sécurité des pièces." },
+        { side: "user", uci: "e8g8", explanation: "La dame poursuit l’attaque et se place sur une case protégée par le roi blanc." }
+      ]
+    },
+    {
+      id: "comparison-thinking-07-engine-output",
+      kind: "method",
+      level: "Avancé",
+      title: "07 · Lire Stockfish sans lui prêter une pensée humaine",
+      category: "Méthode · maîtres et Stockfish",
+      program: "Étude comparée · maîtres et Stockfish",
+      author: "SupaChess Académie",
+      book: "Parcours pédagogique original",
+      reference: "Comparaison pédagogique · ligne calculée et explication humaine",
+      fen: "r1bqkb1r/1ppp1ppp/p1n2n2/4p3/B3P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 5",
+      color: "w",
+      question: "Que permet de conclure une variante Stockfish, à elle seule ?",
+      choices: [
+        { text: "Elle révèle exactement le raisonnement humain d’un grand maître.", correct: false },
+        { text: "Elle donne une ligne et une évaluation issues de la recherche du moteur; l’explication stratégique demande une analyse distincte.", correct: true },
+        { text: "Elle prouve que tout autre coup naturel est une erreur humaine.", correct: false }
+      ],
+      principle: "Stockfish recherche des suites et évalue des positions selon son moteur. Un commentaire humain aide à formuler un plan; aucune de ces sources ne doit être confondue avec les pensées privées d’un joueur.",
+      transfer: "Écris d’abord ton idée. Lis ensuite une annotation humaine sourcée, puis compare plusieurs lignes Stockfish et explique les différences à partir de l’échiquier.",
+      pitfall: "Ne présente ni les évaluations du moteur comme une explication, ni une annotation comme une transcription certaine du monologue du joueur.",
+      hints: ["Distingue la ligne calculée, l’évaluation numérique et l’interprétation humaine.", "Pour comprendre la différence, compare les positions finales et les plans possibles."],
+      sequence: [
+        { side: "user", uci: "e1g1", explanation: "Le roque est un candidat de développement; formule ton plan avant de consulter l’évaluation." },
+        { side: "book", uci: "b7b5", explanation: "La réponse noire change les priorités; réévalue la position au lieu d’attribuer une intention cachée." },
+        { side: "user", uci: "a4b3", explanation: "Compare cette réponse à la variante principale du moteur et à l’explication humaine disponible." }
+      ]
+    },
+    {
+      id: "comparison-thinking-08-endgame-plan",
+      kind: "method",
+      level: "Expert",
+      title: "08 · Choisir une suite adaptée à la finale",
+      category: "Méthode · maîtres et Stockfish",
+      program: "Étude comparée · maîtres et Stockfish",
+      author: "SupaChess Académie",
+      book: "Parcours pédagogique original",
+      reference: "Position pédagogique de finale · activité de la tour et du roi",
+      fen: "7k/8/8/8/8/8/8/R6K w - - 0 1",
+      color: "w",
+      question: "Quel plan illustre le mieux une décision calculée plutôt qu’un simple coup forcing ?",
+      choices: [
+        { text: "Activer la tour sur la huitième rangée, puis rapprocher le roi en réévaluant.", correct: true },
+        { text: "Chercher une fourchette inexistante avant de regarder les rois.", correct: false },
+        { text: "Pousser un pion qui n’existe pas sur l’échiquier.", correct: false }
+      ],
+      principle: "Dans une finale, l’activité du roi et la coupure du roi adverse peuvent compter davantage qu’une menace immédiate. L’évaluation dépend des cases et des réponses légales.",
+      transfer: "Compare la portée des pièces et l’activité des rois, puis demande au moteur de vérifier ta ligne.",
+      pitfall: "Un coup actif n’est pas automatiquement gagnant; vérifie les ressources du roi adverse et la position finale.",
+      hints: ["La tour peut couper la huitième rangée avec échec.", "Après le déplacement du roi noir, cherche une case sûre pour activer le roi blanc."],
+      sequence: [
+        { side: "user", uci: "a1a8", explanation: "La tour donne échec et coupe la rangée." },
+        { side: "book", uci: "h8h7", explanation: "Le roi sort de l’échec sans être sur la rangée de la tour." },
+        { side: "user", uci: "h1g2", explanation: "Le roi blanc s’active; compare l’issue avec d’autres réponses légales." }
+      ]
+    },
+    {
       id: "capablanca-rook-king",
       level: "Avancé",
       title: "Couper le roi avec la tour",
