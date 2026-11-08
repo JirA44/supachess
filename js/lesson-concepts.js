@@ -109,6 +109,16 @@
       ["plan-selection","Choisir un plan cohérent",2,"Un plan relie une faiblesse ou un objectif à une séquence de coups qui améliore les pièces.","Nomme la cible, la pièce à améliorer et le changement de structure recherché.","Jouer un plan appris sans vérifier s’il correspond à la position actuelle.","Fonde le plan sur une faiblesse réelle et les meilleures réponses adverses.","Plan"],
       ["time-management","Gérer le temps de réflexion",2,"Le temps doit être investi dans les décisions critiques, les positions tactiques et les moments où le plan change.","Repère les coups forcés et les positions où plusieurs candidats doivent être comparés.","Dépenser le même temps sur chaque coup ou jouer trop vite dans une position critique.","Ralentis quand le roi, le matériel ou la structure peut changer tactiquement.","Précision"],
       ["error-review","Apprendre de ses erreurs",1,"L’analyse utile identifie la décision, la meilleure réponse manquée et le repère qui évitera de répéter l’erreur.","Rejoue la position avant le coup, formule les candidats puis compare la réponse adverse.","Se contenter de mémoriser le meilleur coup sans comprendre pourquoi l’idée échouait.","Transforme chaque erreur en question de vérification à réutiliser.","Auto-réfutation"]
+    ]},
+    { id: "positional-play", label: "Jeu positionnel · plans et manœuvres", items: [
+      ["central-break","Rupture centrale",1,"Une rupture centrale modifie la structure et ouvre des lignes. Elle est forte si tes pièces peuvent utiliser les lignes avant celles de l’adversaire.","Avant la poussée, compare le développement, la sécurité des rois, les prises possibles et les cases qui seront libérées.","Ouvrir le centre alors que tes pièces sont encore inactives ou que ton roi est moins sûr.","Calcule les reprises, puis vérifie quelles pièces profitent réellement de l’ouverture.","rupture centrale"],
+      ["outpost","Avant-poste durable",2,"Un avant-poste est une case avancée difficile à contester par les pions adverses, où une pièce peut s’installer avec soutien.","Vérifie quels pions adverses peuvent chasser la pièce et si tes pièces ou pions soutiennent la case.","Confondre une case avancée avec un avant-poste stable sans vérifier les échanges et les contrôles.","Trace les poussées de pions disponibles des deux camps avant d’installer la pièce.","avant-poste"],
+      ["open-file-invasion","Occuper et pénétrer par une colonne ouverte",2,"Une colonne ouverte donne une voie d’accès aux tours; il faut ensuite trouver une rangée ou une cible où pénétrer.","Repère les colonnes sans pions, les tours qui peuvent les occuper et les cases d’entrée sûres.","Occuper une colonne sans cible ni point d’infiltration et laisser l’adversaire échanger la tour active.","Cherche une case d’entrée soutenue et vérifie si l’adversaire peut chasser ou échanger la tour.","colonne ouverte, infiltration"],
+      ["piece-maneuver","Manœuvrer la pièce la moins active",2,"Une manœuvre améliore une pièce en plusieurs étapes vers une case où elle contrôle plus de cases ou attaque une faiblesse.","Compare les fonctions actuelles des pièces, puis nomme une destination utile et un itinéraire sûr.","Bouger une pièce plusieurs fois sans objectif, ou lancer une attaque avec une pièce encore inactive.","Formule la case de destination avant de choisir la première étape de la route.","manœuvre, pièce inactive"],
+      ["restrict-piece","Restreindre une pièce adverse",3,"La restriction réduit les cases utiles d’une pièce ou limite ses ruptures; une pièce gênée n’est pas automatiquement gagnée.","Compte les cases de mobilité, les cases contrôlées et les meilleures sorties après chaque poussée ou échange.","Affirmer qu’une pièce est enfermée sans vérifier ses sorties, les sacrifices de libération et le contre-jeu.","Construis la liste des sorties légales, puis vérifie que ton plan les réduit sans créer une faiblesse plus grave.","restriction, mobilité"],
+      ["second-weakness","Créer une deuxième faiblesse",4,"Quand une cible est bien défendue, changer d’aile peut obliger l’adversaire à répartir ses défenseurs et créer une nouvelle cible.","Repère la première cible, les défenseurs qui lui sont liés et l’aile où une seconde faiblesse peut apparaître.","Insister sur une cible imprenable ou déplacer les pièces sans empêcher le contre-jeu adverse.","Cherche un transfert de pièces ou une majorité de pions qui force l’adversaire à choisir quoi défendre.","deuxième faiblesse, plan"],
+      ["king-activity","Activer le roi en finale",1,"Quand les dames et les menaces de mat ont disparu, le roi devient une pièce de soutien et de lutte pour les cases clés.","Compare les routes du roi, les pions vulnérables et les cases d’entrée des deux camps.","Garder le roi passif comme en milieu de jeu ou s’éloigner d’un pion passé urgent.","Vérifie d’abord les échecs et les courses de pions, puis choisis la route centrale sûre.","roi actif, finale"],
+      ["space-and-breaks","Espace, cases faibles et rupture libératrice",3,"L’espace restreint les pièces adverses mais peut devenir une cible; une rupture bien préparée peut libérer les pièces comprimées.","Repère les pièces sans cases, la base de la chaîne de pions et la rupture qui pourrait transformer la structure.","Pousser encore des pions sans soutien ou fermer la position quand tes pièces ont besoin de lignes.","Identifie le point de rupture et évalue la position après les échanges de pions.","espace, structure, rupture"]
     ]}
   ];
 
@@ -337,6 +347,133 @@
     if (conceptFilter) conceptFilter.value = "";
   });
   renderCards();
+
+  const positionalPlayLessons = [
+    {
+      id: "positional-central-break-prepared-pieces", level: "Débutant",
+      title: "Ouvrir le centre au bon moment", category: "Jeu positionnel · Ruptures centrales",
+      author: "SupaChess Académie", program: "Jeu positionnel · rupture et activité des pièces",
+      book: "Parcours original SupaChess", reference: "Position pédagogique originale",
+      fen: "r1bqkbnr/ppp2ppp/2np4/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4", color: "w",
+      question: "Tes pièces mineures sont sorties et le centre reste mobile. Quelle rupture ouvre les lignes avant que l’adversaire ne s’installe ?",
+      choices: [
+        { text: "d4, puis calculer la reprise sur d4", correct: true },
+        { text: "h3, sans changer le centre ni améliorer une pièce", correct: false },
+        { text: "Déplacer une pièce déjà développée sans cible précise", correct: false }
+      ],
+      principle: "d4 conteste le pion e5 et ouvre le centre. Une rupture centrale ne vaut que si tu calcules les prises et si tes pièces peuvent profiter des lignes libérées.",
+      transfer: "Avant toute rupture, vérifie l’activité des pièces, la sécurité des rois et la position après les reprises. Si l’adversaire peut ouvrir les lignes à son avantage, prépare d’abord tes pièces.",
+      hints: ["Cherche la poussée qui attaque le pion central e5 et libère les lignes.", "Après d4, calcule exd4 puis vérifie si Nxd4 est légal."],
+      sequence: [
+        { side: "user", uci: "d2d4", explanation: "d4 conteste le pion e5 et ouvre le centre." },
+        { side: "book", uci: "e5d4", explanation: "Les Noirs prennent le pion d4; la structure centrale change." },
+        { side: "user", uci: "f3d4", explanation: "Nxd4 reprend avec une pièce développée qui occupe une case centrale." }
+      ]
+    },
+    {
+      id: "positional-outpost-knight", level: "Intermédiaire",
+      title: "Installer un cavalier sur un avant-poste", category: "Jeu positionnel · Cases fortes",
+      author: "SupaChess Académie", program: "Jeu positionnel · cases fortes et avant-postes",
+      book: "Parcours original SupaChess", reference: "Position pédagogique originale",
+      fen: "4k3/2p1p3/8/8/3N4/8/8/4K3 w - - 0 1", color: "w",
+      question: "Les pions noirs ne peuvent pas chasser durablement un cavalier de d5. Quelle case exploite cet avant-poste ?",
+      choices: [
+        { text: "Nd5, en occupant la case forte", correct: true },
+        { text: "Reculer le cavalier sans raison", correct: false },
+        { text: "Avancer un pion de l’aile sans améliorer la position", correct: false }
+      ],
+      principle: "Nd5 installe le cavalier sur une case que les pions c7 et e7 ne peuvent pas attaquer.",
+      transfer: "Vérifie aussi si un échange, une attaque directe ou un sacrifice de pion permettrait à l’adversaire de supprimer le cavalier.",
+      hints: ["Regarde les cases attaquées par les pions noirs c7 et e7.", "Déplace le cavalier d4 vers la case centrale qu’aucun de ces pions ne contrôle."],
+      sequence: [
+        { side: "user", uci: "d4d5", explanation: "Nd5 occupe l’avant-poste : aucun pion noir ne peut le chasser directement." },
+        { side: "book", uci: "e8d8", explanation: "Le roi se déplace; l’avant-poste reste occupé et contrôle des cases centrales." }
+      ]
+    },
+    {
+      id: "positional-rook-seventh-rank", level: "Intermédiaire",
+      title: "Pénétrer sur la septième rangée", category: "Jeu positionnel · Colonnes et infiltration",
+      author: "SupaChess Académie", program: "Jeu positionnel · activité des tours",
+      book: "Parcours original SupaChess", reference: "Position pédagogique originale",
+      fen: "6k1/8/8/8/8/8/8/3R2K1 w - - 0 1", color: "w",
+      question: "La colonne d est libre et la tour peut s’infiltrer sans être capturée. Quelle case augmente son activité ?",
+      choices: [
+        { text: "Rd7, pour pénétrer sur la septième rangée", correct: true },
+        { text: "Re1, en restant sur la première rangée", correct: false },
+        { text: "Déplacer le roi alors que la tour a une voie d’infiltration", correct: false }
+      ],
+      principle: "Rd7 utilise la colonne ouverte pour placer la tour sur la septième rangée, où elle peut créer des menaces dans une position réelle.",
+      transfer: "Une tour sur la septième rangée n’est forte que si elle est protégée et si l’adversaire ne peut pas l’échanger ou créer un contre-jeu décisif.",
+      hints: ["La tour peut parcourir la colonne d sans obstacle.", "Choisis une case d’infiltration avancée, puis vérifie qu’elle n’est pas attaquée par le roi."],
+      sequence: [
+        { side: "user", uci: "d1d7", explanation: "Rd7 utilise la colonne ouverte pour pénétrer sur la septième rangée." },
+        { side: "book", uci: "g8f7", explanation: "Le roi se rapproche sans pouvoir attaquer la tour en d7." }
+      ]
+    },
+    {
+      id: "positional-improve-worst-piece", level: "Intermédiaire",
+      title: "Améliorer la pièce la moins active", category: "Jeu positionnel · Manœuvres",
+      author: "SupaChess Académie", program: "Jeu positionnel · amélioration des pièces",
+      book: "Parcours original SupaChess", reference: "Position pédagogique originale",
+      fen: "6k1/8/8/8/8/8/5N2/4K2R w - - 0 1", color: "w",
+      question: "Le cavalier est mal placé et la tour est déjà sur une colonne libre. Quelle manœuvre l’oriente vers le centre ?",
+      choices: [
+        { text: "Nd3, pour contrôler davantage de cases centrales", correct: true },
+        { text: "Déplacer la tour d’une case sur la même colonne sans objectif", correct: false },
+        { text: "Avancer le roi vers le bord", correct: false }
+      ],
+      principle: "Nd3 améliore le cavalier et lui donne accès à des cases centrales. Un plan positionnel commence par identifier la pièce qui contribue le moins.",
+      transfer: "Compare toutes tes pièces et définis leur destination avant de calculer le chemin de manœuvre.",
+      hints: ["Compare les cases contrôlées par le cavalier et la tour.", "Cherche un coup de cavalier qui se rapproche du centre."],
+      sequence: [
+        { side: "user", uci: "f2d3", explanation: "Nd3 améliore la pièce la moins active et contrôle plusieurs cases centrales." },
+        { side: "book", uci: "g8f7", explanation: "Le roi noir se rapproche; le cavalier reste sur une case active." }
+      ]
+    },
+    {
+      id: "positional-king-activity-endgame", level: "Débutant",
+      title: "Activer le roi en finale", category: "Jeu positionnel · Activité du roi",
+      author: "SupaChess Académie", program: "Jeu positionnel · principes de finale",
+      book: "Parcours original SupaChess", reference: "Position pédagogique originale",
+      fen: "8/8/8/8/3k4/8/6P1/4K3 w - - 0 1", color: "w",
+      question: "Il n’y a plus de pièces lourdes. Quelle décision rend ton roi plus actif et l’oriente vers le centre ?",
+      choices: [
+        { text: "Kf2, pour rapprocher le roi du centre", correct: true },
+        { text: "Garder le roi en e1 sans plan", correct: false },
+        { text: "Avancer le pion g2 sans vérifier la course des rois", correct: false }
+      ],
+      principle: "Kf2 rapproche le roi du centre et du pion, rôle essentiel en finale. Vérifie toutefois les cases contrôlées et les courses de pions.",
+      transfer: "L’activité du roi est prioritaire seulement si elle ne laisse pas perdre un pion passé ou une tactique immédiate.",
+      hints: ["Compare le trajet du roi et la distance au pion g2.", "Choisis une case centrale qui n’est pas adjacente au roi noir d4."],
+      sequence: [
+        { side: "user", uci: "e1f2", explanation: "Kf2 active le roi et l’oriente vers le centre et le pion." },
+        { side: "book", uci: "d4c4", explanation: "Le roi noir avance aussi; les deux rois se disputent les cases d’accès." }
+      ]
+    },
+    {
+      id: "positional-restrict-knight", level: "Intermédiaire",
+      title: "Réduire la mobilité sans prétendre gagner la pièce", category: "Jeu positionnel · Restriction",
+      author: "SupaChess Académie", program: "Jeu positionnel · mobilité et cases de fuite",
+      book: "Parcours original SupaChess", reference: "Position pédagogique originale",
+      fen: "4k3/8/8/7n/8/8/6P1/4K3 w - - 0 1", color: "w",
+      question: "Quelle poussée attaque le cavalier h5 et le force à choisir une sortie, sans conclure qu’il est enfermé ?",
+      choices: [
+        { text: "g4, puis compter les sorties légales du cavalier", correct: true },
+        { text: "Avancer le roi vers le cavalier", correct: false },
+        { text: "Jouer ailleurs en ignorant sa mobilité", correct: false }
+      ],
+      principle: "g4 attaque le cavalier h5 et lui impose une décision. La poussée ne le gagne pas automatiquement : il faut vérifier ses sorties, notamment f4, f6, g3 et g7.",
+      transfer: "Un signal positionnel indique une possibilité de restriction, pas une conclusion. Compte les cases de fuite et les contre-menaces avant de lancer une chasse.",
+      hints: ["Un pion blanc en g4 attaque les pièces situées en h5 et f5.", "Après la poussée, énumère les cases légales du cavalier noir."],
+      sequence: [
+        { side: "user", uci: "g2g4", explanation: "g4 attaque le cavalier h5 et réduit ses choix immédiats." },
+        { side: "book", uci: "h5f4", explanation: "Nf4 est une sortie légale : le cavalier n’était pas enfermé. Le bon diagnostic consiste à prévoir cette ressource." }
+      ]
+    }
+  ];
+  if (window.SupaChessAcademy?.addDerivedLessons) {
+    window.SupaChessAcademy.addDerivedLessons(positionalPlayLessons);
+  }
 
   const weakSignalCombinationLessons = [
     {
