@@ -53,6 +53,10 @@ function isLevelDiagnosticActive() {
   const diagnostic = readLevelDiagnostic();
   return Boolean(diagnostic && diagnostic.active);
 }
+function isReviewDisplayActive() {
+  const review = typeof reviewState !== "undefined" ? reviewState : null;
+  return Boolean(review && (review.running || review.returnState || review.exercise));
+}
 let correctionExerciseModeActive = false;
 let correctionModeRestore = null;
 function isUnassistedAidLockActive() { return state.unassistedGame && !correctionExerciseModeActive; }
@@ -1032,8 +1036,9 @@ function recordMoveGrade(ply, color, category, metadata = {}) {
 function renderMoveGradeSummary() {
   const wrap = $("move-grade-summary");
   if (!wrap) return;
-  wrap.hidden = isUnassistedAidLockActive();
-  if (isUnassistedAidLockActive()) return;
+  const hideForUnassistedPlay = isUnassistedAidLockActive() && !isReviewDisplayActive();
+  wrap.hidden = hideForUnassistedPlay;
+  if (hideForUnassistedPlay) return;
   const categories = [
     ["brilliant", "!!", "Brillant"], ["best", "★", "Meilleur coup"],
     ["very-good", "!", "Très bon coup"], ["good", "✓", "Bon coup"],
@@ -1675,27 +1680,36 @@ function renderHistory() {
   const grades = replayHistory && Array.isArray(replayHistory.moveGrades)
     ? replayHistory.moveGrades : (state.moveGradeHistory || []);
   const gradesByPly = new Map(grades.map((entry) => [Number(entry.ply), entry]));
-  const moveQualityMarkup = (ply) => {
+  const qualityForPly = (ply) => {
     const entry = gradesByPly.get(ply);
-    const category = entry && entry.category === "mistake" ? "error" : entry && gradeLabels[entry.category] ? entry.category : "unrated";
+    const category = entry && entry.category === "mistake" ? "error" :
+      entry && gradeLabels[entry.category] ? entry.category : "unrated";
     const [symbol, label] = gradeLabels[category];
-    return "<span class=\"mv-quality grade-" + category + "\" title=\"Qualité Stockfish : " + label +
-      "\" aria-label=\"Qualité Stockfish : " + label + "\">" + symbol + "</span>";
+    return '<span class="mv-quality grade-' + category + '" title="Qualité Stockfish : ' +
+      label + '" aria-label="Qualité Stockfish : ' + label + '">' + symbol + '</span>';
   };
   const moveMarkup = (san, ply) => {
     const safeSan = esc(san);
-    if (!replayHistory) return "<span class=\"mv\">" + safeSan + "</span>";
+    if (!replayHistory) return '<span class="mv">' + safeSan + '</span>';
     const current = Number(replayHistory.currentPly) === ply;
-    return "<button type=\"button\" class=\"mv replay-move" + (current ? " active" : "") +
-      "\" data-replay-ply=\"" + ply + "\" aria-label=\"Afficher la position après le demi-coup " +
-      ply + " : " + safeSan + "\"" + (current ? " aria-current=\"step\"" : "") + ">" + safeSan + "</button>";
+    const symbol = qualityForPly(ply);
+    return '<button type="button" class="mv replay-move' + (current ? ' active' : '') +
+      '" data-replay-ply="' + ply + '" aria-label="Afficher la position après le demi-coup ' +
+      ply + ' : ' + safeSan + '" ' + (current ? 'aria-current="step"' : '') + '>' +
+      '<span class="mv-san">' + safeSan + '</span>' + symbol + '</button>';
   };
+  const liveQualityMarkup = (ply) => qualityForPly(ply);
   let html = "";
   for (let i = 0; i < hist.length; i += 2) {
-    html += "<span class=\"mvnum\">" + (i / 2 + 1) + ".</span>" + moveMarkup(hist[i], i + 1) +
-      moveQualityMarkup(i + 1) + evalTag(evals[i]) + (replayHistory ? "" : accuracyHistoryTag(i + 1));
-    if (hist[i + 1]) html += moveMarkup(hist[i + 1], i + 2) +
-      moveQualityMarkup(i + 2) + evalTag(evals[i + 1]) + (replayHistory ? "" : accuracyHistoryTag(i + 2));
+    const whitePly = i + 1;
+    html += '<span class="mvnum">' + (i / 2 + 1) + '.</span>' +
+      moveMarkup(hist[i], whitePly) +
+      (replayHistory ? "" : liveQualityMarkup(whitePly) + evalTag(evals[i]) + accuracyHistoryTag(whitePly));
+    if (hist[i + 1]) {
+      const blackPly = i + 2;
+      html += moveMarkup(hist[i + 1], blackPly) +
+        (replayHistory ? "" : liveQualityMarkup(blackPly) + evalTag(evals[i + 1]) + accuracyHistoryTag(blackPly));
+    }
   }
   $("move-history").innerHTML = html || "<em>Aucun coup joué.</em>";
 }
@@ -1927,9 +1941,10 @@ function accuracyHtml() {
 function renderAccuracy() {
   const html = accuracyHtml();
   const cell = $("stat-accuracy");
-  if (cell) { cell.innerHTML = html; if (cell.closest("tr")) cell.closest("tr").hidden = state.unassistedGame; }
+  const hideForUnassistedPlay = state.unassistedGame && !isReviewDisplayActive();
+  if (cell) { cell.innerHTML = html; if (cell.closest("tr")) cell.closest("tr").hidden = hideForUnassistedPlay; }
   const badge = $("accuracy-badge");
-  if (badge) { badge.innerHTML = "Précision — " + html; badge.hidden = state.unassistedGame; }
+  if (badge) { badge.innerHTML = "Précision — " + html; badge.hidden = hideForUnassistedPlay; }
 }
 window.SupaChessRenderAccuracy = renderAccuracy;
 
