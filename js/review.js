@@ -1223,6 +1223,7 @@ function reviewHandleExerciseSquareClick(square){
           boardUI.selected=null;boardUI.legalTargets=[];renderBoard();return true;
         }
         exercise.awaitingRetry=true;
+        reviewSyncBestMoveButton();
         boardUI.selected=null;boardUI.legalTargets=[];boardUI.legalTargetHints={};
         boardUI.lastMove={from:selected,to:square,san:played.san};
         document.getElementById("review-exercise-feedback").textContent=
@@ -1235,6 +1236,7 @@ function reviewHandleExerciseSquareClick(square){
       }
       const played=state.chess.move({from:selected,to:square,promotion});
       exercise.solved=true;
+      reviewSyncBestMoveButton();
       reviewCorrectionProgressSave(exercise.progressGameId,item);
       boardUI.selected=null;boardUI.legalTargets=[];
       boardUI.lastMove={from:selected,to:square,san:played.san};
