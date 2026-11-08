@@ -1333,6 +1333,7 @@ function reviewBeginReplay() {
     coachClass: document.getElementById("coach-panel").className,
   };
   reviewSyncBestMoveButton();
+  window.SupaChessRenderAccuracy?.();
 }
 
 function reviewRestoreAfterReplay() {
