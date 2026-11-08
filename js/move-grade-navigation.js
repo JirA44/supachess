@@ -45,34 +45,43 @@
     return matches[0];
   }
 
-  function moveGradeEntriesThroughPosition(entries, currentPly) {
-    const limit = Math.max(0, Number(currentPly) || 0);
+  function moveGradeEntriesThroughPosition(entries, currentPly, moves) {
+    const requested = Math.max(0, Math.floor(Number(currentPly) || 0));
+    const moveList = Array.isArray(moves) ? moves : null;
+    const limit = moveList ? Math.min(requested, moveList.length) : requested;
     const colorAliases = { white: "w", black: "b", w: "w", b: "b" };
-    return (Array.isArray(entries) ? entries : [])
-      .filter((entry) => entry && Number.isFinite(Number(entry.ply)) && Number(entry.ply) <= limit)
-      .map((entry) => ({
-        ...entry,
-        ply: Number(entry.ply),
-        color: colorAliases[String(entry.color || "").toLowerCase()] || entry.color,
-        category: normalizeCategory(entry.category),
-      }))
-      .filter((entry) => entry.color === "w" || entry.color === "b");
-  }
-
-  function currentPositionPly() {
-    if (typeof reviewState !== "undefined" && reviewState.returnState) {
-      return Math.max(0, Number(state.replayIdx) || 0);
+    const byPly = new Map();
+    for (const entry of Array.isArray(entries) ? entries : []) {
+      if (!entry || !Number.isFinite(Number(entry.ply)) || Number(entry.ply) > limit) continue;
+      const color = colorAliases[String(entry.color || "").toLowerCase()] || entry.color;
+      if (color !== "w" && color !== "b") continue;
+      const ply = Number(entry.ply);
+      byPly.set(ply, { ...entry, ply, color, category: normalizeCategory(entry.category) });
     }
-    return typeof state !== "undefined" && state.chess
-      ? state.chess.history().length
-      : 0;
+    if (moveList) {
+      return moveList.slice(0, limit).map((move, index) => {
+        const ply = index + 1;
+        const saved = byPly.get(ply);
+        const color = colorAliases[String(move && move.color || "").toLowerCase()] || (saved && saved.color);
+        return {
+          ...(saved || {}),
+          ply,
+          color,
+          category: saved ? saved.category : "unrated",
+        };
+      }).filter((entry) => entry.color === "w" || entry.color === "b");
+    }
+    return [...byPly.values()].sort((a, b) => a.ply - b.ply);
   }
 
   function currentGradeEntries() {
-    const source = typeof reviewState !== "undefined" && reviewState.returnState
-      ? reviewState.moveGrades
-      : (typeof state !== "undefined" ? state.moveGradeHistory : []);
-    return moveGradeEntriesThroughPosition(source, currentPositionPly());
+    const inReplay = typeof reviewState !== "undefined" && reviewState.returnState;
+    if (inReplay) {
+      return moveGradeEntriesThroughPosition(reviewState.moveGrades, state.replayIdx, reviewState.moves);
+    }
+    if (typeof state === "undefined" || !state.chess) return [];
+    const moves = state.chess.history({ verbose: true });
+    return moveGradeEntriesThroughPosition(state.moveGradeHistory, moves.length, moves);
   }
 
   function prepareCurrentGameReplay() {
