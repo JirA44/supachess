@@ -983,7 +983,9 @@ async function playEngineMove() {
     boardUI.lastMove = { from: mv.from, to: mv.to, san: mv.san, grade: state.unassistedGame ? null : moveGrade(null) };
     if (baseline.lines.length) {
       const pending = { color: engineColor, beforeCp: clampCpFromLine(baseline.lines[0]),
-        beforeValue: scoreValue(baseline.lines[0]), beforeBestUci: baseline.lines[0].pv[0],
+        beforeValue: scoreValue(baseline.lines[0]),
+        beforeScoreCp: baseline.lines[0].mate == null && Number.isFinite(baseline.lines[0].scoreCp) ? baseline.lines[0].scoreCp : null,
+        beforeMate: baseline.lines[0].mate, beforeBestUci: baseline.lines[0].pv[0],
         san: mv.san, uci: res.bestmove, fen, square: mv.to, moveNumber: moveNumberFromFen(fen),
         ply: state.chess.history().length, token: gen };
       recordMoveGrade(pending.ply, engineColor, "unrated");
@@ -1101,9 +1103,25 @@ function renderMoveGradeSummary() {
 }
 
 function finishEngineFeedback(pending, replyLine) {
+  const beforeScoreCp = Number(pending.beforeScoreCp);
+  const afterScoreCp = Number(replyLine && replyLine.scoreCp);
+  const comparable = pending.beforeMate == null && replyLine && replyLine.mate == null &&
+    Number.isFinite(beforeScoreCp) && Number.isFinite(afterScoreCp);
   const card = moveFeedback.cards.get(pending.color);
+  if (!comparable) {
+    recordMoveGrade(pending.ply, pending.color, "unrated", { lossCp: null });
+    if (typeof gamesAutoSave === "function") gamesAutoSave();
+    if (!card || card.token !== pending.token) return;
+    if (boardUI.lastMove && boardUI.lastMove.to === pending.square) {
+      boardUI.lastMove.grade = null;
+      boardUI.lastMove.evaluation = state.unassistedGame ? null : replyLine && (replyLine.scoreCp != null || replyLine.mate != null)
+        ? formatScore(replyLine, pending.color === "b") : "—";
+      renderBoard();
+    }
+    return;
+  }
   if (!card || card.token !== pending.token) return;
-  const deltaCp = Math.max(0, pending.beforeValue + scoreValue(replyLine));
+  const deltaCp = Math.max(0, beforeScoreCp + afterScoreCp);
   const cand = { deltaCp, line: { ...replyLine, pv: [pending.uci, ...replyLine.pv] } };
   const brilliant = isBrilliantCandidate(pending.fen, cand);
   recordMoveGrade(pending.ply, pending.color, moveGradeCategory(deltaCp, brilliant, pending.uci === pending.beforeBestUci), { lossCp: deltaCp });
