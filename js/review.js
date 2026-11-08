@@ -1016,6 +1016,8 @@ function reviewShowCorrectionExercise(index){
   next.textContent=index===exercise.items.length-1?"Terminer":"Exercice suivant";
   setStatus("Exercice de correction — trouve le meilleur coup.");
   renderAll();
+  // Reapply the cumulative cutoff after rendering a correction position.
+  reviewSetMoveGradeHistory(reviewState.moveGrades, Math.max(0, (Number(item.ply) || 1) - 1));
   window.applyLevelDiagnosticLock?.();
   if(typeof renderAccuracy==="function")renderAccuracy();
   if(Number.isFinite(item.bestScoreCp)||Number.isFinite(item.bestMate)){
