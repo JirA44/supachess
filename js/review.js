@@ -981,6 +981,8 @@ function reviewShowCorrectionExercise(index){
   if(explanationContent)explanationContent.replaceChildren();
   document.getElementById("btn-review-exercise-retry")?.classList.add("hidden");
   const item=exercise.items[index];
+  reviewState.variation=null;
+  reviewSyncBestMoveButton();
   reviewSetMoveGradeHistory(reviewState.moveGrades, Math.max(0, (Number(item.ply) || 1) - 1));
   state.gen++;
   state.chess=new Chess(item.fen);
@@ -1288,6 +1290,15 @@ function reviewExitCorrectionExercises(){
   reviewRestoreAfterReplay();
 }
 
+function reviewSyncBestMoveButton() {
+  const button = document.getElementById("btn-replay-best-move");
+  if (!button) return;
+  const active = Boolean(reviewState.returnState && reviewState.fens.length);
+  const correctionNeedsRetry = Boolean(reviewState.exercise && (reviewState.exercise.awaitingRetry || reviewState.exercise.solved));
+  button.classList.toggle("hidden", !active);
+  button.disabled = !active || !state.engine || reviewState.bestMovePending || correctionNeedsRetry;
+}
+
 function reviewSetReplayControls(active) {
   const enabled = Boolean(active && reviewState.fens.length);
   document.getElementById("btn-replay-prev").disabled = !enabled;
@@ -1295,6 +1306,7 @@ function reviewSetReplayControls(active) {
   document.getElementById("btn-replay-quit").classList.toggle("hidden", !enabled);
   if (!enabled) document.getElementById("replay-label").textContent =
     reviewState.fens.length ? "Relecture en pause" : "Importez ou analysez une partie pour la parcourir";
+  reviewSyncBestMoveButton();
 }
 
 function reviewBeginReplay() {
@@ -1316,6 +1328,7 @@ function reviewBeginReplay() {
     feedbackHtml: feedback.innerHTML,
     coachClass: document.getElementById("coach-panel").className,
   };
+  reviewSyncBestMoveButton();
 }
 
 function reviewRestoreAfterReplay() {
@@ -1342,6 +1355,7 @@ function reviewRestoreAfterReplay() {
   document.getElementById("coach-panel").className = saved.coachClass;
   reviewState.returnState = null;
   reviewState.variation = null;
+  reviewSyncBestMoveButton();
   reviewState.bestMovePending = false;
   window.SupaReplayHistory = null;
   document.getElementById("replay-bar").classList.remove("hidden");
@@ -1418,22 +1432,27 @@ async function reviewPlayBestHalfMove() {
   }
 
   let basePly, baseFen;
-  if (reviewState.variation) {
+  if (reviewState.exercise && !reviewState.variation) {
+    const item = reviewState.exercise.items[reviewState.exercise.index];
+    basePly = Math.max(0, (Number(item && item.ply) || 1) - 1);
+    baseFen = state.chess.fen();
+  } else if (reviewState.variation) {
     basePly = reviewState.variation.basePly;
     baseFen = state.chess.fen();
   } else {
     const currentPly = Math.max(0, Number(state.replayIdx) || 0);
     basePly = currentPly > 0 ? currentPly - 1 : 0;
     baseFen = reviewState.fens[basePly];
-    if (!baseFen) {
-      setStatus("Impossible de retrouver la position avant le demi-coup à remplacer.");
-      return false;
-    }
+  }
+  if (!baseFen) {
+    setStatus("Impossible de retrouver la position avant le demi-coup à remplacer.");
+    return false;
   }
 
   reviewState.bestMovePending = true;
   const button = document.getElementById("btn-best-move");
   if (button) button.dataset.pending = "true";
+  reviewSyncBestMoveButton();
   const generation = ++state.gen;
   state.phase = "analyzing";
   setStatus("Stockfish calcule le meilleur demi-coup pour remplacer celui de la partie…");
@@ -1484,6 +1503,12 @@ async function reviewPlayBestHalfMove() {
       ply: basePly + index + 1, color: item.color, category: "best"
     }));
     reviewSetMoveGradeHistory(variationGrades, state.replayIdx);
+    if (reviewState.exercise) {
+      reviewState.exercise.awaitingRetry = true;
+      document.getElementById("review-exercise-feedback").textContent =
+        `Stockfish joue ${move.san}, le meilleur demi-coup dans cette position. L’aide ne valide pas l’exercice : utilise « Réessayer » pour le refaire toi-même.`;
+      document.getElementById("btn-review-exercise-retry")?.classList.remove("hidden");
+    }
     renderAll();
     const originalMove = reviewState.moves[basePly];
     const replaced = reviewState.variation.moves.length === 1 && originalMove ? " · remplace " + originalMove.san : "";
@@ -1503,6 +1528,7 @@ async function reviewPlayBestHalfMove() {
     reviewState.bestMovePending = false;
     if (button) button.dataset.pending = "false";
     if (typeof syncBestMoveButton === "function") syncBestMoveButton();
+    reviewSyncBestMoveButton();
   }
 }
 window.reviewPlayBestHalfMove = reviewPlayBestHalfMove;
@@ -1671,6 +1697,10 @@ document.getElementById("btn-replay-game").addEventListener("click", () => {
 document.getElementById("btn-replay-prev").addEventListener("click", () => replayGoto((state.replayIdx || 0) - 1).catch(console.error));
 document.getElementById("btn-replay-next").addEventListener("click", () => replayGoto((state.replayIdx || 0) + 1).catch(console.error));
 document.getElementById("btn-replay-quit").addEventListener("click", reviewRestoreAfterReplay);
+document.getElementById("btn-replay-best-move").addEventListener("click", () => {
+  reviewPlayBestHalfMove().catch((error) =>
+    setStatus("Impossible de jouer le meilleur demi-coup : " + (error && error.message || error)));
+});
 if (typeof document.addEventListener === "function") document.addEventListener("keydown", (event) => {
   const shortcutApi=typeof window!=="undefined"?window.SupaKeyboardShortcuts:null;
   const target=event.target;
