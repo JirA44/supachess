@@ -183,3 +183,7 @@
 .academy-content-count strong { color: var(--accent); font-size: clamp(1.45rem, 3vw, 1.9rem); line-height: 1.1; }
 .academy-content-count small { color: var(--text-dim); font-size: .8rem; line-height: 1.35; }
 .academy-content-count-note { margin: 12px 0 0; text-align: center; font-size: .82rem; }
+
+.lesson-turn-indicator { display:inline-flex; align-items:center; gap:8px; width:max-content; max-width:100%; margin:0 0 10px; padding:7px 12px; border:1px solid #6b8f72; border-radius:999px; background:#14251a; color:#b7f0c5; font-weight:800; line-height:1.35; }
+.lesson-turn-indicator[data-side="b"] { border-color:#8592a5; background:#1d2430; color:#f0f3f8; }
+.lesson-turn-indicator[data-side="w"] { border-color:#6b8f72; background:#14251a; color:#b7f0c5; }
