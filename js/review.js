@@ -193,6 +193,14 @@ function reviewHistorySave(pgn, headers = {}, correctionExercises = [], analysis
     event: headers.Event || "",
     date: /^\d{4}\.\d{2}\.\d{2}$/.test(String(headers.Date || "")) ? headers.Date : "",
     timeControl: headers.TimeControl || "",
+    sourceGameId: headers.SupaChessSourceGameId || (existing && existing.sourceGameId) || null,
+    userColor: headers.SupaChessUserColor || (existing && existing.userColor) || null,
+    trainingAidsUsed: headers.SupaChessTrainingAidsUsed === "true" ? true
+      : headers.SupaChessTrainingAidsUsed === "false" ? false
+      : existing && typeof existing.trainingAidsUsed === "boolean" ? existing.trainingAidsUsed : null,
+    unassistedMode: headers.SupaChessUnassistedMode === "true" ||
+      (headers.SupaChessTrainingAidsUsed === "false" && headers.SupaChessUnassistedMode !== "false") ||
+      Boolean(existing && existing.unassistedMode),
     correctionExercises: Array.isArray(correctionExercises) ? correctionExercises : [],
     moveGrades: Array.isArray(moveGrades) ? moveGrades : (existing && Array.isArray(existing.moveGrades) ? existing.moveGrades : []),
     analysis: analysis && analysis.version === 1 ? analysis : (existing && existing.analysis) || null,
@@ -603,7 +611,7 @@ async function reviewRun(options = {}) {
   return true;
 }
 
-async function reviewRunBatch(items, onProgress) {
+async function reviewRunBatch(items, onProgress, onComplete) {
   const queue = (Array.isArray(items) ? items : []).map((item) =>
     typeof item === "string" ? { pgn: item } : item
   ).filter((item) => item && typeof item.pgn === "string" && item.pgn.trim());
@@ -612,10 +620,15 @@ async function reviewRunBatch(items, onProgress) {
     const item = queue[index];
     const input = document.getElementById("pgn-input");
     if (input) input.value = item.pgn;
+    reviewState.currentHeaders = { ...(item.headers || {}) };
     if (typeof onProgress === "function") onProgress({ index: index + 1, total: queue.length, item });
-    const completed = await reviewRun({ batch: true });
-    results.push({ pgn: item.pgn, completed: completed === true });
-    if (completed !== true) break;
+    const completed = await reviewRun({ batch: true, headers: item.headers || {} });
+    const result = { pgn: item.pgn, completed: completed === true };
+    results.push(result);
+    if (typeof onComplete === "function") await onComplete({
+      index: index + 1, total: queue.length, item, completed: result.completed
+    });
+    if (!result.completed) break;
   }
   return results;
 }
