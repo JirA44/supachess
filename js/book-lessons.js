@@ -4985,6 +4985,35 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     }
   );
 
+  LESSONS.push({
+    id: "weak-signal-rim-knight-g5",
+    kind: "method",
+    level: "Avancé",
+    title: "Reconnaître le motif : cavalier de bord sans retraite",
+    category: "Stratégie · mobilité, cases de fuite et piège",
+    program: "SupaChess · lire les signaux faibles",
+    author: "SupaChess Académie",
+    book: "Leçon originale inspirée de la position fournie",
+    fen: "1k1r3r/bp4p1/2n2p1n/p6p/N3p3/1PP2N1P/PB3PP1/1K1R3R b - - 0 1",
+    color: "b",
+    question: "Après f3, quel coup exploite concrètement le manque de retraites du cavalier h4 ?",
+    choices: [
+      { text: "…g5 : le pion attaque le cavalier; ses quatre sorties sont occupées ou contrôlées.", correct: true },
+      { text: "…a4 : pousser le pion de l’aile sans s’occuper du cavalier attaqué.", correct: false },
+      { text: "Déplacer une tour sans créer de menace ni améliorer la sécurité du roi.", correct: false }
+    ],
+    principle: "Après …g5, le cavalier h4 a quatre sauts : f3 et g2 sont occupées par des pièces blanches; f5 et g6 sont contrôlées par le fou noir h7. Le pion g5 menace directement le cavalier.",
+    transfer: "Énumère les cases de retraite d’une pièce attaquée. Pour chacune, vérifie si elle est occupée, contrôlée, défendue ou tactiquement sûre; ensuite seulement conclus qu’elle est enfermée.",
+    pitfall: "Une case contrôlée n’implique pas automatiquement qu’on peut gagner la pièce : la défense peut être clouée ou surchargée. Recalcule la meilleure réponse adverse.",
+    hints: [
+      "Le cavalier h4 ne peut sauter qu’en f3, f5, g2 ou g6.",
+      "Les cases f3 et g2 sont occupées; trace les diagonales du fou h7 vers f5 et g6."
+    ],
+    sequence: [
+      { side: "user", uci: "g7g5", explanation: "…g5 attaque le cavalier h4. Vérifie ses quatre cases de fuite avant de conclure qu’il est piégé." }
+    ]
+  });
+
   renderCatalog();
   const searchParams = new URLSearchParams(location.search);
   const requestedLesson = searchParams.get("lesson");
