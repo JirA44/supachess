@@ -375,7 +375,7 @@
       title: "Installer un cavalier sur un avant-poste", category: "Jeu positionnel · Cases fortes",
       author: "SupaChess Académie", program: "Jeu positionnel · cases fortes et avant-postes",
       book: "Parcours original SupaChess", reference: "Position pédagogique originale",
-      fen: "4k3/2p1p3/8/8/3N4/8/8/4K3 w - - 0 1", color: "w",
+      fen: "4k3/2p1p3/8/8/8/4N3/8/4K3 w - - 0 1", color: "w",
       question: "Les pions noirs ne peuvent pas chasser durablement un cavalier de d5. Quelle case exploite cet avant-poste ?",
       choices: [
         { text: "Nd5, en occupant la case forte", correct: true },
@@ -384,9 +384,9 @@
       ],
       principle: "Nd5 installe le cavalier sur une case que les pions c7 et e7 ne peuvent pas attaquer.",
       transfer: "Vérifie aussi si un échange, une attaque directe ou un sacrifice de pion permettrait à l’adversaire de supprimer le cavalier.",
-      hints: ["Regarde les cases attaquées par les pions noirs c7 et e7.", "Déplace le cavalier d4 vers la case centrale qu’aucun de ces pions ne contrôle."],
+      hints: ["Regarde les cases attaquées par les pions noirs c7 et e7.", "Déplace le cavalier e3 vers la case centrale qu’aucun de ces pions ne contrôle."],
       sequence: [
-        { side: "user", uci: "d4d5", explanation: "Nd5 occupe l’avant-poste : aucun pion noir ne peut le chasser directement." },
+        { side: "user", uci: "e3d5", explanation: "Nd5 occupe l’avant-poste : aucun pion noir ne peut le chasser directement." },
         { side: "book", uci: "e8d8", explanation: "Le roi se déplace; l’avant-poste reste occupé et contrôle des cases centrales." }
       ]
     },
