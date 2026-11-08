@@ -343,9 +343,9 @@
       id: "engine-derived-weak-signal-combination-knight-fork",
       level: "Intermédiaire",
       title: "Combiner roi exposé et fourchette",
-      category: "Tactique · Combinaison de signaux faibles",
+      category: "Reconnaissance · Combinaison de signaux faibles",
       author: "SupaChess Académie",
-      program: "Signaux faibles · combinaisons d’attaques",
+      program: "Reconnaissance · signaux faibles et attaques coordonnées",
       book: "Parcours original SupaChess",
       reference: "Position pédagogique originale",
       fen: "6k1/8/2N5/5q2/8/8/8/K7 w - - 0 1",
@@ -357,7 +357,7 @@
         { text: "Reculer le cavalier sans créer de menace", correct: false }
       ],
       principle: "Un roi exposé et une dame située à portée du cavalier deviennent une combinaison : Ne7+ attaque le roi et la dame en même temps.",
-      transfer: "Avant de jouer, repère séparément la sécurité du roi, les cases contrôlées par le cavalier et les pièces adverses qui pourraient être attaquées avec échec.",
+      transfer: "Le gain vient d’abord du repérage : roi vulnérable et dame sur une case de fourchette. Calcule seulement l’échec et la prise pour confirmer la combinaison.",
       hints: [
         "Premier signal : le roi noir est près du centre de l’action. Deuxième signal : la dame noire se trouve sur une case que le cavalier peut atteindre.",
         "Cherche un coup de cavalier qui donne échec tout en attaquant la dame."
@@ -372,9 +372,9 @@
       id: "engine-derived-weak-signal-combination-queen-alignment",
       level: "Avancé",
       title: "Relier alignement et pièce protectrice",
-      category: "Tactique · Combinaison de signaux faibles",
+      category: "Reconnaissance · Combinaison de signaux faibles",
       author: "SupaChess Académie",
-      program: "Signaux faibles · combinaisons d’attaques",
+      program: "Reconnaissance · signaux faibles et attaques coordonnées",
       book: "Parcours original SupaChess",
       reference: "Position pédagogique originale",
       fen: "4k3/3q4/8/1B6/8/8/8/K2R4 w - - 0 1",
@@ -386,7 +386,7 @@
         { text: "La tour peut prendre la dame parce qu’une dame alignée est toujours perdue", correct: false }
       ],
       principle: "Rxd7 gagne la dame parce que le fou b5 protège la case d7. Le roi e8 ne peut pas capturer la tour sur une case contrôlée par le fou.",
-      transfer: "Quand tu vois une pièce alignée avec le roi, vérifie le défenseur de la case de prise et les réponses légales du roi avant de conclure.",
+      transfer: "Repère d’abord l’alignement tour-dame-roi, puis le fou qui protège la case de capture. Le calcul court confirme que le roi ne peut pas reprendre.",
       hints: [
         "Repère la ligne entre la tour d1, la dame d7 et le roi e8; puis trace la diagonale du fou b5.",
         "Après Rxd7, demande-toi si Kxd7 est légal."
@@ -400,9 +400,9 @@
       id: "engine-derived-weak-signal-combination-protected-queen",
       level: "Avancé",
       title: "Combiner échec, dame en prise et tour protectrice",
-      category: "Tactique · Combinaison de signaux faibles",
+      category: "Reconnaissance · Combinaison de signaux faibles",
       author: "SupaChess Académie",
-      program: "Signaux faibles · combinaisons d’attaques",
+      program: "Reconnaissance · signaux faibles et attaques coordonnées",
       book: "Parcours original SupaChess",
       reference: "Position pédagogique originale",
       fen: "6k1/5q2/8/3Q4/8/8/8/K4R2 w - - 0 1",
@@ -414,7 +414,7 @@
         { text: "Le roi noir ne peut jamais capturer une dame", correct: false }
       ],
       principle: "Qxf7+ gagne la dame : la tour f1 protège f7. Le roi noir ne peut pas capturer la dame sur cette case contrôlée.",
-      transfer: "Combine les indices : dame accessible, échec au roi, pièce protectrice qui interdit la reprise. Vérifie toujours la ligne de défense jusqu’à la case de capture.",
+      transfer: "Repère la dame attaquable, le roi adjacent et la tour qui contrôle la case. L’idée vient de ces signaux réunis; calcule la réponse à l’échec et vérifie que la reprise est impossible.",
       hints: [
         "Le coup candidat prend la dame en donnant échec.",
         "Compte les cases de la colonne f entre la tour et la dame; vérifie ensuite si Kxf7 est légal."
