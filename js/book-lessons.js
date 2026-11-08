@@ -4938,7 +4938,23 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   }
 
   function renderBoard() {
-    if (game) boardUI.render(enginePreview || game);
+    const position = enginePreview || game;
+    if (!position) return;
+    boardUI.render(position);
+    const indicator = $("lesson-turn-indicator");
+    if (!indicator) return;
+    if (position.in_checkmate()) {
+      const mated = position.turn() === "w" ? "Blancs" : "Noirs";
+      indicator.textContent = "Échec et mat — les " + mated + " sont matés.";
+      indicator.dataset.side = position.turn();
+    } else if (position.in_stalemate()) {
+      indicator.textContent = "Pat — partie nulle.";
+      indicator.dataset.side = position.turn();
+    } else {
+      const side = position.turn() === "w" ? "Blancs" : "Noirs";
+      indicator.textContent = "Trait aux " + side + " — c’est aux " + side + " de jouer.";
+      indicator.dataset.side = position.turn();
+    }
   }
 
   function previewEngineLine(choice) {
