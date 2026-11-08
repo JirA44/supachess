@@ -761,7 +761,9 @@ function setUnassistedGameMode(active, options = {}) {
   }
   syncUndoButton();
   const bestButton = $("btn-best-move");
-  if (bestButton && state.unassistedGame) {
+  const replayButton = $("btn-replay-quit");
+  const replayActive = replayButton && !replayButton.classList.contains("hidden");
+  if (bestButton && state.unassistedGame && !replayActive) {
     bestButton.disabled = true;
     bestButton.title = "Meilleur coup masqué pendant une partie sans aide";
   }
@@ -1520,7 +1522,8 @@ function syncBestMoveButton() {
   if (!button) return;
   const replayButton = $("btn-replay-quit");
   const replayActive = replayButton && !replayButton.classList.contains("hidden");
-  if (state.unassistedGame) {
+  const replayReady = replayActive && typeof window.reviewPlayBestHalfMove === "function";
+  if (state.unassistedGame && !replayReady) {
     button.disabled = true;
     button.title = "Meilleur coup masqué pendant une partie sans aide";
     return;
@@ -1530,9 +1533,10 @@ function syncBestMoveButton() {
     button.title = "Meilleur coup masqué pendant le diagnostic de niveau";
     return;
   }
-  button.title = "Jouer le meilleur demi-coup Stockfish";
+  button.title = replayReady
+    ? "Remplacer le demi-coup affiché par le meilleur coup Stockfish dans une variante temporaire"
+    : "Jouer le meilleur demi-coup Stockfish";
   const allowedTurn = isManualMode() || state.chess.turn() === state.userColor;
-  const replayReady = replayActive && typeof window.reviewPlayBestHalfMove === "function";
   button.disabled = button.dataset.pending === "true" || (replayReady
     ? !["userTurn", "coach"].includes(state.phase)
     : !["userTurn", "coach"].includes(state.phase) || !allowedTurn || !state.candidates.length);
@@ -1988,7 +1992,6 @@ $("btn-flip-board").addEventListener("click", () => {
   renderBoard();
 });
 $("btn-best-move").addEventListener("click", () => {
-  if (state.unassistedGame) return;
   const replayButton = $("btn-replay-quit");
   const replayActive = replayButton && !replayButton.classList.contains("hidden");
   if (replayActive) {
@@ -1997,7 +2000,7 @@ $("btn-best-move").addEventListener("click", () => {
     } else setStatus("Le mode relecture n’a pas chargé le calcul du meilleur demi-coup.");
     return;
   }
-  if (isDiagnosticControlLockActive()) return;
+  if (state.unassistedGame || isDiagnosticControlLockActive()) return;
   if (!["userTurn", "coach"].includes(state.phase) || (!isManualMode() && state.chess.turn() !== state.userColor)) return;
   const best = state.candidates.find((candidate) => candidate.rank === 1) || state.candidates[0];
   if (!best) return;
