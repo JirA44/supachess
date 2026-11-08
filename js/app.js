@@ -592,7 +592,8 @@ function newGame(options = {}) {
   state.timeRankSubmitted = false;
   state.clockMs = { w: selectedClockMs("w"), b: selectedClockMs("b") };
   state.clockRemainingMs = { ...state.clockMs };
-  setUnassistedGameMode(Boolean(options.unassisted), { resume: Boolean(options.resume) });
+  const diagnosticGame = isLevelDiagnosticActive();
+  setUnassistedGameMode(Boolean(options.unassisted || diagnosticGame), { resume: Boolean(options.resume) });
   if (!options.resume) setNewGameAidsOff();
   window.SupaReplayHistory = null;
   state.abandoned = false;
@@ -1939,6 +1940,10 @@ $("btn-abandon-diagnostic")?.addEventListener("click", () => {
   else {
     startLevelDiagnostic();
     applyLevelDiagnosticLock();
+    if (state.phase !== "init" && state.phase !== "gameover") {
+      setUnassistedGameMode(true);
+      window.gamesMarkDiagnosticMode?.(true);
+    }
     window.dispatchEvent(new Event("supachess:level-diagnostic-change"));
   }
 });
