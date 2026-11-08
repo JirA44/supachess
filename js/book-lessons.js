@@ -3187,6 +3187,346 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   // Original five-step routine: inspect threats, generate candidates, calculate, compare, blunder-check.
   LESSONS.push(...[{"id":"best-move-method-01-threats","kind":"method","level":"Débutant","title":"Étape 1 · Lire les menaces adverses","category":"Méthode de réflexion · calcul avant chaque coup","author":"SupaChess Académie","program":"Méthode · trouver le meilleur coup","book":"Programme original SupaChess · méthode du meilleur coup","reference":"Leçon originale · position et calcul vérifiés","fen":"r1bqkb1r/1ppp1ppp/p1n2n2/4p3/B3P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 5","color":"w","question":"Après ...Cf6, quelle vérification doit précéder ton plan ?","choices":[{"text":"Repérer la pression sur e4 et les autres échecs, prises et menaces noirs.","correct":true},{"text":"Continuer automatiquement le développement sans regarder le dernier coup.","correct":false},{"text":"Chercher uniquement une attaque contre le roi noir.","correct":false}],"principle":"Le dernier coup adverse change la position : identifie ce qu’il attaque, ce qu’il prépare et les coups forcing dont il dispose.","transfer":"Après chaque coup adverse, nomme sa menace en une phrase avant de choisir ton plan.","pitfall":"Ne confonds pas un coup qui paraît naturel avec un coup qui répond aux besoins de la position.","hints":["Le cavalier en f6 met le pion e4 sous pression.","Compare Bc2 et un coup qui ignorerait la pression centrale."],"sequence":[{"side":"user","uci":"a4b3","explanation":"Le fou se replie sur une case sûre et continue de soutenir le centre."},{"side":"book","uci":"d7d5","explanation":"Les Noirs cherchent immédiatement la rupture centrale : réévalue la position."}]},{"id":"best-move-method-02-candidates","kind":"method","level":"Débutant","title":"Étape 2 · Former les coups candidats","category":"Méthode de réflexion · calcul avant chaque coup","author":"SupaChess Académie","program":"Méthode · trouver le meilleur coup","book":"Programme original SupaChess · méthode du meilleur coup","reference":"Leçon originale · position et calcul vérifiés","fen":"r1bqkb1r/1ppp1ppp/p1n2n2/4p3/B3P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 5","color":"w","question":"Quel ordre aide à ne pas oublier une ressource forcing ?","choices":[{"text":"Lister les échecs, les captures, les menaces, puis les coups de plan.","correct":true},{"text":"Choisir un seul coup et calculer seulement s’il semble brillant.","correct":false},{"text":"Écarter les captures et les échecs avant de regarder la position.","correct":false}],"principle":"CCT signifie Checks, Captures, Threats : examine échecs, prises et menaces, puis ajoute les coups de plan.","transfer":"Écris trois candidats distincts avant de calculer; pour chacun, vérifie les réponses adverses.","pitfall":"CCT est une méthode de recherche, pas une obligation de jouer un échec ou une prise.","hints":["Commence par les coups qui forcent immédiatement une réponse.","Ajoute ensuite les menaces et les coups de développement utiles."],"sequence":[{"side":"user","uci":"d2d4","explanation":"Tu proposes la rupture centrale comme coup candidat."},{"side":"book","uci":"e5d4","explanation":"Les Noirs prennent le pion : il faut calculer la suite, pas arrêter l’analyse."},{"side":"user","uci":"f3d4","explanation":"Tu reprends avec le cavalier et développes une pièce avec tempo."}]},{"id":"best-move-method-03-calculate","kind":"method","level":"Intermédiaire","title":"Étape 3 · Calculer la meilleure défense","category":"Méthode de réflexion · calcul avant chaque coup","author":"SupaChess Académie","program":"Méthode · trouver le meilleur coup","book":"Programme original SupaChess · méthode du meilleur coup","reference":"Leçon originale · position et calcul vérifiés","fen":"r1bqkb1r/1ppp1ppp/p1n2n2/4p3/B3P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 5","color":"w","question":"Après 1.d4, quelle suite respecte le mieux la règle de calcul ?","choices":[{"text":"Calculer une réponse active comme ...exd4, puis les reprises et contre-menaces.","correct":true},{"text":"Supposer que les Noirs joueront une réponse passive qui m’arrange.","correct":false},{"text":"S’arrêter dès que mon premier coup paraît logique.","correct":false}],"principle":"Pour chaque candidat, calcule au moins ton coup, la meilleure réponse adverse et ta suite; prolonge jusqu’à ce que la position soit compréhensible.","transfer":"Annonce les coups forcing des deux camps, puis vérifie la position finale et le matériel.","pitfall":"Une variante n’est pas calculée tant que tu as choisi la réponse adverse que tu préfères.","hints":["Après d4, cherche d’abord les prises noires au centre.","Après chaque reprise, vérifie les échecs et les pièces attaquées."],"sequence":[{"side":"user","uci":"d2d4","explanation":"Le coup candidat ouvre le centre."},{"side":"book","uci":"e5d4","explanation":"La réponse la plus directe prend le pion avancé."},{"side":"user","uci":"f3d4","explanation":"Le cavalier reprend; compare maintenant les réponses forcing."},{"side":"book","uci":"f8b4","explanation":"Le fou développe avec échec et modifie le calcul."},{"side":"user","uci":"b1c3","explanation":"Tu interposes le cavalier et développes une pièce."}]},{"id":"best-move-method-04-compare","kind":"method","level":"Intermédiaire","title":"Étape 4 · Comparer les candidats","category":"Méthode de réflexion · calcul avant chaque coup","author":"SupaChess Académie","program":"Méthode · trouver le meilleur coup","book":"Programme original SupaChess · méthode du meilleur coup","reference":"Leçon originale · position et calcul vérifiés","fen":"r1bqkb1r/1ppp1ppp/p1n2n2/4p3/B3P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 5","color":"w","question":"Quel critère permet de départager un coup de plan et une rupture immédiate ?","choices":[{"text":"Comparer les positions après les meilleures réponses : sécurité, activité, matériel et initiative.","correct":true},{"text":"Choisir toujours le coup qui avance le plus de pions.","correct":false},{"text":"Choisir le premier candidat parce qu’il est le plus facile à visualiser.","correct":false}],"principle":"Compare les conséquences concrètes de chaque candidat, y compris la meilleure défense adverse et les risques pour ton roi.","transfer":"Pour deux candidats, note une force, un risque et la position obtenue après la réponse adverse.","pitfall":"Un coup qui crée une menace peut aussi laisser une faiblesse ou permettre une contre-menace.","hints":["Compare le contrôle du centre après chaque réponse.","N’oublie pas sécurité du roi et activité des pièces dans le bilan."],"sequence":[{"side":"user","uci":"c2c3","explanation":"Tu prépares le centre et limites certaines cases du fou adverse."},{"side":"book","uci":"d7d6","explanation":"Les Noirs consolident e5 et gardent plusieurs options."},{"side":"user","uci":"d2d4","explanation":"Tu compares maintenant cette préparation à une rupture immédiate."},{"side":"book","uci":"e5d4","explanation":"Les Noirs échangent au centre; calcule la reprise."},{"side":"user","uci":"c3d4","explanation":"La reprise ouvre le centre et permet d’évaluer la structure obtenue."}]},{"id":"best-move-method-05-final-check","kind":"method","level":"Avancé","title":"Étape 5 · Faire le contrôle anti-gaffe","category":"Méthode de réflexion · calcul avant chaque coup","author":"SupaChess Académie","program":"Méthode · trouver le meilleur coup","book":"Programme original SupaChess · méthode du meilleur coup","reference":"Leçon originale · position et calcul vérifiés","fen":"4r1k1/8/8/8/8/8/4Q3/6K1 w - - 0 1","color":"w","question":"Avant de jouer Qxe8+, quel contrôle final est essentiel ?","choices":[{"text":"Vérifier les réponses au check, les cases du roi et les pièces qui resteront en prise.","correct":true},{"text":"Jouer immédiatement parce que la tour est attaquée.","correct":false},{"text":"Vérifier seulement si mon coup donne échec, puis arrêter le calcul.","correct":false}],"principle":"Avant de jouer, relance le calcul adverse : échecs, captures, menaces, sécurité du roi et pièces non défendues.","transfer":"Après ton choix, imagine la meilleure réponse adverse et contrôle la position obtenue avant de déplacer la pièce.","pitfall":"Un échec ou une prise spectaculaire peut être mauvais si la réponse adverse gagne davantage.","hints":["La tour e8 peut être prise, mais la réponse du roi doit être vérifiée.","Après Qxe8+, teste les cases légales du roi noir."],"sequence":[{"side":"user","uci":"e2e8","explanation":"Tu prends la tour avec échec; cherche les cases de fuite légales."},{"side":"book","uci":"g8g7","explanation":"Le roi se déplace; vérifie que ton échec n’a pas laissé une pièce en prise."}]}]);
 
+  // Progressive original path: recognize the signal, name the motif, then verify the concrete position.
+  LESSONS.push(...[
+  {
+    "id": "pattern-signals-edge-knight-basic",
+    "program": "Carlsen · reconnaissance des motifs",
+    "title": "Lire les sorties d’un cavalier au bord",
+    "category": "Signaux · Mobilité et pièces enfermées",
+    "level": "Débutant",
+    "author": "SupaChess Académie",
+    "book": "Parcours original SupaChess",
+    "reference": "Leçon originale · Position d’entraînement",
+    "fen": "k7/6pb/8/8/7N/5P2/6B1/7K b - - 0 1",
+    "color": "b",
+    "question": "Avant de jouer …g5 pour attaquer le cavalier h4, comment vérifier s’il peut se sauver ?",
+    "choices": [
+      {
+        "text": "Énumérer f3, f5, g2 et g6, puis vérifier occupation et contrôle de chaque case.",
+        "correct": true
+      },
+      {
+        "text": "Conclure qu’un cavalier au bord est toujours piégé.",
+        "correct": false
+      },
+      {
+        "text": "Compter seulement le matériel sans regarder les cases de fuite.",
+        "correct": false
+      }
+    ],
+    "principle": "Après …g5, f3 et g2 sont occupées par des pièces blanches; f5 et g6 sont contrôlées par le fou h7. Le motif vient de la position concrète, pas de la seule présence du cavalier au bord.",
+    "transfer": "Pour chaque pièce attaquée, liste ses cases légales; classe-les selon qu’elles sont occupées, contrôlées ou sûres, puis vérifie si la pièce qui contrôle peut réellement capturer.",
+    "pitfall": "Ne traite pas « cavalier au bord » comme une règle automatique.",
+    "pitfallReason": "Seules les cases de fuite et les réponses adverses confirment qu’une pièce est réellement enfermée.",
+    "hints": [
+      "Le cavalier h4 n’a que quatre sauts possibles.",
+      "Vérifie f3 et g2, puis trace la diagonale du fou h7."
+    ],
+    "sequence": [
+      {
+        "side": "user",
+        "uci": "g7g5",
+        "explanation": "…g5 attaque le cavalier. La vérification des quatre sorties révèle que chacune est occupée ou contrôlée."
+      }
+    ]
+  },
+  {
+    "id": "pattern-signals-capture-checker",
+    "program": "Carlsen · reconnaissance des motifs",
+    "title": "Répondre à l’échec en capturant l’attaquant",
+    "category": "Signaux · Échec et pièce en prise",
+    "level": "Débutant",
+    "author": "SupaChess Académie",
+    "book": "Parcours original SupaChess",
+    "reference": "Leçon originale · Position d’entraînement",
+    "fen": "4k3/8/8/8/8/8/3q4/3RK3 w - - 0 1",
+    "color": "w",
+    "question": "La dame noire donne échec et se trouve devant ta tour. Quelle réponse légale résout l’échec ?",
+    "choices": [
+      {
+        "text": "Rxd2 : prendre la dame avec la tour.",
+        "correct": true
+      },
+      {
+        "text": "Jouer un coup de développement sans traiter l’échec.",
+        "correct": false
+      },
+      {
+        "text": "Déplacer une pièce qui ne met pas le roi à l’abri.",
+        "correct": false
+      }
+    ],
+    "principle": "L’échec impose une réponse immédiate. Ici, la tour d1 peut capturer la dame d2 et supprimer l’attaquant.",
+    "transfer": "Quand ton roi est en échec, vérifie les prises de l’attaquant, les interpositions possibles et les cases de fuite.",
+    "pitfall": "Ne poursuis pas ton plan tant que l’échec n’est pas résolu.",
+    "pitfallReason": "Un coup qui laisse son roi en échec est illégal.",
+    "hints": [
+      "Identifie la pièce qui attaque le roi e1.",
+      "La tour d1 peut atteindre d2."
+    ],
+    "sequence": [
+      {
+        "side": "user",
+        "uci": "d1d2",
+        "explanation": "Rxd2 capture la dame qui donnait échec."
+      }
+    ]
+  },
+  {
+    "id": "pattern-signals-isolated-pawn",
+    "program": "Carlsen · reconnaissance des motifs",
+    "title": "Reconnaître et cibler un pion isolé",
+    "category": "Motifs positionnels · Structure de pions",
+    "level": "Intermédiaire",
+    "author": "SupaChess Académie",
+    "book": "Parcours original SupaChess",
+    "reference": "Leçon originale · Position d’entraînement",
+    "fen": "4k3/8/2p5/8/3P4/8/8/4K3 b - - 0 1",
+    "color": "b",
+    "question": "Le pion d4 n’a aucun pion blanc sur les colonnes voisines. Quel coup crée une attaque directe contre cette cible ?",
+    "choices": [
+      {
+        "text": "…c5 : le pion c6 avance et attaque d4.",
+        "correct": true
+      },
+      {
+        "text": "Déplacer le roi sans améliorer la pression sur d4.",
+        "correct": false
+      },
+      {
+        "text": "Pousser un pion de l’aile sans lien avec la cible.",
+        "correct": false
+      }
+    ],
+    "principle": "Le pion d4 est isolé : aucun pion voisin ne peut le soutenir. …c5 l’attaque directement, sans garantir à lui seul qu’il sera gagné.",
+    "transfer": "Repère les pions isolés, arriérés ou fixés; cherche comment les attaquer, puis vérifie les défenses adverses.",
+    "pitfall": "Un pion faible est une cible, pas un gain automatique.",
+    "pitfallReason": "Le défenseur peut le protéger par une pièce ou créer du contre-jeu.",
+    "hints": [
+      "Vérifie quelles cases le pion c6 contrôlera après son avance.",
+      "Un pion noir en c5 attaque d4."
+    ],
+    "sequence": [
+      {
+        "side": "user",
+        "uci": "c6c5",
+        "explanation": "…c5 attaque le pion isolé d4; les défenses blanches restent à calculer."
+      }
+    ]
+  },
+  {
+    "id": "pattern-signals-knight-outpost",
+    "program": "Carlsen · reconnaissance des motifs",
+    "title": "Installer un cavalier sur un avant-poste",
+    "category": "Motifs positionnels · Cases fortes",
+    "level": "Intermédiaire",
+    "author": "SupaChess Académie",
+    "book": "Parcours original SupaChess",
+    "reference": "Leçon originale · Position d’entraînement",
+    "fen": "4k3/8/3p4/4p3/4PN2/8/8/4K3 w - - 0 1",
+    "color": "w",
+    "question": "Quelle case centrale ton pion e4 soutient-il, où le cavalier devient difficile à chasser par un pion ?",
+    "choices": [
+      {
+        "text": "Nd5 : le pion e4 soutient le cavalier sur d5.",
+        "correct": true
+      },
+      {
+        "text": "Reculer le cavalier sans examiner les cases centrales.",
+        "correct": false
+      },
+      {
+        "text": "Échanger le pion e4 sans raison positionnelle.",
+        "correct": false
+      }
+    ],
+    "principle": "Nd5 place le cavalier sur une case avancée soutenue par e4. Les pions noirs d6 et e5 ne peuvent pas le chasser directement.",
+    "transfer": "Un avant-poste est une case avancée, difficile à contester par un pion et soutenue par ta structure. Vérifie les échanges et les pièces adverses.",
+    "pitfall": "Une case centrale n’est pas automatiquement un avant-poste.",
+    "pitfallReason": "Si l’adversaire peut chasser ou échanger le cavalier, l’installation peut perdre du temps.",
+    "hints": [
+      "Le pion e4 contrôle d5.",
+      "Depuis f4, le cavalier peut atteindre d5."
+    ],
+    "sequence": [
+      {
+        "side": "user",
+        "uci": "f4d5",
+        "explanation": "Nd5 installe le cavalier sur une case soutenue par e4 et difficile à attaquer avec un pion."
+      }
+    ]
+  },
+  {
+    "id": "pattern-signals-open-file",
+    "program": "Carlsen · reconnaissance des motifs",
+    "title": "Envahir par une colonne ouverte",
+    "category": "Plans · Colonnes ouvertes",
+    "level": "Intermédiaire",
+    "author": "SupaChess Académie",
+    "book": "Parcours original SupaChess",
+    "reference": "Leçon originale · Position d’entraînement",
+    "fen": "4k3/8/8/8/8/8/8/R3K3 w - - 0 1",
+    "color": "w",
+    "question": "La colonne a ne contient aucun pion. Quel coup actif utilise cette colonne pour créer une menace au roi ?",
+    "choices": [
+      {
+        "text": "Ra8+ : la tour entre sur la huitième rangée et donne échec.",
+        "correct": true
+      },
+      {
+        "text": "Déplacer le roi alors que la tour peut pénétrer.",
+        "correct": false
+      },
+      {
+        "text": "Pousser un pion inexistant sur la colonne a.",
+        "correct": false
+      }
+    ],
+    "principle": "Sur une colonne ouverte, Ra8+ active la tour et oblige le roi noir à répondre à l’échec.",
+    "transfer": "Sur une colonne ouverte, cherche une entrée sur la rangée adverse, une cible ou une possibilité de doubler les tours; calcule ensuite les réponses forcées.",
+    "pitfall": "Une colonne ouverte n’est utile que si la tour peut l’occuper sans être perdue.",
+    "pitfallReason": "Évalue les cases contrôlées et les contre-attaques avant de pénétrer.",
+    "hints": [
+      "La colonne a est entièrement libre.",
+      "La tour a1 peut atteindre a8 et attaquer le roi e8 sur la rangée."
+    ],
+    "sequence": [
+      {
+        "side": "user",
+        "uci": "a1a8",
+        "explanation": "Ra8+ exploite la colonne ouverte et donne échec au roi noir."
+      }
+    ]
+  },
+  {
+    "id": "pattern-signals-absolute-pin",
+    "program": "Carlsen · reconnaissance des motifs",
+    "title": "Reconnaître et lever un clouage absolu",
+    "category": "Motifs tactiques · Clouage",
+    "level": "Avancé",
+    "author": "SupaChess Académie",
+    "book": "Parcours original SupaChess",
+    "reference": "Leçon originale · Position d’entraînement",
+    "fen": "3qk3/pp6/2n5/1B6/8/8/8/4K3 b - - 0 1",
+    "color": "b",
+    "question": "Le fou b5 aligne le cavalier c6 et le roi e8. Quel coup sort le roi de la diagonale et libère le cavalier ?",
+    "choices": [
+      {
+        "text": "…Kf8 : le roi quitte la diagonale du fou.",
+        "correct": true
+      },
+      {
+        "text": "Déplacer le cavalier cloué comme si le roi n’était pas derrière.",
+        "correct": false
+      },
+      {
+        "text": "Pousser un pion sans traiter l’alignement.",
+        "correct": false
+      }
+    ],
+    "principle": "Le fou b5, le cavalier c6 et le roi e8 sont alignés : le cavalier est cloué absolument. …Kf8 déplace le roi hors de la diagonale et libère le cavalier.",
+    "transfer": "Dans un clouage absolu, la pièce ne peut pas bouger si cela expose son roi. Cherche à déplacer le roi, interposer une pièce ou échanger l’attaquant.",
+    "pitfall": "Ne confonds pas clouage absolu au roi et clouage relatif à une dame ou une tour.",
+    "pitfallReason": "Une pièce clouée au roi ne peut légalement pas bouger; une pièce clouée à une pièce plus précieuse peut parfois bouger si le calcul le permet.",
+    "hints": [
+      "Trace la diagonale b5–c6–d7–e8.",
+      "Sortir le roi de cette diagonale enlève la contrainte."
+    ],
+    "sequence": [
+      {
+        "side": "user",
+        "uci": "e8f8",
+        "explanation": "…Kf8 quitte la diagonale d’échec et libère le cavalier c6."
+      }
+    ]
+  },
+  {
+    "id": "pattern-signals-fork-two-targets",
+    "program": "Carlsen · reconnaissance des motifs",
+    "title": "Repérer une fourchette à deux cibles",
+    "category": "Motifs tactiques · Fourchette",
+    "level": "Avancé",
+    "author": "SupaChess Académie",
+    "book": "Parcours original SupaChess",
+    "reference": "Leçon originale · Position d’entraînement",
+    "fen": "3qk2r/8/8/6N1/8/8/8/4KR2 w - - 0 1",
+    "color": "w",
+    "question": "Quel saut attaque simultanément la dame d8 et la tour h8, tout en restant protégé par la tour f1 ?",
+    "choices": [
+      {
+        "text": "Nf7 : le cavalier attaque les deux pièces noires.",
+        "correct": true
+      },
+      {
+        "text": "Déplacer la tour f1 sans créer de menace.",
+        "correct": false
+      },
+      {
+        "text": "Reculer le cavalier en laissant les cibles tranquilles.",
+        "correct": false
+      }
+    ],
+    "principle": "Nf7 attaque la dame d8 et la tour h8. La tour blanche f1 protège f7; l’adversaire doit traiter les deux menaces.",
+    "transfer": "Pour une fourchette, identifie chaque cible, vérifie la case d’arrivée puis calcule si le roi ou une autre pièce peut prendre le cavalier.",
+    "pitfall": "Une double attaque ne gagne rien si la pièce qui la crée peut être capturée sans compensation.",
+    "pitfallReason": "Vérifie les défenses de la case d’arrivée et les réponses intermédiaires.",
+    "hints": [
+      "Le cavalier g5 peut atteindre f7.",
+      "Depuis f7, il attaque d8 et h8; vérifie la protection de f7."
+    ],
+    "sequence": [
+      {
+        "side": "user",
+        "uci": "g5f7",
+        "explanation": "Nf7 crée la fourchette; la tour f1 défend le cavalier sur f7."
+      }
+    ]
+  },
+  {
+    "id": "pattern-signals-back-rank-mate",
+    "program": "Carlsen · reconnaissance des motifs",
+    "title": "Reconnaître le mat du fond",
+    "category": "Signaux tactiques · Sécurité du roi",
+    "level": "Expert",
+    "author": "SupaChess Académie",
+    "book": "Parcours original SupaChess",
+    "reference": "Leçon originale · Position d’entraînement",
+    "fen": "2k5/8/8/8/8/8/4rPPP/6K1 b - - 0 1",
+    "color": "b",
+    "question": "Le roi blanc est enfermé derrière ses propres pions. Quel coup de tour donne mat sur la première rangée ?",
+    "choices": [
+      {
+        "text": "…Re1# : la tour couvre les cases de fuite et le roi ne peut ni la prendre ni bloquer.",
+        "correct": true
+      },
+      {
+        "text": "Déplacer le roi noir sans exploiter le réseau de mat.",
+        "correct": false
+      },
+      {
+        "text": "Pousser un pion alors qu’un mat est disponible.",
+        "correct": false
+      }
+    ],
+    "principle": "Re1# donne échec et mat : la tour attaque le roi g1; f1 et h1 sont contrôlées, les pions blancs occupent g2, f2 et h2 et aucune pièce ne peut interposer.",
+    "transfer": "Avant de conclure au mat du fond, vérifie toutes les cases de fuite, les captures de la tour et les interpositions légales.",
+    "pitfall": "Un roi caché derrière ses pions n’est pas toujours maté.",
+    "pitfallReason": "Une case de fuite, une prise ou une pièce interposée peut sauver la partie; seul l’examen des réponses légales confirme le mat.",
+    "hints": [
+      "La tour e2 peut descendre sur la première rangée.",
+      "Après Re1+, vérifie f1, h1, les prises et toutes les interpositions."
+    ],
+    "sequence": [
+      {
+        "side": "user",
+        "uci": "e2e1",
+        "explanation": "Re1# est légal et laisse le roi blanc sans réponse. L’échiquier confirme l’échec et mat."
+      }
+    ]
+  }
+]);
+
   // Generated Stockfish practice entries are stored locally and loaded only in this browser.
   const STOCKFISH_DERIVED_KEY = "supachess-stockfish-derived-lessons-v1";
   try {
@@ -4025,7 +4365,12 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   function renderChoices(lesson) {
     const wrap = $("lesson-choices");
     wrap.textContent = "";
-    lesson.choices.forEach((choice) => {
+    const choices = lesson.choices.slice();
+    for (let i = choices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [choices[i], choices[j]] = [choices[j], choices[i]];
+    }
+    choices.forEach((choice) => {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "lesson-choice";
