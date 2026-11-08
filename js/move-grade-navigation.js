@@ -45,8 +45,34 @@
     return matches[0];
   }
 
+  function moveGradeEntriesThroughPosition(entries, currentPly) {
+    const limit = Math.max(0, Number(currentPly) || 0);
+    const colorAliases = { white: "w", black: "b", w: "w", b: "b" };
+    return (Array.isArray(entries) ? entries : [])
+      .filter((entry) => entry && Number.isFinite(Number(entry.ply)) && Number(entry.ply) <= limit)
+      .map((entry) => ({
+        ...entry,
+        ply: Number(entry.ply),
+        color: colorAliases[String(entry.color || "").toLowerCase()] || entry.color,
+        category: normalizeCategory(entry.category),
+      }))
+      .filter((entry) => entry.color === "w" || entry.color === "b");
+  }
+
+  function currentPositionPly() {
+    if (typeof reviewState !== "undefined" && reviewState.returnState) {
+      return Math.max(0, Number(state.replayIdx) || 0);
+    }
+    return typeof state !== "undefined" && state.chess
+      ? state.chess.history().length
+      : 0;
+  }
+
   function currentGradeEntries() {
-    return reviewState.returnState ? reviewState.moveGrades : state.moveGradeHistory;
+    const source = typeof reviewState !== "undefined" && reviewState.returnState
+      ? reviewState.moveGrades
+      : (typeof state !== "undefined" ? state.moveGradeHistory : []);
+    return moveGradeEntriesThroughPosition(source, currentPositionPly());
   }
 
   function prepareCurrentGameReplay() {
@@ -135,14 +161,20 @@
   }
 
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { MOVE_GRADE_SHORTCUTS, moveGradeTargetPly, normalizeCategory };
+    module.exports = { MOVE_GRADE_SHORTCUTS, moveGradeTargetPly, moveGradeEntriesThroughPosition, normalizeCategory };
   }
   if (typeof document === "undefined") return;
 
   const originalRender = window.renderMoveGradeSummary;
   if (typeof originalRender === "function") {
     window.renderMoveGradeSummary = function (...args) {
-      originalRender.apply(this, args);
+      const fullHistory = state.moveGradeHistory;
+      state.moveGradeHistory = currentGradeEntries();
+      try {
+        originalRender.apply(this, args);
+      } finally {
+        state.moveGradeHistory = fullHistory;
+      }
       enhanceMoveGradeRows();
     };
     window.renderMoveGradeSummary();
