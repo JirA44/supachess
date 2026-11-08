@@ -587,6 +587,8 @@ async function reviewRun(options = {}) {
   const analysisSummary = typeof ReviewInsights !== "undefined"
     ? ReviewInsights.buildGameSummary({ rows, moves, fens, accuracyW: accW, accuracyB: accB, headers }) : null;
   reviewHistorySave(pgnText, headers, reviewState.correctionExercises, analysisSummary, reviewState.moveGrades);
+  // Affiche immédiatement les compteurs de la partie entière après son analyse.
+  reviewSetMoveGradeHistory(reviewState.moveGrades, moves.length);
   document.getElementById("btn-replay-game").classList.remove("hidden");
 
   // Le lot reste local : le bilan transversal est calculé après les analyses.
@@ -1428,11 +1430,6 @@ async function reviewPlayBestHalfMove() {
     return false;
   }
   if (reviewState.bestMovePending) return false;
-  if (!["userTurn", "coach"].includes(state.phase)) {
-    setStatus("Attends la fin de l’analyse de cette position avant de jouer le meilleur demi-coup.");
-    return false;
-  }
-
   let basePly, baseFen;
   if (reviewState.exercise && !reviewState.variation) {
     const item = reviewState.exercise.items[reviewState.exercise.index];
