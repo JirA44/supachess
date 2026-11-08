@@ -69,7 +69,9 @@
       try {
         localStorage.setItem(RESULT_KEY, JSON.stringify({
           token: batch.token, status: batch.status, total: batch.items.length,
-          completed: batch.completed, failedGame: batch.failedGame || null, finishedAt: batch.finishedAt
+          completed: batch.completed, failedGame: batch.failedGame || null,
+          gameIds: batch.items.slice(0, batch.nextIndex).map((item) => item.headers && item.headers.SupaChessSourceGameId).filter(Boolean),
+          finishedAt: batch.finishedAt
         }));
         localStorage.removeItem(QUEUE_KEY);
       } catch (_) {}
@@ -84,7 +86,9 @@
       try {
         localStorage.setItem(RESULT_KEY, JSON.stringify({
           token: batch.token, status: "failed", total: batch.items.length,
-          completed: Number(batch.completed) || 0, error: batch.error, finishedAt: batch.finishedAt
+          completed: Number(batch.completed) || 0,
+          gameIds: batch.items.slice(0, batch.nextIndex).map((item) => item.headers && item.headers.SupaChessSourceGameId).filter(Boolean),
+          error: batch.error, finishedAt: batch.finishedAt
         }));
         localStorage.removeItem(QUEUE_KEY);
       } catch (_) {}
