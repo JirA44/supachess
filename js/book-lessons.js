@@ -5620,6 +5620,37 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     }
   ]);
 
+  // A checked knight fork whose only legal reply leaves the queen capturable.
+  LESSONS.push(...[
+    {
+      id: "pattern-signals-knight-fork-king-queen",
+      program: "Carlsen · reconnaissance des motifs",
+      title: "Fourchette de cavalier avec échec",
+      category: "Tactique · Fourchette et réponse forcée",
+      level: "Intermédiaire",
+      author: "SupaChess Académie",
+      book: "Parcours original SupaChess",
+      reference: "Leçon originale · Position vérifiée",
+      fen: "4kb2/3ppq2/8/1N6/8/8/8/K3R3 w - - 0 1",
+      color: "w",
+      question: "Quel échec de cavalier attaque aussi la dame f7, et pourquoi le pion e7 ne peut-il pas le prendre ?",
+      choices: [
+        { text: "Jouer Cd6+ : le cavalier attaque roi et dame; le pion e7 est cloué par la tour e1", correct: true },
+        { text: "Déplacer le roi blanc sans attaquer de pièce", correct: false },
+        { text: "Prendre un pion éloigné sans vérifier les réponses", correct: false }
+      ],
+      principle: "Cd6+ attaque le roi e8 et la dame f7. La prise …exd6 est illégale, car le pion e7 quitterait la colonne et exposerait son roi à la tour e1. Après …Rd8, Cxf7+ prend la dame.",
+      transfer: "Une fourchette fonctionne grâce à la réponse adverse réelle. Cherche les pièces qui peuvent capturer ton cavalier et vérifie si elles sont clouées ou empêchées par une autre menace.",
+      pitfall: "Ne conclus pas qu’une pièce est clouée sans tracer la ligne jusqu’au roi ou à une pièce plus importante; vérifie aussi toutes les réponses légales à l’échec.",
+      hints: ["Le cavalier b5 peut donner échec en d6 et attaquer f7.", "Si le pion e7 prend le cavalier, la tour e1 attaquera le roi e8; joue Cd6+."],
+      sequence: [
+        { side: "user", uci: "b5d6", explanation: "Cd6+ donne échec au roi e8 et attaque simultanément la dame f7." },
+        { side: "book", uci: "e8d8", explanation: "La seule réponse légale vérifiée est …Rd8; …exd6 laisserait le roi en échec sur la colonne e." },
+        { side: "user", uci: "d6f7", explanation: "Cxf7+ capture la dame. La tour e1 empêchait le pion e7 de prendre le cavalier." }
+      ]
+    }
+  ]);
+
   renderCatalog();
   const searchParams = new URLSearchParams(location.search);
   const requestedLesson = searchParams.get("lesson");
