@@ -102,6 +102,7 @@ test("method paths include all their lessons in progressive level order", () => 
     "Stockfish · comparer et vérifier",
     "Calcul profond · parties maîtresses",
     "Précision · jouer juste et vérifier",
+    "Étude comparée · maîtres et Stockfish",
   ];
   const ranks = { Débutant: 0, Intermédiaire: 1, Avancé: 2, Expert: 3 };
   for (const program of programs) {
