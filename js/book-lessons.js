@@ -3527,6 +3527,94 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   }
 ]);
 
+  // Additional original weak-signal exercises based on the supplied transcript.
+  LESSONS.push(...[
+  {
+    "id": "pattern-signals-pawn-defense-vacated",
+    "program": "Carlsen · reconnaissance des motifs",
+    "title": "Recompter les défenseurs après une poussée de pion",
+    "category": "Signaux tactiques · Défenseur déplacé",
+    "level": "Avancé",
+    "author": "SupaChess Académie",
+    "book": "Parcours original SupaChess",
+    "reference": "Leçon originale · Position d’entraînement",
+    "fen": "6k1/5p1p/5bp1/5Q2/8/3B4/8/2K5 w - - 0 1",
+    "color": "w",
+    "question": "Le pion noir vient d’avancer de g7 à g6. Pourquoi le fou f6 est-il maintenant prenable ?",
+    "choices": [
+      {
+        "text": "Le pion g7 ne défend plus f6 depuis g6; Qxf6 prend le fou sans reprise de pion.",
+        "correct": true
+      },
+      {
+        "text": "Un fou devant le roi est toujours sans défense.",
+        "correct": false
+      },
+      {
+        "text": "La poussée a ouvert une diagonale du roi blanc vers f6.",
+        "correct": false
+      }
+    ],
+    "principle": "Avant l’avance, le pion g7 défendait f6. En g6, il ne protège plus cette case. La dame blanche peut prendre le fou; vérifie ensuite les autres pièces capables de reprendre.",
+    "transfer": "Après chaque poussée de pion, recalcule les cases attaquées et défendues : le pion abandonne certaines cases tout en en contrôlant d’autres.",
+    "pitfall": "Une pièce précédemment défendue ne le reste pas automatiquement après le mouvement de son défenseur.",
+    "pitfallReason": "Un défenseur peut bouger, être échangé, cloué ou devenir incapable de reprendre.",
+    "hints": [
+      "Compare les cases attaquées par le pion en g7 puis en g6.",
+      "La dame f5 peut capturer le fou f6."
+    ],
+    "sequence": [
+      {
+        "side": "user",
+        "uci": "f5f6",
+        "explanation": "Qxf6 prend le fou : après …g6, le pion ne défend plus f6."
+      }
+    ]
+  },
+  {
+    "id": "pattern-signals-combined-fork",
+    "program": "Carlsen · reconnaissance des motifs",
+    "title": "Combiner une fourchette et une pièce contrainte",
+    "category": "Motifs tactiques · Fourchette et pièces restreintes",
+    "level": "Expert",
+    "author": "SupaChess Académie",
+    "book": "Parcours original SupaChess",
+    "reference": "Leçon originale · Position d’entraînement",
+    "fen": "8/2r3k1/4b3/8/5N2/8/8/K7 w - - 0 1",
+    "color": "w",
+    "question": "Le cavalier f4 peut prendre le fou e6 avec échec. Quel motif crée-t-il aussi contre le roi g7 et la tour c7 ?",
+    "choices": [
+      {
+        "text": "Nxe6+ : le cavalier donne échec au roi et attaque la tour.",
+        "correct": true
+      },
+      {
+        "text": "Échanger le cavalier contre le fou sans créer de menace supplémentaire.",
+        "correct": false
+      },
+      {
+        "text": "Reculer le cavalier sans exploiter les deux cibles.",
+        "correct": false
+      }
+    ],
+    "principle": "Nxe6+ combine une prise et une fourchette : le roi doit répondre à l’échec tandis que la tour c7 est attaquée. Vérifie les prises possibles du cavalier et la meilleure réponse adverse.",
+    "transfer": "Un signal sert à choisir les candidats. Calcule ensuite les coups forcing et les meilleures réponses; ne balaie pas mécaniquement tous les échecs, prises et menaces à chaque position.",
+    "pitfall": "Une fourchette apparente ne garantit pas un gain.",
+    "pitfallReason": "L’adversaire peut capturer le cavalier, interposer une pièce ou déplacer une cible avec tempo.",
+    "hints": [
+      "Depuis e6, le cavalier attaque g7 et c7.",
+      "Après l’échec, vérifie aussi la sécurité du cavalier."
+    ],
+    "sequence": [
+      {
+        "side": "user",
+        "uci": "f4e6",
+        "explanation": "Nxe6+ donne échec et attaque simultanément la tour c7; calcule maintenant les réponses légales du roi."
+      }
+    ]
+  }
+]);
+
   // Generated Stockfish practice entries are stored locally and loaded only in this browser.
   const STOCKFISH_DERIVED_KEY = "supachess-stockfish-derived-lessons-v1";
   try {
