@@ -625,11 +625,11 @@ body {
 }
 .sq .piece.checkmate-king-fall-bottom {
   transform-origin: center bottom;
-  animation: supa-king-topple-bottom 820ms cubic-bezier(.2,.78,.26,1) both;
+  animation: supa-king-topple-bottom 1600ms cubic-bezier(.2,.78,.26,1) both;
 }
 .sq .piece.checkmate-king-fall-top {
   transform-origin: center top;
-  animation: supa-king-topple-top 820ms cubic-bezier(.2,.78,.26,1) both;
+  animation: supa-king-topple-top 1600ms cubic-bezier(.2,.78,.26,1) both;
 }
 .sq .piece.checkmate-king-fallen.checkmate-fall-bottom {
   transform-origin: center bottom;
