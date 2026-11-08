@@ -5535,6 +5535,91 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     ]
   });
 
+  // Original motif lessons: discovered attack, pawn fork, and aligned king/queen.
+  LESSONS.push(...[
+    {
+      id: "pattern-signals-discovered-attack",
+      program: "Carlsen · reconnaissance des motifs",
+      title: "Voir l’attaque révélée",
+      category: "Tactique · Attaque à la découverte",
+      level: "Intermédiaire",
+      author: "SupaChess Académie",
+      book: "Parcours original SupaChess",
+      reference: "Leçon originale · Position vérifiée",
+      fen: "q7/7k/8/8/N7/8/1B6/R6K w - - 0 1",
+      color: "w",
+      question: "Quel coup dégage la tour a1 et révèle une attaque contre la dame a8 ?",
+      choices: [
+        { text: "Déplacer le cavalier a4 en c5", correct: true },
+        { text: "Déplacer le fou b2 sans libérer la colonne a", correct: false },
+        { text: "Jouer un coup de roi sans examiner la dame", correct: false }
+      ],
+      principle: "Le cavalier masque la tour sur la colonne a. En le déplaçant avec tempo, la tour attaque la dame a8. La dame peut prendre la tour en a1, mais le fou b2 la reprend.",
+      transfer: "Repère les pièces alignées derrière une pièce écran. Après le coup de dégagement, vérifie la pièce révélée et la meilleure capture adverse.",
+      pitfall: "Une attaque révélée n’est pas automatiquement gagnante : calcule si la pièce attaquée peut capturer, fuir ou créer une menace plus forte.",
+      hints: ["Trace la colonne a entre la tour et la dame.", "Déplace le cavalier sans obstruer la colonne; le coup attendu est Cc5."],
+      sequence: [
+        { side: "user", uci: "a4c5", explanation: "Le cavalier libère la colonne a et la tour attaque la dame a8." },
+        { side: "book", uci: "a8a1", explanation: "La dame peut capturer la tour; vérifie la pièce qui défend a1." },
+        { side: "user", uci: "b2a1", explanation: "Le fou reprend la dame en a1. La séquence confirme que la tour n’était pas sans défense." }
+      ]
+    },
+    {
+      id: "pattern-signals-pawn-fork",
+      program: "Carlsen · reconnaissance des motifs",
+      title: "Fourchette de pion : vérifier la case d’arrivée",
+      category: "Tactique · Fourchette de pion",
+      level: "Intermédiaire",
+      author: "SupaChess Académie",
+      book: "Parcours original SupaChess",
+      reference: "Leçon originale · Position vérifiée",
+      fen: "7k/8/3q1r2/8/4P3/8/8/K3R3 w - - 0 1",
+      color: "w",
+      question: "Quel coup attaque simultanément la dame d6 et la tour f6, tout en restant défendu ?",
+      choices: [
+        { text: "Avancer le pion e4 en e5", correct: true },
+        { text: "Pousser le pion a sans créer de menace", correct: false },
+        { text: "Échanger la tour e1 contre un pion", correct: false }
+      ],
+      principle: "e5 attaque la dame d6 et la tour f6. Le pion n’est pas gratuit : la tour e1 le défend sur la colonne e; si la dame prend en e5, Txe5 la capture.",
+      transfer: "Pour une fourchette, vérifie les deux cibles, les cases de fuite et si l’adversaire peut prendre le pion. Compte les défenseurs de la case d’arrivée avant de jouer.",
+      pitfall: "Ne confonds pas deux pièces attaquées avec un gain automatique : calcule chaque prise et la réponse qui suit.",
+      hints: ["Le pion e4 peut attaquer d5 et f5 après une avancée.", "Après e5, la tour e1 protège le pion sur la colonne."],
+      sequence: [
+        { side: "user", uci: "e4e5", explanation: "Le pion attaque la dame d6 et la tour f6, et la tour e1 protège e5." },
+        { side: "book", uci: "d6e5", explanation: "La dame peut prendre le pion; il faut avoir calculé cette réponse." },
+        { side: "user", uci: "e1e5", explanation: "La tour reprend la dame en e5 : la case d’arrivée était défendue." }
+      ]
+    },
+    {
+      id: "pattern-signals-king-queen-alignment",
+      program: "Carlsen · reconnaissance des motifs",
+      title: "Profiter de l’alignement roi-dame",
+      category: "Tactique · Alignement et pièce défendue",
+      level: "Avancé",
+      author: "SupaChess Académie",
+      book: "Parcours original SupaChess",
+      reference: "Leçon originale · Position vérifiée",
+      fen: "k7/8/8/1B6/q7/8/8/R6K w - - 0 1",
+      color: "w",
+      question: "Comment capturer la dame a4 en donnant échec, sans permettre au roi de reprendre la tour ?",
+      choices: [
+        { text: "Prendre la dame avec la tour a1; le fou b5 protège a4 et la tour donne échec au roi a8", correct: true },
+        { text: "Prendre un pion éloigné sans examiner l’alignement", correct: false },
+        { text: "Déplacer le fou et laisser la dame sans réponse", correct: false }
+      ],
+      principle: "La tour prend la dame sur a4 et découvre la colonne vers le roi a8. Le fou b5 protège la case a4, donc le roi ne peut pas reprendre la tour.",
+      transfer: "Repère les alignements entre pièces lourdes et roi. Vérifie que la case de capture est défendue et que le roi est réellement en échec après la prise.",
+      pitfall: "Un alignement ne suffit pas : contrôle les cases intermédiaires, la légalité de la prise et les défenses de la pièce qui capture.",
+      hints: ["La dame a4 est sur la colonne de la tour a1; le roi noir est au bout de cette colonne.", "Le fou b5 défend la case a4; joue Txa4+."],
+      sequence: [
+        { side: "user", uci: "a1a4", explanation: "La tour capture la dame et donne échec sur la colonne a." },
+        { side: "book", uci: "a8b8", explanation: "Le roi doit sortir de l’échec; il ne peut pas prendre la tour protégée par le fou b5." },
+        { side: "user", uci: "a4b4", explanation: "La tour quitte la colonne et reste en jeu après avoir gagné la dame." }
+      ]
+    }
+  ]);
+
   renderCatalog();
   const searchParams = new URLSearchParams(location.search);
   const requestedLesson = searchParams.get("lesson");
