@@ -434,7 +434,7 @@ function gamesRenderPanel() {
     if (typeof updateOpponentFideEstimate === "function") updateOpponentFideEstimate();
     return;
   }
-  wrap.innerHTML = arr.map((g) => {
+  wrap.innerHTML = arr.map((g, index) => {
     const d = new Date(g.date);
     const when = d.toLocaleDateString("fr-FR") + " " +
       d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
