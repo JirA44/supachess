@@ -100,9 +100,27 @@ function gamesMarkTrainingAidUsed() {
 window.gamesTrainingAidsActive = gamesTrainingAidsActive;
 window.gamesMarkTrainingAidUsed = gamesMarkTrainingAidUsed;
 
+function gamesDiagnosticModeActive() {
+  try {
+    const diagnostic = JSON.parse(localStorage.getItem("supachess-level-diagnostic") || "null");
+    return Boolean(diagnostic && diagnostic.active);
+  } catch (_) { return false; }
+}
+
+window.gamesMarkDiagnosticMode = function(active) {
+  if (!active || !currentGameId || !currentGameMetadata ||
+      !state || state.phase === "init" || state.phase === "gameover") return;
+  currentGameMetadata.diagnosticMode = true;
+  currentGameMetadata.unassistedMode = true;
+  // Keep any aid use already recorded before diagnostics was activated.
+  if (gamesTrainingAidsActive()) currentGameMetadata.trainingAidsUsed = true;
+  gamesAutoSave();
+};
+
 function gamesNewEntry() {
   currentGameId = Date.now() + "-" + Math.random().toString(36).slice(2, 7);
   const gameNumber = gamesNextNumber(gamesLoad());
+  const diagnosticMode = gamesDiagnosticModeActive();
   const manual = typeof isManualMode === "function" && isManualMode();
   const setting = !manual && typeof opponentElo === "function" ? opponentElo() : null;
   const thinkTime = !manual && typeof opponentThinkTime === "function" ? opponentThinkTime() : null;
@@ -121,8 +139,9 @@ function gamesNewEntry() {
     stockfishRatingSource: Number.isFinite(estimate) ? "supachess-engine-setting-v1" : null,
     stockfishSettingElo: hasEngineSetting ? setting : null,
     engineThinkTimeMs: Number.isFinite(thinkTime) ? thinkTime : null,
-    trainingAidsUsed: gamesTrainingAidsActive(),
-    unassistedMode: Boolean(state.unassistedGame),
+    trainingAidsUsed: diagnosticMode ? false : gamesTrainingAidsActive(),
+    unassistedMode: diagnosticMode || Boolean(state.unassistedGame),
+    diagnosticMode,
   };
 }
 
@@ -275,6 +294,7 @@ function gamesBuildPgn(result) {
   }
   state.chess.header("SupaChessTrainingAidsUsed", currentGameMetadata.trainingAidsUsed ? "true" : "false");
   state.chess.header("SupaChessUnassistedMode", currentGameMetadata.unassistedMode ? "true" : "false");
+  state.chess.header("SupaChessDiagnosticMode", currentGameMetadata.diagnosticMode ? "true" : "false");
   if (currentGameMetadata.engineName) {
     const customHeaders = [
       "SupaChessOpponent", currentGameMetadata.engineName,
@@ -335,7 +355,7 @@ function gamesAutoSave() {
     stats: { ...state.stats },
     moveGrades: Array.isArray(state.moveGradeHistory) ? state.moveGradeHistory.map((grade) => ({ ...grade })) : [],
     ...currentGameMetadata,
-    unassistedMode: Boolean(state.unassistedGame),
+    unassistedMode: Boolean(currentGameMetadata.unassistedMode || state.unassistedGame),
   };
   const arr = gamesLoad();
   const i = arr.findIndex((g) => g.id === currentGameId);
@@ -424,11 +444,15 @@ function gamesRenderPanel() {
       ? Math.abs(g.accuracyW - g.accuracyB) : null;
     const gapLabel = gap === null ? "" : ` · écart ${gap.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} % (${g.accuracyW === g.accuracyB ? "égalité" : "en faveur des " + (g.accuracyW > g.accuracyB ? "Blancs" : "Noirs")})`;
     const resultLabel = g.abandoned ? "Défaite par abandon" : g.stopped ? "Arrêtée — sans résultat" : g.result;
+    const aidLabel = g.trainingAidsUsed === false ? "Sans aides" :
+      g.trainingAidsUsed === true ? "Avec aides" : "Aides non vérifiées";
+    const aidColor = g.trainingAidsUsed === false ? "#8fe3a2" :
+      g.trainingAidsUsed === true ? "#ffb38a" : "#c2c9d2";
     const gameNumber = Number.isSafeInteger(Number(g.gameNumber)) && Number(g.gameNumber) > 0 ? Number(g.gameNumber) : index + 1;
     const engineDetails = gamesEngineRowDetails(g);
     const halfMoveCount = gamesHalfMoveCount(g);
     return `<div class="game-row" data-id="${esc(g.id)}">
-      <span class="game-meta">Partie n°${gameNumber} · ${esc(when)} · <strong>${esc(resultLabel)}</strong> · ${halfMoveCount} demi-coup${halfMoveCount > 1 ? "s" : ""} · préc. B/N ${esc(acc)}${esc(gapLabel)}${esc(gamesAcplDetailsForPgn(g.pgn))}${engineDetails ? `<small class="game-engine-details">${esc(engineDetails)}</small>` : ""}</span>
+      <span class="game-meta">Partie n°${gameNumber} · ${esc(when)} · <strong>${esc(resultLabel)}</strong> · ${halfMoveCount} demi-coup${halfMoveCount > 1 ? "s" : ""} · <strong class="game-aid-label" style="color:${aidColor}">${aidLabel}</strong> · préc. B/N ${esc(acc)}${esc(gapLabel)}${esc(gamesAcplDetailsForPgn(g.pgn))}${engineDetails ? `<small class="game-engine-details">${esc(engineDetails)}</small>` : ""}</span>
       <span class="game-actions">
         <button class="btn mini" data-act="correct" title="Aller à la première erreur à corriger">Corriger</button>
         <button class="btn mini" data-act="dl" title="Télécharger le PGN">⬇ PGN</button>
