@@ -5651,6 +5651,35 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     }
   ]);
 
+  // Positional pattern: a pawn-supported outpost that cannot be challenged by pawns.
+  LESSONS.push(...[
+    {
+      id: "pattern-signals-protected-outpost",
+      program: "Carlsen · reconnaissance des motifs",
+      title: "Installer un avant-poste protégé",
+      category: "Stratégie · Cases fortes et avant-postes",
+      level: "Intermédiaire",
+      author: "SupaChess Académie",
+      book: "Parcours original SupaChess",
+      reference: "Leçon originale · Position vérifiée",
+      fen: "7k/5ppp/8/8/1N2P3/8/8/K7 w - - 0 1",
+      color: "w",
+      question: "Quelle case centrale offre au cavalier un avant-poste protégé que les pions noirs ne peuvent pas chasser ?",
+      choices: [
+        { text: "Jouer Cd5 : le pion e4 protège le cavalier et aucun pion noir ne peut l’attaquer", correct: true },
+        { text: "Reculer le cavalier vers le bord sans raison", correct: false },
+        { text: "Pousser un pion de l’aile sans améliorer une pièce", correct: false }
+      ],
+      principle: "Cd5 installe le cavalier sur une case protégée par le pion e4. Les Noirs n’ont pas de pion c ou e capable de le chasser; le cavalier dispose donc d’un avant-poste stable.",
+      transfer: "Pour repérer un avant-poste, vérifie qui contrôle la case, quel pion le défend et si les pions adverses peuvent échanger ou chasser la pièce.",
+      pitfall: "Une case centrale n’est pas forcément un avant-poste : si un pion adverse peut la contester, la pièce risque d’être échangée ou repoussée.",
+      hints: ["Le pion e4 contrôle d5.", "Le cavalier b4 peut atteindre d5; vérifie les pions noirs capables de l’attaquer."],
+      sequence: [
+        { side: "user", uci: "b4d5", explanation: "Cd5 pose le cavalier sur une case protégée par e4 et impossible à contester par les pions noirs de cette position." }
+      ]
+    }
+  ]);
+
   renderCatalog();
   const searchParams = new URLSearchParams(location.search);
   const requestedLesson = searchParams.get("lesson");
