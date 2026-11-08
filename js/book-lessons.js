@@ -2697,13 +2697,13 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
         { text: "Supposer que l’adversaire répondra comme je le souhaite", correct: false },
         { text: "Ne calculer que ma menace et jouer immédiatement", correct: false },
       ],
-      principle: "Le calcul commence par une hypothèse adverse exigeante : quelle réponse gêne le plus mon idée ? Dans cette position, après Cg5, les Noirs ont notamment …d5!, une contre-attaque centrale. On vérifie ensuite les échecs, captures, menaces, pièces attaquées ou non protégées, puis les tactiques.",
-      transfer: "À chaque demi-coup, arrête la variante et recommence le même inventaire. Ne poursuis pas une ligne si tu n’as pas répondu à la meilleure réplique adverse.",
+      principle: "Commence par diagnostiquer la position : sécurité des rois, matériel, activité des pièces, structure de pions, cases faibles et déséquilibres. Les échecs, captures et menaces sont un contrôle tactique utile, pas une liste à réciter avant chaque coup. Pour un candidat critique, cherche la meilleure défense adverse et calcule ses conséquences.",
+      transfer: "Note ce qui a changé, deux ou trois candidats issus des besoins concrets de la position, puis la meilleure défense contre chacun. Recommence le diagnostic après chaque réponse importante.",
       hints: [
         "Remplace la question « que va-t-il probablement jouer ? » par « quelle est sa réponse la plus forte ? ».",
         "Après la réponse adverse, énumère les échecs, les captures et les menaces avant de continuer.",
       ],
-      pitfall: "Ne confonds pas un coup légal avec un bon coup : une pièce peut bouger légalement tout en laissant une tactique ou une pièce sans défense.",
+      pitfall: "Ne transforme pas les échecs, captures et menaces en recette universelle : un coup de plan calme peut être meilleur. Ne calcule pas non plus contre une défense complaisante.",
       sequence: [
         { side: "user", uci: "e1g1", explanation: "Le roque est le coup joué dans la ligne d’étude; le réflexe à entraîner reste de calculer la meilleure réponse noire après chaque candidat." },
         { side: "book", uci: "f8c5", explanation: "Les Noirs développent le fou. Vérifie ses menaces et les pièces qu’il vise avant de poursuivre." },
