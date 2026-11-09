@@ -535,6 +535,11 @@ body {
 :root[data-psychedelic-palette="rainbow"] { --psy-a:255,35,145; --psy-b:255,205,30; --psy-c:20,220,190; --psy-d:120,55,245; }
 :root[data-psychedelic-palette="neon"] { --psy-a:255,0,255; --psy-b:175,255,0; --psy-c:0,245,255; --psy-d:255,35,65; }
 :root[data-psychedelic-palette="pastel"] { --psy-a:255,155,190; --psy-b:255,235,155; --psy-c:155,235,225; --psy-d:205,180,255; }
+.psychedelic-palette-preview { display:flex; gap:5px; margin:7px 0 3px; }
+.psychedelic-palette-preview i { width:32px; height:13px; border-radius:99px; border:1px solid #ffffff80; background:rgb(var(--psy-a)); }
+.psychedelic-palette-preview i:nth-child(2) { background:rgb(var(--psy-b)); }
+.psychedelic-palette-preview i:nth-child(3) { background:rgb(var(--psy-c)); }
+.psychedelic-palette-preview i:nth-child(4) { background:rgb(var(--psy-d)); }
 .psychedelic-orb { display:grid; place-items:center; width:30px; height:30px; border-radius:50%; color:#fff; font-size:1.25rem; background:conic-gradient(#ff3a9e,#ffbd38,#69ed73,#21d9ff,#9c65ff,#ff3a9e); box-shadow:0 0 14px #c253f5aa; }
 :root[data-psychedelic="true"] body { position:relative; isolation:isolate; background:#15101d; }
 :root[data-psychedelic="true"] body::before { content:""; position:fixed; inset:-28%; z-index:-1; pointer-events:none; opacity:var(--psychedelic-glow-opacity, .21); background:radial-gradient(ellipse at 18% 25%,rgba(var(--psy-a),.55),transparent 38%),radial-gradient(ellipse at 76% 22%,rgba(var(--psy-c),.48),transparent 36%),radial-gradient(ellipse at 62% 78%,rgba(var(--psy-d),.52),transparent 40%),radial-gradient(ellipse at 22% 80%,rgba(var(--psy-b),.38),transparent 38%); background-size:160% 160%; animation:supa-liquid-drift var(--psychedelic-drift-duration,28s) ease-in-out infinite alternate; }
