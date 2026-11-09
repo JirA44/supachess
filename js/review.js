@@ -545,6 +545,14 @@ async function reviewRun(options = {}) {
       centipawns: cpEvidence,
       lossCp: verifiedLossCp,
       mateAwareLoss,
+      fenBefore: fens[i],
+      fenAfter: fens[i + 1],
+      playedUci: uciMove,
+      bestMoveUci: candidates[0] && Array.isArray(candidates[0].pv) ? candidates[0].pv[0] || "" : "",
+      opponentBestReplyUci: positionCandidates[i + 1] && positionCandidates[i + 1][0] && Array.isArray(positionCandidates[i + 1][0].pv)
+        ? positionCandidates[i + 1][0].pv[0] || "" : "",
+      opponentBestReplyLine: positionCandidates[i + 1] && positionCandidates[i + 1][0] && Array.isArray(positionCandidates[i + 1][0].pv)
+        ? positionCandidates[i + 1][0].pv.slice(0, 8) : [],
     });
   }
   const r1 = (v) => (v === null ? null : Math.round(v * 10) / 10);
@@ -578,8 +586,16 @@ async function reviewRun(options = {}) {
   });
   rows.forEach((row, i) => { row.evaluation = reviewState.grades[i].evaluation; row.classification = reviewClassOf(row, reviewState.grades[i]); });
   reviewState.moveGrades = reviewState.grades.map((grade, index) => ({
-    ply: index + 1, color: moves[index].color, category: grade.category || "unrated",
+    ply: index + 1, color: moves[index].color, san: moves[index].san,
+    category: grade.category || "unrated",
     lossCp: Number.isFinite(grade.deltaCp) ? grade.deltaCp : null,
+    bestMove: rows[index].bestMove,
+    playedUci: rows[index].playedUci,
+    bestMoveUci: rows[index].bestMoveUci,
+    opponentBestReplyUci: rows[index].opponentBestReplyUci,
+    opponentBestReplyLine: rows[index].opponentBestReplyLine,
+    fenBefore: rows[index].fenBefore,
+    fenAfter: rows[index].fenAfter,
   }));
   reviewState.correctionExercises = reviewBuildCorrectionExercises(rows, fens, moves, positionLines);
   reviewSetProgress("Analyse Stockfish terminée — bilan en cours…");
