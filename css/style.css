@@ -557,6 +557,17 @@ body {
 @keyframes supa-psychedelic-spin { from { filter:hue-rotate(0deg); } to { filter:hue-rotate(160deg); } }
 @keyframes supa-psychedelic-prism { from { filter:hue-rotate(0deg) saturate(1.4); } to { filter:hue-rotate(120deg) saturate(1.8); } }
 @keyframes supa-aurora-drift { from { background-position:0% 35%,100% 50%; } to { background-position:100% 65%,0% 50%; } }
+
+:root[data-psychedelic="true"][data-psychedelic-effect="kaleidoscope"] .sq.light::before,
+:root[data-psychedelic="true"][data-psychedelic-effect="kaleidoscope"] .sq.dark::before { background-image:repeating-conic-gradient(from 45deg at 50% 50%,rgba(var(--psy-a),.96) 0 30deg,rgba(var(--psy-b),.9) 30deg 60deg,rgba(var(--psy-c),.96) 60deg 90deg,rgba(var(--psy-d),.9) 90deg 120deg); animation:supa-psychedelic-spin var(--psychedelic-color-duration,22s) linear infinite; }
+:root[data-psychedelic="true"][data-psychedelic-effect="tunnel"] .sq.light::before,
+:root[data-psychedelic="true"][data-psychedelic-effect="tunnel"] .sq.dark::before { background-image:repeating-radial-gradient(circle at 50% 50%,rgba(var(--psy-a),.96) 0 9%,rgba(var(--psy-b),.92) 10% 18%,rgba(var(--psy-c),.96) 19% 27%,rgba(var(--psy-d),.92) 28% 36%); animation:supa-tunnel-pulse var(--psychedelic-color-duration,22s) ease-in-out infinite alternate; }
+:root[data-psychedelic="true"][data-psychedelic-effect="ripples"] .sq.light::before,
+:root[data-psychedelic="true"][data-psychedelic-effect="ripples"] .sq.dark::before { background-image:repeating-radial-gradient(ellipse at 50% 50%,rgba(var(--psy-a),.9) 0 8%,transparent 10% 18%,rgba(var(--psy-c),.92) 20% 28%,transparent 30% 40%); animation:supa-tunnel-pulse var(--psychedelic-color-duration,22s) ease-in-out infinite alternate; }
+:root[data-psychedelic="true"][data-psychedelic-effect="pulse"] .sq.light::before,
+:root[data-psychedelic="true"][data-psychedelic-effect="pulse"] .sq.dark::before { background-image:linear-gradient(125deg,rgba(var(--psy-a),.95),rgba(var(--psy-b),.9),rgba(var(--psy-c),.96),rgba(var(--psy-d),.94)); animation:supa-psychedelic-pulse var(--psychedelic-color-duration,22s) ease-in-out infinite alternate; }
+@keyframes supa-tunnel-pulse { from { background-size:140% 140%; background-position:50% 50%; } to { background-size:240% 240%; background-position:46% 55%; } }
+@keyframes supa-psychedelic-pulse { from { filter:brightness(.85) saturate(1.2); } to { filter:brightness(1.7) saturate(1.9); } }
 @media (prefers-reduced-motion:reduce) {
   :root[data-psychedelic="true"] body::before,
   :root[data-psychedelic="true"] .sq.light::before,
