@@ -527,6 +527,7 @@ body {
 .psychedelic-mode-section { grid-column:1 / -1; }
 .psychedelic-mode-toggle { min-width:170px; min-height:46px; flex-direction:row; padding:8px 12px; }
 .appearance-help { margin-top:8px; max-width:62ch; color:var(--text-dim); font-size:.85rem; line-height:1.45; }
+.appearance-help { margin-top:8px; max-width:62ch; color:var(--text-dim); font-size:.85rem; line-height:1.45; }
 .psychedelic-orb { display:grid; place-items:center; width:30px; height:30px; border-radius:50%; color:#fff; font-size:1.25rem; background:conic-gradient(#ff3a9e,#ffbd38,#69ed73,#21d9ff,#9c65ff,#ff3a9e); box-shadow:0 0 14px #c253f5aa; }
 :root[data-psychedelic="true"] body { position:relative; isolation:isolate; background:#15101d; }
 :root[data-psychedelic="true"] body::before { content:""; position:fixed; inset:-28%; z-index:-1; pointer-events:none; background:radial-gradient(ellipse at 18% 25%,#e92f8050,transparent 38%),radial-gradient(ellipse at 76% 22%,#1be0dd44,transparent 36%),radial-gradient(ellipse at 62% 78%,#8346ff48,transparent 40%),radial-gradient(ellipse at 22% 80%,#f4a52d36,transparent 38%); background-size:160% 160%; animation:supa-liquid-drift 28s ease-in-out infinite alternate; }
