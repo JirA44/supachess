@@ -25,9 +25,9 @@
       return {
         board: boardThemes.some(x => x.id === saved.board) ? saved.board : "green",
         pieces: pieceThemes.some(x => x.id === saved.pieces) ? saved.pieces : "classic",
-        psychedelic: saved.psychedelic === true
+        psychedelic: saved.psychedelic !== false
       };
-    } catch (_) { return { board:"green", pieces:"classic", psychedelic:false }; }
+    } catch (_) { return { board:"green", pieces:"classic", psychedelic:true }; }
   }
   let current = load();
   const api = {
@@ -35,7 +35,7 @@
     setBoard: value => { if (boardThemes.some(theme => theme.id === value)) { current.board = value; apply(true); } },
     setPieces: value => { if (pieceThemes.some(theme => theme.id === value)) { current.pieces = value; apply(true); } },
     setPsychedelic: value => { current.psychedelic = Boolean(value); apply(true); },
-    reset: () => { current = { board:"green", pieces:"classic", psychedelic:false }; apply(true); }
+    reset: () => { current = { board:"green", pieces:"classic", psychedelic:true }; apply(true); }
   };
   window.SupaAppearanceSettings = api;
   function apply(save = false) {
