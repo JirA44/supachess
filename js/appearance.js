@@ -27,7 +27,7 @@
         pieces: pieceThemes.some(x => x.id === saved.pieces) ? saved.pieces : "classic",
         psychedelic: saved.psychedelic === true
       };
-    } catch (_) { return { board:"green", pieces:"classic" }; }
+    } catch (_) { return { board:"green", pieces:"classic", psychedelic:false }; }
   }
   let current = load();
   const api = {
