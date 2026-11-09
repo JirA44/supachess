@@ -532,16 +532,31 @@ body {
 .psychedelic-controls output { color:var(--accent); font-variant-numeric:tabular-nums; }
 .psychedelic-controls input[type="range"] { width:100%; min-height:30px; accent-color:#cf62ff; touch-action:pan-y; }
 .psychedelic-controls select { width:100%; min-height:42px; padding:8px 10px; border:1px solid var(--panel-edge); border-radius:8px; background:var(--bg-soft); color:var(--text); font:inherit; }
-:root[data-psychedelic-palette="rainbow"] { --psy-a:255,40,165; --psy-b:255,210,55; --psy-c:30,225,210; --psy-d:125,65,255; }
-:root[data-psychedelic-palette="neon"] { --psy-a:255,0,204; --psy-b:198,255,0; --psy-c:0,229,255; --psy-d:124,77,255; }
-:root[data-psychedelic-palette="pastel"] { --psy-a:255,143,177; --psy-b:255,224,138; --psy-c:128,221,234; --psy-d:189,160,255; }
+:root[data-psychedelic-palette="rainbow"] { --psy-a:255,35,145; --psy-b:255,205,30; --psy-c:20,220,190; --psy-d:120,55,245; }
+:root[data-psychedelic-palette="neon"] { --psy-a:255,0,255; --psy-b:175,255,0; --psy-c:0,245,255; --psy-d:255,35,65; }
+:root[data-psychedelic-palette="pastel"] { --psy-a:255,155,190; --psy-b:255,235,155; --psy-c:155,235,225; --psy-d:205,180,255; }
 .psychedelic-orb { display:grid; place-items:center; width:30px; height:30px; border-radius:50%; color:#fff; font-size:1.25rem; background:conic-gradient(#ff3a9e,#ffbd38,#69ed73,#21d9ff,#9c65ff,#ff3a9e); box-shadow:0 0 14px #c253f5aa; }
 :root[data-psychedelic="true"] body { position:relative; isolation:isolate; background:#15101d; }
 :root[data-psychedelic="true"] body::before { content:""; position:fixed; inset:-28%; z-index:-1; pointer-events:none; opacity:var(--psychedelic-glow-opacity, .21); background:radial-gradient(ellipse at 18% 25%,rgba(var(--psy-a),.55),transparent 38%),radial-gradient(ellipse at 76% 22%,rgba(var(--psy-c),.48),transparent 36%),radial-gradient(ellipse at 62% 78%,rgba(var(--psy-d),.52),transparent 40%),radial-gradient(ellipse at 22% 80%,rgba(var(--psy-b),.38),transparent 38%); background-size:160% 160%; animation:supa-liquid-drift var(--psychedelic-drift-duration,28s) ease-in-out infinite alternate; }
 :root[data-psychedelic="true"] .sq.light::before,
-:root[data-psychedelic="true"] .sq.dark::before { content:""; position:absolute; inset:0; z-index:0; pointer-events:none; opacity:var(--psychedelic-board-opacity,.23); background:linear-gradient(135deg,rgba(var(--psy-a),.64),rgba(var(--psy-b),.62),rgba(var(--psy-c),.66),rgba(var(--psy-d),.66),rgba(var(--psy-a),.64)); background-size:300% 300%; animation:supa-liquid-colors var(--psychedelic-color-duration,22s) ease-in-out infinite alternate; }
+:root[data-psychedelic="true"] .sq.dark::before { content:""; position:absolute; inset:0; z-index:0; pointer-events:none; opacity:var(--psychedelic-board-opacity,.23); background-size:240% 240%; }
+:root[data-psychedelic="true"][data-psychedelic-effect="liquid"] .sq.light::before,
+:root[data-psychedelic="true"][data-psychedelic-effect="liquid"] .sq.dark::before { background-image:linear-gradient(135deg,rgba(var(--psy-a),.9),rgba(var(--psy-b),.85),rgba(var(--psy-c),.9),rgba(var(--psy-d),.9),rgba(var(--psy-a),.9)); animation:supa-liquid-colors var(--psychedelic-color-duration,22s) ease-in-out infinite alternate; }
+:root[data-psychedelic="true"][data-psychedelic-effect="spiral"] .sq.light::before,
+:root[data-psychedelic="true"][data-psychedelic-effect="spiral"] .sq.dark::before { background-image:conic-gradient(from 0deg at 50% 50%,rgba(var(--psy-a),.95),rgba(var(--psy-b),.75),rgba(var(--psy-c),.95),rgba(var(--psy-d),.88),rgba(var(--psy-a),.95)); animation:supa-psychedelic-spin var(--psychedelic-color-duration,22s) linear infinite; }
+:root[data-psychedelic="true"][data-psychedelic-effect="waves"] .sq.light::before,
+:root[data-psychedelic="true"][data-psychedelic-effect="waves"] .sq.dark::before { background-image:repeating-linear-gradient(125deg,rgba(var(--psy-a),.96) 0 13%,rgba(var(--psy-b),.84) 13% 26%,rgba(var(--psy-c),.94) 26% 39%,rgba(var(--psy-d),.88) 39% 52%); animation:supa-liquid-colors var(--psychedelic-color-duration,22s) ease-in-out infinite alternate; }
+:root[data-psychedelic="true"][data-psychedelic-effect="prism"] .sq.light::before,
+:root[data-psychedelic="true"][data-psychedelic-effect="prism"] .sq.dark::before { background-image:repeating-conic-gradient(from 12deg at 50% 50%,rgba(var(--psy-a),.96) 0 18deg,rgba(var(--psy-b),.9) 18deg 36deg,rgba(var(--psy-c),.94) 36deg 54deg,rgba(var(--psy-d),.9) 54deg 72deg); animation:supa-psychedelic-prism var(--psychedelic-color-duration,22s) ease-in-out infinite alternate; }
+:root[data-psychedelic="true"][data-psychedelic-effect="plasma"] .sq.light::before,
+:root[data-psychedelic="true"][data-psychedelic-effect="plasma"] .sq.dark::before { background-image:radial-gradient(ellipse at 18% 25%,rgba(var(--psy-a),.98),transparent 48%),radial-gradient(ellipse at 78% 20%,rgba(var(--psy-c),.95),transparent 46%),radial-gradient(ellipse at 65% 82%,rgba(var(--psy-d),.98),transparent 48%),radial-gradient(ellipse at 18% 80%,rgba(var(--psy-b),.92),transparent 44%); animation:supa-liquid-colors var(--psychedelic-color-duration,22s) ease-in-out infinite alternate; }
+:root[data-psychedelic="true"][data-psychedelic-effect="aurora"] .sq.light::before,
+:root[data-psychedelic="true"][data-psychedelic-effect="aurora"] .sq.dark::before { background-image:linear-gradient(112deg,transparent 0 12%,rgba(var(--psy-c),.96) 24%,transparent 39% 48%,rgba(var(--psy-d),.9) 59%,transparent 74%),linear-gradient(68deg,rgba(var(--psy-a),.9),transparent 34%,rgba(var(--psy-b),.92) 62%,transparent 85%); animation:supa-aurora-drift var(--psychedelic-color-duration,22s) ease-in-out infinite alternate; }
 @keyframes supa-liquid-drift { 0% { transform:translate3d(-2%,1%,0) rotate(-3deg) scale(1); } 50% { transform:translate3d(2%,-1%,0) rotate(2deg) scale(1.06); } 100% { transform:translate3d(-1%,2%,0) rotate(-1deg) scale(1.02); } }
-@keyframes supa-liquid-colors { 0% { background-position:0% 50%; filter:hue-rotate(0deg); } 100% { background-position:100% 50%; filter:hue-rotate(55deg); } }
+@keyframes supa-liquid-colors { 0% { background-position:0% 50%; filter:hue-rotate(0deg); } 100% { background-position:100% 50%; filter:hue-rotate(45deg); } }
+@keyframes supa-psychedelic-spin { from { filter:hue-rotate(0deg); } to { filter:hue-rotate(160deg); } }
+@keyframes supa-psychedelic-prism { from { filter:hue-rotate(0deg) saturate(1.4); } to { filter:hue-rotate(120deg) saturate(1.8); } }
+@keyframes supa-aurora-drift { from { background-position:0% 35%,100% 50%; } to { background-position:100% 65%,0% 50%; } }
 @media (prefers-reduced-motion:reduce) {
   :root[data-psychedelic="true"] body::before,
   :root[data-psychedelic="true"] .sq.light::before,
