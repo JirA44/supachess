@@ -130,7 +130,7 @@
           <div class="method-path-kicker">Routine · effet, intention, plan, évaluation</div>
           <h3>Étudier le demi-coup adverse</h3>
           <p>Après chaque coup adverse, établis ce qu’il fait réellement, quel plan il peut préparer, ses conséquences et ses faiblesses. Distingue une menace concrète d’une hypothèse sur son intention.</p>
-          <ol><li>Observe la pièce déplacée, les captures, les cases contrôlées et les nouvelles menaces.</li><li>Déduis un plan plausible à partir des pions, des pièces actives et des cases clés.</li><li>Calcule les conséquences et les réponses possibles pour les deux camps.</li><li>Juge le coup par comparaison avec les alternatives et Stockfish; il peut être bon, imprécis ou erroné.</li></ol>
+          <ol><li>Observe la pièce déplacée, les captures, les cases contrôlées et les nouvelles menaces.</li><li>Déduis un plan plausible à partir des pions, des pièces actives et des cases clés.</li><li>Après chaque candidat, passe au point de vue adverse et cherche sa meilleure réponse légale possible : échecs, captures, menaces, contre-attaques et coups intermédiaires.</li><li>Calcule ensuite la meilleure réponse pour ton camp et la suite la plus forte de l’adversaire; compare plusieurs lignes Stockfish quand elles sont disponibles.</li><li>Juge le coup par comparaison avec les alternatives et Stockfish; il peut être bon, imprécis ou erroné.</li></ol>
           <p><small>Une ligne étudiée illustre un scénario; elle ne prédit pas le choix réel de l’adversaire et n’est pas automatiquement la meilleure réponse.</small></p>
           <p class="method-path-count" data-method-count>Leçons et exercices en cours de comptage…</p>
           <button class="btn method-path-action" type="button" data-method-action="Étudier le demi-coup adverse">Explorer le parcours</button>
@@ -141,7 +141,7 @@
           <h3>Méthode Fischer</h3>
           <p>Une routine originale d’entraînement aux échecs pour observer, calculer la meilleure réponse adverse, vérifier et apprendre des erreurs.</p>
           <p><strong>Information complète, avenir inconnu :</strong> la position et les coups légaux sont visibles; le prochain choix adverse reste à anticiper.</p>
-          <ol><li><strong>Observer :</strong> rois, pièces attaquées, menaces et contraintes.</li><li><strong>Proposer :</strong> deux ou trois candidats.</li><li><strong>Réfuter :</strong> chercher la meilleure réponse adverse, dont échecs, captures et coups intermédiaires.</li><li><strong>Comparer :</strong> calculer les suites forcées et évaluer la position obtenue pour les deux camps.</li><li><strong>Vérifier :</strong> noter son idée avant Stockfish, puis rejouer et analyser l’écart.</li></ol>
+          <ol><li><strong>Observer :</strong> rois, pièces attaquées, menaces et contraintes.</li><li><strong>Proposer :</strong> deux ou trois candidats.</li><li><strong>Réfuter :</strong> pour chaque candidat, chercher la meilleure réponse légale adverse possible (échecs, captures, menaces, contre-attaques et coups intermédiaires), pas seulement le coup réellement joué.</li><li><strong>Poursuivre :</strong> calculer sa meilleure réponse, puis la meilleure suite adverse; comparer plusieurs lignes Stockfish si disponibles.</li><li><strong>Comparer :</strong> calculer les suites forcées et évaluer la position obtenue pour les deux camps.</li><li><strong>Vérifier :</strong> noter son idée avant Stockfish, puis rejouer et analyser l’écart.</li></ol>
           <p class="method-path-count" data-method-count>Leçons du parcours en cours de comptage…</p>
           <button class="btn method-path-action" type="button" data-method-action="Fischer · préparation et précision">Explorer les leçons Fischer</button>
         </article>
@@ -368,7 +368,7 @@
     </section>
     <p class="lesson-note">Les exercices sont rédigés pour SupaChess. Chaque FEN et chaque demi-coup des lignes étudiées sont vérifiés par les tests; les variantes Stockfish restent dépendantes du temps de recherche.</p>
   </main>
-<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14853</footer>
+<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14876</footer>
 
   <script src="vendor/chess.js"></script>
   <script src="js/engine.js"></script>
@@ -381,7 +381,7 @@
   <script src="js/lesson-concepts.js?v=positional-play-path-20261108-v3"></script>
   <script src="js/academy-content-counts.js?v=academy-content-counters-20261106-v1"></script>
   <script src="js/stockfish-study-lab.js?v=auto-generated-audit-practice-20261101-v2"></script>
-  <script src="js/method-paths.js?v=opponent-halfmove-study-20261104-v1"></script>
+  <script src="js/method-paths.js?v=opponent-best-reply-refutation-20261109-v1"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
