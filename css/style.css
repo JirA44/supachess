@@ -527,12 +527,19 @@ body {
 .psychedelic-mode-section { grid-column:1 / -1; }
 .psychedelic-mode-toggle { min-width:170px; min-height:46px; flex-direction:row; padding:8px 12px; }
 .appearance-help { margin-top:8px; max-width:62ch; color:var(--text-dim); font-size:.85rem; line-height:1.45; }
-.appearance-help { margin-top:8px; max-width:62ch; color:var(--text-dim); font-size:.85rem; line-height:1.45; }
+.psychedelic-controls { display:grid; grid-template-columns:minmax(0,1fr); gap:6px; max-width:520px; margin-top:12px; }
+.psychedelic-controls label { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:5px; color:var(--text); font-size:.9rem; font-weight:700; }
+.psychedelic-controls output { color:var(--accent); font-variant-numeric:tabular-nums; }
+.psychedelic-controls input[type="range"] { width:100%; min-height:30px; accent-color:#cf62ff; touch-action:pan-y; }
+.psychedelic-controls select { width:100%; min-height:42px; padding:8px 10px; border:1px solid var(--panel-edge); border-radius:8px; background:var(--bg-soft); color:var(--text); font:inherit; }
+:root[data-psychedelic-palette="rainbow"] { --psy-a:255,40,165; --psy-b:255,210,55; --psy-c:30,225,210; --psy-d:125,65,255; }
+:root[data-psychedelic-palette="neon"] { --psy-a:255,0,204; --psy-b:198,255,0; --psy-c:0,229,255; --psy-d:124,77,255; }
+:root[data-psychedelic-palette="pastel"] { --psy-a:255,143,177; --psy-b:255,224,138; --psy-c:128,221,234; --psy-d:189,160,255; }
 .psychedelic-orb { display:grid; place-items:center; width:30px; height:30px; border-radius:50%; color:#fff; font-size:1.25rem; background:conic-gradient(#ff3a9e,#ffbd38,#69ed73,#21d9ff,#9c65ff,#ff3a9e); box-shadow:0 0 14px #c253f5aa; }
 :root[data-psychedelic="true"] body { position:relative; isolation:isolate; background:#15101d; }
-:root[data-psychedelic="true"] body::before { content:""; position:fixed; inset:-28%; z-index:-1; pointer-events:none; background:radial-gradient(ellipse at 18% 25%,#e92f8050,transparent 38%),radial-gradient(ellipse at 76% 22%,#1be0dd44,transparent 36%),radial-gradient(ellipse at 62% 78%,#8346ff48,transparent 40%),radial-gradient(ellipse at 22% 80%,#f4a52d36,transparent 38%); background-size:160% 160%; animation:supa-liquid-drift 28s ease-in-out infinite alternate; }
+:root[data-psychedelic="true"] body::before { content:""; position:fixed; inset:-28%; z-index:-1; pointer-events:none; opacity:var(--psychedelic-glow-opacity, .21); background:radial-gradient(ellipse at 18% 25%,rgba(var(--psy-a),.55),transparent 38%),radial-gradient(ellipse at 76% 22%,rgba(var(--psy-c),.48),transparent 36%),radial-gradient(ellipse at 62% 78%,rgba(var(--psy-d),.52),transparent 40%),radial-gradient(ellipse at 22% 80%,rgba(var(--psy-b),.38),transparent 38%); background-size:160% 160%; animation:supa-liquid-drift var(--psychedelic-drift-duration,28s) ease-in-out infinite alternate; }
 :root[data-psychedelic="true"] .sq.light::before,
-:root[data-psychedelic="true"] .sq.dark::before { content:""; position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.38; background:linear-gradient(135deg,rgba(255,40,165,.55),rgba(255,210,55,.5),rgba(30,225,210,.55),rgba(125,65,255,.56),rgba(255,40,165,.55)); background-size:300% 300%; animation:supa-liquid-colors 22s ease-in-out infinite alternate; }
+:root[data-psychedelic="true"] .sq.dark::before { content:""; position:absolute; inset:0; z-index:0; pointer-events:none; opacity:var(--psychedelic-board-opacity,.23); background:linear-gradient(135deg,rgba(var(--psy-a),.64),rgba(var(--psy-b),.62),rgba(var(--psy-c),.66),rgba(var(--psy-d),.66),rgba(var(--psy-a),.64)); background-size:300% 300%; animation:supa-liquid-colors var(--psychedelic-color-duration,22s) ease-in-out infinite alternate; }
 @keyframes supa-liquid-drift { 0% { transform:translate3d(-2%,1%,0) rotate(-3deg) scale(1); } 50% { transform:translate3d(2%,-1%,0) rotate(2deg) scale(1.06); } 100% { transform:translate3d(-1%,2%,0) rotate(-1deg) scale(1.02); } }
 @keyframes supa-liquid-colors { 0% { background-position:0% 50%; filter:hue-rotate(0deg); } 100% { background-position:100% 50%; filter:hue-rotate(55deg); } }
 @media (prefers-reduced-motion:reduce) {
