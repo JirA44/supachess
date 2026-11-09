@@ -24,7 +24,8 @@
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
       return {
         board: boardThemes.some(x => x.id === saved.board) ? saved.board : "green",
-        pieces: pieceThemes.some(x => x.id === saved.pieces) ? saved.pieces : "classic"
+        pieces: pieceThemes.some(x => x.id === saved.pieces) ? saved.pieces : "classic",
+        psychedelic: saved.psychedelic === true
       };
     } catch (_) { return { board:"green", pieces:"classic" }; }
   }
@@ -33,12 +34,14 @@
     get: () => ({ ...current }),
     setBoard: value => { if (boardThemes.some(theme => theme.id === value)) { current.board = value; apply(true); } },
     setPieces: value => { if (pieceThemes.some(theme => theme.id === value)) { current.pieces = value; apply(true); } },
-    reset: () => { current = { board:"green", pieces:"classic" }; apply(true); }
+    setPsychedelic: value => { current.psychedelic = Boolean(value); apply(true); },
+    reset: () => { current = { board:"green", pieces:"classic", psychedelic:false }; apply(true); }
   };
   window.SupaAppearanceSettings = api;
   function apply(save = false) {
     document.documentElement.dataset.boardTheme = current.board;
     document.documentElement.dataset.pieceTheme = current.pieces;
+    document.documentElement.dataset.psychedelic = String(current.psychedelic);
     if (save) {
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(current)); } catch (_) {}
     }
@@ -47,6 +50,7 @@
   function render() {
     const boardRoot = document.getElementById("board-theme-options");
     const pieceRoot = document.getElementById("piece-theme-options");
+    const psychedelicToggle = document.getElementById("psychedelic-mode-toggle");
     if (!boardRoot || !pieceRoot) return;
     boardRoot.innerHTML = "";
     boardThemes.forEach(theme => {
@@ -74,6 +78,11 @@
       button.innerHTML = '<span class="piece-theme-sample" aria-hidden="true">♞♙</span><span class="appearance-choice-label">'+theme.label+'</span>';
       pieceRoot.appendChild(button);
     });
+    if (psychedelicToggle) {
+      psychedelicToggle.setAttribute("aria-pressed", String(current.psychedelic));
+      psychedelicToggle.setAttribute("aria-label", current.psychedelic ? "Désactiver le mode psychédélique" : "Activer le mode psychédélique");
+      psychedelicToggle.innerHTML = '<span class="psychedelic-orb" aria-hidden="true">✺</span><span class="appearance-choice-label">'+(current.psychedelic ? "Mode activé" : "Mode désactivé")+'</span>';
+    }
   }
   document.getElementById("board-theme-options")?.addEventListener("click", event => {
     const button = event.target.closest("button[data-theme]");
@@ -87,8 +96,11 @@
     current.pieces = button.dataset.theme;
     apply(true);
   });
+  document.getElementById("psychedelic-mode-toggle")?.addEventListener("click", () => {
+    api.setPsychedelic(!current.psychedelic);
+  });
   document.getElementById("appearance-reset")?.addEventListener("click", () => {
-    current = { board:"green", pieces:"classic" };
+    current = { board:"green", pieces:"classic", psychedelic:false };
     apply(true);
   });
   apply(false);
