@@ -20,7 +20,8 @@
     { id:"carved", label:"Sculpté", sample:"♞" },
   ];
   const psychedelicPalettes = ["rainbow", "neon", "pastel"];
-  const DEFAULTS = { board:"green", pieces:"classic", psychedelic:true, psychedelicIntensity:55, psychedelicSpeed:100, psychedelicPalette:"rainbow" };
+  const psychedelicEffects = ["liquid", "spiral", "waves", "prism", "plasma", "aurora"];
+  const DEFAULTS = { board:"green", pieces:"classic", psychedelic:true, psychedelicIntensity:55, psychedelicSpeed:100, psychedelicPalette:"rainbow", psychedelicEffect:"liquid" };
   const clamp = (value, min, max, fallback) => Number.isFinite(Number(value)) ? Math.min(max, Math.max(min, Number(value))) : fallback;
   function load() {
     try {
@@ -31,7 +32,8 @@
         psychedelic: saved.psychedelic !== false,
         psychedelicIntensity: clamp(saved.psychedelicIntensity, 0, 100, DEFAULTS.psychedelicIntensity),
         psychedelicSpeed: clamp(saved.psychedelicSpeed, 25, 200, DEFAULTS.psychedelicSpeed),
-        psychedelicPalette: psychedelicPalettes.includes(saved.psychedelicPalette) ? saved.psychedelicPalette : DEFAULTS.psychedelicPalette
+        psychedelicPalette: psychedelicPalettes.includes(saved.psychedelicPalette) ? saved.psychedelicPalette : DEFAULTS.psychedelicPalette,
+        psychedelicEffect: psychedelicEffects.includes(saved.psychedelicEffect) ? saved.psychedelicEffect : DEFAULTS.psychedelicEffect
       };
     } catch (_) { return { ...DEFAULTS }; }
   }
@@ -44,6 +46,7 @@
     setPsychedelicIntensity: value => { current.psychedelicIntensity = clamp(value, 0, 100, DEFAULTS.psychedelicIntensity); apply(true); },
     setPsychedelicSpeed: value => { current.psychedelicSpeed = clamp(value, 25, 200, DEFAULTS.psychedelicSpeed); apply(true); },
     setPsychedelicPalette: value => { if (psychedelicPalettes.includes(value)) { current.psychedelicPalette = value; apply(true); } },
+    setPsychedelicEffect: value => { if (psychedelicEffects.includes(value)) { current.psychedelicEffect = value; apply(true); } },
     reset: () => { current = { ...DEFAULTS }; apply(true); }
   };
   window.SupaAppearanceSettings = api;
@@ -53,6 +56,7 @@
     const root = document.documentElement;
     root.dataset.psychedelic = String(current.psychedelic);
     root.dataset.psychedelicPalette = current.psychedelicPalette;
+    root.dataset.psychedelicEffect = current.psychedelicEffect;
     root.style.setProperty("--psychedelic-board-opacity", String((current.psychedelicIntensity / 100 * 0.42).toFixed(2)));
     root.style.setProperty("--psychedelic-glow-opacity", String((current.psychedelicIntensity / 100 * 0.38).toFixed(2)));
     root.style.setProperty("--psychedelic-drift-duration", (28 * 100 / current.psychedelicSpeed).toFixed(1) + "s");
@@ -71,12 +75,14 @@
     const speed = document.getElementById("psychedelic-speed");
     const speedValue = document.getElementById("psychedelic-speed-value");
     const palette = document.getElementById("psychedelic-palette");
+    const effect = document.getElementById("psychedelic-effect");
     if (!boardRoot || !pieceRoot) return;
     if (intensity) intensity.value = current.psychedelicIntensity;
     if (intensityValue) intensityValue.value = current.psychedelicIntensity + " %";
     if (speed) speed.value = current.psychedelicSpeed;
     if (speedValue) speedValue.value = current.psychedelicSpeed + " %";
     if (palette) palette.value = current.psychedelicPalette;
+    if (effect) effect.value = current.psychedelicEffect;
     boardRoot.innerHTML = "";
     boardThemes.forEach(theme => {
       const button = document.createElement("button");
@@ -132,6 +138,9 @@
   });
   document.getElementById("psychedelic-palette")?.addEventListener("change", event => {
     api.setPsychedelicPalette(event.target.value);
+  });
+  document.getElementById("psychedelic-effect")?.addEventListener("change", event => {
+    api.setPsychedelicEffect(event.target.value);
   });
   document.getElementById("appearance-reset")?.addEventListener("click", () => {
     api.reset();
