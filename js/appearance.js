@@ -20,7 +20,7 @@
     { id:"carved", label:"Sculpté", sample:"♞" },
   ];
   const psychedelicPalettes = ["rainbow", "neon", "pastel"];
-  const psychedelicEffects = ["liquid", "spiral", "waves", "prism", "plasma", "aurora"];
+  const psychedelicEffects = ["liquid", "spiral", "waves", "prism", "plasma", "aurora", "kaleidoscope", "tunnel", "ripples", "pulse"];
   const DEFAULTS = { board:"green", pieces:"classic", psychedelic:true, psychedelicIntensity:55, psychedelicSpeed:100, psychedelicPalette:"rainbow", psychedelicEffect:"liquid" };
   const clamp = (value, min, max, fallback) => Number.isFinite(Number(value)) ? Math.min(max, Math.max(min, Number(value))) : fallback;
   function load() {
