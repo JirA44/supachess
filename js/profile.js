@@ -161,6 +161,16 @@ function profileGameWasUnaided(game){
   var userMoves=(Array.isArray(game.moveGrades)?game.moveGrades:[]).filter(function(move){return move&&move.color===color;});
   return userMoves.length>0&&userMoves.every(function(move){return move.noTrainingAids===true;});
 }
+function isCompletedUnaidedClassifiedGame(game){
+  if(!game||!['1-0','0-1','1/2-1/2'].includes(String(game.result||''))||
+    game.abandoned||game.stopped||game.termination==='abandoned'||game.termination==='unterminated'||
+    !Array.isArray(game.moveGrades)||!profileGameWasUnaided(game))return false;
+  var color=resolveProfileUserColor(game);
+  return !!color&&game.moveGrades.some(function(move){
+    return move&&move.color===color&&move.category&&move.category!=='unrated'&&
+      ['brilliant','best','very-good','good','ok','inaccuracy','mistake','error','blunder'].includes(move.category);
+  });
+}
 function summarizeAccuracyGames(games, now){
   var currentTime=Number.isFinite(Number(now))?Number(now):Date.now();
   var day=24*60*60*1000;
@@ -462,15 +472,14 @@ function readDiagnosticProfile(){
   function read(key,fallback){try{return JSON.parse(localStorage.getItem(key)||'');}catch(_e){return fallback;}}
   var diagnostic=read('supachess-level-diagnostic',null);
   var games=read('supachess_games',[]);
-  if(!diagnostic||!Array.isArray(games))return {diagnostic:diagnostic,games:[],ratedMoves:[],gameCount:0};
+  if(!diagnostic||!Array.isArray(games))return {diagnostic:diagnostic,games:[],ratedMoves:[],gameCount:0,unaidedHistoryCount:0};
   var start=Date.parse(diagnostic.startedAt||'');
-  var selected=games.filter(function(game){
+  var completedNoAid=games.filter(isCompletedUnaidedClassifiedGame);
+  var selected=completedNoAid.filter(function(game){
     var started=Number.parseInt(String(game&&game.id||''),10);
-    return game&&Number.isFinite(start)&&Number.isFinite(started)&&started>=start&&
-      /stockfish/i.test(String(game.engineName||''))&&
-      ['1-0','0-1','1/2-1/2'].includes(game.result)&&
-      !game.abandoned&&!game.stopped&&game.termination!=='abandoned'&&game.termination!=='unterminated'&&
-      Number(game.stats&&game.stats.moves)>0&&Array.isArray(game.moveGrades);
+    return Number.isFinite(start)&&Number.isFinite(started)&&started>=start&&
+      (/stockfish/i.test(String(game.engineName||''))||game.stockfishRatingSource==='supachess-engine-setting-v1')&&
+      Number(game.stats&&game.stats.moves)>0;
   }).sort(function(a,b){return Number.parseInt(String(a.id),10)-Number.parseInt(String(b.id),10);});
   var diagnosticGames=selected.slice(0,Math.max(10,Number(diagnostic.analyzedGamesAtCompletion)||10));
   var ratedMoves=[];
@@ -495,8 +504,9 @@ function readDiagnosticProfile(){
         }
       }
     }catch(_e){}
+    var color=resolveProfileUserColor(game);
     (game.moveGrades||[]).forEach(function(move){
-      if(move&&move.color===game.userColor&&move.category&&move.category!=='unrated'){
+      if(move&&move.color===color&&move.category&&move.category!=='unrated'){
         var category=move.category==='error'?'mistake':move.category;
         if(['brilliant','best','very-good','good','ok','inaccuracy','mistake','blunder'].includes(category)){
           ratedMoves.push({category:category,gameId:String(game.id),ply:Number(move.ply),phase:phaseByPly[Number(move.ply)]||null});
@@ -504,7 +514,13 @@ function readDiagnosticProfile(){
       }
     });
   });
-  return {diagnostic:diagnostic,games:diagnosticGames,ratedMoves:ratedMoves,gameCount:diagnosticGames.length};
+  return {
+    diagnostic:diagnostic,
+    games:diagnosticGames,
+    ratedMoves:ratedMoves,
+    gameCount:diagnosticGames.length,
+    unaidedHistoryCount:completedNoAid.length
+  };
 }
 
 function renderMoveTypeAveragePanel(games,range){
@@ -748,15 +764,20 @@ function renderDiagnosticProfile(){
       if(categories.includes(move.category))phaseCounts[move.phase].issues++;
     }
   });
-  var eligible=diagnostic.completed===true||report.gameCount>=10;
+  var eligible=report.gameCount>=10;
   var html='<section class="profile-diagnostic-report" aria-labelledby="profile-diagnostic-report-title" style="margin:18px 0;padding:16px;border:1px solid #4facfe;border-radius:14px;background:#202b3d;color:#f4f7fb">'+
     '<h4 id="profile-diagnostic-report-title" style="margin-top:0">Bilan de ton diagnostic</h4>';
-  if(diagnostic.active&&report.gameCount<10){
-    var completed=report.gameCount;
-    return html+'<p>Diagnostic en cours : '+completed+'/10 parties terminées contre Stockfish. Le bilan apparaîtra ici après le seuil.</p></section>';
-  }
   if(!eligible){
-    return html+'<p>Diagnostic non terminé : '+Number(diagnostic.gamesCompletedBeforeEnd||diagnostic.analyzedGamesAtEnd||0)+'/10 parties admissibles. Termine un nouveau diagnostic pour établir ton profil.</p></section>';
+    var progress=Number(report.gameCount)||0;
+    var historyCount=Number(report.unaidedHistoryCount)||0;
+    var state=diagnostic.active?'en cours':'non terminé';
+    var explanation='Diagnostic '+state+' : '+progress+'/10 parties admissibles depuis son activation. Seules les parties terminées contre Stockfish, confirmées sans aides et jouées après l’activation comptent.';
+    if(historyCount>progress){
+      explanation+=' Ton historique contient '+historyCount+' partie(s) terminée(s) sans aides avec coups classés; '+progress+' satisfont aussi les critères de ce diagnostic.';
+    }
+    if(diagnostic.active)explanation+=' Le bilan complet apparaîtra après 10 parties.';
+    else explanation+=' Active ou reprends le diagnostic pour compléter les parties manquantes.';
+    return html+'<p>'+explanation+'</p></section>';
   }
   html+='<p>Échantillon : '+report.gameCount+' partie(s) terminée(s), '+rated.length+' demi-coup(s) de ton camp évalué(s) par Stockfish. Les résultats décrivent cet échantillon et ne constituent pas un Elo FIDE.</p>';
   if(!rated.length){
@@ -1360,7 +1381,7 @@ function initRankingSection(){
   sec.querySelectorAll('.rank-tab').forEach(function(b){ b.addEventListener('click', function(){ load(b.getAttribute('data-type')); }); });
   load('puzzle');
 }
-window.SupaProfiles={init:init, ensureUserProfile:ensureUserProfile, updateStats:updateStats, recordTimedGame:recordTimedGame, searchUsers:searchUsers, getTopRanking:getTopRanking, getTopLevelRanking:getTopLevelRanking, publishLearningLevel:publishLearningLevel, getProfile:getProfile, renderProfileModal:renderProfileModal, readLocalLearningProgress:readLocalLearningProgress, summarizeAccuracyGames:summarizeAccuracyGames, summarizeCentipawnLossGames:summarizeCentipawnLossGames, mergeProfileAnalysisGames:mergeProfileAnalysisGames, renderLocalLearningPanel:renderLocalLearningPanel, renderOwnProfileFallback:renderOwnProfileFallback, lessonProgressSeries:lessonProgressSeries, renderLessonProgressRangeChart:renderLessonProgressRangeChart, bindLessonProgressRangeControls:bindLessonProgressRangeControls, renderProfileActivityChart:renderProfileActivityChart, renderProfileActivityContent:renderProfileActivityContent, initSearchBar:initSearchBar, initRankingSection:initRankingSection, GAME_TYPES:GAME_TYPES};
+window.SupaProfiles={init:init, ensureUserProfile:ensureUserProfile, updateStats:updateStats, recordTimedGame:recordTimedGame, searchUsers:searchUsers, getTopRanking:getTopRanking, getTopLevelRanking:getTopLevelRanking, publishLearningLevel:publishLearningLevel, getProfile:getProfile, renderProfileModal:renderProfileModal, readLocalLearningProgress:readLocalLearningProgress, summarizeAccuracyGames:summarizeAccuracyGames, summarizeCentipawnLossGames:summarizeCentipawnLossGames, mergeProfileAnalysisGames:mergeProfileAnalysisGames, renderLocalLearningPanel:renderLocalLearningPanel, renderOwnProfileFallback:renderOwnProfileFallback, lessonProgressSeries:lessonProgressSeries, renderLessonProgressRangeChart:renderLessonProgressRangeChart, bindLessonProgressRangeControls:bindLessonProgressRangeControls, renderProfileActivityChart:renderProfileActivityChart, renderProfileActivityContent:renderProfileActivityContent, initSearchBar:initSearchBar, initRankingSection:initRankingSection, isCompletedUnaidedClassifiedGame:isCompletedUnaidedClassifiedGame, resolveProfileUserColor:resolveProfileUserColor, GAME_TYPES:GAME_TYPES};
 if(document&&typeof document.querySelector==='function'){
   document.addEventListener('click',handleProfileActivityYearClick);
   if(document.readyState==='loading'&&typeof document.addEventListener==='function') document.addEventListener('DOMContentLoaded',initRankingSection,{once:true});
