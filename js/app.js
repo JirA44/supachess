@@ -113,7 +113,13 @@ function countCompletedDiagnosticGames(diagnostic) {
     if (!Array.isArray(games)) return 0;
     const counted = new Set();
     for (const game of games) {
-      if (!game || !game.id || game.trainingAidsUsed !== false || game.abandoned || game.termination === "abandoned" || !["1-0", "0-1", "1/2-1/2"].includes(game.result)) continue;
+      const profileApi = window.SupaProfiles;
+      const confirmedUnaided = profileApi && typeof profileApi.isCompletedUnaidedClassifiedGame === "function"
+        ? profileApi.isCompletedUnaidedClassifiedGame(game)
+        : game && game.trainingAidsUsed === false;
+      if (!game || !game.id || !confirmedUnaided || game.abandoned || game.stopped ||
+          game.termination === "abandoned" || game.termination === "unterminated" ||
+          !["1-0", "0-1", "1/2-1/2"].includes(game.result)) continue;
       if (!Number(game.stats && game.stats.moves)) continue;
       const startedAt = Number.parseInt(String(game.id), 10);
       const playedAgainstStockfish = /stockfish/i.test(String(game.engineName || "")) ||
@@ -130,11 +136,18 @@ function countEligibleStockfishGames() {
     const counted = new Set();
     for (const game of games) {
       const rating = Number(game && game.stockfishRatingEstimate);
-      const eligible = game && game.id &&
+      const profileApi = window.SupaProfiles;
+      const confirmedUnaided = profileApi && typeof profileApi.isCompletedUnaidedClassifiedGame === "function"
+        ? profileApi.isCompletedUnaidedClassifiedGame(game)
+        : game && game.trainingAidsUsed === false;
+      const playerColor = profileApi && typeof profileApi.resolveProfileUserColor === "function"
+        ? profileApi.resolveProfileUserColor(game) : game && game.userColor;
+      const eligible = game && game.id && confirmedUnaided &&
         /stockfish/i.test(String(game.engineName || "")) &&
         game.stockfishRatingSource === "supachess-engine-setting-v1" &&
-        ["w", "b"].includes(game.userColor) &&
+        ["w", "b"].includes(playerColor) &&
         ["1-0", "0-1", "1/2-1/2"].includes(game.result) &&
+        !game.abandoned && !game.stopped &&
         Number.isFinite(rating) && rating >= 800 && rating <= 3500;
       if (eligible) counted.add(String(game.id));
     }
