@@ -315,3 +315,6 @@ function qualityClass(deltaCp, rank) {
   if (deltaCp <= 80) return "q-mid";
   return "q-bad";
 }
+
+// Shared entry point for the certified SupaChess board protocol.
+window.SupaChessBoardUI = BoardUI;
