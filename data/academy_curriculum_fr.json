@@ -1,0 +1,4589 @@
+{
+  "schemaVersion": "1.0",
+  "language": "fr",
+  "title": "SupaChess Academy - catalogue pédagogique",
+  "notice": "Catalogue de 240 leçons planifiées. Aucune position, ligne PGN, évaluation Stockfish ni exercice ne sont prétendus validés. Contenus originaux à développer et tester avant publication.",
+  "sourcePolicy": "S'inspirer des méthodes générales des maîtres, jamais recopier textes ou diagrammes protégés.",
+  "levels": [
+    "Initiation",
+    "Débutant",
+    "Fondamental",
+    "Intermédiaire",
+    "Avancé",
+    "Expert",
+    "Maître",
+    "Élite"
+  ],
+  "releaseGates": [
+    "Chaque position FEN parsée et légale",
+    "Chaque séquence PGN rejouée intégralement",
+    "Réponses vérifiées par chess.js et Stockfish versionnée",
+    "Explications contextualisées et vérifiées",
+    "Aucun doublon exact FEN + solution",
+    "Tests mobiles clavier accessibilité",
+    "Examen initial et post-test",
+    "Publication seulement après tests"
+  ],
+  "lessons": [
+    {
+      "id": "SC-01-01",
+      "level": 1,
+      "module": "Echiquier et notation",
+      "title": "Cases et coordonnées",
+      "objective": "Comprendre et appliquer : cases et coordonnées.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-01-02",
+      "level": 1,
+      "module": "Echiquier et notation",
+      "title": "Colonnes rangées diagonales",
+      "objective": "Comprendre et appliquer : colonnes rangées diagonales.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-01-03",
+      "level": 1,
+      "module": "Echiquier et notation",
+      "title": "Orientation de l'échiquier",
+      "objective": "Comprendre et appliquer : orientation de l'échiquier.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-01-04",
+      "level": 1,
+      "module": "Echiquier et notation",
+      "title": "Notation algébrique",
+      "objective": "Comprendre et appliquer : notation algébrique.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-01-05",
+      "level": 1,
+      "module": "Echiquier et notation",
+      "title": "Lecture de positions FEN",
+      "objective": "Comprendre et appliquer : lecture de positions fen.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-01-06",
+      "level": 1,
+      "module": "Echiquier et notation",
+      "title": "Valeur relative des pièces",
+      "objective": "Comprendre et appliquer : valeur relative des pièces.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-01-07",
+      "level": 1,
+      "module": "Echiquier et notation",
+      "title": "Identification des pièces",
+      "objective": "Comprendre et appliquer : identification des pièces.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-01-08",
+      "level": 1,
+      "module": "Echiquier et notation",
+      "title": "Coups blancs et noirs",
+      "objective": "Comprendre et appliquer : coups blancs et noirs.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-01-09",
+      "level": 1,
+      "module": "Echiquier et notation",
+      "title": "Reconnaissance du trait",
+      "objective": "Comprendre et appliquer : reconnaissance du trait.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-01-10",
+      "level": 1,
+      "module": "Echiquier et notation",
+      "title": "Reconstruction d'une position",
+      "objective": "Comprendre et appliquer : reconstruction d'une position.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-02-01",
+      "level": 1,
+      "module": "Déplacements et captures",
+      "title": "Tour",
+      "objective": "Comprendre et appliquer : tour.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-02-02",
+      "level": 1,
+      "module": "Déplacements et captures",
+      "title": "Fou",
+      "objective": "Comprendre et appliquer : fou.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-02-03",
+      "level": 1,
+      "module": "Déplacements et captures",
+      "title": "Dame",
+      "objective": "Comprendre et appliquer : dame.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-02-04",
+      "level": 1,
+      "module": "Déplacements et captures",
+      "title": "Cavalier",
+      "objective": "Comprendre et appliquer : cavalier.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-02-05",
+      "level": 1,
+      "module": "Déplacements et captures",
+      "title": "Roi",
+      "objective": "Comprendre et appliquer : roi.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-02-06",
+      "level": 1,
+      "module": "Déplacements et captures",
+      "title": "Pion",
+      "objective": "Comprendre et appliquer : pion.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-02-07",
+      "level": 1,
+      "module": "Déplacements et captures",
+      "title": "Prise et échange",
+      "objective": "Comprendre et appliquer : prise et échange.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-02-08",
+      "level": 1,
+      "module": "Déplacements et captures",
+      "title": "Obstacles et rayons",
+      "objective": "Comprendre et appliquer : obstacles et rayons.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-02-09",
+      "level": 1,
+      "module": "Déplacements et captures",
+      "title": "Promotion",
+      "objective": "Comprendre et appliquer : promotion.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-02-10",
+      "level": 1,
+      "module": "Déplacements et captures",
+      "title": "Exercices de déplacement",
+      "objective": "Comprendre et appliquer : exercices de déplacement.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-03-01",
+      "level": 1,
+      "module": "Règles et premiers mats",
+      "title": "Échec et réponses légales",
+      "objective": "Comprendre et appliquer : échec et réponses légales.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-03-02",
+      "level": 1,
+      "module": "Règles et premiers mats",
+      "title": "Échec et mat",
+      "objective": "Comprendre et appliquer : échec et mat.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-03-03",
+      "level": 1,
+      "module": "Règles et premiers mats",
+      "title": "Pat",
+      "objective": "Comprendre et appliquer : pat.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-03-04",
+      "level": 1,
+      "module": "Règles et premiers mats",
+      "title": "Petit roque",
+      "objective": "Comprendre et appliquer : petit roque.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-03-05",
+      "level": 1,
+      "module": "Règles et premiers mats",
+      "title": "Grand roque",
+      "objective": "Comprendre et appliquer : grand roque.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-03-06",
+      "level": 1,
+      "module": "Règles et premiers mats",
+      "title": "Prise en passant",
+      "objective": "Comprendre et appliquer : prise en passant.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-03-07",
+      "level": 1,
+      "module": "Règles et premiers mats",
+      "title": "Nulle et répétitions",
+      "objective": "Comprendre et appliquer : nulle et répétitions.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-03-08",
+      "level": 1,
+      "module": "Règles et premiers mats",
+      "title": "Mat avec deux tours",
+      "objective": "Comprendre et appliquer : mat avec deux tours.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-03-09",
+      "level": 1,
+      "module": "Règles et premiers mats",
+      "title": "Mat dame contre roi",
+      "objective": "Comprendre et appliquer : mat dame contre roi.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-03-10",
+      "level": 1,
+      "module": "Règles et premiers mats",
+      "title": "Mat tour contre roi",
+      "objective": "Comprendre et appliquer : mat tour contre roi.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-04-01",
+      "level": 2,
+      "module": "Sécurité des pièces",
+      "title": "Pièces attaquées",
+      "objective": "Comprendre et appliquer : pièces attaquées.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-04-02",
+      "level": 2,
+      "module": "Sécurité des pièces",
+      "title": "Pièces défendues",
+      "objective": "Comprendre et appliquer : pièces défendues.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-04-03",
+      "level": 2,
+      "module": "Sécurité des pièces",
+      "title": "Pièces non protégées",
+      "objective": "Comprendre et appliquer : pièces non protégées.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-04-04",
+      "level": 2,
+      "module": "Sécurité des pièces",
+      "title": "Comptage des attaquants",
+      "objective": "Comprendre et appliquer : comptage des attaquants.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-04-05",
+      "level": 2,
+      "module": "Sécurité des pièces",
+      "title": "Échanges favorables",
+      "objective": "Comprendre et appliquer : échanges favorables.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-04-06",
+      "level": 2,
+      "module": "Sécurité des pièces",
+      "title": "Menaces en un coup",
+      "objective": "Comprendre et appliquer : menaces en un coup.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-04-07",
+      "level": 2,
+      "module": "Sécurité des pièces",
+      "title": "Échec intermédiaire",
+      "objective": "Comprendre et appliquer : échec intermédiaire.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-04-08",
+      "level": 2,
+      "module": "Sécurité des pièces",
+      "title": "Sécurité du roi",
+      "objective": "Comprendre et appliquer : sécurité du roi.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-04-09",
+      "level": 2,
+      "module": "Sécurité des pièces",
+      "title": "Vérification avant le coup",
+      "objective": "Comprendre et appliquer : vérification avant le coup.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-04-10",
+      "level": 2,
+      "module": "Sécurité des pièces",
+      "title": "Routine anti-gaffe",
+      "objective": "Comprendre et appliquer : routine anti-gaffe.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-05-01",
+      "level": 2,
+      "module": "Tactiques élémentaires",
+      "title": "Fourchette du cavalier",
+      "objective": "Comprendre et appliquer : fourchette du cavalier.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-05-02",
+      "level": 2,
+      "module": "Tactiques élémentaires",
+      "title": "Fourchette du pion",
+      "objective": "Comprendre et appliquer : fourchette du pion.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-05-03",
+      "level": 2,
+      "module": "Tactiques élémentaires",
+      "title": "Clouage absolu",
+      "objective": "Comprendre et appliquer : clouage absolu.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-05-04",
+      "level": 2,
+      "module": "Tactiques élémentaires",
+      "title": "Clouage relatif",
+      "objective": "Comprendre et appliquer : clouage relatif.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-05-05",
+      "level": 2,
+      "module": "Tactiques élémentaires",
+      "title": "Enfilade",
+      "objective": "Comprendre et appliquer : enfilade.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-05-06",
+      "level": 2,
+      "module": "Tactiques élémentaires",
+      "title": "Attaque double",
+      "objective": "Comprendre et appliquer : attaque double.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-05-07",
+      "level": 2,
+      "module": "Tactiques élémentaires",
+      "title": "Attaque à la découverte",
+      "objective": "Comprendre et appliquer : attaque à la découverte.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-05-08",
+      "level": 2,
+      "module": "Tactiques élémentaires",
+      "title": "Échec à la découverte",
+      "objective": "Comprendre et appliquer : échec à la découverte.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-05-09",
+      "level": 2,
+      "module": "Tactiques élémentaires",
+      "title": "Mat du couloir",
+      "objective": "Comprendre et appliquer : mat du couloir.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-05-10",
+      "level": 2,
+      "module": "Tactiques élémentaires",
+      "title": "Mat en deux",
+      "objective": "Comprendre et appliquer : mat en deux.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-06-01",
+      "level": 2,
+      "module": "Début de partie",
+      "title": "Contrôle du centre",
+      "objective": "Comprendre et appliquer : contrôle du centre.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-06-02",
+      "level": 2,
+      "module": "Début de partie",
+      "title": "Développement rapide",
+      "objective": "Comprendre et appliquer : développement rapide.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-06-03",
+      "level": 2,
+      "module": "Début de partie",
+      "title": "Sécurité du roi",
+      "objective": "Comprendre et appliquer : sécurité du roi.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-06-04",
+      "level": 2,
+      "module": "Début de partie",
+      "title": "Ne pas sortir la dame trop tôt",
+      "objective": "Comprendre et appliquer : ne pas sortir la dame trop tôt.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-06-05",
+      "level": 2,
+      "module": "Début de partie",
+      "title": "Ne pas multiplier les coups de pion",
+      "objective": "Comprendre et appliquer : ne pas multiplier les coups de pion.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-06-06",
+      "level": 2,
+      "module": "Début de partie",
+      "title": "Mobiliser les pièces",
+      "objective": "Comprendre et appliquer : mobiliser les pièces.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-06-07",
+      "level": 2,
+      "module": "Début de partie",
+      "title": "Choisir le roque",
+      "objective": "Comprendre et appliquer : choisir le roque.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-06-08",
+      "level": 2,
+      "module": "Début de partie",
+      "title": "Ouvertures ouvertes",
+      "objective": "Comprendre et appliquer : ouvertures ouvertes.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-06-09",
+      "level": 2,
+      "module": "Début de partie",
+      "title": "Ouvertures fermées",
+      "objective": "Comprendre et appliquer : ouvertures fermées.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-06-10",
+      "level": 2,
+      "module": "Début de partie",
+      "title": "Principes plutôt que mémorisation",
+      "objective": "Comprendre et appliquer : principes plutôt que mémorisation.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-07-01",
+      "level": 3,
+      "module": "Calcul et visualisation",
+      "title": "Coups candidats",
+      "objective": "Comprendre et appliquer : coups candidats.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-07-02",
+      "level": 3,
+      "module": "Calcul et visualisation",
+      "title": "Échecs captures menaces",
+      "objective": "Comprendre et appliquer : échecs captures menaces.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-07-03",
+      "level": 3,
+      "module": "Calcul et visualisation",
+      "title": "Coups forcés",
+      "objective": "Comprendre et appliquer : coups forcés.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-07-04",
+      "level": 3,
+      "module": "Calcul et visualisation",
+      "title": "Calcul sur deux demi-coups",
+      "objective": "Comprendre et appliquer : calcul sur deux demi-coups.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-07-05",
+      "level": 3,
+      "module": "Calcul et visualisation",
+      "title": "Calcul sur quatre demi-coups",
+      "objective": "Comprendre et appliquer : calcul sur quatre demi-coups.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-07-06",
+      "level": 3,
+      "module": "Calcul et visualisation",
+      "title": "Visualisation sans déplacer",
+      "objective": "Comprendre et appliquer : visualisation sans déplacer.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-07-07",
+      "level": 3,
+      "module": "Calcul et visualisation",
+      "title": "Réfutation de variante",
+      "objective": "Comprendre et appliquer : réfutation de variante.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-07-08",
+      "level": 3,
+      "module": "Calcul et visualisation",
+      "title": "Comparaison de deux variantes",
+      "objective": "Comprendre et appliquer : comparaison de deux variantes.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-07-09",
+      "level": 3,
+      "module": "Calcul et visualisation",
+      "title": "Coup intermédiaire",
+      "objective": "Comprendre et appliquer : coup intermédiaire.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-07-10",
+      "level": 3,
+      "module": "Calcul et visualisation",
+      "title": "Bilan des variantes",
+      "objective": "Comprendre et appliquer : bilan des variantes.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-08-01",
+      "level": 3,
+      "module": "Finales fondamentales",
+      "title": "Opposition",
+      "objective": "Comprendre et appliquer : opposition.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-08-02",
+      "level": 3,
+      "module": "Finales fondamentales",
+      "title": "Carré du pion",
+      "objective": "Comprendre et appliquer : carré du pion.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-08-03",
+      "level": 3,
+      "module": "Finales fondamentales",
+      "title": "Roi actif",
+      "objective": "Comprendre et appliquer : roi actif.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-08-04",
+      "level": 3,
+      "module": "Finales fondamentales",
+      "title": "Pion passé",
+      "objective": "Comprendre et appliquer : pion passé.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-08-05",
+      "level": 3,
+      "module": "Finales fondamentales",
+      "title": "Pions liés",
+      "objective": "Comprendre et appliquer : pions liés.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-08-06",
+      "level": 3,
+      "module": "Finales fondamentales",
+      "title": "Finale roi et pion",
+      "objective": "Comprendre et appliquer : finale roi et pion.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-08-07",
+      "level": 3,
+      "module": "Finales fondamentales",
+      "title": "Tour derrière pion passé",
+      "objective": "Comprendre et appliquer : tour derrière pion passé.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-08-08",
+      "level": 3,
+      "module": "Finales fondamentales",
+      "title": "Lucena introduction",
+      "objective": "Comprendre et appliquer : lucena introduction.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-08-09",
+      "level": 3,
+      "module": "Finales fondamentales",
+      "title": "Philidor introduction",
+      "objective": "Comprendre et appliquer : philidor introduction.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-08-10",
+      "level": 3,
+      "module": "Finales fondamentales",
+      "title": "Conversion technique",
+      "objective": "Comprendre et appliquer : conversion technique.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-09-01",
+      "level": 3,
+      "module": "Analyse de parties",
+      "title": "Identifier le tournant",
+      "objective": "Comprendre et appliquer : identifier le tournant.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-09-02",
+      "level": 3,
+      "module": "Analyse de parties",
+      "title": "Annoter un coup",
+      "objective": "Comprendre et appliquer : annoter un coup.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-09-03",
+      "level": 3,
+      "module": "Analyse de parties",
+      "title": "Erreur tactique ou stratégique",
+      "objective": "Comprendre et appliquer : erreur tactique ou stratégique.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-09-04",
+      "level": 3,
+      "module": "Analyse de parties",
+      "title": "Relier coup et évaluation",
+      "objective": "Comprendre et appliquer : relier coup et évaluation.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-09-05",
+      "level": 3,
+      "module": "Analyse de parties",
+      "title": "Analyse sans moteur",
+      "objective": "Comprendre et appliquer : analyse sans moteur.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-09-06",
+      "level": 3,
+      "module": "Analyse de parties",
+      "title": "Vérification avec moteur",
+      "objective": "Comprendre et appliquer : vérification avec moteur.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-09-07",
+      "level": 3,
+      "module": "Analyse de parties",
+      "title": "Reconstruire une variante",
+      "objective": "Comprendre et appliquer : reconstruire une variante.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-09-08",
+      "level": 3,
+      "module": "Analyse de parties",
+      "title": "Diagnostic de lacune",
+      "objective": "Comprendre et appliquer : diagnostic de lacune.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-09-09",
+      "level": 3,
+      "module": "Analyse de parties",
+      "title": "Journal des erreurs",
+      "objective": "Comprendre et appliquer : journal des erreurs.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-09-10",
+      "level": 3,
+      "module": "Analyse de parties",
+      "title": "Plan de correction",
+      "objective": "Comprendre et appliquer : plan de correction.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-10-01",
+      "level": 4,
+      "module": "Structures de pions",
+      "title": "Pion isolé",
+      "objective": "Comprendre et appliquer : pion isolé.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-10-02",
+      "level": 4,
+      "module": "Structures de pions",
+      "title": "Pions doublés",
+      "objective": "Comprendre et appliquer : pions doublés.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-10-03",
+      "level": 4,
+      "module": "Structures de pions",
+      "title": "Pions arriérés",
+      "objective": "Comprendre et appliquer : pions arriérés.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-10-04",
+      "level": 4,
+      "module": "Structures de pions",
+      "title": "Majorité de pions",
+      "objective": "Comprendre et appliquer : majorité de pions.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-10-05",
+      "level": 4,
+      "module": "Structures de pions",
+      "title": "Chaînes de pions",
+      "objective": "Comprendre et appliquer : chaînes de pions.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-10-06",
+      "level": 4,
+      "module": "Structures de pions",
+      "title": "Ruptures de pions",
+      "objective": "Comprendre et appliquer : ruptures de pions.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-10-07",
+      "level": 4,
+      "module": "Structures de pions",
+      "title": "Case faible",
+      "objective": "Comprendre et appliquer : case faible.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-10-08",
+      "level": 4,
+      "module": "Structures de pions",
+      "title": "Avant-poste",
+      "objective": "Comprendre et appliquer : avant-poste.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-10-09",
+      "level": 4,
+      "module": "Structures de pions",
+      "title": "Structure Carlsbad",
+      "objective": "Comprendre et appliquer : structure carlsbad.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-10-10",
+      "level": 4,
+      "module": "Structures de pions",
+      "title": "Plans à partir des pions",
+      "objective": "Comprendre et appliquer : plans à partir des pions.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-11-01",
+      "level": 4,
+      "module": "Stratégie positionnelle",
+      "title": "Bonne et mauvaise pièce",
+      "objective": "Comprendre et appliquer : bonne et mauvaise pièce.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-11-02",
+      "level": 4,
+      "module": "Stratégie positionnelle",
+      "title": "Fou contre cavalier",
+      "objective": "Comprendre et appliquer : fou contre cavalier.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-11-03",
+      "level": 4,
+      "module": "Stratégie positionnelle",
+      "title": "Colonnes ouvertes",
+      "objective": "Comprendre et appliquer : colonnes ouvertes.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-11-04",
+      "level": 4,
+      "module": "Stratégie positionnelle",
+      "title": "Septième rangée",
+      "objective": "Comprendre et appliquer : septième rangée.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-11-05",
+      "level": 4,
+      "module": "Stratégie positionnelle",
+      "title": "Espace",
+      "objective": "Comprendre et appliquer : espace.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-11-06",
+      "level": 4,
+      "module": "Stratégie positionnelle",
+      "title": "Centralisation",
+      "objective": "Comprendre et appliquer : centralisation.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-11-07",
+      "level": 4,
+      "module": "Stratégie positionnelle",
+      "title": "Prophylaxie",
+      "objective": "Comprendre et appliquer : prophylaxie.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-11-08",
+      "level": 4,
+      "module": "Stratégie positionnelle",
+      "title": "Transformation des avantages",
+      "objective": "Comprendre et appliquer : transformation des avantages.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-11-09",
+      "level": 4,
+      "module": "Stratégie positionnelle",
+      "title": "Échange des pièces",
+      "objective": "Comprendre et appliquer : échange des pièces.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-11-10",
+      "level": 4,
+      "module": "Stratégie positionnelle",
+      "title": "Choix du plan",
+      "objective": "Comprendre et appliquer : choix du plan.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-12-01",
+      "level": 4,
+      "module": "Attaque et défense",
+      "title": "Attaque du roi roqué",
+      "objective": "Comprendre et appliquer : attaque du roi roqué.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-12-02",
+      "level": 4,
+      "module": "Attaque et défense",
+      "title": "Sacrifice sur h7",
+      "objective": "Comprendre et appliquer : sacrifice sur h7.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-12-03",
+      "level": 4,
+      "module": "Attaque et défense",
+      "title": "Ouverture des lignes",
+      "objective": "Comprendre et appliquer : ouverture des lignes.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-12-04",
+      "level": 4,
+      "module": "Attaque et défense",
+      "title": "Initiative",
+      "objective": "Comprendre et appliquer : initiative.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-12-05",
+      "level": 4,
+      "module": "Attaque et défense",
+      "title": "Coordination",
+      "objective": "Comprendre et appliquer : coordination.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-12-06",
+      "level": 4,
+      "module": "Attaque et défense",
+      "title": "Défense active",
+      "objective": "Comprendre et appliquer : défense active.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-12-07",
+      "level": 4,
+      "module": "Attaque et défense",
+      "title": "Ressources défensives",
+      "objective": "Comprendre et appliquer : ressources défensives.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-12-08",
+      "level": 4,
+      "module": "Attaque et défense",
+      "title": "Contre-attaque",
+      "objective": "Comprendre et appliquer : contre-attaque.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-12-09",
+      "level": 4,
+      "module": "Attaque et défense",
+      "title": "Sacrifice de qualité",
+      "objective": "Comprendre et appliquer : sacrifice de qualité.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-12-10",
+      "level": 4,
+      "module": "Attaque et défense",
+      "title": "Évaluation de l'attaque",
+      "objective": "Comprendre et appliquer : évaluation de l'attaque.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-13-01",
+      "level": 5,
+      "module": "Calcul complexe",
+      "title": "Arbre de variantes",
+      "objective": "Comprendre et appliquer : arbre de variantes.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-13-02",
+      "level": 5,
+      "module": "Calcul complexe",
+      "title": "Ordre des coups",
+      "objective": "Comprendre et appliquer : ordre des coups.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-13-03",
+      "level": 5,
+      "module": "Calcul complexe",
+      "title": "Coups silencieux",
+      "objective": "Comprendre et appliquer : coups silencieux.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-13-04",
+      "level": 5,
+      "module": "Calcul complexe",
+      "title": "Déséquilibres tactiques",
+      "objective": "Comprendre et appliquer : déséquilibres tactiques.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-13-05",
+      "level": 5,
+      "module": "Calcul complexe",
+      "title": "Déviations",
+      "objective": "Comprendre et appliquer : déviations.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-13-06",
+      "level": 5,
+      "module": "Calcul complexe",
+      "title": "Surcharges",
+      "objective": "Comprendre et appliquer : surcharges.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-13-07",
+      "level": 5,
+      "module": "Calcul complexe",
+      "title": "Interférences",
+      "objective": "Comprendre et appliquer : interférences.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-13-08",
+      "level": 5,
+      "module": "Calcul complexe",
+      "title": "Zugzwang tactique",
+      "objective": "Comprendre et appliquer : zugzwang tactique.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-13-09",
+      "level": 5,
+      "module": "Calcul complexe",
+      "title": "Positions critiques",
+      "objective": "Comprendre et appliquer : positions critiques.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-13-10",
+      "level": 5,
+      "module": "Calcul complexe",
+      "title": "Gestion du temps de calcul",
+      "objective": "Comprendre et appliquer : gestion du temps de calcul.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-14-01",
+      "level": 5,
+      "module": "Finales techniques",
+      "title": "Tours actives",
+      "objective": "Comprendre et appliquer : tours actives.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-14-02",
+      "level": 5,
+      "module": "Finales techniques",
+      "title": "Tour et pions",
+      "objective": "Comprendre et appliquer : tour et pions.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-14-03",
+      "level": 5,
+      "module": "Finales techniques",
+      "title": "Finales de fous",
+      "objective": "Comprendre et appliquer : finales de fous.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-14-04",
+      "level": 5,
+      "module": "Finales techniques",
+      "title": "Fous de couleurs opposées",
+      "objective": "Comprendre et appliquer : fous de couleurs opposées.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-14-05",
+      "level": 5,
+      "module": "Finales techniques",
+      "title": "Finales de cavaliers",
+      "objective": "Comprendre et appliquer : finales de cavaliers.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-14-06",
+      "level": 5,
+      "module": "Finales techniques",
+      "title": "Forteresses",
+      "objective": "Comprendre et appliquer : forteresses.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-14-07",
+      "level": 5,
+      "module": "Finales techniques",
+      "title": "Pion passé éloigné",
+      "objective": "Comprendre et appliquer : pion passé éloigné.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-14-08",
+      "level": 5,
+      "module": "Finales techniques",
+      "title": "Triangulation",
+      "objective": "Comprendre et appliquer : triangulation.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-14-09",
+      "level": 5,
+      "module": "Finales techniques",
+      "title": "Courses de pions",
+      "objective": "Comprendre et appliquer : courses de pions.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-14-10",
+      "level": 5,
+      "module": "Finales techniques",
+      "title": "Études de finales",
+      "objective": "Comprendre et appliquer : études de finales.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-15-01",
+      "level": 5,
+      "module": "Jeu prophylactique",
+      "title": "Menaces adverses",
+      "objective": "Comprendre et appliquer : menaces adverses.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-15-02",
+      "level": 5,
+      "module": "Jeu prophylactique",
+      "title": "Plans de l'adversaire",
+      "objective": "Comprendre et appliquer : plans de l'adversaire.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-15-03",
+      "level": 5,
+      "module": "Jeu prophylactique",
+      "title": "Restriction",
+      "objective": "Comprendre et appliquer : restriction.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-15-04",
+      "level": 5,
+      "module": "Jeu prophylactique",
+      "title": "Amélioration des pièces",
+      "objective": "Comprendre et appliquer : amélioration des pièces.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-15-05",
+      "level": 5,
+      "module": "Jeu prophylactique",
+      "title": "Anticipation des ruptures",
+      "objective": "Comprendre et appliquer : anticipation des ruptures.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-15-06",
+      "level": 5,
+      "module": "Jeu prophylactique",
+      "title": "Cases de repli",
+      "objective": "Comprendre et appliquer : cases de repli.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-15-07",
+      "level": 5,
+      "module": "Jeu prophylactique",
+      "title": "Contrôle des contre-jeux",
+      "objective": "Comprendre et appliquer : contrôle des contre-jeux.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-15-08",
+      "level": 5,
+      "module": "Jeu prophylactique",
+      "title": "Moment de l'échange",
+      "objective": "Comprendre et appliquer : moment de l'échange.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-15-09",
+      "level": 5,
+      "module": "Jeu prophylactique",
+      "title": "Défense préventive",
+      "objective": "Comprendre et appliquer : défense préventive.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-15-10",
+      "level": 5,
+      "module": "Jeu prophylactique",
+      "title": "Prophylaxie à la Karpov",
+      "objective": "Comprendre et appliquer : prophylaxie à la karpov.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-16-01",
+      "level": 6,
+      "module": "Évaluation dynamique",
+      "title": "Matériel et activité",
+      "objective": "Comprendre et appliquer : matériel et activité.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-16-02",
+      "level": 6,
+      "module": "Évaluation dynamique",
+      "title": "Compensation",
+      "objective": "Comprendre et appliquer : compensation.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-16-03",
+      "level": 6,
+      "module": "Évaluation dynamique",
+      "title": "Initiative durable",
+      "objective": "Comprendre et appliquer : initiative durable.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-16-04",
+      "level": 6,
+      "module": "Évaluation dynamique",
+      "title": "Roi exposé",
+      "objective": "Comprendre et appliquer : roi exposé.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-16-05",
+      "level": 6,
+      "module": "Évaluation dynamique",
+      "title": "Déséquilibres",
+      "objective": "Comprendre et appliquer : déséquilibres.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-16-06",
+      "level": 6,
+      "module": "Évaluation dynamique",
+      "title": "Sacrifice positionnel",
+      "objective": "Comprendre et appliquer : sacrifice positionnel.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-16-07",
+      "level": 6,
+      "module": "Évaluation dynamique",
+      "title": "Évaluation humaine et moteur",
+      "objective": "Comprendre et appliquer : évaluation humaine et moteur.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-16-08",
+      "level": 6,
+      "module": "Évaluation dynamique",
+      "title": "Horizon de calcul",
+      "objective": "Comprendre et appliquer : horizon de calcul.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-16-09",
+      "level": 6,
+      "module": "Évaluation dynamique",
+      "title": "Forteresse contre avantage",
+      "objective": "Comprendre et appliquer : forteresse contre avantage.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-16-10",
+      "level": 6,
+      "module": "Évaluation dynamique",
+      "title": "Décision sous incertitude",
+      "objective": "Comprendre et appliquer : décision sous incertitude.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-17-01",
+      "level": 6,
+      "module": "Répertoire et préparation",
+      "title": "Construire répertoire blanc",
+      "objective": "Comprendre et appliquer : construire répertoire blanc.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-17-02",
+      "level": 6,
+      "module": "Répertoire et préparation",
+      "title": "Construire répertoire noir",
+      "objective": "Comprendre et appliquer : construire répertoire noir.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-17-03",
+      "level": 6,
+      "module": "Répertoire et préparation",
+      "title": "Identifier transpositions",
+      "objective": "Comprendre et appliquer : identifier transpositions.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-17-04",
+      "level": 6,
+      "module": "Répertoire et préparation",
+      "title": "Éviter pièges",
+      "objective": "Comprendre et appliquer : éviter pièges.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-17-05",
+      "level": 6,
+      "module": "Répertoire et préparation",
+      "title": "Préparation d'adversaire",
+      "objective": "Comprendre et appliquer : préparation d'adversaire.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-17-06",
+      "level": 6,
+      "module": "Répertoire et préparation",
+      "title": "Plans typiques d'ouverture",
+      "objective": "Comprendre et appliquer : plans typiques d'ouverture.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-17-07",
+      "level": 6,
+      "module": "Répertoire et préparation",
+      "title": "Répétition espacée des lignes",
+      "objective": "Comprendre et appliquer : répétition espacée des lignes.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-17-08",
+      "level": 6,
+      "module": "Répertoire et préparation",
+      "title": "Nouveautés",
+      "objective": "Comprendre et appliquer : nouveautés.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-17-09",
+      "level": 6,
+      "module": "Répertoire et préparation",
+      "title": "Analyse de partie de référence",
+      "objective": "Comprendre et appliquer : analyse de partie de référence.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-17-10",
+      "level": 6,
+      "module": "Répertoire et préparation",
+      "title": "Révision après tournoi",
+      "objective": "Comprendre et appliquer : révision après tournoi.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-18-01",
+      "level": 6,
+      "module": "Technique et conversion",
+      "title": "Créer deuxième faiblesse",
+      "objective": "Comprendre et appliquer : créer deuxième faiblesse.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-18-02",
+      "level": 6,
+      "module": "Technique et conversion",
+      "title": "Convertir pion de plus",
+      "objective": "Comprendre et appliquer : convertir pion de plus.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-18-03",
+      "level": 6,
+      "module": "Technique et conversion",
+      "title": "Presser sans risque",
+      "objective": "Comprendre et appliquer : presser sans risque.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-18-04",
+      "level": 6,
+      "module": "Technique et conversion",
+      "title": "Améliorer avant d'agir",
+      "objective": "Comprendre et appliquer : améliorer avant d'agir.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-18-05",
+      "level": 6,
+      "module": "Technique et conversion",
+      "title": "Choix de simplification",
+      "objective": "Comprendre et appliquer : choix de simplification.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-18-06",
+      "level": 6,
+      "module": "Technique et conversion",
+      "title": "Éviter contre-jeu",
+      "objective": "Comprendre et appliquer : éviter contre-jeu.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-18-07",
+      "level": 6,
+      "module": "Technique et conversion",
+      "title": "Réduire les ressources adverses",
+      "objective": "Comprendre et appliquer : réduire les ressources adverses.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-18-08",
+      "level": 6,
+      "module": "Technique et conversion",
+      "title": "Gérer pendule",
+      "objective": "Comprendre et appliquer : gérer pendule.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-18-09",
+      "level": 6,
+      "module": "Technique et conversion",
+      "title": "Réussir une finale égale",
+      "objective": "Comprendre et appliquer : réussir une finale égale.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-18-10",
+      "level": 6,
+      "module": "Technique et conversion",
+      "title": "Réparer un avantage gaspillé",
+      "objective": "Comprendre et appliquer : réparer un avantage gaspillé.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-19-01",
+      "level": 7,
+      "module": "Calcul de maître",
+      "title": "Variantes longues",
+      "objective": "Comprendre et appliquer : variantes longues.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-19-02",
+      "level": 7,
+      "module": "Calcul de maître",
+      "title": "Coups candidats cachés",
+      "objective": "Comprendre et appliquer : coups candidats cachés.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-19-03",
+      "level": 7,
+      "module": "Calcul de maître",
+      "title": "Visualisation à l'aveugle",
+      "objective": "Comprendre et appliquer : visualisation à l'aveugle.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-19-04",
+      "level": 7,
+      "module": "Calcul de maître",
+      "title": "Comparaison arbres",
+      "objective": "Comprendre et appliquer : comparaison arbres.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-19-05",
+      "level": 7,
+      "module": "Calcul de maître",
+      "title": "Défense contre combinaisons",
+      "objective": "Comprendre et appliquer : défense contre combinaisons.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-19-06",
+      "level": 7,
+      "module": "Calcul de maître",
+      "title": "Sacrifice calculé",
+      "objective": "Comprendre et appliquer : sacrifice calculé.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-19-07",
+      "level": 7,
+      "module": "Calcul de maître",
+      "title": "Échecs perpétuels",
+      "objective": "Comprendre et appliquer : échecs perpétuels.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-19-08",
+      "level": 7,
+      "module": "Calcul de maître",
+      "title": "Ressources de pat",
+      "objective": "Comprendre et appliquer : ressources de pat.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-19-09",
+      "level": 7,
+      "module": "Calcul de maître",
+      "title": "Test de réfutation",
+      "objective": "Comprendre et appliquer : test de réfutation.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-19-10",
+      "level": 7,
+      "module": "Calcul de maître",
+      "title": "Précision à profondeur croissante",
+      "objective": "Comprendre et appliquer : précision à profondeur croissante.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-20-01",
+      "level": 7,
+      "module": "Structures de haut niveau",
+      "title": "Hérisson",
+      "objective": "Comprendre et appliquer : hérisson.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-20-02",
+      "level": 7,
+      "module": "Structures de haut niveau",
+      "title": "Benoni",
+      "objective": "Comprendre et appliquer : benoni.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-20-03",
+      "level": 7,
+      "module": "Structures de haut niveau",
+      "title": "Maroczy",
+      "objective": "Comprendre et appliquer : maroczy.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-20-04",
+      "level": 7,
+      "module": "Structures de haut niveau",
+      "title": "Isolani dynamique",
+      "objective": "Comprendre et appliquer : isolani dynamique.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-20-05",
+      "level": 7,
+      "module": "Structures de haut niveau",
+      "title": "Pions pendants",
+      "objective": "Comprendre et appliquer : pions pendants.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-20-06",
+      "level": 7,
+      "module": "Structures de haut niveau",
+      "title": "Structures siciliennes",
+      "objective": "Comprendre et appliquer : structures siciliennes.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-20-07",
+      "level": 7,
+      "module": "Structures de haut niveau",
+      "title": "Structures espagnoles",
+      "objective": "Comprendre et appliquer : structures espagnoles.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-20-08",
+      "level": 7,
+      "module": "Structures de haut niveau",
+      "title": "Structures indiennes",
+      "objective": "Comprendre et appliquer : structures indiennes.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-20-09",
+      "level": 7,
+      "module": "Structures de haut niveau",
+      "title": "Transitions de structure",
+      "objective": "Comprendre et appliquer : transitions de structure.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-20-10",
+      "level": 7,
+      "module": "Structures de haut niveau",
+      "title": "Choix de rupture critique",
+      "objective": "Comprendre et appliquer : choix de rupture critique.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-21-01",
+      "level": 7,
+      "module": "Préparation compétition",
+      "title": "Préparer match",
+      "objective": "Comprendre et appliquer : préparer match.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-21-02",
+      "level": 7,
+      "module": "Préparation compétition",
+      "title": "Identifier style adverse",
+      "objective": "Comprendre et appliquer : identifier style adverse.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-21-03",
+      "level": 7,
+      "module": "Préparation compétition",
+      "title": "Répertoire surprise",
+      "objective": "Comprendre et appliquer : répertoire surprise.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-21-04",
+      "level": 7,
+      "module": "Préparation compétition",
+      "title": "Analyse des nouveautés",
+      "objective": "Comprendre et appliquer : analyse des nouveautés.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-21-05",
+      "level": 7,
+      "module": "Préparation compétition",
+      "title": "Gestion du risque",
+      "objective": "Comprendre et appliquer : gestion du risque.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-21-06",
+      "level": 7,
+      "module": "Préparation compétition",
+      "title": "Choix de cadence",
+      "objective": "Comprendre et appliquer : choix de cadence.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-21-07",
+      "level": 7,
+      "module": "Préparation compétition",
+      "title": "Préparation psychologique",
+      "objective": "Comprendre et appliquer : préparation psychologique.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-21-08",
+      "level": 7,
+      "module": "Préparation compétition",
+      "title": "Gestion de défaite",
+      "objective": "Comprendre et appliquer : gestion de défaite.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-21-09",
+      "level": 7,
+      "module": "Préparation compétition",
+      "title": "Revue post-partie",
+      "objective": "Comprendre et appliquer : revue post-partie.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-21-10",
+      "level": 7,
+      "module": "Préparation compétition",
+      "title": "Cycle d'entraînement",
+      "objective": "Comprendre et appliquer : cycle d'entraînement.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-22-01",
+      "level": 8,
+      "module": "Décision pratique élite",
+      "title": "Évaluation comparative",
+      "objective": "Comprendre et appliquer : évaluation comparative.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-22-02",
+      "level": 8,
+      "module": "Décision pratique élite",
+      "title": "Difficulté humaine des positions",
+      "objective": "Comprendre et appliquer : difficulté humaine des positions.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-22-03",
+      "level": 8,
+      "module": "Décision pratique élite",
+      "title": "Choisir entre égalité et complexité",
+      "objective": "Comprendre et appliquer : choisir entre égalité et complexité.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-22-04",
+      "level": 8,
+      "module": "Décision pratique élite",
+      "title": "Provocation stratégique",
+      "objective": "Comprendre et appliquer : provocation stratégique.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-22-05",
+      "level": 8,
+      "module": "Décision pratique élite",
+      "title": "Créer problèmes pratiques",
+      "objective": "Comprendre et appliquer : créer problèmes pratiques.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-22-06",
+      "level": 8,
+      "module": "Décision pratique élite",
+      "title": "Plans à long terme",
+      "objective": "Comprendre et appliquer : plans à long terme.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-22-07",
+      "level": 8,
+      "module": "Décision pratique élite",
+      "title": "Décisions avec peu de temps",
+      "objective": "Comprendre et appliquer : décisions avec peu de temps.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-22-08",
+      "level": 8,
+      "module": "Décision pratique élite",
+      "title": "Optimisation du risque",
+      "objective": "Comprendre et appliquer : optimisation du risque.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-22-09",
+      "level": 8,
+      "module": "Décision pratique élite",
+      "title": "Réfuter sa propre idée",
+      "objective": "Comprendre et appliquer : réfuter sa propre idée.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-22-10",
+      "level": 8,
+      "module": "Décision pratique élite",
+      "title": "Analyse post-mortem",
+      "objective": "Comprendre et appliquer : analyse post-mortem.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-23-01",
+      "level": 8,
+      "module": "Styles des champions",
+      "title": "Capablanca finales",
+      "objective": "Comprendre et appliquer : capablanca finales.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-23-02",
+      "level": 8,
+      "module": "Styles des champions",
+      "title": "Alekhine initiative",
+      "objective": "Comprendre et appliquer : alekhine initiative.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-23-03",
+      "level": 8,
+      "module": "Styles des champions",
+      "title": "Botvinnik préparation",
+      "objective": "Comprendre et appliquer : botvinnik préparation.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-23-04",
+      "level": 8,
+      "module": "Styles des champions",
+      "title": "Tal complications",
+      "objective": "Comprendre et appliquer : tal complications.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-23-05",
+      "level": 8,
+      "module": "Styles des champions",
+      "title": "Petrosian prophylaxie",
+      "objective": "Comprendre et appliquer : petrosian prophylaxie.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-23-06",
+      "level": 8,
+      "module": "Styles des champions",
+      "title": "Fischer précision",
+      "objective": "Comprendre et appliquer : fischer précision.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-23-07",
+      "level": 8,
+      "module": "Styles des champions",
+      "title": "Karpov restriction",
+      "objective": "Comprendre et appliquer : karpov restriction.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-23-08",
+      "level": 8,
+      "module": "Styles des champions",
+      "title": "Kasparov dynamisme",
+      "objective": "Comprendre et appliquer : kasparov dynamisme.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-23-09",
+      "level": 8,
+      "module": "Styles des champions",
+      "title": "Anand calcul rapide",
+      "objective": "Comprendre et appliquer : anand calcul rapide.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-23-10",
+      "level": 8,
+      "module": "Styles des champions",
+      "title": "Carlsen pression technique",
+      "objective": "Comprendre et appliquer : carlsen pression technique.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-24-01",
+      "level": 8,
+      "module": "Laboratoire de performance",
+      "title": "Benchmark initial",
+      "objective": "Comprendre et appliquer : benchmark initial.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-24-02",
+      "level": 8,
+      "module": "Laboratoire de performance",
+      "title": "Tactique à temps limité",
+      "objective": "Comprendre et appliquer : tactique à temps limité.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-24-03",
+      "level": 8,
+      "module": "Laboratoire de performance",
+      "title": "Calcul sans échiquier",
+      "objective": "Comprendre et appliquer : calcul sans échiquier.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-24-04",
+      "level": 8,
+      "module": "Laboratoire de performance",
+      "title": "Finales contre moteur",
+      "objective": "Comprendre et appliquer : finales contre moteur.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-24-05",
+      "level": 8,
+      "module": "Laboratoire de performance",
+      "title": "Matchs thématiques",
+      "objective": "Comprendre et appliquer : matchs thématiques.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-24-06",
+      "level": 8,
+      "module": "Laboratoire de performance",
+      "title": "Analyse adversariale",
+      "objective": "Comprendre et appliquer : analyse adversariale.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-24-07",
+      "level": 8,
+      "module": "Laboratoire de performance",
+      "title": "Détection erreurs récurrentes",
+      "objective": "Comprendre et appliquer : détection erreurs récurrentes.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-24-08",
+      "level": 8,
+      "module": "Laboratoire de performance",
+      "title": "Réentraînement ciblé",
+      "objective": "Comprendre et appliquer : réentraînement ciblé.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-24-09",
+      "level": 8,
+      "module": "Laboratoire de performance",
+      "title": "Validation hors échantillon",
+      "objective": "Comprendre et appliquer : validation hors échantillon.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    },
+    {
+      "id": "SC-24-10",
+      "level": 8,
+      "module": "Laboratoire de performance",
+      "title": "Examen final personnalisé",
+      "objective": "Comprendre et appliquer : examen final personnalisé.",
+      "stages": [
+        "explication originale",
+        "démonstration sur échiquier",
+        "prédire le meilleur coup",
+        "expliquer les alternatives",
+        "exercices gradués",
+        "évaluation et correction",
+        "révision espacée"
+      ],
+      "exerciseTarget": 10,
+      "requiresValidatedPosition": true,
+      "contentStatus": "planned"
+    }
+  ]
+}
