@@ -316,5 +316,3 @@ function qualityClass(deltaCp, rank) {
   return "q-bad";
 }
 
-// Shared entry point for the certified SupaChess board protocol.
-window.SupaChessBoardUI = BoardUI;
