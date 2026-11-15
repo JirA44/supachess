@@ -128,12 +128,14 @@ function gamesNewEntry() {
   const estimate = hasEngineSetting && typeof estimateOpponentFideLikeElo === "function"
     ? estimateOpponentFideLikeElo(setting, thinkTime)
     : null;
+  const selfPlayMode = state.gameMode === "self-play" || state.gameMode === "supa-vs-supa" ? state.gameMode : null;
   currentGameMetadata = {
-    engineName: manual ? null : (state.engine && state.engine.engineName) || "Stockfish 19",
+    engineName: state.gameMode === "supa-vs-supa" ? "Supa contre Supa · Stockfish 19" : manual ? null : (state.engine && state.engine.engineName) || "Stockfish 19",
+    selfPlayMode,
     manualMode: manual,
     clockMs: { ...(state.clockMs || { w: 0, b: 0 }) },
     userColor: state.userColor,
-    playerName: gamesCurrentPlayerName(),
+    playerName: state.gameMode === "supa-vs-supa" ? "Supa Blancs" : state.gameMode === "self-play" ? "Joueur · deux camps" : gamesCurrentPlayerName(),
     gameNumber,
     stockfishRatingEstimate: Number.isFinite(estimate) ? estimate : null,
     stockfishRatingSource: Number.isFinite(estimate) ? "supachess-engine-setting-v1" : null,
@@ -310,6 +312,7 @@ function gamesBuildPgn(result) {
 }
 
 function gamesSubmitTimedRanking(entry) {
+  if (entry && entry.selfPlayMode) return;
   if (!entry || currentGameMetadata.rankingSubmitted || state.phase !== "gameover" ||
       state.abandoned || state.stopped || entry.result === "*" ||
       currentGameMetadata.manualMode || currentGameMetadata.trainingAidsUsed !== false) return;
