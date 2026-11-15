@@ -162,7 +162,7 @@ function profileGameWasUnaided(game){
   return userMoves.length>0&&userMoves.every(function(move){return move.noTrainingAids===true;});
 }
 function isCompletedUnaidedClassifiedGame(game){
-  if(!game||!['1-0','0-1','1/2-1/2'].includes(String(game.result||''))||
+  if(!game||game.selfPlayMode||!['1-0','0-1','1/2-1/2'].includes(String(game.result||''))||
     game.abandoned||game.stopped||game.termination==='abandoned'||game.termination==='unterminated'||
     !Array.isArray(game.moveGrades)||!profileGameWasUnaided(game))return false;
   var color=resolveProfileUserColor(game);
