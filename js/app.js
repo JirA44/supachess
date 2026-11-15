@@ -7,6 +7,7 @@ const state = {
   chess: new Chess(),
   engine: null,
   userColor: "w",
+  gameMode: "vs-engine",
   unassistedGame: false,
   candidates: [],        // [{rank, uci, san, line, deltaCp, args}]
   candidateFen: null,
@@ -142,7 +143,7 @@ function countEligibleStockfishGames() {
         : game && game.trainingAidsUsed === false;
       const playerColor = profileApi && typeof profileApi.resolveProfileUserColor === "function"
         ? profileApi.resolveProfileUserColor(game) : game && game.userColor;
-      const eligible = game && game.id && confirmedUnaided &&
+      const eligible = game && game.id && !game.selfPlayMode && confirmedUnaided &&
         /stockfish/i.test(String(game.engineName || "")) &&
         game.stockfishRatingSource === "supachess-engine-setting-v1" &&
         ["w", "b"].includes(playerColor) &&
@@ -598,6 +599,7 @@ async function init() {
 }
 
 function newGame(options = {}) {
+  state.gameMode = ["self-play", "supa-vs-supa"].includes(options.gameMode) ? options.gameMode : "vs-engine";
   stopPlayerClock();
   state.paused = false;
   state.pauseResumePhase = null;
@@ -610,7 +612,7 @@ function newGame(options = {}) {
   state.clockMs = { w: selectedClockMs("w"), b: selectedClockMs("b") };
   state.clockRemainingMs = { ...state.clockMs };
   const diagnosticGame = isLevelDiagnosticActive();
-  setUnassistedGameMode(Boolean(options.unassisted || diagnosticGame), { resume: Boolean(options.resume) });
+  setUnassistedGameMode(Boolean(options.unassisted || diagnosticGame || state.gameMode !== "vs-engine"), { resume: Boolean(options.resume) });
   if (!options.resume) setNewGameAidsOff();
   window.SupaReplayHistory = null;
   state.abandoned = false;
@@ -632,7 +634,7 @@ function newGame(options = {}) {
   state.fenHistory = [fenKey(state.chess.fen())];
   state.positionFenHistory = [state.chess.fen()];
   state.evalHistory = [];
-  state.userColor = $("sel-color").value;
+  state.userColor = state.gameMode === "supa-vs-supa" ? "w" : $("sel-color").value;
   boardUI.setFlipped(state.userColor === "b");
   boardUI.mateFall = null;
   boardUI.mateFallAnimated = false;
@@ -647,6 +649,21 @@ function newGame(options = {}) {
   renderPlayerClocks();
   startTurn();
 }
+
+function startSelfPlayGame() {
+  if (isLevelDiagnosticActive()) { setStatus("Termine ou désactive le diagnostic avant de lancer une partie d’entraînement."); return; }
+  $("sel-elo").value = "manual";
+  updateOpponentFideEstimate();
+  newGame({ unassisted: true, gameMode: "self-play" });
+}
+function startSupaVsSupaGame() {
+  if (isLevelDiagnosticActive()) { setStatus("Termine ou désactive le diagnostic avant de lancer une partie Supa contre Supa."); return; }
+  if ($("sel-elo").value === "manual") $("sel-elo").value = "1600";
+  updateOpponentFideEstimate();
+  newGame({ unassisted: true, clocksEnabled: false, gameMode: "supa-vs-supa" });
+}
+window.SupaChessStartSelfPlay = startSelfPlayGame;
+window.SupaChessStartSupaVsSupa = startSupaVsSupaGame;
 
 function abandonCurrentGame() {
   if (state.phase === "init" || state.phase === "gameover") return;
@@ -797,6 +814,20 @@ function fenKey(fen) { return fen.split(" ").slice(0, 4).join(" "); }
 /* ── Boucle de jeu ── */
 async function startTurn() {
   if (state.paused || checkGameOver()) { syncPauseButton(); return; }
+  if (state.gameMode === "supa-vs-supa") {
+    state.phase = "engineThinking";
+    syncPauseButton();
+    await playEngineMove();
+    return;
+  }
+  if (state.gameMode === "self-play") {
+    state.phase = "userTurn";
+    startPlayerClock(state.chess.turn());
+    syncPauseButton();
+    setStatus("À toi de jouer les " + (state.chess.turn() === "w" ? "Blancs" : "Noirs") + " : formule ton plan, puis change de camp pour réfuter ton idée.");
+    renderBoard();
+    return;
+  }
   if (isManualMode() || state.chess.turn() === state.userColor) {
     state.phase = "analyzing";
     syncPauseButton();
@@ -972,7 +1003,7 @@ async function playEngineMove() {
   state.phase = "engineThinking";
   const gen = ++state.gen;
   startPlayerClock(state.chess.turn());
-  setStatus("Stockfish réfléchit…");
+  setStatus(state.gameMode === "supa-vs-supa" ? "Supa (" + (state.chess.turn() === "w" ? "Blancs" : "Noirs") + ") réfléchit…" : "Stockfish réfléchit…");
   boardUI.dots = [];
   renderBoard();
   const fen = state.chess.fen();
@@ -1464,7 +1495,9 @@ function checkGameOver() {
   boardUI.dots = [];
   let msg = "Partie terminée — ";
   if (c.in_checkmate()) {
-    msg += c.turn() === state.userColor ? "échec et mat, vous avez perdu." : "échec et mat, vous avez gagné !";
+    msg += state.gameMode === "supa-vs-supa"
+      ? "échec et mat — Supa " + (c.turn() === "w" ? "Noirs" : "Blancs") + " gagne."
+      : c.turn() === state.userColor ? "échec et mat, vous avez perdu." : "échec et mat, vous avez gagné !";
   } else if (c.in_stalemate()) msg += "pat (nulle).";
   else if (c.in_threefold_repetition()) msg += "nulle par répétition.";
   else if (c.insufficient_material()) msg += "nulle (matériel insuffisant).";
@@ -1982,6 +2015,8 @@ function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
 
 /* ── Boutons ── */
 $("btn-new").addEventListener("click", () => newGame({ unassisted: false }));
+$("btn-self-play")?.addEventListener("click", startSelfPlayGame);
+$("btn-supa-vs-supa")?.addEventListener("click", startSupaVsSupaGame);
 $("btn-unassisted-game")?.addEventListener("click", () => newGame({ unassisted: true }));
 $("btn-abandon-game")?.addEventListener("click", abandonCurrentGame);
 $("btn-stop-game")?.addEventListener("click", stopCurrentGame);
