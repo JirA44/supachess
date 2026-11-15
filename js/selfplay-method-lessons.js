@@ -105,6 +105,81 @@
       hints: ["Il faut une référence inchangée.", "Inverse les couleurs et utilise des positions que le moteur n’a pas vues pendant l’entraînement."],
       fen: START, color: "w", sequence: SHARED_SEQUENCE
     }
+
+    {
+      id: "engine-derived-selfplay-06-identify-the-threat",
+      level: "Débutant",
+      title: "Identifier précisément ce qui est attaqué",
+      category: "Signaux · menaces et défense",
+      author: "SupaChess Académie",
+      program: "Signaux · défendre ou contre-attaquer",
+      fen: "r1bqkbnr/1ppp1ppp/p1n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4",
+      color: "w",
+      question: "Après 1. e4 e5 2. Cf3 Cc6 3. Fb5 a6, quelle pièce est directement attaquée et par quoi ?",
+      choices: [
+        { text: "Le fou blanc en b5 est attaqué par le pion noir a6", correct: true },
+        { text: "La dame blanche est attaquée par le cavalier c6", correct: false },
+        { text: "Le roi blanc est en échec", correct: false }
+      ],
+      principle: "Nomme la pièce visée, l’attaquant et la menace concrète. Ici le pion a6 attaque le fou b5; il n’y a pas échec.",
+      transfer: "Avant de défendre, vérifie aussi si la pièce peut capturer l’attaquant, se déplacer, être échangée ou créer une menace plus urgente.",
+      pitfall: "Ne confonds pas une pièce attaquée avec une pièce déjà perdue : compte les réponses légales et les suites après chaque échange.",
+      hints: ["Regarde les cases d’attaque du pion noir a6.", "Un pion attaque en diagonale."],
+      sequence: [
+        { side: "user", uci: "b5a4", explanation: "Ba4 met le fou hors de l’attaque du pion a6. Il faudra quand même examiner la suite noire." },
+        { side: "book", uci: "b7b5", explanation: "…b5 attaque à nouveau le fou : une défense ne termine pas le calcul." },
+        { side: "user", uci: "a4b3", explanation: "Bb3 met le fou à l’abri de cette nouvelle poussée. La séquence montre pourquoi il faut recalculer après chaque coup adverse." }
+      ]
+    },
+    {
+      id: "engine-derived-selfplay-07-recalculate-after-defense",
+      level: "Intermédiaire",
+      title: "Après la défense, recalculer la suite",
+      category: "Signaux · menaces et défense",
+      author: "SupaChess Académie",
+      program: "Signaux · défendre ou contre-attaquer",
+      fen: "r1bqkbnr/1ppp1ppp/p1n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4",
+      color: "w",
+      question: "Tu réponds à l’attaque du fou par Ba4 et les Noirs jouent …b5. Que fais-tu maintenant ?",
+      choices: [
+        { text: "Recommencer le diagnostic : identifier la nouvelle attaque et calculer le meilleur coup noir après chacune de mes réponses", correct: true },
+        { text: "Considérer le fou définitivement en sécurité parce qu’il a déjà bougé une fois", correct: false },
+        { text: "Jouer immédiatement une contre-attaque sans vérifier si le fou peut être capturé", correct: false }
+      ],
+      principle: "Chaque réponse adverse crée une nouvelle position. Une pièce peut être attaquée plusieurs fois de suite; la défense doit être réévaluée à chaque demi-coup.",
+      transfer: "Après tout coup de défense, demande-toi : quelle est sa meilleure réponse? Mon coup laisse-t-il une autre pièce attaquée? Puis-je sortir, échanger, interposer ou contre-attaquer?",
+      pitfall: "Un plan de défense n’est pas une suite calculée. Ne t’arrête pas au premier coup de l’adversaire.",
+      hints: ["Dans la ligne montrée, le pion b7 avance en b5.", "Le fou en a4 est-il encore attaqué? Trouve une case de repli légale."],
+      sequence: [
+        { side: "user", uci: "b5a4", explanation: "Le fou s’écarte de la première attaque." },
+        { side: "book", uci: "b7b5", explanation: "Les Noirs attaquent de nouveau le fou; il faut relancer l’analyse." },
+        { side: "user", uci: "a4b3", explanation: "Bb3 répond à la nouvelle menace. Après ce coup, cherche encore la meilleure suite noire." }
+      ]
+    },
+    {
+      id: "engine-derived-selfplay-08-defend-or-counterattack",
+      level: "Avancé",
+      title: "Défendre, échanger ou contre-attaquer ?",
+      category: "Signaux · menaces et défense",
+      author: "SupaChess Académie",
+      program: "Signaux · défendre ou contre-attaquer",
+      fen: "r1bqkbnr/1ppp1ppp/p1n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4",
+      color: "w",
+      question: "Le fou b5 est attaqué par a6. Quel critère permet de choisir entre le repli Ba4, l’échange Bxc6 et une contre-attaque ?",
+      choices: [
+        { text: "Calculer la meilleure réponse adverse après chaque candidat, puis comparer sécurité, échanges et menaces créées", correct: true },
+        { text: "Toujours capturer l’attaquant pour supprimer la menace", correct: false },
+        { text: "Toujours contre-attaquer, même si l’adversaire peut prendre le fou avec tempo", correct: false }
+      ],
+      principle: "Il n’existe pas de réponse automatique. Le repli, l’échange ou la contre-attaque sont des candidats à calculer selon les conséquences concrètes.",
+      transfer: "Pour un échange de prises, note chaque prise légale dans l’ordre, les pièces restantes, leur valeur et les menaces qui subsistent. Des défenseurs plus chers ne peuvent pas toujours reprendre sans coût.",
+      pitfall: "Compter seulement trois attaquants contre deux défenseurs ne suffit pas : l’ordre des prises, les clouages, les échecs et la valeur des pièces changent le bilan.",
+      hints: ["Compare au moins Ba4 et Bxc6.", "Après Bxc6, demande-toi si …dxc6 est légal et quel matériel disparaît."],
+      sequence: [
+        { side: "user", uci: "b5c6", explanation: "Bxc6 est un candidat, mais il faut vérifier la reprise noire avant de conclure." },
+        { side: "book", uci: "d7c6", explanation: "…dxc6 reprend le fou. L’échange se juge sur la valeur des deux pièces et les conséquences positionnelles, pas sur le seul fait d’avoir supprimé l’attaquant." }
+      ]
+    },
   ];
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) || "[]");
