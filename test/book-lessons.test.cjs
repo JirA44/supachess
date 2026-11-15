@@ -102,6 +102,7 @@ test("method paths include all their lessons in progressive level order", () => 
     "Stockfish · comparer et vérifier",
     "Calcul profond · parties maîtresses",
     "Précision · jouer juste et vérifier",
+    "SupaChess · représenter les possibilités",
   ];
   const ranks = { Débutant: 0, Intermédiaire: 1, Avancé: 2, Expert: 3 };
   for (const program of programs) {
@@ -119,6 +120,31 @@ test("method paths include all their lessons in progressive level order", () => 
         program + " should continue to its next lesson");
     }
   }
+});
+
+test("mental-representation path teaches imagery, transformations, plans, and separate branches", () => {
+  const program = "SupaChess · représenter les possibilités";
+  const expected = [
+    ["imagination-01-visualiser-piece", "Débutant"],
+    ["imagination-02-transformer-centre", "Intermédiaire"],
+    ["imagination-03-projeter-plan", "Avancé"],
+    ["imagination-04-branches-et-reevaluation", "Expert"],
+    ["imagination-05-suivre-branche-d4", "Expert"],
+  ];
+  const lessons = LESSONS.filter((lesson) => lesson.program === program);
+  assert.deepEqual(lessons.map((lesson) => [lesson.id, lesson.level]), expected);
+  assert.ok(lessons.every((lesson) => lesson.kind === "method" && lesson.transfer && lesson.pitfall));
+  assert.match(lessons[0].principle, /géométrie/i);
+  assert.match(lessons[1].principle, /structure/i);
+  assert.match(lessons[2].principle, /hypothèse/i);
+  assert.match(lessons[3].principle, /scénarios séparés/i);
+
+  const html = fs.readFileSync(path.join(__dirname, "../book-lessons.html"), "utf8");
+  const concepts = fs.readFileSync(path.join(__dirname, "../js/lesson-concepts.js"), "utf8");
+  assert.match(html, /data-method-action="SupaChess · représenter les possibilités"/);
+  assert.match(html, /<option>SupaChess · représenter les possibilités<\/option>/);
+  for (const concept of ["mental-board-image", "position-transformation", "plan-projection", "variant-branches"])
+    assert.ok(concepts.includes(`"${concept}"`), concept + " should be searchable in the concept glossary");
 });
 
 test("a completed path continues at the first unfinished lesson of the next path", () => {
@@ -169,7 +195,7 @@ test("each player and Stockfish path has a clearly attributed original starter l
 });
 
 test("trap-prevention lessons progress from avoiding a pin to punishing Legal's mate trap", () => {
-  const traps = LESSONS.filter((lesson) => /piège/.test(lesson.title.toLocaleLowerCase("fr")) && lesson.kind !== "anticipation");
+  const traps = LESSONS.filter((lesson) => lesson.program === "Anti-pièges · repérer et parer" && /piège/.test(lesson.title.toLocaleLowerCase("fr")) && lesson.kind !== "anticipation");
   assert.deepEqual(traps.map((lesson) => lesson.level), ["Débutant", "Intermédiaire", "Avancé"]);
   for (const lesson of traps) {
     assert.equal(lesson.program, "Anti-pièges · repérer et parer");
@@ -498,3 +524,4 @@ test("catalog refresh uses the existing competency summary helper", () => {
   assert.match(source, /const competencySummary = lessonCompetencySummary\(LESSONS, progress\);/);
   assert.doesNotMatch(source, /\bsummarizeCompetencies\s*\(/);
 });
+

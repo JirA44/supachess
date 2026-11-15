@@ -4073,6 +4073,158 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     return (completed ? "✓ " : "") + number + ". " + title;
   }
 
+  // Original path on mental representation: see geometry, imagine changes,
+  // form a plan, then keep alternative continuations separate.
+  LESSONS.push(
+    {
+      id: "imagination-01-visualiser-piece",
+      kind: "method",
+      level: "Débutant",
+      title: "Visualiser une pièce sans la déplacer",
+      category: "Représentation · image mentale et trajectoires",
+      program: "SupaChess · représenter les possibilités",
+      author: "SupaChess Académie",
+      book: "Parcours original SupaChess",
+      reference: "Leçon originale · géométrie et représentation mentale",
+      setup: ["e4", "e5"],
+      color: "w",
+      question: "Avant de jouer Cf3, quelle image mentale est la plus utile ?",
+      choices: [
+        { text: "Imaginer le cavalier g1 sur f3, les cases qu’il contrôle et les pièces que ce déplacement laisse derrière.", correct: true },
+        { text: "Imaginer seulement le coup adverse que je préfère voir.", correct: false },
+        { text: "Croire que toutes les cases atteignables par le cavalier sont forcément sûres.", correct: false }
+      ],
+      principle: "La représentation commence par la géométrie : imagine la pièce sur sa case d’arrivée, ses nouvelles attaques, ses cases de retour et les lignes que le déplacement libère ou bloque. Une case atteignable n’est pas automatiquement sûre.",
+      transfer: "Sans déplacer la pièce, annonce ses cases d’arrivée et les changements d’attaque. Puis joue le coup et compare l’image prévue à la position réelle.",
+      pitfall: "Ne confonds pas la case imaginée avec la position actuelle et ne conclus pas qu’une pièce est en sécurité simplement parce que son déplacement est légal.",
+      hints: ["Le cavalier g1 peut aller en f3 ou h3; e2 est occupée par un pion blanc.", "Compare l’activité centrale de f3 à celle de h3, puis vérifie les réponses noires."],
+      sequence: [
+        { side: "user", uci: "g1f3", explanation: "Cf3 place le cavalier au centre et attaque d4 et e5. Vérifie aussi les cases laissées par son départ." },
+        { side: "book", uci: "b8c6", explanation: "…Cc6 développe une pièce et défend e5; actualise la position mentale plutôt que de garder l’ancienne image." },
+        { side: "user", uci: "f3g5", explanation: "Cg5 change les cases attaquées et expose le cavalier à d’autres réponses. Une nouvelle image doit remplacer la précédente." }
+      ]
+    },
+    {
+      id: "imagination-02-transformer-centre",
+      kind: "method",
+      level: "Intermédiaire",
+      title: "Imaginer le centre après un échange",
+      category: "Représentation · transformation de position",
+      program: "SupaChess · représenter les possibilités",
+      author: "SupaChess Académie",
+      book: "Parcours original SupaChess",
+      reference: "Leçon originale · structure centrale et lignes libérées",
+      setup: ["e4", "e5", "Nf3", "Nc6"],
+      color: "w",
+      question: "Avant d4, que faut-il imaginer après …exd4 et Cxd4 ?",
+      choices: [
+        { text: "Le pion e noir et le pion d blanc disparaissent, le cavalier blanc arrive en d4 et la diagonale du fou c1 se libère.", correct: true },
+        { text: "La position reste identique, car les deux camps ont échangé un pion.", correct: false },
+        { text: "Le cavalier f3 reste en f3 après avoir repris en d4.", correct: false }
+      ],
+      principle: "Une transformation change plusieurs éléments à la fois : matériel, structure de pions, cases occupées, lignes ouvertes, pièces déplacées et nouvelles cibles. Après 1.d4 exd4 2.Cxd4, le cavalier se trouve en d4 et le départ du pion d2 libère la diagonale du fou c1.",
+      transfer: "Avant une poussée ou un échange, visualise au moins la position après les reprises probables. Recompte les pièces et retrace les lignes qui s’ouvrent ou se ferment.",
+      pitfall: "Ne juge pas un échange au seul nombre de pions : la structure et l’activité des pièces peuvent changer même si le matériel reste égal.",
+      hints: ["Après d4, les Noirs peuvent prendre le pion avec le pion e5.", "Après Cxd4, repère le cavalier qui a quitté f3 et la case d2 libérée."],
+      sequence: [
+        { side: "user", uci: "d2d4", explanation: "d4 propose une transformation du centre; imagine les reprises avant de toucher le pion." },
+        { side: "book", uci: "e5d4", explanation: "…exd4 retire le pion e5 et place le pion noir sur d4." },
+        { side: "user", uci: "f3d4", explanation: "Cxd4 retire le pion noir et déplace le cavalier en d4. La diagonale c1–d2 s’est libérée." },
+        { side: "book", uci: "g8f6", explanation: "…Cf6 est une réponse possible de développement; ce scénario n’est pas la seule suite légale." }
+      ]
+    },
+    {
+      id: "imagination-03-projeter-plan",
+      kind: "method",
+      level: "Avancé",
+      title: "Projeter un plan à partir des pièces",
+      category: "Représentation · plan et manœuvre",
+      program: "SupaChess · représenter les possibilités",
+      author: "SupaChess Académie",
+      book: "Parcours original SupaChess",
+      reference: "Leçon originale · scénario de manœuvre",
+      setup: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "d3", "Bc5", "O-O", "O-O", "c3", "d6", "Re1", "a6"],
+      color: "w",
+      question: "Quel projet peut-on imaginer ici sans prétendre connaître la réponse noire ?",
+      choices: [
+        { text: "Préparer une route de manœuvre pour le cavalier b1, puis réévaluer selon les réponses noires.", correct: true },
+        { text: "Supposer que les Noirs joueront toujours les coups exacts prévus et ne plus réexaminer la position.", correct: false },
+        { text: "Déclarer qu’un plan est mauvais avant d’avoir considéré la structure et les pièces concernées.", correct: false }
+      ],
+      principle: "Un plan est une hypothèse organisée : une pièce, une destination, un itinéraire et un but. La manœuvre Cb1–d2–f1–g3 est un scénario à tester dans cette position, pas une suite forcée ni une prédiction de l’adversaire.",
+      transfer: "Écris la destination de la pièce et le changement recherché. Après chaque réponse adverse, vérifie si l’itinéraire reste sûr et utile ou si le plan doit changer.",
+      pitfall: "Ne confonds pas plan et automatisme. Si l’adversaire crée une menace ou modifie la structure, reprends l’évaluation depuis la nouvelle position.",
+      hints: ["Le cavalier b1 peut rejoindre d2 puis f1; imagine sa destination avant le premier déplacement.", "Le trajet n’est utile que si les réponses adverses ne le rendent pas trop lent ou dangereux."],
+      sequence: [
+        { side: "user", uci: "h2h3", explanation: "h3 est un coup d’attente utile dans ce scénario; il ne force pas les Noirs à répondre d’une seule manière." },
+        { side: "book", uci: "c5a7", explanation: "…Fa7 est une réponse illustrative. Observe ce qu’elle change, sans la prendre pour une réponse obligatoire." },
+        { side: "user", uci: "b1d2", explanation: "Le cavalier commence la route imaginée vers f1 et g3; vérifie si cette destination reste pertinente." },
+        { side: "book", uci: "f8e8", explanation: "…Te8 est une autre étape possible du scénario. Les Noirs gardent d’autres choix; chaque branche doit être évaluée séparément." },
+        { side: "user", uci: "d2f1", explanation: "Le cavalier poursuit sa manœuvre. Compare la position obtenue avec le plan initial et réévalue les deux camps." },
+        { side: "book", uci: "h7h6", explanation: "…h6 est une nouvelle réponse possible. Contrôle à nouveau si la case g3 et le trajet du cavalier restent utiles." },
+        { side: "user", uci: "f1g3", explanation: "Cg3 atteint la destination imaginée. Le parcours illustre un plan complet; il ne prouve pas que cette manœuvre est toujours le meilleur choix." }
+      ]
+    },
+    {
+      id: "imagination-04-branches-et-reevaluation",
+      kind: "method",
+      level: "Expert",
+      title: "Ouvrir plusieurs branches et réévaluer",
+      category: "Représentation · variantes et scénarios",
+      program: "SupaChess · représenter les possibilités",
+      author: "SupaChess Académie",
+      book: "Parcours original SupaChess",
+      reference: "Leçon originale · comparaison de scénarios",
+      setup: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6"],
+      color: "w",
+      question: "Tu compares d3 et d4. Comment représenter correctement les réponses adverses possibles ?",
+      choices: [
+        { text: "Garder une branche distincte pour chaque réponse importante, calculer sa meilleure suite, puis réévaluer chaque position finale.", correct: true },
+        { text: "Mélanger les pièces de deux variantes dans une seule position mentale.", correct: false },
+        { text: "Choisir la réponse noire la plus facile et supposer qu’elle sera jouée.", correct: false }
+      ],
+      principle: "Les variantes sont des scénarios séparés. Après chaque réponse, reconstruis le plateau de cette branche, cherche les meilleures réponses des deux camps, puis compare les positions obtenues. L’analyse Stockfish peut proposer plusieurs lignes, mais sa recherche reste limitée par le temps et la profondeur.",
+      transfer: "Pour un candidat critique, note au moins deux réponses adverses plausibles. Ne fusionne jamais les positions; compare matériel, sécurité des rois, activité, structure et menaces dans chaque branche.",
+      pitfall: "Ne traite pas une variante affichée comme une prédiction ou comme une preuve que les autres coups n’existent pas. Une ligne explorée n’est qu’un scénario parmi les possibilités.",
+      hints: ["Après d4, imagine séparément la prise …exd4 et une réponse qui ne prend pas le pion.", "Reviens à la position de départ avant de calculer la seconde branche."],
+      sequence: [
+        { side: "user", uci: "d2d3", explanation: "d3 est une branche de comparaison; note l’image de cette position avant d’analyser une autre candidate." },
+        { side: "book", uci: "d7d6", explanation: "…d6 illustre une réponse calme. Elle n’exclut pas d’autres défenses." },
+        { side: "user", uci: "b1c3", explanation: "Cc3 développe une pièce dans cette branche. Compare cette structure à la branche d4 séparément." }
+      ]
+    },
+    {
+      id: "imagination-05-suivre-branche-d4",
+      kind: "method",
+      level: "Expert",
+      title: "Rejouer la branche d4 séparément",
+      category: "Représentation · comparaison de branches",
+      program: "SupaChess · représenter les possibilités",
+      author: "SupaChess Académie",
+      book: "Parcours original SupaChess",
+      reference: "Leçon originale · branche d’ouverture à comparer",
+      setup: ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6"],
+      color: "w",
+      question: "Tu as déjà imaginé 1.d3. Quelle démarche garde la branche 1.d4 distincte ?",
+      choices: [
+        { text: "Repartir de la position avant le coup, jouer d4, calculer les réponses séparément et comparer les positions obtenues.", correct: true },
+        { text: "Conserver le pion en d3 tout en ajoutant mentalement le pion en d4.", correct: false },
+        { text: "Supposer que …exd4 est obligatoire puis arrêter l’analyse après la reprise.", correct: false }
+      ],
+      principle: "Pour comparer deux candidats, chaque branche repart de la même position de départ. 1.d4 exd4 2.Cxd4 est un scénario concret; il faut aussi examiner les réponses noires qui ne prennent pas le pion et réévaluer après chacune.",
+      transfer: "Reviens à la position racine, joue le second candidat, puis compare les réponses adverses et les structures. Ne mélange jamais une pièce issue de la première variante avec cette branche.",
+      pitfall: "Ne traite pas la prise …exd4 comme la seule réponse légale ni comme une prédiction. La ligne jouée sert d’exemple de calcul, pas d’affirmation sur la meilleure recherche Stockfish.",
+      hints: ["La position racine est la même que dans la leçon sur d3.", "Après d4, teste …exd4 puis Cxd4; reconstruis le plateau après chaque demi-coup."],
+      sequence: [
+        { side: "user", uci: "d2d4", explanation: "Cette leçon joue la seconde candidate depuis la position racine, sans conserver le coup d3 de l’autre branche." },
+        { side: "book", uci: "e5d4", explanation: "…exd4 est une réponse possible qui transforme le centre; d’autres réponses noires doivent aussi être envisagées." },
+        { side: "user", uci: "f3d4", explanation: "Cxd4 donne la position de comparaison. Évalue les lignes, les pièces déplacées et le centre après les reprises." },
+        { side: "book", uci: "d7d6", explanation: "…d6 illustre une continuation légale de développement; réévalue sans considérer cette suite comme forcée." }
+      ]
+    }
+  );
+
+
   if (typeof module !== "undefined" && module.exports) {
     module.exports = { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPositionKey, lessonReviewPartnerIndices, lessonCompetencyKeys, lessonCompetencySummary, lessonReviewDifficultyOptions, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText };
   }
@@ -5705,3 +5857,4 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   loadLesson(requestedLessonIndex >= 0 ? requestedLessonIndex : (requestedNext && firstIncomplete >= 0 ? firstIncomplete : 0));
   renderPersonalizedPgnPath();
 })(typeof window !== "undefined" ? window : globalThis);
+
