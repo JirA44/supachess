@@ -249,6 +249,8 @@
 </details>
 <div class="board-controls">
         <button id="btn-new" class="btn" type="button">Nouvelle partie</button>
+        <button id="btn-self-play" class="btn" type="button" title="Joue les deux camps toi-même, sans aide. Après la partie, analyse les deux couleurs et reprends les moments critiques.">Jouer contre soi-même</button>
+        <button id="btn-supa-vs-supa" class="btn" type="button" title="Lance une partie automatique Supa contre Supa au niveau moteur choisi. Cette partie n’alimente pas ton profil de joueur.">Supa contre Supa</button>
         <button id="btn-unassisted-game" class="btn" type="button" aria-pressed="false" title="Démarrer une nouvelle partie sans bulles, aides de coups, flèches, évaluation, coach ni annulation.">Jouer une partie sans aide</button>
         <button id="btn-undo" class="btn" type="button">Annuler mon demi-coup</button>
         <button id="btn-flip-board" class="btn" type="button" aria-pressed="false">Retourner l’échiquier</button>
@@ -270,6 +272,17 @@
         <button id="btn-pgn" class="btn">⬇ PGN</button>
         <button id="btn-analyze-pgn" class="btn">Analyser un PGN (Supa)</button>
       </div>
+      <details id="self-play-learning-guide" class="panel">
+        <summary>Leçon : apprendre en jouant les deux camps</summary>
+        <p>Avant chaque demi-coup, formule ton plan et le meilleur coup candidat. En changeant de camp, cherche la réponse la plus forte contre ton idée : menace, défense, échange ou ressource tactique.</p>
+        <ol>
+          <li><strong>Avant le coup :</strong> note l’objectif, deux candidats et la meilleure réponse adverse prévue.</li>
+          <li><strong>En changeant de camp :</strong> essaie d’abord de réfuter ton propre coup, puis choisis la réponse la plus exigeante.</li>
+          <li><strong>Après la partie :</strong> ouvre « Analyser » dans la liste des parties, compare les deux camps, puis utilise « Corriger » sur les moments critiques.</li>
+          <li><strong>Pour vérifier l’apprentissage :</strong> rejoue une position critique avec une autre idée et explique le plan des deux côtés sans regarder les candidats.</li>
+        </ol>
+        <p>Supa contre Supa joue automatiquement les deux camps au niveau moteur sélectionné. Ces parties servent à observer et étudier des plans; elles sont exclues du profil personnel de jeu.</p>
+      </details>
       <div id="replay-bar" class="board-controls" aria-label="Navigation dans la partie">
         <button id="btn-replay-prev" class="btn" type="button" aria-label="Coup précédent" disabled>◀</button>
         <span id="replay-label" aria-live="polite">Importez ou analysez une partie pour la parcourir</span>
@@ -463,14 +476,14 @@
   <span id="registered-members-count" class="registered-members-count">Comptes inscrits : chargement…</span>
   <span id="unique-visitors-count" class="unique-visitors-count">Visiteurs uniques estimés : chargement…</span>
 </div>
-  <span class="site-version" aria-label="Version de SupaChess">Version SupaChess : 1.13.14878</span>
+  <span class="site-version" aria-label="Version de SupaChess">Version SupaChess : 1.13.14901</span>
 </footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="js/site-stats.js?v=unique-visitors-20261029"></script>
-<script src="js/profile.js?v=acpl-per-game-20261105-v1&activity=profile-activity-last365-20261105-v1&accuracy-point-labels=20261106-v1&acpl-point-labels=20261106-v1&acpl-mate-filter=20261108-v1&diagnostic-unaided-count=20261110-v1"></script>
+<script src="js/profile.js?v=exclude-self-play-20261115-v1&acpl-per-game-20261105-v1&activity=profile-activity-last365-20261105-v1&accuracy-point-labels=20261106-v1&acpl-point-labels=20261106-v1&acpl-mate-filter=20261108-v1&diagnostic-unaided-count=20261110-v1"></script>
 <script src="js/sounds.js?v=profile-sounds-20261104"></script>
 <script src="vendor/chess.js"></script>
 <script src="js/engine.js?v=stockfish-worker-recovery-20261029"></script>
@@ -480,9 +493,9 @@
 <script src="js/appearance.js?v=appearance-options-20261102-v1&psychedelic-liquid-20261109-v1&psychedelic-default-on-20261109-v1&psychedelic-controls-20261109-v6"></script>
 <script src="js/analysis-settings.js?v=diagnostic-arrows-effective-state-20261105-v2&new-game-aids=20261107-v1"></script>
 <script src="js/move-feedback.js?v=supa-brilliant-indicator-20261103-v1"></script>
-<script src="js/app.js?v=stop-engine-20261105-v1&clock=explicit-start-20261105-v1&review-clocks=20261105-v1&accuracy-player-colors=20261105-v2&checkmate=king-fall-20261105-v1&precision-gap=20261106-v1&precision-gap-every-game=20261106-v1&diagnostic-only-play-mode=20261106-v2&profile-name=20261106-v1&game-number=20261106-v1&diagnostic-no-aid-label=20261108-v1&precision-gap-percent=20261106-v1&pause-controls=20261107-v1&diagnostic-toggle=20261107-v1&diagnostic-no-aid-mode=20261108-v1&acpl-mate-guard=20261108-v1&best-move-replay=20261108-v3&review-display-move-history=20261108-v1"></script>
+<script src="js/app.js?v=self-play-modes-20261115-v1&stop-engine-20261105-v1&clock=explicit-start-20261105-v1&review-clocks=20261105-v1&accuracy-player-colors=20261105-v2&checkmate=king-fall-20261105-v1&precision-gap=20261106-v1&precision-gap-every-game=20261106-v1&diagnostic-only-play-mode=20261106-v2&profile-name=20261106-v1&game-number=20261106-v1&diagnostic-no-aid-label=20261108-v1&precision-gap-percent=20261106-v1&pause-controls=20261107-v1&diagnostic-toggle=20261107-v1&diagnostic-no-aid-mode=20261108-v1&acpl-mate-guard=20261108-v1&best-move-replay=20261108-v3&review-display-move-history=20261108-v1"></script>
 <script src="js/diagnostic-undo-lock.js?v=correction-unlock-20261105-v1"></script>
-<script src="js/games.js?v=timed-games-20261104-v1&precision-gap-every-game-20261106-v1&acpl-gap=20261106-v1&profile-name=20261106-v1&game-number=20261106-v1&precision-gap-percent=20261106-v1"></script>
+<script src="js/games.js?v=self-play-metadata-20261115-v1&timed-games-20261104-v1&precision-gap-every-game-20261106-v1&acpl-gap=20261106-v1&profile-name=20261106-v1&game-number=20261106-v1&precision-gap-percent=20261106-v1"></script>
 <script src="js/tablebase.js?v=op1-partial-tablebase-20261027"></script>
 <script src="js/blindspots.js?v=pressure-defender-causes-20261030"></script>
   <script src="js/learning-loop.js"></script>
