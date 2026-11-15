@@ -3,7 +3,26 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const { Chess } = require("chess.js");
+const { buildSelfPlayEntries } = require("../js/selfplay-study.js");
 const { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPositionKey, lessonReviewPartnerIndices, lessonCompetencyKeys, lessonCompetencySummary, lessonReviewDifficultyOptions, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText } = require("../js/book-lessons.js");
+
+test("completed Supa-vs-Supa PGNs become legal, attributable study positions only", () => {
+  const game = {
+    id: "match-test", gameNumber: 42, selfPlayMode: "supa-vs-supa", engineName: "Supa contre Supa · Stockfish 19",
+    result: "1-0", pgn: '[White "Supa Blancs"]\n[Black "Supa Noirs"]\n[Result "1-0"]\n\n1. e4 e5 2. Nf3 Nc6 1-0'
+  };
+  const entries = buildSelfPlayEntries([game, { ...game, id: "unfinished", result: "*" }, { ...game, id: "human", selfPlayMode: null }], Chess);
+  assert.equal(entries.length, 4);
+  assert.equal(entries[0].title, "Auto-jeu · partie n°42 · Blancs e4");
+  assert.equal(entries[0].expectedUci, "e2e4");
+  assert.equal(entries[0].playedSan, "e4");
+  assert.equal(entries[0].kind, "selfplay");
+  for (const entry of entries) {
+    const position = new Chess(entry.fen);
+    const move = position.move({ from: entry.expectedUci.slice(0, 2), to: entry.expectedUci.slice(2, 4), promotion: entry.expectedUci.slice(4) || "q" });
+    assert.ok(move, `${entry.id} expected move must be legal`);
+  }
+});
 
 test("book lesson setups and user/book move sequences are legal", () => {
   for (const lesson of LESSONS) {

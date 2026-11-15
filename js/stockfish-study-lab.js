@@ -62,6 +62,7 @@
         <button class="btn" type="button" data-sf-pause disabled>Mettre en pause</button>
         <button class="btn" type="button" data-sf-lessons>Auditer les leçons et exercices</button>
         <button class="btn" type="button" data-sf-puzzles>Auditer les puzzles tactiques</button>
+        <button class="btn" type="button" data-sf-selfplay>Analyser les parties Supa contre Supa</button>
       </div>
       <p class="sf-study-status" role="status" aria-live="polite" data-sf-status></p>
       <div class="sf-study-progress" aria-label="Progression de l’audit"><span data-sf-progress></span></div>
@@ -69,7 +70,7 @@
       <input id="sf-study-search" data-sf-search type="search" placeholder="Titre, joueur, thème…" style="width:min(100%,520px);padding:10px;margin:6px 0">
       <div class="sf-study-results" data-sf-results></div>
       <button class="btn" type="button" data-sf-more hidden>Afficher davantage</button>
-      <p class="sf-study-muted">Un exercice de choix unique n’est créé que si Stockfish classe nettement le premier coup (écart d’au moins 0,35 pion dans cette recherche). Les puzzles dont la solution publiée diffère du premier coup moteur sont signalés, pas réécrits silencieusement. Les analyses et exercices ajoutés sont locaux à cet appareil.</p>
+      <p class="sf-study-muted">Le mode Supa contre Supa actuel utilise Stockfish 19 pour les deux camps; Berserk n’est pas encore intégré. Un exercice à solution unique n’est créé que si Stockfish distingue nettement le premier coup. Les parties restent sur cet appareil : leur analyse produit des exercices locaux, mais n’envoie pas les PGN et ne réentraîne pas les poids de Stockfish.</p>
     `;
     const intro = document.querySelector(".lesson-intro");
     if (intro) intro.insertAdjacentElement("afterend", section);
@@ -77,6 +78,7 @@
     section.querySelector("[data-sf-audit]").addEventListener("click", () => startAudit("all"));
     section.querySelector("[data-sf-lessons]").addEventListener("click", () => startAudit("lessons"));
     section.querySelector("[data-sf-puzzles]").addEventListener("click", () => startAudit("puzzles"));
+    section.querySelector("[data-sf-selfplay]").addEventListener("click", () => startAudit("selfplay"));
     section.querySelector("[data-sf-pause]").addEventListener("click", () => { paused = true; setStatus("Pause demandée; le calcul en cours va se terminer avant l’arrêt."); });
     section.querySelector("[data-sf-more]").addEventListener("click", () => { visibleCount += 25; renderResults(); });
     return section;
@@ -130,6 +132,18 @@
     });
   }
 
+  function collectSelfPlayEntries() {
+    const games = (() => {
+      try {
+        const value = JSON.parse(localStorage.getItem("supachess_games") || "[]");
+        return Array.isArray(value) ? value : [];
+      } catch (_) { return []; }
+    })();
+    if (!root.SupaSelfPlayStudy || typeof root.SupaSelfPlayStudy.buildSelfPlayEntries !== "function")
+      throw new Error("L’outil de lecture des parties moteur n’est pas chargé.");
+    return root.SupaSelfPlayStudy.buildSelfPlayEntries(games, Chess);
+  }
+
   function levelFromRating(rating) {
     if (rating <= 1300) return "Débutant";
     if (rating <= 1800) return "Intermédiaire";
@@ -148,17 +162,26 @@
     running = true;
     paused = false;
     pauseButton.disabled = false;
-    const buttons = ui.querySelectorAll("[data-sf-audit],[data-sf-lessons],[data-sf-puzzles]");
+    const buttons = ui.querySelectorAll("[data-sf-audit],[data-sf-lessons],[data-sf-puzzles],[data-sf-selfplay]");
     buttons.forEach((button) => { button.disabled = true; });
     try {
       let lessons = [];
       let puzzles = [];
-      if (scope !== "puzzles") lessons = await collectLessonEntries();
-      if (scope !== "lessons") {
+      let selfPlay = [];
+      if (scope === "selfplay") selfPlay = collectSelfPlayEntries();
+      else {
+        if (scope !== "puzzles") lessons = await collectLessonEntries();
+      }
+      if (scope !== "lessons" && scope !== "selfplay") {
         try { puzzles = await collectPuzzleEntries(); }
         catch (error) { if (scope === "puzzles" || scope === "all") throw error; }
       }
-      sourceEntries = scope === "lessons" ? lessons : scope === "puzzles" ? puzzles : lessons.concat(puzzles);
+      sourceEntries = scope === "selfplay" ? selfPlay : scope === "lessons" ? lessons : scope === "puzzles" ? puzzles : lessons.concat(puzzles);
+      if (scope === "selfplay" && !selfPlay.length) {
+        setStatus("Aucune partie Supa contre Supa terminée avec PGN légal n’est enregistrée sur cet appareil.");
+        renderResults();
+        return;
+      }
       const valid = sourceEntries.filter((entry) => entry.kind !== "invalid");
       const uniquePositions = new Map();
       valid.forEach((entry) => {
@@ -168,8 +191,10 @@
       });
       const work = Array.from(uniquePositions.entries());
       const processedStart = valid.filter((entry) => audit[entry.key]).length;
-      setStatus("Corpus chargé : " + lessons.length + " leçons/exercices et " + puzzles.length +
-        " puzzles. Positions distinctes à analyser maintenant : " + work.length + ".");
+      setStatus(scope === "selfplay"
+        ? (selfPlay.length ? selfPlay.length + " position(s) extraite(s) des parties Supa contre Supa terminées. Positions inédites à analyser : " + work.length + "." : "Aucune partie Supa contre Supa terminée avec PGN légal n’est enregistrée sur cet appareil.")
+        : "Corpus chargé : " + lessons.length + " leçons/exercices et " + puzzles.length +
+          " puzzles. Positions distinctes à analyser maintenant : " + work.length + ".");
       if (!engine) {
         engine = new StockfishEngine("vendor/stockfish-19-lite-single.js");
         await engine.ready;
@@ -187,6 +212,9 @@
             level: entry.level, fen: fen, choices: result.choices, legalCount: result.legalCount,
             depth: result.choices.reduce((max, choice) => Math.max(max, choice.depth), 0),
             puzzleAnswer: entry.answerUci || "", expectedUci: entry.expectedUci || "",
+            playedSan: entry.playedSan || "", sourceGameId: entry.sourceGameId || "",
+            sourceGameNumber: entry.sourceGameNumber || null, sourcePly: entry.sourcePly || null,
+            sourceEngineName: entry.sourceEngineName || "", sourceResult: entry.sourceResult || "",
             analyzedAt: new Date().toISOString(), moveTimeMs: MOVE_TIME
           };
         }
@@ -203,7 +231,10 @@
           valid.length + " entrée(s) vérifiée(s) et sauvegardée(s) localement.");
       }
       renderResults();
-      autoUseAuditResults();
+      const scopedRecords = scope === "selfplay"
+        ? sourceEntries.map((entry) => audit[entry.key]).filter(Boolean)
+        : null;
+      autoUseAuditResults(scopedRecords, scope === "selfplay" ? "selfplay" : "all");
     } catch (error) {
       setStatus("Audit interrompu : " + (error && error.message ? error.message : "Stockfish n’a pas répondu."));
       renderResults();
@@ -258,14 +289,21 @@
       author: "Atelier Stockfish · variantes calculées",
       program: "Stockfish · comparer et vérifier",
       book: "Position analysée localement",
-      reference: (record.kind === "puzzle" ? "Puzzle tactique " : "Leçon/exercice ") + record.id +
-        " · recherche Stockfish 19 · " + record.depth + " ply · " + MOVE_TIME + " ms par position",
+      reference: record.kind === "selfplay"
+        ? "Partie Supa contre Supa n°" + (record.sourceGameNumber || record.sourceGameId || "?") + " · " + record.sourceEngineName +
+          " · demi-coup " + record.sourcePly + " · joué : " + (record.playedSan || "inconnu") + " · résultat " + record.sourceResult +
+          " · recherche Stockfish 19 · profondeur " + record.depth + " ply · " + MOVE_TIME + " ms"
+        : (record.kind === "puzzle" ? "Puzzle tactique " : "Leçon/exercice ") + record.id +
+          " · recherche Stockfish 19 · " + record.depth + " ply · " + MOVE_TIME + " ms par position",
       fen: record.fen, color: record.fen.split(/\s+/)[1] || "w",
       question: analysisOnly
         ? "Quel coup Stockfish classe en tête dans cette recherche rapide ? Ce classement ne signifie pas que le coup soit unique ou forcé."
         : "Quel premier coup Stockfish classe en tête dans cette recherche ?",
       choices: choices,
-      principle: analysisOnly
+      principle: record.kind === "selfplay"
+        ? "Cette position provient d’une partie moteur enregistrée. Le coup joué était " + (record.playedSan || "non renseigné") +
+          "; Stockfish classe " + candidates[0].san + " en tête de cette recherche. Compare les variantes et les réponses adverses : ce résultat est un support d’étude, pas un apprentissage automatique des poids du moteur."
+        : analysisOnly
         ? "Exercice d’analyse comparative : le moteur n’a pas départagé nettement les candidats. Joue la ligne classée première, puis compare-la aux autres choix légaux et explique le plan obtenu; ne traite pas ce classement comme un coup forcé."
         : "Routine de maîtrise : établis des coups candidats, anticipe la meilleure réponse adverse, puis compare les variantes jusqu’à une position que tu peux évaluer. Stockfish fournit un classement issu de cette recherche, pas une explication humaine ni une certitude absolue.",
       transfer: "Refais cette position sans moteur. Note deux coups candidats, la meilleure réponse adverse à chacun, puis compare la position finale.",
@@ -293,8 +331,9 @@
     return true;
   }
 
-  function autoUseAuditResults() {
-    const records = Object.values(audit).filter((record) => record && Array.isArray(record.choices))
+  function autoUseAuditResults(scopedRecords, markerSuffix) {
+    const records = (Array.isArray(scopedRecords) ? scopedRecords : Object.values(audit))
+      .filter((record) => record && Array.isArray(record.choices))
       .sort((a,b) => {
         const rank = (record) => { const e=resultEligibility(record); return e.ok?0:e.analysisOnly?1:2; };
         const priority = rank(a) - rank(b);
@@ -308,7 +347,7 @@
       const time = Date.parse(record.analyzedAt || "") || 0;
       return Math.max(latest, time);
     }, 0);
-    const marker = "supachess-stockfish-auto-used-v1";
+    const marker = "supachess-stockfish-auto-used-v1" + (markerSuffix === "selfplay" ? "-selfplay" : "");
     if (localStorage.getItem(marker) === signature) return;
     const stored = (() => { try { const x=JSON.parse(localStorage.getItem(DERIVED_KEY)||"[]"); return Array.isArray(x)?x:[]; } catch (_) { return []; } })();
     const known = new Set(stored.map((lesson) => lesson && lesson.id).filter(Boolean));
@@ -382,6 +421,12 @@
         checked.textContent = "Solution enregistrée : " + record.puzzleAnswer +
           (best && best.uci.slice(0, 4) === record.puzzleAnswer.slice(0, 4) ? " · conforme au premier coup" : " · à contrôler");
         card.appendChild(checked);
+      } else if (record.kind === "selfplay") {
+        const played = document.createElement("p");
+        played.textContent = "Dans la partie : " + (record.playedSan || "coup inconnu") +
+          " · Stockfish classe en tête : " + (best ? best.san : "indisponible") +
+          " · partie n°" + (record.sourceGameNumber || record.sourceGameId || "?") + ".";
+        card.appendChild(played);
       } else if (record.kind === "lesson" && record.expectedUci && best &&
           best.uci.slice(0, 4) !== record.expectedUci.slice(0, 4)) {
         const checked = document.createElement("p");
@@ -416,3 +461,4 @@
   renderResults();
   autoUseAuditResults();
 })(window);
+

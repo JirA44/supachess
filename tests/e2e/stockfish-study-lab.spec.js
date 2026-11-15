@@ -1,5 +1,34 @@
 const { test, expect } = require("@playwright/test");
 
+test("Supa-vs-Supa games become local Stockfish-reviewed exercises", async ({ page }) => {
+  test.setTimeout(120000);
+  await page.addInitScript(() => {
+    localStorage.removeItem("supachess-stockfish-study-audit-v1");
+    localStorage.removeItem("supachess-stockfish-derived-lessons-v1");
+    localStorage.removeItem("supachess-book-lessons-v1");
+    localStorage.setItem("supachess_games", JSON.stringify([{
+      id: "browser-selfplay-test", gameNumber: 902, selfPlayMode: "supa-vs-supa",
+      engineName: "Supa contre Supa · Stockfish 19", result: "1-0", stopped: false, abandoned: false,
+      pgn: '[White "Supa Blancs"]\n[Black "Supa Noirs"]\n[Result "1-0"]\n\n1. e4 e5 2. Nf3 Nc6 1-0'
+    }]));
+  });
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/book-lessons.html");
+  await page.getByRole("button", { name: "Analyser les parties Supa contre Supa" }).click();
+  const status = page.locator("[data-sf-status]");
+  await expect.poll(async () => status.textContent(), { timeout: 120000 }).toMatch(/exercice\(s\) créé\(s\)|exercice\(s\) sauvegardé\(s\)/i);
+  const audit = await page.evaluate(() => Object.values(JSON.parse(localStorage.getItem("supachess-stockfish-study-audit-v1") || "{}"))
+    .filter((record) => record.kind === "selfplay"));
+  expect(audit).toHaveLength(4);
+  expect(audit[0].sourceGameNumber).toBe(902);
+  expect(audit[0].playedSan).toBeTruthy();
+  const generated = await page.evaluate(() => JSON.parse(localStorage.getItem("supachess-stockfish-derived-lessons-v1") || "[]")
+    .filter((lesson) => lesson.reference && lesson.reference.includes("partie Supa contre Supa n°902")));
+  expect(generated.length).toBeGreaterThan(0);
+  expect(errors).toEqual([]);
+});
+
 test("Stockfish audits the full Academy and tactic corpus, then creates a legal mastery exercise", async ({ page }) => {
   test.setTimeout(300000);
   await page.addInitScript(() => {
@@ -24,3 +53,4 @@ test("Stockfish audits the full Academy and tactic corpus, then creates a legal 
   expect(await page.locator("#lesson-title").textContent()).toMatch(/Analyse comparative|Maîtrise moteur/);
   expect(errors).toEqual([]);
 });
+
