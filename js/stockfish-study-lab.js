@@ -75,6 +75,7 @@
           </select>
         </label>
         <button class="btn" type="button" data-sf-generate>Générer une partie moteur</button>
+        <button class="btn" type="button" data-sf-rush>Générer un rush Stockfish 19 · 0,15 s/coup</button>
         <button class="btn" type="button" data-sf-cancel-game disabled>Arrêter le match</button>
         <button class="btn" type="button" data-sf-audit>Auditer tout le corpus</button>
         <button class="btn" type="button" data-sf-pause disabled>Mettre en pause</button>
@@ -98,6 +99,12 @@
     section.querySelector("[data-sf-puzzles]").addEventListener("click", () => startAudit("puzzles"));
     section.querySelector("[data-sf-selfplay]").addEventListener("click", () => startAudit("selfplay"));
     section.querySelector("[data-sf-generate]").addEventListener("click", generateEngineGame);
+    section.querySelector("[data-sf-rush]").addEventListener("click", () => {
+      section.querySelector("[data-sf-match-white]").value = "stockfish";
+      section.querySelector("[data-sf-match-black]").value = "stockfish";
+      section.querySelector("[data-sf-match-time]").value = "150";
+      generateEngineGame();
+    });
     section.querySelector("[data-sf-cancel-game]").addEventListener("click", cancelGeneratedGame);
     section.querySelector("[data-sf-pause]").addEventListener("click", () => { paused = true; setStatus("Pause demandée; le calcul en cours va se terminer avant l’arrêt."); });
     section.querySelector("[data-sf-more]").addEventListener("click", () => { visibleCount += 25; renderResults(); });
@@ -109,6 +116,7 @@
   const progressNode = ui.querySelector("[data-sf-progress]");
   const pauseButton = ui.querySelector("[data-sf-pause]");
   const generateButton = ui.querySelector("[data-sf-generate]");
+  const rushButton = ui.querySelector("[data-sf-rush]");
   const cancelGameButton = ui.querySelector("[data-sf-cancel-game]");
 
   function setStatus(text) { statusNode.textContent = text; }
@@ -133,6 +141,7 @@
     const match = { cancelled: false, engines: [] };
     generatedMatch = match;
     generateButton.disabled = true;
+    rushButton.disabled = true;
     cancelGameButton.disabled = false;
     ui.querySelectorAll("[data-sf-audit],[data-sf-lessons],[data-sf-puzzles],[data-sf-selfplay]").forEach((button) => { button.disabled = true; });
     const players = {};
@@ -186,6 +195,7 @@
       if (generatedMatch === match) generatedMatch = null;
       if (match.cancelled) renderProgress(0, 1);
       generateButton.disabled = false;
+      rushButton.disabled = false;
       cancelGameButton.disabled = true;
       ui.querySelectorAll("[data-sf-audit],[data-sf-lessons],[data-sf-puzzles],[data-sf-selfplay]").forEach((button) => { button.disabled = false; });
       running = false;
@@ -263,7 +273,7 @@
     running = true;
     paused = false;
     pauseButton.disabled = false;
-    const buttons = ui.querySelectorAll("[data-sf-audit],[data-sf-lessons],[data-sf-puzzles],[data-sf-selfplay],[data-sf-generate]");
+    const buttons = ui.querySelectorAll("[data-sf-audit],[data-sf-lessons],[data-sf-puzzles],[data-sf-selfplay],[data-sf-generate],[data-sf-rush]");
     buttons.forEach((button) => { button.disabled = true; });
     try {
       let lessons = [];
