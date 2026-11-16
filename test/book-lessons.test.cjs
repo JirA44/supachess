@@ -3,20 +3,26 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const { Chess } = require("chess.js");
-const { buildSelfPlayEntries } = require("../js/selfplay-study.js");
+const { buildEngineGameEntries } = require("../js/selfplay-study.js");
 const { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPositionKey, lessonReviewPartnerIndices, lessonCompetencyKeys, lessonCompetencySummary, lessonReviewDifficultyOptions, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText } = require("../js/book-lessons.js");
 
-test("completed Supa-vs-Supa PGNs become legal, attributable study positions only", () => {
+test("completed Stockfish and Supa-vs-Supa PGNs become legal, attributable study positions", () => {
   const game = {
     id: "match-test", gameNumber: 42, selfPlayMode: "supa-vs-supa", engineName: "Supa contre Supa · Stockfish 19",
     result: "1-0", pgn: '[White "Supa Blancs"]\n[Black "Supa Noirs"]\n[Result "1-0"]\n\n1. e4 e5 2. Nf3 Nc6 1-0'
   };
-  const entries = buildSelfPlayEntries([game, { ...game, id: "unfinished", result: "*" }, { ...game, id: "human", selfPlayMode: null }], Chess);
-  assert.equal(entries.length, 4);
+  const stockfishGame = {
+    id: "stockfish-test", gameNumber: 43, engineName: "", selfPlayMode: null, result: "0-1",
+    pgn: '[White "Joueur"]\n[Black "Stockfish 19"]\n[SupaChessOpponent "Stockfish 19"]\n[Result "0-1"]\n\n1. e4 e5 2. Nf3 Nc6 0-1'
+  };
+  const entries = buildEngineGameEntries([game, stockfishGame, { ...game, id: "unfinished", result: "*" }, { ...game, id: "human", selfPlayMode: null, engineName: null }], Chess);
+  assert.equal(entries.length, 8);
   assert.equal(entries[0].title, "Auto-jeu · partie n°42 · Blancs e4");
   assert.equal(entries[0].expectedUci, "e2e4");
   assert.equal(entries[0].playedSan, "e4");
   assert.equal(entries[0].kind, "selfplay");
+  assert.equal(entries[4].kind, "engine-game");
+  assert.equal(entries[4].sourceLabel, "Partie contre Stockfish 19 n°43");
   for (const entry of entries) {
     const position = new Chess(entry.fen);
     const move = position.move({ from: entry.expectedUci.slice(0, 2), to: entry.expectedUci.slice(2, 4), promotion: entry.expectedUci.slice(4) || "q" });

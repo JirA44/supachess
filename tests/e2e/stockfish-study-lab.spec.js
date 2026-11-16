@@ -10,21 +10,25 @@ test("Supa-vs-Supa games become local Stockfish-reviewed exercises", async ({ pa
       id: "browser-selfplay-test", gameNumber: 902, selfPlayMode: "supa-vs-supa",
       engineName: "Supa contre Supa · Stockfish 19", result: "1-0", stopped: false, abandoned: false,
       pgn: '[White "Supa Blancs"]\n[Black "Supa Noirs"]\n[Result "1-0"]\n\n1. e4 e5 2. Nf3 Nc6 1-0'
+    }, {
+      id: "browser-stockfish-test", gameNumber: 903, selfPlayMode: null,
+      engineName: "Stockfish 19", result: "0-1", stopped: false, abandoned: false,
+      pgn: '[White "Joueur"]\n[Black "Stockfish 19"]\n[SupaChessOpponent "Stockfish 19"]\n[Result "0-1"]\n\n1. d4 d5 2. c4 e6 0-1'
     }]));
   });
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/book-lessons.html");
-  await page.getByRole("button", { name: "Analyser les parties Supa contre Supa" }).click();
+  await page.getByRole("button", { name: "Analyser les parties contre un moteur" }).click();
   const status = page.locator("[data-sf-status]");
   await expect.poll(async () => status.textContent(), { timeout: 120000 }).toMatch(/exercice\(s\) créé\(s\)|exercice\(s\) sauvegardé\(s\)/i);
   const audit = await page.evaluate(() => Object.values(JSON.parse(localStorage.getItem("supachess-stockfish-study-audit-v1") || "{}"))
-    .filter((record) => record.kind === "selfplay"));
-  expect(audit).toHaveLength(4);
+    .filter((record) => record.kind === "selfplay" || record.kind === "engine-game"));
+  expect(audit).toHaveLength(8);
   expect(audit[0].sourceGameNumber).toBe(902);
   expect(audit[0].playedSan).toBeTruthy();
   const generated = await page.evaluate(() => JSON.parse(localStorage.getItem("supachess-stockfish-derived-lessons-v1") || "[]")
-    .filter((lesson) => lesson.reference && lesson.reference.includes("partie Supa contre Supa n°902")));
+    .filter((lesson) => lesson.reference && lesson.reference.includes("Partie contre Stockfish 19 n°903")));
   expect(generated.length).toBeGreaterThan(0);
   expect(errors).toEqual([]);
 });

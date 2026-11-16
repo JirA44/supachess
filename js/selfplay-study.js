@@ -1,13 +1,16 @@
-/* Extract legal study positions from completed Supa-vs-Supa games. */
+/* Extract legal study positions from completed engine games stored on this device. */
 (function (root) {
   "use strict";
 
-  function buildSelfPlayEntries(games, ChessCtor) {
+  function buildEngineGameEntries(games, ChessCtor) {
     if (typeof ChessCtor !== "function") throw new TypeError("Un constructeur Chess est requis.");
     const entries = [];
     for (const game of Array.isArray(games) ? games : []) {
-      if (!game || game.selfPlayMode !== "supa-vs-supa" || game.abandoned || game.stopped ||
-          !["1-0", "0-1", "1/2-1/2"].includes(game.result) || typeof game.pgn !== "string") continue;
+      if (!game || game.abandoned || game.stopped || !["1-0", "0-1", "1/2-1/2"].includes(game.result) || typeof game.pgn !== "string") continue;
+      const opponentTag = game.pgn.match(/^\[SupaChessOpponent\s+"([^"]+)"\]/mi);
+      const engineName = String(game.engineName || opponentTag?.[1] || "");
+      const selfPlay = game.selfPlayMode === "supa-vs-supa";
+      if (!selfPlay && !/stockfish|berserk/i.test(engineName)) continue;
 
       const parsed = new ChessCtor();
       if (parsed.load_pgn(game.pgn) === false) continue;
@@ -23,12 +26,16 @@
         if (!applied) break;
         const ply = index + 1;
         const side = move.color === "w" ? "Blancs" : "Noirs";
+        const gameNumber = game.gameNumber || game.id || "?";
+        const sourceLabel = selfPlay
+          ? "Partie Supa contre Supa n°" + gameNumber
+          : "Partie contre " + engineName + " n°" + gameNumber;
         entries.push({
-          key: "selfplay:" + gameId + ":" + ply + ":" + fen.split(" ").slice(0, 4).join("_"),
-          id: "selfplay-" + gameId + "-" + ply,
-          kind: "selfplay",
-          title: "Auto-jeu · partie n°" + (game.gameNumber || game.id || "?") + " · " + side + " " + applied.san,
-          theme: String(game.engineName || "Supa contre Supa"),
+          key: (selfPlay ? "selfplay:" : "engine-game:") + gameId + ":" + ply + ":" + fen.split(" ").slice(0, 4).join("_"),
+          id: (selfPlay ? "selfplay-" : "engine-game-") + gameId + "-" + ply,
+          kind: selfPlay ? "selfplay" : "engine-game",
+          title: (selfPlay ? "Auto-jeu" : "Partie moteur") + " · partie n°" + gameNumber + " · " + side + " " + applied.san,
+          theme: engineName || "Supa contre Supa",
           level: "Avancé",
           fen: fen,
           expectedUci: move.from + move.to + (move.promotion || ""),
@@ -36,7 +43,8 @@
           sourceGameId: String(game.id || ""),
           sourceGameNumber: Number(game.gameNumber) || null,
           sourcePly: ply,
-          sourceEngineName: String(game.engineName || "Supa contre Supa"),
+          sourceEngineName: engineName || "Supa contre Supa",
+          sourceLabel: sourceLabel,
           sourceResult: game.result
         });
       }
@@ -44,7 +52,7 @@
     return entries;
   }
 
-  const api = { buildSelfPlayEntries };
+  const api = { buildEngineGameEntries };
   root.SupaSelfPlayStudy = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

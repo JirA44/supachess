@@ -62,7 +62,7 @@
         <button class="btn" type="button" data-sf-pause disabled>Mettre en pause</button>
         <button class="btn" type="button" data-sf-lessons>Auditer les leçons et exercices</button>
         <button class="btn" type="button" data-sf-puzzles>Auditer les puzzles tactiques</button>
-        <button class="btn" type="button" data-sf-selfplay>Analyser les parties Supa contre Supa</button>
+        <button class="btn" type="button" data-sf-selfplay>Analyser les parties contre un moteur</button>
       </div>
       <p class="sf-study-status" role="status" aria-live="polite" data-sf-status></p>
       <div class="sf-study-progress" aria-label="Progression de l’audit"><span data-sf-progress></span></div>
@@ -70,7 +70,7 @@
       <input id="sf-study-search" data-sf-search type="search" placeholder="Titre, joueur, thème…" style="width:min(100%,520px);padding:10px;margin:6px 0">
       <div class="sf-study-results" data-sf-results></div>
       <button class="btn" type="button" data-sf-more hidden>Afficher davantage</button>
-      <p class="sf-study-muted">Le mode Supa contre Supa actuel utilise Stockfish 19 pour les deux camps; Berserk n’est pas encore intégré. Un exercice à solution unique n’est créé que si Stockfish distingue nettement le premier coup. Les parties restent sur cet appareil : leur analyse produit des exercices locaux, mais n’envoie pas les PGN et ne réentraîne pas les poids de Stockfish.</p>
+      <p class="sf-study-muted">Les parties terminées contre Stockfish et les matchs Supa contre Supa enregistrés sur cet appareil peuvent fournir des positions d’étude. Le mode Supa contre Supa actuel utilise Stockfish 19 pour les deux camps; Berserk n’est pas encore intégré. Les PGN restent sur cet appareil. L’analyse crée des exercices locaux, sans envoyer les parties ni réentraîner les poids des moteurs.</p>
     `;
     const intro = document.querySelector(".lesson-intro");
     if (intro) intro.insertAdjacentElement("afterend", section);
@@ -132,16 +132,16 @@
     });
   }
 
-  function collectSelfPlayEntries() {
+  function collectEngineGameEntries() {
     const games = (() => {
       try {
         const value = JSON.parse(localStorage.getItem("supachess_games") || "[]");
         return Array.isArray(value) ? value : [];
       } catch (_) { return []; }
     })();
-    if (!root.SupaSelfPlayStudy || typeof root.SupaSelfPlayStudy.buildSelfPlayEntries !== "function")
+    if (!root.SupaSelfPlayStudy || typeof root.SupaSelfPlayStudy.buildEngineGameEntries !== "function")
       throw new Error("L’outil de lecture des parties moteur n’est pas chargé.");
-    return root.SupaSelfPlayStudy.buildSelfPlayEntries(games, Chess);
+    return root.SupaSelfPlayStudy.buildEngineGameEntries(games, Chess);
   }
 
   function levelFromRating(rating) {
@@ -168,7 +168,7 @@
       let lessons = [];
       let puzzles = [];
       let selfPlay = [];
-      if (scope === "selfplay") selfPlay = collectSelfPlayEntries();
+      if (scope === "selfplay") selfPlay = collectEngineGameEntries();
       else {
         if (scope !== "puzzles") lessons = await collectLessonEntries();
       }
@@ -178,7 +178,7 @@
       }
       sourceEntries = scope === "selfplay" ? selfPlay : scope === "lessons" ? lessons : scope === "puzzles" ? puzzles : lessons.concat(puzzles);
       if (scope === "selfplay" && !selfPlay.length) {
-        setStatus("Aucune partie Supa contre Supa terminée avec PGN légal n’est enregistrée sur cet appareil.");
+        setStatus("Aucune partie terminée contre Stockfish, Berserk ou Supa contre Supa avec PGN légal n’est enregistrée sur cet appareil. Vérifie que la partie figure dans Parties et qu’elle n’a pas été arrêtée ou abandonnée.");
         renderResults();
         return;
       }
@@ -192,7 +192,7 @@
       const work = Array.from(uniquePositions.entries());
       const processedStart = valid.filter((entry) => audit[entry.key]).length;
       setStatus(scope === "selfplay"
-        ? (selfPlay.length ? selfPlay.length + " position(s) extraite(s) des parties Supa contre Supa terminées. Positions inédites à analyser : " + work.length + "." : "Aucune partie Supa contre Supa terminée avec PGN légal n’est enregistrée sur cet appareil.")
+        ? (selfPlay.length ? selfPlay.length + " position(s) extraite(s) des parties moteur terminées. Positions inédites à analyser : " + work.length + "." : "Aucune partie terminée contre Stockfish, Berserk ou Supa contre Supa avec PGN légal n’est enregistrée sur cet appareil. Vérifie que la partie figure dans Parties et qu’elle n’a pas été arrêtée ou abandonnée.")
         : "Corpus chargé : " + lessons.length + " leçons/exercices et " + puzzles.length +
           " puzzles. Positions distinctes à analyser maintenant : " + work.length + ".");
       if (!engine) {
@@ -212,7 +212,7 @@
             level: entry.level, fen: fen, choices: result.choices, legalCount: result.legalCount,
             depth: result.choices.reduce((max, choice) => Math.max(max, choice.depth), 0),
             puzzleAnswer: entry.answerUci || "", expectedUci: entry.expectedUci || "",
-            playedSan: entry.playedSan || "", sourceGameId: entry.sourceGameId || "",
+            playedSan: entry.playedSan || "", sourceLabel: entry.sourceLabel || "", sourceGameId: entry.sourceGameId || "",
             sourceGameNumber: entry.sourceGameNumber || null, sourcePly: entry.sourcePly || null,
             sourceEngineName: entry.sourceEngineName || "", sourceResult: entry.sourceResult || "",
             analyzedAt: new Date().toISOString(), moveTimeMs: MOVE_TIME
@@ -289,8 +289,8 @@
       author: "Atelier Stockfish · variantes calculées",
       program: "Stockfish · comparer et vérifier",
       book: "Position analysée localement",
-      reference: record.kind === "selfplay"
-        ? "Partie Supa contre Supa n°" + (record.sourceGameNumber || record.sourceGameId || "?") + " · " + record.sourceEngineName +
+      reference: record.kind === "selfplay" || record.kind === "engine-game"
+        ? (record.sourceLabel || "Partie moteur n°" + (record.sourceGameNumber || record.sourceGameId || "?")) + " · " + record.sourceEngineName +
           " · demi-coup " + record.sourcePly + " · joué : " + (record.playedSan || "inconnu") + " · résultat " + record.sourceResult +
           " · recherche Stockfish 19 · profondeur " + record.depth + " ply · " + MOVE_TIME + " ms"
         : (record.kind === "puzzle" ? "Puzzle tactique " : "Leçon/exercice ") + record.id +
@@ -300,8 +300,8 @@
         ? "Quel coup Stockfish classe en tête dans cette recherche rapide ? Ce classement ne signifie pas que le coup soit unique ou forcé."
         : "Quel premier coup Stockfish classe en tête dans cette recherche ?",
       choices: choices,
-      principle: record.kind === "selfplay"
-        ? "Cette position provient d’une partie moteur enregistrée. Le coup joué était " + (record.playedSan || "non renseigné") +
+      principle: record.kind === "selfplay" || record.kind === "engine-game"
+        ? "Cette position provient de " + (record.sourceLabel || "une partie moteur enregistrée") + ". Le coup joué était " + (record.playedSan || "non renseigné") +
           "; Stockfish classe " + candidates[0].san + " en tête de cette recherche. Compare les variantes et les réponses adverses : ce résultat est un support d’étude, pas un apprentissage automatique des poids du moteur."
         : analysisOnly
         ? "Exercice d’analyse comparative : le moteur n’a pas départagé nettement les candidats. Joue la ligne classée première, puis compare-la aux autres choix légaux et explique le plan obtenu; ne traite pas ce classement comme un coup forcé."
@@ -421,11 +421,11 @@
         checked.textContent = "Solution enregistrée : " + record.puzzleAnswer +
           (best && best.uci.slice(0, 4) === record.puzzleAnswer.slice(0, 4) ? " · conforme au premier coup" : " · à contrôler");
         card.appendChild(checked);
-      } else if (record.kind === "selfplay") {
+      } else if (record.kind === "selfplay" || record.kind === "engine-game") {
         const played = document.createElement("p");
         played.textContent = "Dans la partie : " + (record.playedSan || "coup inconnu") +
           " · Stockfish classe en tête : " + (best ? best.san : "indisponible") +
-          " · partie n°" + (record.sourceGameNumber || record.sourceGameId || "?") + ".";
+          " · " + (record.sourceLabel || "partie n°" + (record.sourceGameNumber || record.sourceGameId || "?")) + ".";
         card.appendChild(played);
       } else if (record.kind === "lesson" && record.expectedUci && best &&
           best.uci.slice(0, 4) !== record.expectedUci.slice(0, 4)) {
