@@ -94,9 +94,10 @@ test("rush preset runs Stockfish 19 against itself at 150 ms per half-move", asy
 
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("supachess_games") || "[]")[0]);
   expect(saved.engineName).toBe("Supa contre Supa · Stockfish 19 vs Stockfish 19");
-  expect(saved.white).toBe("Stockfish 19");
-  expect(saved.black).toBe("Stockfish 19");
+  expect(saved.pgn).toContain('[White "Stockfish 19"]');
+  expect(saved.pgn).toContain('[Black "Stockfish 19"]');
   const replay = new Chess();
   expect(replay.load_pgn(saved.pgn)).not.toBe(false);
   expect(replay.history()).toHaveLength(7);
 });
+
