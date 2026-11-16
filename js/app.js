@@ -1043,6 +1043,18 @@ async function playEngineMove() {
   try {
     baseline = await state.engine.analyze({ fen, multipv: 1, movetime: Math.min(thinkTime, 1200), elo: 0 });
     if (state.gen !== gen || state.chess.fen() !== fen) return;
+    if (state.gameMode === "supa-vs-supa" && baseline.lines.length) {
+      updateEvalBar(baseline.lines[0]);
+      const pending = state.accuracy.pendingEngine;
+      if (pending) {
+        state.accuracy.pendingEngine = null;
+        const afterLine = baseline.lines[0];
+        state.evalHistory[pending.ply - 1] = whitePovEval(afterLine, state.chess.turn() === "w");
+        finishEngineFeedback(pending, afterLine);
+        recordAccuracy(pending.color, pending.beforeCp, -clampCpFromLine(afterLine), pending.ply);
+        renderHistory();
+      }
+    }
     await opponent.ready;
     if (state.gen !== gen || state.chess.fen() !== fen) return;
     res = opponent === state.engine && elo === 0 && thinkTime <= 1200
@@ -1081,6 +1093,7 @@ async function playEngineMove() {
       recordMoveGrade(pending.ply, engineColor, "unrated");
       if (state.chess.game_over()) {
         const terminal = { scoreCp: 0, mate: state.chess.in_checkmate() ? 0 : null, pv: [], depth: baseline.lines[0].depth };
+        if (state.gameMode === "supa-vs-supa") updateEvalBar(terminal);
         finishEngineFeedback(pending, terminal);
         recordAccuracy(engineColor, pending.beforeCp, state.chess.in_checkmate() ? 1000 : 0, pending.ply);
       } else {
@@ -1115,12 +1128,13 @@ function recordMoveGrade(ply, color, category, metadata = {}) {
     Object.assign(existing, metadata);
   } else state.moveGradeHistory.push({ ply, color, category, ...metadata });
   renderMoveGradeSummary();
+  renderHistory();
 }
 
 function renderMoveGradeSummary() {
   const wrap = $("move-grade-summary");
   if (!wrap) return;
-  const hideForUnassistedPlay = isUnassistedAidLockActive() && !isReviewDisplayActive();
+  const hideForUnassistedPlay = isUnassistedAidLockActive() && state.gameMode !== "supa-vs-supa" && !isReviewDisplayActive();
   wrap.hidden = hideForUnassistedPlay;
   if (hideForUnassistedPlay) return;
   const categories = [
@@ -1199,19 +1213,20 @@ function finishEngineFeedback(pending, replyLine) {
   const comparable = pending.beforeMate == null && replyLine && replyLine.mate == null &&
     Number.isFinite(beforeScoreCp) && Number.isFinite(afterScoreCp);
   const card = moveFeedback.cards.get(pending.color);
+  const trackSupaSelfPlay = state.gameMode === "supa-vs-supa";
   if (!comparable) {
     recordMoveGrade(pending.ply, pending.color, "unrated", { lossCp: null });
     if (typeof gamesAutoSave === "function") gamesAutoSave();
-    if (!card || card.token !== pending.token) return;
+    if ((!card || card.token !== pending.token) && !trackSupaSelfPlay) return;
     if (boardUI.lastMove && boardUI.lastMove.to === pending.square) {
       boardUI.lastMove.grade = null;
-      boardUI.lastMove.evaluation = state.unassistedGame ? null : replyLine && (replyLine.scoreCp != null || replyLine.mate != null)
+      boardUI.lastMove.evaluation = state.unassistedGame && !trackSupaSelfPlay ? null : replyLine && (replyLine.scoreCp != null || replyLine.mate != null)
         ? formatScore(replyLine, pending.color === "b") : "—";
       renderBoard();
     }
     return;
   }
-  if (!card || card.token !== pending.token) return;
+  if ((!card || card.token !== pending.token) && !trackSupaSelfPlay) return;
   const deltaCp = Math.max(0, beforeScoreCp + afterScoreCp);
   const cand = { deltaCp, line: { ...replyLine, pv: [pending.uci, ...replyLine.pv] } };
   const brilliant = isBrilliantCandidate(pending.fen, cand);
@@ -1220,8 +1235,8 @@ function finishEngineFeedback(pending, replyLine) {
   if (!state.unassistedGame) moveFeedback.show({ san: pending.san, color: pending.color, moveNumber: pending.moveNumber, square: pending.square,
     deltaCp, brilliant, best: pending.uci === pending.beforeBestUci, token: pending.token, source: pending.cand && pending.cand.brilliantSource || (pending.cand && pending.cand.supaBrilliant ? "SupaEngine" : null) });
   if (boardUI.lastMove && boardUI.lastMove.to === pending.square) {
-    boardUI.lastMove.grade = state.unassistedGame ? null : grade;
-    boardUI.lastMove.evaluation = state.unassistedGame ? null : replyLine && (replyLine.scoreCp !== null || replyLine.mate !== null)
+    boardUI.lastMove.grade = state.unassistedGame && !trackSupaSelfPlay ? null : grade;
+    boardUI.lastMove.evaluation = state.unassistedGame && !trackSupaSelfPlay ? null : replyLine && (replyLine.scoreCp !== null || replyLine.mate !== null)
       ? formatScore(replyLine, pending.color === "b") : "—";
     renderBoard();
   }
