@@ -31,6 +31,7 @@ test('colors white and black player names in both accuracy summaries', async ({ 
 
 
 test('starting a self-play game clears the previously loaded PGN replay', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('supachess-level-diagnostic', JSON.stringify({ active: false, completed: true })));
   await page.goto('/index.html');
   await expect.poll(() => page.locator('body').getAttribute('data-engine-ready'), { timeout: 30000 }).toBe('1');
 
