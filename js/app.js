@@ -2037,15 +2037,27 @@ window.SupaChessRenderAccuracy = renderAccuracy;
 function updateEvalBar(bestLine) {
   if (!bestLine) return;
   const whiteToMove = state.chess.turn() === "w";
+  const hasMate = Number.isFinite(bestLine.mate);
   let cp;
-  if (bestLine.mate !== null) cp = (bestLine.mate > 0 ? 2000 : -2000) * (whiteToMove ? 1 : -1);
-  else cp = bestLine.scoreCp * (whiteToMove ? 1 : -1);
+  if (hasMate) cp = (bestLine.mate > 0 ? 2000 : -2000) * (whiteToMove ? 1 : -1);
+  else {
+    const scoreCp = Number(bestLine.scoreCp);
+    if (!Number.isFinite(scoreCp)) return;
+    cp = scoreCp * (whiteToMove ? 1 : -1);
+  }
   state.evalWhiteCp = cp;
-  const pct = 100 / (1 + Math.exp(-cp / 250)); // sigmoïde
+  const pct = 100 / (1 + Math.exp(-cp / 250)); // sigmoïde, vue du camp blanc
   $("evalbar-white").style.height = pct.toFixed(1) + "%";
-  $("evalbar-label").textContent = bestLine.mate !== null
-    ? "#" + Math.abs(bestLine.mate)
-    : (cp > 0 ? "+" : "") + (cp / 100).toFixed(2);
+  const side = cp > 0 ? "Blancs" : cp < 0 ? "Noirs" : "Égalité";
+  const label = $("evalbar-label");
+  label.textContent = hasMate
+    ? `Mat en ${Math.abs(bestLine.mate)} pour ${cp > 0 ? "Blancs" : "Noirs"}`
+    : cp === 0 ? "Égalité 0.00" : `${side} +${(Math.abs(cp) / 100).toFixed(2)}`;
+  label.title = hasMate
+    ? `Stockfish annonce un mat en ${Math.abs(bestLine.mate)} pour ${cp > 0 ? "les Blancs" : "les Noirs"}.`
+    : cp === 0 ? "Évaluation Stockfish : position égale."
+      : `Évaluation Stockfish : avantage aux ${side.toLowerCase()}, ${(Math.abs(cp) / 100).toFixed(2)} pion(s).`;
+  label.setAttribute("aria-label", label.title);
 }
 
 // La barre d'évaluation est calée sur l'échiquier en CSS (.board-row, align-items: stretch).
