@@ -3,13 +3,19 @@ const { Chess } = require("chess.js");
 const { buildEngineGameEntries } = require("../../js/selfplay-study.js");
 
 test("academy generates a legal Stockfish versus Berserk PGN for study", async ({ page }) => {
-  await page.addInitScript(() => {
-    const moves = ["e2e4", "e7e5", "d1h5", "b8c6", "f1c4", "g8f6", "h5f7"];
-    let index = 0;
+  const moves = ["e2e4", "e7e5", "d1h5", "b8c6", "f1c4", "g8f6", "h5f7"];
+  const movesByFen = {};
+  const expectedGame = new Chess();
+  for (const uci of moves) {
+    movesByFen[expectedGame.fen()] = uci;
+    expectedGame.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.slice(4) || undefined });
+  }
+  await page.addInitScript((movesByFen) => {
     class FakeWorker {
       constructor(path) {
         this.path = path;
         this.terminated = false;
+        this.positionFen = "";
         if (path.includes("berserk")) queueMicrotask(() => this.emit({ type: "ready", name: "Berserk 14 · WebAssembly · 1 thread" }));
       }
       emit(data) { if (!this.terminated) this.onmessage && this.onmessage({ data }); }
@@ -17,15 +23,19 @@ test("academy generates a legal Stockfish versus Berserk PGN for study", async (
         if (command === "uci") {
           queueMicrotask(() => { this.emit("id name " + (this.path.includes("berserk") ? "Berserk 14" : "Stockfish 19")); this.emit("uciok"); });
         } else if (command === "isready") queueMicrotask(() => this.emit("readyok"));
+        else if (command.startsWith("position fen ")) this.positionFen = command.slice("position fen ".length);
         else if (command.startsWith("go ")) {
-          const move = moves[index++];
-          queueMicrotask(() => { this.emit("info depth 1 multipv 1 score cp 0 pv " + move); this.emit("bestmove " + move); });
+          const move = movesByFen[this.positionFen] || "0000";
+          queueMicrotask(() => {
+            if (move !== "0000") this.emit("info depth 1 multipv 1 score cp 0 pv " + move);
+            this.emit("bestmove " + move);
+          });
         }
       }
       terminate() { this.terminated = true; }
     }
     window.Worker = FakeWorker;
-  });
+  }, movesByFen);
 
   await page.goto("/book-lessons.html");
   await page.locator("[data-sf-match-time]").selectOption("150");
