@@ -1358,10 +1358,9 @@ function reviewSyncBestMoveButton() {
 function reviewSetReplayControls(active) {
   const enabled = Boolean(active && reviewState.fens.length);
   const currentPly = Math.max(0, Number(state.replayIdx) || 0);
-  const finalPly = Math.max(0, reviewState.fens.length - 1);
   document.getElementById("btn-replay-start").disabled = !enabled || currentPly === 0;
   document.getElementById("btn-replay-prev").disabled = !enabled || currentPly === 0;
-  document.getElementById("btn-replay-next").disabled = !enabled || currentPly >= finalPly;
+  document.getElementById("btn-replay-next").disabled = !enabled;
   document.getElementById("btn-replay-quit").classList.toggle("hidden", !enabled);
   if (!enabled) document.getElementById("replay-label").textContent =
     reviewState.fens.length ? "Relecture en pause" : "Importez ou analysez une partie pour la parcourir";
