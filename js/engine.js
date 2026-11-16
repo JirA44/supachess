@@ -165,6 +165,92 @@ class StockfishEngine {
   }
 }
 
+/* Berserk 14 — moteur UCI monothread chargé uniquement si l’utilisateur le choisit.
+   L’analyse et le classement des coups restent gérés par Stockfish. */
+class BerserkEngine extends StockfishEngine {
+  constructor(workerPath) {
+    super(workerPath || "vendor/berserk-14-worker.js");
+    this.engineName = "Berserk 14";
+  }
+
+  _onLine(line) {
+    if (line.startsWith("id name")) {
+      this.engineName = "Berserk 14 · WebAssembly · 1 thread";
+      return;
+    }
+    super._onLine(line);
+  }
+
+  _startWorker() {
+    if (this.worker) return;
+    const worker = new Worker(this.workerPath);
+    this.worker = worker;
+    this.isReady = false;
+    this.ready = new Promise((resolve, reject) => {
+      this.readyResolve = resolve;
+      this.readyReject = reject;
+    });
+    this.ready.catch(() => {});
+    this.readyTimer = setTimeout(() => {
+      this._failWorker(worker, this._error("Berserk 14 n’a pas terminé son chargement dans les 90 secondes.", "ENGINE_STARTUP_TIMEOUT"));
+    }, 90000);
+    worker.onmessage = (event) => {
+      if (this.worker !== worker) return;
+      const data = event && event.data;
+      if (data && typeof data === "object") {
+        if (data.type === "ready") {
+          this.engineName = data.name || "Berserk 14";
+          try { this._send("uci"); }
+          catch (error) { this._failWorker(worker, this._error(error.message || String(error), "ENGINE_WORKER_ERROR")); }
+        } else if (data.type === "error") {
+          this._failWorker(worker, this._error("Berserk 14 : " + (data.message || "échec du chargement du moteur ou de son réseau NNUE."), "ENGINE_WORKER_ERROR"));
+        }
+        return;
+      }
+      this._onLine(String(data));
+    };
+    worker.onerror = (event) => {
+      this._failWorker(worker, this._error("Le Worker Berserk 14 a échoué : " + (event && (event.message || event.type) || "erreur inconnue"), "ENGINE_WORKER_ERROR"));
+    };
+    worker.onmessageerror = () => this._failWorker(worker, this._error("La réponse de Berserk 14 est illisible.", "ENGINE_WORKER_ERROR"));
+  }
+
+  _next() {
+    if (this.busy || !this.isReady || this.queue.length === 0) return;
+    this.busy = true;
+    const job = this.queue.shift();
+    this.current = job;
+    const options = job.options || {};
+    const timeoutMs = Number.isFinite(options.timeoutMs) && options.timeoutMs > 0
+      ? options.timeoutMs : Math.max(30000, (options.movetime || 1500) * 10 + 10000);
+    job.timer = setTimeout(() => {
+      if (this.current === job) this._failWorker(this.worker, this._error("Berserk 14 n’a pas répondu dans les " + timeoutMs + " ms.", "ENGINE_TIMEOUT"));
+    }, timeoutMs);
+    try {
+      this._send("setoption name MultiPV value " + Math.max(1, options.multipv || 1));
+      this._send("position fen " + options.fen);
+      this._send("go movetime " + Math.max(100, options.movetime || 1500));
+    } catch (error) {
+      this._failWorker(this.worker, this._error(error.message || String(error), "ENGINE_WORKER_ERROR"));
+    }
+  }
+
+  stop() {
+    const worker = this.worker;
+    if (!worker) return;
+    if (this.current && this.current.timer) clearTimeout(this.current.timer);
+    const current = this.current;
+    const queued = this.queue.splice(0);
+    this.current = null;
+    this.busy = false;
+    this.isReady = false;
+    this.worker = null;
+    try { worker.terminate(); } catch (_) {}
+    if (current) current.resolve({ bestmove: null, lines: Object.values(current.lines || {}) });
+    queued.forEach((job) => job.resolve({ bestmove: null, lines: [] }));
+  }
+}
+
 /* Parse une ligne "info depth .. multipv N score cp X .. pv e2e4 e7e5 ..."
    Retourne { multipv, depth, scoreCp, mate, pv:[uci...] } — score côté trait. */
 function parseInfoLine(line) {

@@ -1,0 +1,41 @@
+name: Build Berserk 14 for SupaChess Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/build-berserk-wasm.py"
+      - "vendor/berserk-14-worker.js"
+      - ".github/workflows/build-berserk-wasm.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish-engine-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: emscripten-core/setup-emsdk@v15
+        with:
+          version: "5.0.1"
+      - name: Compile pinned Berserk and verify its NNUE network
+        run: python scripts/build-berserk-wasm.py
+      - name: Publish generated WebAssembly assets for GitHub Pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add vendor/berserk-14.js vendor/berserk-14.wasm vendor/berserk-14.data vendor/LICENSE.Berserk-14.txt
+          if git diff --cached --quiet; then
+            echo "Berserk assets already match the pinned source."
+            exit 0
+          fi
+          git commit -m "Build Berserk 14 WebAssembly assets"
+          git push origin HEAD:main

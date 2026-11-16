@@ -104,7 +104,7 @@
       pitfall: "Tester seulement sur les positions d’entraînement peut masquer le surapprentissage. Une victoire isolée ne suffit pas.",
       hints: ["Il faut une référence inchangée.", "Inverse les couleurs et utilise des positions que le moteur n’a pas vues pendant l’entraînement."],
       fen: START, color: "w", sequence: SHARED_SEQUENCE
-    }
+    },
 
     {
       id: "engine-derived-selfplay-06-identify-the-threat",

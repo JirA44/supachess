@@ -6,6 +6,9 @@ const $ = (id) => document.getElementById(id);
 const state = {
   chess: new Chess(),
   engine: null,
+  opponentEngine: null,
+  opponentEngineId: null,
+  gameOpponentEngineId: "stockfish",
   userColor: "w",
   gameMode: "vs-engine",
   unassistedGame: false,
@@ -539,6 +542,16 @@ window.SupaChessStartTimedGame = function(minutes) {
 };
 function opponentElo() { return parseInt($("sel-elo").value, 10); }
 function isManualMode() { return $("sel-elo").value === "manual"; }
+function selectedOpponentEngineId() { return $("sel-engine")?.value || "stockfish"; }
+function activeOpponentEngine() {
+  if ((state.gameOpponentEngineId || selectedOpponentEngineId()) !== "berserk") return state.engine;
+  if (!state.opponentEngine || state.opponentEngineId !== "berserk") {
+    state.opponentEngine?.stop?.();
+    state.opponentEngine = new BerserkEngine("vendor/berserk-14-worker.js");
+    state.opponentEngineId = "berserk";
+  }
+  return state.opponentEngine;
+}
 function opponentThinkTime() { return movetime(); }
 
 /* Indicative FIDE-like estimate only: anchor full-power SF19 at 3500 for 3s,
@@ -552,6 +565,17 @@ function updateOpponentFideEstimate() {
   const output = $("opponent-fide-estimate");
   const accuracyOutput = $("opponent-accuracy-estimate");
   if (!output) return;
+  const engineId = selectedOpponentEngineId();
+  const eloSelect = $("sel-elo");
+  if (eloSelect) eloSelect.disabled = engineId === "berserk";
+  const engineNote = $("engine-choice-note");
+  if (engineNote && engineId === "berserk") engineNote.textContent = "Choix appliqué à la prochaine partie. Berserk 14 joue à sa force native, sans réglage Elo. Le temps de réflexion choisi contrôle sa recherche. L’évaluation et la classification des coups restent assurées par Stockfish 19.";
+  else if (engineNote) engineNote.textContent = "Choix appliqué à la prochaine partie. Stockfish sert aussi à évaluer les coups. Berserk 14 est un moteur indépendant en WebAssembly, chargé au premier usage; son réglage Elo ne peut pas être limité.";
+  if (engineId === "berserk") {
+    output.textContent = "Berserk 14 · pleine force native · niveau FIDE-like non mesuré";
+    if (accuracyOutput) accuracyOutput.textContent = "La sélection Elo Stockfish ne s’applique pas à Berserk; le temps de réflexion reste réglable.";
+    return;
+  }
   if (isManualMode()) {
     output.textContent = "Mode manuel — aucun adversaire moteur";
     if (accuracyOutput) accuracyOutput.textContent = "Mode manuel — précision à mesurer dans tes parties.";
@@ -600,6 +624,7 @@ async function init() {
 
 function newGame(options = {}) {
   state.gameMode = ["self-play", "supa-vs-supa"].includes(options.gameMode) ? options.gameMode : "vs-engine";
+  state.gameOpponentEngineId = selectedOpponentEngineId();
   stopPlayerClock();
   state.paused = false;
   state.pauseResumePhase = null;
@@ -695,6 +720,7 @@ function stopCurrentGame() {
   state.paused = false;
   state.pauseResumePhase = null;
   try { state.engine?.stop?.(); } catch (_) {}
+  try { state.opponentEngine?.stop?.(); } catch (_) {}
   stopPlayerClock();
   state.gen++;
   state.abandoned = false;
@@ -1003,18 +1029,31 @@ async function playEngineMove() {
   state.phase = "engineThinking";
   const gen = ++state.gen;
   startPlayerClock(state.chess.turn());
-  setStatus(state.gameMode === "supa-vs-supa" ? "Supa (" + (state.chess.turn() === "w" ? "Blancs" : "Noirs") + ") réfléchit…" : "Stockfish réfléchit…");
+  const opponent = activeOpponentEngine();
+  const engineLabel = (state.gameOpponentEngineId || selectedOpponentEngineId()) === "berserk" ? "Berserk 14" : "Stockfish";
+  setStatus(state.gameMode === "supa-vs-supa" ? engineLabel + " (" + (state.chess.turn() === "w" ? "Blancs" : "Noirs") + ") réfléchit…" : engineLabel + " réfléchit…");
   boardUI.dots = [];
   renderBoard();
   const fen = state.chess.fen();
   const elo = opponentElo();
   const thinkTime = opponentThinkTime();
   // La référence reste rapide; le coup adverse utilise bien le temps choisi.
-  const baseline = await state.engine.analyze({ fen, multipv: 1, movetime: Math.min(thinkTime, 1200), elo: 0 });
-  if (state.gen !== gen || state.chess.fen() !== fen) return;
-  const res = elo === 0 && thinkTime <= 1200
-    ? baseline
-    : await state.engine.analyze({ fen, multipv: 1, movetime: thinkTime, elo });
+  let baseline, res;
+  try {
+    baseline = await state.engine.analyze({ fen, multipv: 1, movetime: Math.min(thinkTime, 1200), elo: 0 });
+    if (state.gen !== gen || state.chess.fen() !== fen) return;
+    await opponent.ready;
+    if (state.gen !== gen || state.chess.fen() !== fen) return;
+    res = opponent === state.engine && elo === 0 && thinkTime <= 1200
+      ? baseline
+      : await opponent.analyze({ fen, multipv: 1, movetime: thinkTime, elo: opponent === state.engine ? elo : 0 });
+  } catch (error) {
+    if (state.gen === gen) {
+      stopCurrentGame();
+      setStatus(engineLabel + " indisponible : " + (error && error.message || "échec de chargement").slice(0, 180) + ". Partie arrêtée sans résultat; tu peux choisir Stockfish et recommencer.");
+    }
+    return;
+  }
   if (state.gen !== gen || state.chess.fen() !== fen) return;
   if (!res.bestmove || res.bestmove === "(none)") { checkGameOver(); return; }
   const engineColor = state.chess.turn();
@@ -2083,6 +2122,9 @@ function onOpponentSettingsChange() {
   startTurn();
 }
 $("sel-elo").addEventListener("change", onOpponentSettingsChange);
+$("sel-engine")?.addEventListener("change", () => {
+  onOpponentSettingsChange();
+});
 $("sel-movetime").addEventListener("change", onOpponentSettingsChange);
 restorePlayerClockSettings();
 for (const id of ["sel-clock-white", "sel-clock-black"]) {

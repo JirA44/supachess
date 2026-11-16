@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vérification du moteur Berserk 14</title>
+<body>
+  <h1>Vérification Berserk 14</h1>
+  <p id="engine-test-status" role="status" data-status="running">Chargement du moteur et de son réseau NNUE…</p>
+  <script src="../vendor/chess.js"></script>
+  <script src="../js/engine.js"></script>
+  <script>
+    (async () => {
+      const status = document.getElementById("engine-test-status");
+      const engine = new BerserkEngine("../vendor/berserk-14-worker.js");
+      try {
+        await engine.ready;
+        const chess = new Chess();
+        const result = await engine.analyze({ fen: chess.fen(), multipv: 1, movetime: 500 });
+        if (!result.bestmove || result.bestmove === "(none)") throw new Error("Le moteur n’a pas proposé de coup.");
+        const uci = result.bestmove;
+        const move = chess.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] || "q" });
+        if (!move) throw new Error("Coup UCI illégal : " + uci);
+        status.dataset.status = "pass";
+        status.textContent = "OK · Berserk 14 a joué légalement " + move.san + " · " + (result.lines[0]?.depth || 0) + " ply.";
+      } catch (error) {
+        status.dataset.status = "fail";
+        status.textContent = "ÉCHEC · " + (error.message || String(error));
+        throw error;
+      } finally {
+        engine.stop();
+      }
+    })();
+  </script>
+</body>
+</html>

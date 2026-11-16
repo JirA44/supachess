@@ -1,0 +1,5 @@
+Berserk 14 is distributed under the GNU General Public License, version 3 or later.
+Copyright (C) 2024 Jay Honnold.
+
+The full license text is provided in LICENSE.Berserk-14.txt. Source code and
+build instructions are available at https://github.com/jhonnold/berserk.

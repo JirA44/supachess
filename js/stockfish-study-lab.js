@@ -10,6 +10,7 @@
   const MOVE_TIME = 500;
   const MIN_GAP_CP = 35;
   let engine = null;
+  let generatedMatch = null;
   let paused = false;
   let running = false;
   let sourceEntries = [];
@@ -58,6 +59,23 @@
       <h2 id="sf-study-title">Atelier Stockfish · audit et nouvelles maîtrises</h2>
       <p>Stockfish 19 passe en revue les positions des leçons, exercices de l’Académie et puzzles tactiques. Il fournit des coups, évaluations et variantes calculées; les principes pédagogiques ci-dessous sont des consignes originales de vérification, pas des explications internes du moteur. L’audit reprend où il s’est arrêté et garde ses données dans ce navigateur.</p>
       <div class="sf-study-controls">
+        <label>Blancs
+          <select data-sf-match-white aria-label="Moteur des Blancs">
+            <option value="stockfish" selected>Stockfish 19</option><option value="berserk">Berserk 14</option>
+          </select>
+        </label>
+        <label>Noirs
+          <select data-sf-match-black aria-label="Moteur des Noirs">
+            <option value="stockfish">Stockfish 19</option><option value="berserk" selected>Berserk 14</option>
+          </select>
+        </label>
+        <label>Réflexion par demi-coup
+          <select data-sf-match-time aria-label="Temps de réflexion par demi-coup">
+            <option value="150">Rapide · 0,15 s</option><option value="300" selected>Standard · 0,3 s</option><option value="600">Approfondi · 0,6 s</option>
+          </select>
+        </label>
+        <button class="btn" type="button" data-sf-generate>Générer une partie moteur</button>
+        <button class="btn" type="button" data-sf-cancel-game disabled>Arrêter le match</button>
         <button class="btn" type="button" data-sf-audit>Auditer tout le corpus</button>
         <button class="btn" type="button" data-sf-pause disabled>Mettre en pause</button>
         <button class="btn" type="button" data-sf-lessons>Auditer les leçons et exercices</button>
@@ -70,7 +88,7 @@
       <input id="sf-study-search" data-sf-search type="search" placeholder="Titre, joueur, thème…" style="width:min(100%,520px);padding:10px;margin:6px 0">
       <div class="sf-study-results" data-sf-results></div>
       <button class="btn" type="button" data-sf-more hidden>Afficher davantage</button>
-      <p class="sf-study-muted">Les parties terminées contre Stockfish et les matchs Supa contre Supa enregistrés sur cet appareil peuvent fournir des positions d’étude. Le mode Supa contre Supa actuel utilise Stockfish 19 pour les deux camps; Berserk n’est pas encore intégré. Les PGN restent sur cet appareil. L’analyse crée des exercices locaux, sans envoyer les parties ni réentraîner les poids des moteurs.</p>
+      <p class="sf-study-muted">Génère un match Stockfish 19 contre Berserk 14, ou choisis les deux moteurs. Seuls les coups légaux sont joués; une partie terminée est contrôlée puis enregistrée sur cet appareil avant de pouvoir fournir des exercices. Stockfish sert à l’analyse des positions. Les parties ne modifient pas les poids des moteurs.</p>
     `;
     const intro = document.querySelector(".lesson-intro");
     if (intro) intro.insertAdjacentElement("afterend", section);
@@ -79,6 +97,8 @@
     section.querySelector("[data-sf-lessons]").addEventListener("click", () => startAudit("lessons"));
     section.querySelector("[data-sf-puzzles]").addEventListener("click", () => startAudit("puzzles"));
     section.querySelector("[data-sf-selfplay]").addEventListener("click", () => startAudit("selfplay"));
+    section.querySelector("[data-sf-generate]").addEventListener("click", generateEngineGame);
+    section.querySelector("[data-sf-cancel-game]").addEventListener("click", cancelGeneratedGame);
     section.querySelector("[data-sf-pause]").addEventListener("click", () => { paused = true; setStatus("Pause demandée; le calcul en cours va se terminer avant l’arrêt."); });
     section.querySelector("[data-sf-more]").addEventListener("click", () => { visibleCount += 25; renderResults(); });
     return section;
@@ -88,8 +108,89 @@
   const statusNode = ui.querySelector("[data-sf-status]");
   const progressNode = ui.querySelector("[data-sf-progress]");
   const pauseButton = ui.querySelector("[data-sf-pause]");
+  const generateButton = ui.querySelector("[data-sf-generate]");
+  const cancelGameButton = ui.querySelector("[data-sf-cancel-game]");
 
   function setStatus(text) { statusNode.textContent = text; }
+
+  function waitForPaint() { return new Promise((resolve) => requestAnimationFrame(() => resolve())); }
+
+  function cancelGeneratedGame() {
+    if (!generatedMatch) return;
+    generatedMatch.cancelled = true;
+    cancelGameButton.disabled = true;
+    generatedMatch.engines.forEach((player) => { try { player.stop(); } catch (_) {} });
+    setStatus("Arrêt demandé. La partie incomplète ne sera pas enregistrée.");
+  }
+
+  async function generateEngineGame() {
+    if (running || generatedMatch) return;
+    running = true;
+    const whiteId = ui.querySelector("[data-sf-match-white]").value;
+    const blackId = ui.querySelector("[data-sf-match-black]").value;
+    const thinkMs = Math.max(100, Number(ui.querySelector("[data-sf-match-time]").value) || 300);
+    const label = (id) => id === "berserk" ? "Berserk 14" : "Stockfish 19";
+    const match = { cancelled: false, engines: [] };
+    generatedMatch = match;
+    generateButton.disabled = true;
+    cancelGameButton.disabled = false;
+    ui.querySelectorAll("[data-sf-audit],[data-sf-lessons],[data-sf-puzzles],[data-sf-selfplay]").forEach((button) => { button.disabled = true; });
+    const players = {};
+    try {
+      for (const id of new Set([whiteId, blackId])) {
+        const player = id === "berserk"
+          ? new BerserkEngine("vendor/berserk-14-worker.js")
+          : new StockfishEngine("vendor/stockfish-19-lite-single.js");
+        match.engines.push(player);
+        players[id] = player;
+        setStatus("Chargement de " + label(id) + "…");
+        await player.ready;
+        if (match.cancelled) return;
+      }
+      const game = new Chess();
+      const maximumPlies = 160;
+      let plies = 0;
+      setStatus(label(whiteId) + " (Blancs) contre " + label(blackId) + " (Noirs) · partie en cours…");
+      while (!game.game_over() && plies < maximumPlies && !match.cancelled) {
+        const sideId = game.turn() === "w" ? whiteId : blackId;
+        const response = await players[sideId].analyze({ fen: game.fen(), multipv: 1, movetime: thinkMs, elo: 0, timeoutMs: 90000 });
+        if (match.cancelled) return;
+        const uci = String(response && response.bestmove || "");
+        const move = uci.match(/^([a-h][1-8])([a-h][1-8])([qrbn])?$/i);
+        if (!move) throw new Error(label(sideId) + " n’a pas fourni de coup UCI valide à la position " + game.fen() + ".");
+        const played = game.move({ from: move[1].toLowerCase(), to: move[2].toLowerCase(), promotion: move[3] && move[3].toLowerCase() });
+        if (!played) throw new Error(label(sideId) + " a proposé un coup illégal (" + uci + "); la partie n’a pas été enregistrée.");
+        plies += 1;
+        if (plies % 4 === 0 || game.game_over()) {
+          setStatus("Match " + label(whiteId) + " – " + label(blackId) + " · " + plies + " demi-coups légaux joués…");
+          renderProgress(plies, maximumPlies);
+          await waitForPaint();
+        }
+      }
+      if (match.cancelled) return;
+      const capped = !game.game_over();
+      const result = game.in_checkmate() ? (game.turn() === "w" ? "0-1" : "1-0") : "1/2-1/2";
+      const termination = capped ? "Nulle technique à la limite de 160 demi-coups" :
+        game.in_checkmate() ? "Échec et mat" : game.in_stalemate() ? "Pat" : "Partie nulle selon les règles";
+      const saved = root.SupaSelfPlayStudy.storeGeneratedEngineGame({
+        ChessCtor: Chess, chess: game, result, white: label(whiteId), black: label(blackId),
+        engineName: label(whiteId) + " vs " + label(blackId), termination
+      });
+      setStatus("Partie n°" + saved.gameNumber + " terminée et PGN légal vérifié · " + saved.result + " · " + plies + " demi-coups. Elle est enregistrée sur cet appareil. Lance « Analyser les parties contre un moteur » pour en tirer des positions et exercices.");
+      renderProgress(maximumPlies, maximumPlies);
+      renderResults();
+    } catch (error) {
+      if (!match.cancelled) setStatus("Match non enregistré : " + (error && error.message || "erreur moteur inconnue"));
+    } finally {
+      match.engines.forEach((player) => { try { player.stop(); } catch (_) {} });
+      if (generatedMatch === match) generatedMatch = null;
+      if (match.cancelled) renderProgress(0, 1);
+      generateButton.disabled = false;
+      cancelGameButton.disabled = true;
+      ui.querySelectorAll("[data-sf-audit],[data-sf-lessons],[data-sf-puzzles],[data-sf-selfplay]").forEach((button) => { button.disabled = false; });
+      running = false;
+    }
+  }
 
   async function collectLessonEntries() {
     const entries = [];
@@ -162,7 +263,7 @@
     running = true;
     paused = false;
     pauseButton.disabled = false;
-    const buttons = ui.querySelectorAll("[data-sf-audit],[data-sf-lessons],[data-sf-puzzles],[data-sf-selfplay]");
+    const buttons = ui.querySelectorAll("[data-sf-audit],[data-sf-lessons],[data-sf-puzzles],[data-sf-selfplay],[data-sf-generate]");
     buttons.forEach((button) => { button.disabled = true; });
     try {
       let lessons = [];
@@ -178,7 +279,7 @@
       }
       sourceEntries = scope === "selfplay" ? selfPlay : scope === "lessons" ? lessons : scope === "puzzles" ? puzzles : lessons.concat(puzzles);
       if (scope === "selfplay" && !selfPlay.length) {
-        setStatus("Aucune partie terminée contre Stockfish, Berserk ou Supa contre Supa avec PGN légal n’est enregistrée sur cet appareil. Vérifie que la partie figure dans Parties et qu’elle n’a pas été arrêtée ou abandonnée.");
+        setStatus("Aucune partie moteur terminée avec PGN légal n’est enregistrée sur cet appareil. Utilise « Générer une partie moteur » ci-dessus, ou termine une partie contre Stockfish/Berserk, puis relance l’analyse.");
         renderResults();
         return;
       }
@@ -192,7 +293,7 @@
       const work = Array.from(uniquePositions.entries());
       const processedStart = valid.filter((entry) => audit[entry.key]).length;
       setStatus(scope === "selfplay"
-        ? (selfPlay.length ? selfPlay.length + " position(s) extraite(s) des parties moteur terminées. Positions inédites à analyser : " + work.length + "." : "Aucune partie terminée contre Stockfish, Berserk ou Supa contre Supa avec PGN légal n’est enregistrée sur cet appareil. Vérifie que la partie figure dans Parties et qu’elle n’a pas été arrêtée ou abandonnée.")
+        ? (selfPlay.length ? selfPlay.length + " position(s) extraite(s) des parties moteur terminées. Positions inédites à analyser : " + work.length + "." : "Aucune partie moteur terminée avec PGN légal n’est enregistrée sur cet appareil. Génère d’abord un match ci-dessus.")
         : "Corpus chargé : " + lessons.length + " leçons/exercices et " + puzzles.length +
           " puzzles. Positions distinctes à analyser maintenant : " + work.length + ".");
       if (!engine) {
@@ -461,4 +562,3 @@
   renderResults();
   autoUseAuditResults();
 })(window);
-

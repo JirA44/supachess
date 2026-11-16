@@ -25,6 +25,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: emscripten-core/setup-emsdk@v15
+        with:
+          version: '5.0.1'
+      - name: Build Berserk browser test assets
+        run: python scripts/build-berserk-wasm.py
       - run: npm install --no-save @playwright/test
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test --config=playwright.config.cjs

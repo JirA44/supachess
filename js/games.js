@@ -122,15 +122,17 @@ function gamesNewEntry() {
   const gameNumber = gamesNextNumber(gamesLoad());
   const diagnosticMode = gamesDiagnosticModeActive();
   const manual = typeof isManualMode === "function" && isManualMode();
-  const setting = !manual && typeof opponentElo === "function" ? opponentElo() : null;
+  const engineId = state.gameOpponentEngineId || (typeof selectedOpponentEngineId === "function" ? selectedOpponentEngineId() : "stockfish");
+  const usesBerserk = !manual && engineId === "berserk";
+  const setting = !manual && !usesBerserk && typeof opponentElo === "function" ? opponentElo() : null;
   const thinkTime = !manual && typeof opponentThinkTime === "function" ? opponentThinkTime() : null;
   const hasEngineSetting = !manual && Number.isFinite(setting);
-  const estimate = hasEngineSetting && typeof estimateOpponentFideLikeElo === "function"
+  const estimate = hasEngineSetting && !usesBerserk && typeof estimateOpponentFideLikeElo === "function"
     ? estimateOpponentFideLikeElo(setting, thinkTime)
     : null;
   const selfPlayMode = state.gameMode === "self-play" || state.gameMode === "supa-vs-supa" ? state.gameMode : null;
   currentGameMetadata = {
-    engineName: state.gameMode === "supa-vs-supa" ? "Supa contre Supa · Stockfish 19" : manual ? null : (state.engine && state.engine.engineName) || "Stockfish 19",
+    engineName: state.gameMode === "supa-vs-supa" ? "Supa contre Supa · " + (usesBerserk ? "Berserk 14" : "Stockfish 19") : manual ? null : (usesBerserk ? "Berserk 14 · WebAssembly · 1 thread" : (state.engine && state.engine.engineName) || "Stockfish 19"),
     selfPlayMode,
     manualMode: manual,
     clockMs: { ...(state.clockMs || { w: 0, b: 0 }) },

@@ -1,5 +1,7 @@
 node_modules/
 screenshots/
 .wrangler/
+.npm-cache/
+.tmp-chrome-berserk/
 
 .superpowers/
