@@ -20,8 +20,36 @@ const REVIEW_MOVE_CLASSES = [
   { id: "unrated", symbol: "…", label: "Non évalué" },
 ];
 
-const reviewState = { fens: [], moves: [], grades: [], moveGrades: [], correctionExercises: [], currentHeaders: {}, gameSummary: null, sessionStats: null, exercise: null, running: false, returnState: null, modalReturnFocus: null, variation: null, bestMovePending: false };
+const reviewState = { fens: [], moves: [], grades: [], moveGrades: [], correctionExercises: [], currentHeaders: {}, gameSummary: null, sessionStats: null, exercise: null, running: false, analysisGeneration: 0, returnState: null, modalReturnFocus: null, variation: null, bestMovePending: false };
 window.SupaChessClearReviewAccuracy = () => { reviewState.gameSummary = null; reviewState.sessionStats = null; };
+window.SupaChessPrepareNewGame = () => {
+  reviewState.analysisGeneration++;
+  reviewState.running = false;
+  reviewState.returnState = null;
+  reviewState.variation = null;
+  reviewState.exercise = null;
+  reviewState.bestMovePending = false;
+  reviewState.fens = [];
+  reviewState.moves = [];
+  reviewState.grades = [];
+  reviewState.moveGrades = [];
+  reviewState.correctionExercises = [];
+  reviewState.currentHeaders = {};
+  reviewState.gameSummary = null;
+  reviewState.sessionStats = null;
+  window.SupaReplayHistory = null;
+  window.setSupaCorrectionExerciseMode?.(false);
+  document.getElementById("review-panel")?.classList.add("hidden");
+  document.getElementById("review-exercise-panel")?.classList.add("hidden");
+  document.getElementById("review-report").innerHTML = "";
+  document.getElementById("btn-replay-game").classList.add("hidden");
+  document.getElementById("replay-bar").classList.add("hidden");
+  document.getElementById("replay-label").textContent = "Importez ou analysez une partie pour la parcourir";
+  document.getElementById("pgn-modal")?.classList.add("hidden");
+  reviewSetPlayerClocksHidden(false);
+  reviewSetReplayControls(false);
+  reviewClearCorrectionResumeParams();
+};
 
 function trapModalKeys(modal, close) {
   modal.addEventListener("keydown", (event) => {
@@ -463,6 +491,7 @@ async function reviewRun(options = {}) {
     window.SupaChessRenderAccuracy?.();
   }
   reviewState.running = true;
+  const runGeneration = ++reviewState.analysisGeneration;
   reviewSetReplayControls(false);
   reviewHideModal();
   const panel = document.getElementById("review-panel");
@@ -486,16 +515,19 @@ async function reviewRun(options = {}) {
       const tmp = new Chess(fens[i]);
       if (tmp.game_over()) { cps.push(tmp.in_checkmate() ? -1000 : 0); positionLines.push(null); positionCandidates.push([]); continue; }
       const res = await reviewAnalyzePosition({ fen: fens[i], multipv: 2, movetime: 400, elo: 0 }, Math.min(i + 1, moves.length), moves.length);
+      if (runGeneration !== reviewState.analysisGeneration) return false;
       cps.push(res.lines.length ? clampCpFromLine(res.lines[0]) : 0);
       positionLines.push(res.lines[0] || null);
       positionCandidates.push(Array.isArray(res.lines) ? res.lines : []);
     }
   } catch (e) {
+    if (runGeneration !== reviewState.analysisGeneration) return false;
     reviewSetProgress("Erreur d'analyse : " + e);
     reviewState.running = false;
     return false;
   }
 
+  if (runGeneration !== reviewState.analysisGeneration) return false;
   // Deltas par coup + précision par joueur.
   const rows = [];
   const accs = { w: [], b: [] };
@@ -610,6 +642,7 @@ async function reviewRun(options = {}) {
   // Le lot reste local : le bilan transversal est calculé après les analyses.
   if (!options.batch) {
     await reviewAskSupa(rows, accW, accB, headers);
+    if (runGeneration !== reviewState.analysisGeneration) return false;
     if (!options.startCorrections) {
       reviewBeginReplay();
       document.getElementById("replay-bar").classList.remove("hidden");
@@ -617,6 +650,7 @@ async function reviewRun(options = {}) {
       await replayGoto(moves.length);
     }
   }
+  if (runGeneration !== reviewState.analysisGeneration) return false;
   reviewState.running = false;
   if (options.startCorrections) {
     const exercises = reviewValidCorrectionExercises(reviewState.correctionExercises);

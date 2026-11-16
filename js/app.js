@@ -623,6 +623,7 @@ async function init() {
 }
 
 function newGame(options = {}) {
+  window.SupaChessPrepareNewGame?.();
   state.gameMode = ["self-play", "supa-vs-supa"].includes(options.gameMode) ? options.gameMode : "vs-engine";
   state.gameOpponentEngineId = selectedOpponentEngineId();
   stopPlayerClock();
