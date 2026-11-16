@@ -284,6 +284,7 @@
         <p><strong>Comparer plusieurs temps de calcul :</strong> dans « Analyse », choisis Rapide (0,8 s), Normale (1,5 s) ou Profonde (3 s), puis lance « Supa contre Supa ». Recommence à chaque cadence pour observer l’effet du temps de recherche. Cela compare des réglages du même moteur; les parties seules ne réentraînent pas Stockfish et ne modifient pas ses poids. Elles restent exclues du profil personnel.</p>
       </details>
       <div id="replay-bar" class="board-controls" aria-label="Navigation dans la partie">
+        <button id="btn-replay-start" class="btn" type="button" aria-label="Revenir au début de la partie" title="Afficher la position de départ" disabled>⏮ Début</button>
         <button id="btn-replay-prev" class="btn" type="button" aria-label="Coup précédent" disabled>◀</button>
         <span id="replay-label" aria-live="polite">Importez ou analysez une partie pour la parcourir</span>
         <button id="btn-replay-next" class="btn" type="button" aria-label="Coup suivant" disabled>▶</button>
@@ -482,7 +483,7 @@
   <span id="registered-members-count" class="registered-members-count">Comptes inscrits : chargement…</span>
   <span id="unique-visitors-count" class="unique-visitors-count">Visiteurs uniques estimés : chargement…</span>
 </div>
-  <span class="site-version" aria-label="Version de SupaChess">Version SupaChess : 1.13.14909</span>
+  <span class="site-version" aria-label="Version de SupaChess">Version SupaChess : 1.13.14910</span>
 </footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -507,7 +508,7 @@
   <script src="js/learning-loop.js"></script>
   <script src="js/centipawn-explanations.js?v=chess-cause-library-20261030"></script>
   <script src="js/keyboard-shortcut-settings.js?v=auto-keyboard-layout-detection-20261101"></script>
-  <script src="js/review.js?v=review-exit-reset-20261105-v1&clocks=20261105-v1&precision-gap=20261106-v1&acpl-gap=20261106-v1&precision-gap-percent=20261106-v1&best-move-review-20261108-v3&review-player-labels-20261108-v2&opponent-best-reply-refutation-20261109-v2"></script>
+  <script src="js/review.js?v=review-exit-reset-20261105-v1&clocks=20261105-v1&precision-gap=20261106-v1&acpl-gap=20261106-v1&precision-gap-percent=20261106-v1&best-move-review-20261108-v3&review-player-labels-20261108-v2&opponent-best-reply-refutation-20261109-v2&replay-start-20261116-v1"></script>
 
 <script src="js/move-grade-navigation.js?v=cumulative-move-counts-20261108-v2&selected-grade-chip-20261108-v1"></script>
 <script src="js/review-insights.js?v=learning-baseline-20261027-level-diagnostic-lock-20261027"></script>

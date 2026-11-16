@@ -42,6 +42,16 @@ test('analyzed PGN populates move counters and the best-move button plays a repl
   await expect(firstReplayMove.locator('.mv-san')).toHaveText('e4');
   await expect(firstReplayMove.locator('.mv-quality')).toBeVisible();
 
+  await expect(page.locator('#btn-replay-start')).toBeEnabled();
+  await page.click('#btn-replay-start');
+  await expect.poll(() => page.evaluate(() => state.replayIdx)).toBe(0);
+  await expect(page.locator('#btn-replay-start')).toBeDisabled();
+  await expect(page.locator('#btn-replay-prev')).toBeDisabled();
+  await expect(page.locator('#btn-replay-next')).toBeEnabled();
+  await page.click('#btn-replay-next');
+  await expect.poll(() => page.evaluate(() => state.replayIdx)).toBe(1);
+  await expect(page.locator('#btn-replay-start')).toBeEnabled();
+
   await expect(page.locator('#btn-best-move')).toBeEnabled();
   await page.click('#btn-best-move');
   await expect.poll(() => page.evaluate(() => reviewState.variation?.moves?.length || 0), { timeout: 15000 }).toBe(1);

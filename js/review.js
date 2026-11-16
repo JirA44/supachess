@@ -1323,8 +1323,11 @@ function reviewSyncBestMoveButton() {
 
 function reviewSetReplayControls(active) {
   const enabled = Boolean(active && reviewState.fens.length);
-  document.getElementById("btn-replay-prev").disabled = !enabled;
-  document.getElementById("btn-replay-next").disabled = !enabled;
+  const currentPly = Math.max(0, Number(state.replayIdx) || 0);
+  const finalPly = Math.max(0, reviewState.fens.length - 1);
+  document.getElementById("btn-replay-start").disabled = !enabled || currentPly === 0;
+  document.getElementById("btn-replay-prev").disabled = !enabled || currentPly === 0;
+  document.getElementById("btn-replay-next").disabled = !enabled || currentPly >= finalPly;
   document.getElementById("btn-replay-quit").classList.toggle("hidden", !enabled);
   if (!enabled) document.getElementById("replay-label").textContent =
     reviewState.fens.length ? "Relecture en pause" : "Importez ou analysez une partie pour la parcourir";
@@ -1498,6 +1501,7 @@ async function reviewPlayBestHalfMove() {
     reviewState.variation.moves.push({ from: move.from, to: move.to, san: move.san, color: move.color, uci });
     state.chess = variant;
     state.replayIdx = basePly + reviewState.variation.moves.length;
+    reviewSetReplayControls(Boolean(reviewState.returnState));
     state.userColor = state.chess.turn();
     state.fenHistory = [fenKey(state.chess.fen())];
     state.positionFenHistory = [state.chess.fen()];
@@ -1574,6 +1578,7 @@ async function replayGoto(i) {
       evaluation: reviewState.grades[idx - 1]?.evaluation || "—" };
   }
   state.replayIdx = idx;
+  reviewSetReplayControls(Boolean(reviewState.returnState));
   reviewSetMoveGradeHistory(reviewState.moveGrades, idx);
   state.chess = new Chess(reviewState.fens[idx]);
   state.fenHistory = [fenKey(state.chess.fen())];
@@ -1712,6 +1717,7 @@ document.getElementById("btn-replay-game").addEventListener("click", () => {
   document.getElementById("replay-bar").classList.remove("hidden");
   replayGoto(0).catch(console.error);
 });
+document.getElementById("btn-replay-start").addEventListener("click", () => replayGoto(0).catch(console.error));
 document.getElementById("btn-replay-prev").addEventListener("click", () => replayGoto((state.replayIdx || 0) - 1).catch(console.error));
 document.getElementById("btn-replay-next").addEventListener("click", () => replayGoto((state.replayIdx || 0) + 1).catch(console.error));
 document.getElementById("btn-replay-quit").addEventListener("click", reviewRestoreAfterReplay);
