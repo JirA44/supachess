@@ -17,6 +17,7 @@ test('Supa vs Supa shows the position evaluation and grades each played half-mov
   });
 
   await expect.poll(() => page.evaluate(() => state.moveGradeHistory.find((entry) => entry.ply === 1)?.category), { timeout: 15000 }).toBe('best');
+  await expect(page.locator('#evalbar-label')).toBeVisible();
   await expect(page.locator('#evalbar-label')).toHaveText('Blancs +1.00');
   await expect(page.locator('#move-grade-summary')).toBeVisible();
   await expect(page.locator('#move-grade-summary [data-grade-count]')).not.toHaveText('0');

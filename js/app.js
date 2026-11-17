@@ -293,7 +293,7 @@ function syncEvalBarToggle() {
   let preferred = true;
   try { preferred = localStorage.getItem(EVALBAR_PREFERENCE_KEY) !== "false"; } catch (_) {}
   const diagnosticLocked = isDiagnosticControlLockActive();
-  const unassistedLocked = isUnassistedAidLockActive();
+  const unassistedLocked = isUnassistedAidLockActive() && state.gameMode !== "supa-vs-supa";
   const locked = diagnosticLocked || unassistedLocked;
   const visible = preferred && !locked;
   bar.hidden = !visible;
@@ -305,11 +305,11 @@ function syncEvalBarToggle() {
 }
 const evalBarToggle = $("btn-evalbar-toggle");
 if (evalBarToggle) evalBarToggle.addEventListener("click", () => {
-  if (isUnassistedGameModeActive() || isDiagnosticControlLockActive()) return;
+  if ((isUnassistedGameModeActive() && state.gameMode !== "supa-vs-supa") || isDiagnosticControlLockActive()) return;
   const visible = evalBarToggle.getAttribute("aria-pressed") !== "true";
   try { localStorage.setItem(EVALBAR_PREFERENCE_KEY, String(visible)); } catch (_) {}
   syncEvalBarToggle();
-  if (!correctionExerciseModeActive && visible && typeof window.gamesMarkTrainingAidUsed === "function") window.gamesMarkTrainingAidUsed();
+  if (!correctionExerciseModeActive && state.gameMode !== "supa-vs-supa" && visible && typeof window.gamesMarkTrainingAidUsed === "function") window.gamesMarkTrainingAidUsed();
 });
 setTimeout(syncEvalBarToggle, 0);
 function applyLevelDiagnosticLock() {
@@ -1051,6 +1051,7 @@ async function playEngineMove() {
         const afterLine = baseline.lines[0];
         state.evalHistory[pending.ply - 1] = whitePovEval(afterLine, state.chess.turn() === "w");
         finishEngineFeedback(pending, afterLine);
+        updateEvalBar(afterLine);
         recordAccuracy(pending.color, pending.beforeCp, -clampCpFromLine(afterLine), pending.ply);
         renderHistory();
       }
@@ -1615,7 +1616,7 @@ function setNewGameAidsOff() {
   try {
     localStorage.setItem(DOTS_STORAGE_KEY, "false");
     localStorage.setItem(MOVE_DOTS_STORAGE_KEY, "false");
-    localStorage.setItem(EVALBAR_PREFERENCE_KEY, "false");
+    localStorage.setItem(EVALBAR_PREFERENCE_KEY, state.gameMode === "supa-vs-supa" ? "true" : "false");
   } catch (_) {}
   window.SupaAnalysisSettings?.set("showArrows", false);
   syncDotsButton();
