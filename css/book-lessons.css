@@ -47,6 +47,14 @@
 .lesson-explanation { padding: 11px; background: rgba(76,217,100,.08); border-left: 3px solid var(--green); border-radius: 5px; line-height: 1.5; }
 .lesson-card h3 { margin: 14px 0 5px; font-size: .95rem; }
 .lesson-move-list { padding-left: 24px; color: var(--text-dim); font-size: .88rem; line-height: 1.5; }
+.lesson-move-list li { margin: 0 0 8px; }
+.lesson-move-main { display: block; color: var(--text); font-weight: 800; }
+.lesson-move-explanation { display: block; margin: 2px 0 0; color: var(--text-dim); line-height: 1.45; }
+.lesson-line-training { margin: 12px 0; padding: 12px; background: rgba(76,217,100,.06); border: 1px solid var(--panel-edge); border-radius: 8px; }
+.lesson-line-training h3 { margin-top: 0; }
+.lesson-line-training p { color: var(--text-dim); line-height: 1.45; }
+.lesson-line-training label { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--text); font-weight: 700; }
+.lesson-line-training select { min-height: 40px; padding: 6px 10px; color: var(--text); background: #171a24; border: 1px solid #414863; border-radius: 6px; }
 .lesson-progress, .lesson-note { margin-top: 12px; color: var(--text-dim); font-size: .82rem; line-height: 1.45; }
 .lesson-next { margin-top: 12px; }
 @media (max-width: 760px) {

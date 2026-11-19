@@ -4224,6 +4224,10 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     }
   );
 
+  const providedCourseLessons = root.SUPA_PROVIDED_COURSE_LESSONS ||
+    (typeof module !== "undefined" && module.exports ? require("./provided-course-lessons.js") : []);
+  LESSONS.push(...providedCourseLessons);
+
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = { LESSONS, setupGame, buildEngineChoices, engineHintForMove, methodPathLessonIndices, nextMethodPathLessonIndex, createCompletedLessonRecord, lessonReviewKey, lessonReviewPositionKey, lessonReviewPartnerIndices, lessonCompetencyKeys, lessonCompetencySummary, lessonReviewDifficultyOptions, lessonReviewProgressSummary, createLessonReviewRecord, lessonHeadingText };
@@ -4257,6 +4261,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   let enginePreview = null;
   let engineAnalysisFen = null;
   let engineSequence = null;
+  let engineSequenceMaxPlies = null;
   let analysisToken = 0;
   const engineCache = new Map();
   const engineFailureFens = new Set();
@@ -4632,6 +4637,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     $("lesson-engine-lines").textContent = "";
     lessonIndex = index;
     engineSequence = null;
+    engineSequenceMaxPlies = null;
     $("lesson-status").removeAttribute("data-stockfish-uci");
     reviewSession = options.review && options.reviewTargetId
       ? { targetId: options.reviewTargetId, exerciseId: LESSONS[index].id, exerciseLevel: LESSONS[index].level }
@@ -4733,10 +4739,18 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     return engineSequence || LESSONS[lessonIndex].sequence;
   }
 
-  function buildStockfishSequence(fen, choice, lessonColor) {
+  function selectedStockfishSequenceLength() {
+    const requestedPlies = Number($("lesson-line-length") && $("lesson-line-length").value);
+    return Number.isInteger(requestedPlies) && requestedPlies >= 2 && requestedPlies <= 12
+      ? requestedPlies : 6;
+  }
+
+  function buildStockfishSequence(fen, choice, lessonColor, pliesRemaining) {
     const replay = new Chess(fen);
     const sequence = [];
-    for (const uci of (choice.pv || []).slice(0, 12)) {
+    const maxPlies = Number.isInteger(pliesRemaining) && pliesRemaining >= 0
+      ? pliesRemaining : selectedStockfishSequenceLength();
+    for (const uci of (choice.pv || []).slice(0, maxPlies)) {
       const piece = replay.get(uci.slice(0, 2));
       const side = replay.turn() === lessonColor ? "user" : "book";
       const move = replay.move({
@@ -4796,7 +4810,9 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     let switchedToEngineLine = false;
     if (isStockfishTopMove) {
       const prefix = sequence.slice(0, sequenceIndex);
-      engineSequence = prefix.concat(buildStockfishSequence(positionFen, engineBest, lesson.color));
+      if (engineSequenceMaxPlies === null) engineSequenceMaxPlies = selectedStockfishSequenceLength();
+      const pliesRemaining = engineSequenceMaxPlies - prefix.length;
+      engineSequence = prefix.concat(buildStockfishSequence(positionFen, engineBest, lesson.color, pliesRemaining));
       sequenceIndex = prefix.length;
       expected = engineSequence[sequenceIndex];
       switchedToEngineLine = true;
@@ -4825,9 +4841,9 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     anticipatingBook = false;
     clearSelection();
     boardUI.lastMove = { from: move.from, to: move.to, san: move.san };
-    appendMove(move.san, anticipated ? "Réponse adverse anticipée" : "Toi");
+    appendMove(move.san, anticipated ? "Réponse adverse anticipée" : (engineSequence ? "Toi · ligne Stockfish" : "Toi"), expected && expected.explanation);
     $("lesson-feedback").textContent = switchedToEngineLine
-      ? "Bien joué : le top 1 Stockfish est prioritaire. La suite suit sa variante calculée."
+      ? "Bien joué : top 1 Stockfish. Pourquoi cette ligne ? " + expected.explanation
       : (engineIsAuthoritative && !isStockfishTopMove
         ? "La ligne pédagogique est acceptée comme variante secondaire. Stockfish préfère " + engineBest.san + ". "
         : engineIsAuthoritative
@@ -4871,8 +4887,8 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
         invalidateLessonEngineLines();
         clearEvalBar();
         boardUI.lastMove = { from: move.from, to: move.to, san: move.san };
-        appendMove(move.san, engineSequence ? "Réponse Stockfish" : "Ligne pédagogique de secours");
-        $("lesson-status").textContent = "À toi : joue la suite.";
+        appendMove(move.san, engineSequence ? "Stockfish" : "Ligne pédagogique", action.explanation);
+        $("lesson-status").textContent = "À toi. Pourquoi Stockfish a-t-il joué " + move.san + " ? " + action.explanation;
         waitingForBook = false;
         renderBoard();
         advanceSequence();
@@ -4883,9 +4899,18 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     $("lesson-status").textContent = "À toi : continue la ligne.";
   }
 
-  function appendMove(san, who) {
+  function appendMove(san, who, explanation) {
     const item = document.createElement("li");
-    item.textContent = who + " : " + san;
+    const main = document.createElement("span");
+    main.className = "lesson-move-main";
+    main.textContent = who + " : " + san;
+    item.appendChild(main);
+    if (explanation) {
+      const detail = document.createElement("small");
+      detail.className = "lesson-move-explanation";
+      detail.textContent = explanation;
+      item.appendChild(detail);
+    }
     $("lesson-move-list").appendChild(item);
   }
 

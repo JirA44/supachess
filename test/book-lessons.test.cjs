@@ -309,6 +309,40 @@ test("move hints describe observable chess facts without claiming Stockfish's pr
   assert.match(engineHintForMove({ flags: "p" }, "p"), /promotion/);
 });
 
+test("Stockfish lesson lines can be played for a chosen number of plies with per-move explanations", () => {
+  const html = fs.readFileSync(path.join(__dirname, "../book-lessons.html"), "utf8");
+  const source = fs.readFileSync(path.join(__dirname, "../js/book-lessons.js"), "utf8");
+  const lengthOptions = [...html.matchAll(/<option value="(\d+)"/g)].map((match) => Number(match[1]));
+  assert.ok(html.includes('id="lesson-line-length"'));
+  assert.deepEqual(lengthOptions.filter((value) => value >= 2 && value <= 12), [2, 4, 6, 8, 10, 12]);
+  assert.ok(html.includes("Jouer une variante Stockfish, demi-coup par demi-coup"));
+  assert.match(source, /slice\(0, maxPlies\)/);
+  assert.match(source, /appendMove\(move\.san, engineSequence \? "Stockfish" : "Ligne pédagogique", action\.explanation\)/);
+  assert.match(source, /className = "lesson-move-explanation"/);
+});
+
+test("four chess course PDFs are represented by five progressive, interactive learning paths", () => {
+  const supplied = require("../js/provided-course-lessons.js");
+  const html = fs.readFileSync(path.join(__dirname, "../book-lessons.html"), "utf8");
+  const programs = [
+    "Cours · milieu de jeu et conversion",
+    "Cours · milieu de jeu : forces et plans",
+    "Cours · finales de pions",
+    "Cours · fondamentaux et règles",
+    "Cours · défense active et ressources",
+  ];
+  assert.equal(supplied.length, 22);
+  for (const program of programs) {
+    const lessons = supplied.filter((lesson) => lesson.program === program);
+    assert.ok(lessons.length > 0, program + " should contain lessons");
+    assert.ok(lessons.every((lesson) => lesson.choices.some((choice) => choice.correct) && lesson.sequence.length > 0));
+    assert.ok(lessons.every((lesson) => lesson.reference.includes(".pdf")));
+    assert.ok(html.includes(`data-method-path="${program}"`));
+    assert.ok(html.includes(`<option>${program}</option>`));
+  }
+  assert.match(html, /provided-course-lessons\.js\?v=chess-courses-/);
+});
+
 
 test("PGN-derived lessons cite their source games and keep move-play separate from engine judgment", () => {
   const lessons = LESSONS.filter((entry) => entry.sourcePgn);
