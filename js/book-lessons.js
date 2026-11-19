@@ -4745,30 +4745,51 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
       ? requestedPlies : 6;
   }
 
-  function buildStockfishSequence(fen, choice, lessonColor, pliesRemaining) {
+  async function buildStockfishSequence(fen, choice, lessonColor, pliesRemaining) {
     const replay = new Chess(fen);
     const sequence = [];
     const maxPlies = Number.isInteger(pliesRemaining) && pliesRemaining >= 0
       ? pliesRemaining : selectedStockfishSequenceLength();
-    for (const uci of (choice.pv || []).slice(0, maxPlies)) {
-      const piece = replay.get(uci.slice(0, 2));
-      const side = replay.turn() === lessonColor ? "user" : "book";
-      const move = replay.move({
-        from: uci.slice(0, 2),
-        to: uci.slice(2, 4),
-        promotion: uci.slice(4) || "q",
-      });
-      if (!move) break;
-      sequence.push({
-        side: side,
-        uci: uci,
-        explanation: "Suite calculée par Stockfish. " + engineHintForMove(move, piece && piece.type),
-      });
+    const appendPv = (pv) => {
+      let added = 0;
+      for (const uci of (pv || []).slice(0, maxPlies - sequence.length)) {
+        const piece = replay.get(uci.slice(0, 2));
+        const side = replay.turn() === lessonColor ? "user" : "book";
+        const move = replay.move({
+          from: uci.slice(0, 2),
+          to: uci.slice(2, 4),
+          promotion: uci.slice(4) || "q",
+        });
+        if (!move) break;
+        sequence.push({
+          side: side,
+          uci: uci,
+          explanation: "Suite calculée par Stockfish. " + engineHintForMove(move, piece && piece.type),
+        });
+        added++;
+      }
+      return added;
+    };
+
+    appendPv(choice.pv);
+    // Some Stockfish builds end a PV early. Re-analyze its endpoint so the
+    // requested training length remains playable instead of ending the lesson.
+    while (sequence.length < maxPlies && replay.moves().length) {
+      try {
+        if (!lessonEngine) lessonEngine = new StockfishEngine("vendor/stockfish-19-lite-single.js");
+        await lessonEngine.ready;
+        const response = await lessonEngine.analyze({ fen: replay.fen(), multipv: 1, movetime: 700, elo: 0 });
+        const continuation = buildEngineChoices(replay.fen(), response.lines, Chess).choices[0];
+        const added = continuation ? appendPv(continuation.pv) : 0;
+        if (!added) break;
+      } catch (_) {
+        break;
+      }
     }
     return sequence;
   }
 
-  function onSquareClick(square) {
+  async function onSquareClick(square) {
     const lesson = LESSONS[lessonIndex];
     const sequence = currentLessonSequence();
     if (!game || enginePreview || !principleAnswered || waitingForBook || sequenceIndex >= sequence.length) return;
@@ -4812,7 +4833,9 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
       const prefix = sequence.slice(0, sequenceIndex);
       if (engineSequenceMaxPlies === null) engineSequenceMaxPlies = selectedStockfishSequenceLength();
       const pliesRemaining = engineSequenceMaxPlies - prefix.length;
-      engineSequence = prefix.concat(buildStockfishSequence(positionFen, engineBest, lesson.color, pliesRemaining));
+      waitingForBook = true;
+      engineSequence = prefix.concat(await buildStockfishSequence(positionFen, engineBest, lesson.color, pliesRemaining));
+      waitingForBook = false;
       sequenceIndex = prefix.length;
       expected = engineSequence[sequenceIndex];
       switchedToEngineLine = true;

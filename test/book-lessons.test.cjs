@@ -316,7 +316,10 @@ test("Stockfish lesson lines can be played for a chosen number of plies with per
   assert.ok(html.includes('id="lesson-line-length"'));
   assert.deepEqual(lengthOptions.filter((value) => value >= 2 && value <= 12), [2, 4, 6, 8, 10, 12]);
   assert.ok(html.includes("Jouer une variante Stockfish, demi-coup par demi-coup"));
-  assert.match(source, /slice\(0, maxPlies\)/);
+  assert.match(source, /slice\(0, maxPlies - sequence\.length\)/);
+  assert.match(source, /async function buildStockfishSequence/);
+  assert.match(source, /while \(sequence\.length < maxPlies && replay\.moves\(\)\.length\)/);
+  assert.match(source, /lessonEngine\.analyze\(\{ fen: replay\.fen\(\), multipv: 1, movetime: 700, elo: 0 \}\)/);
   assert.match(source, /appendMove\(move\.san, engineSequence \? "Stockfish" : "Ligne pédagogique", action\.explanation\)/);
   assert.match(source, /className = "lesson-move-explanation"/);
 });

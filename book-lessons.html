@@ -405,7 +405,7 @@
         <p class="lesson-feedback" id="lesson-feedback" role="status" aria-live="polite"></p>
         <section class="lesson-line-training" aria-labelledby="lesson-line-training-title">
           <h3 id="lesson-line-training-title">Jouer une variante Stockfish, demi-coup par demi-coup</h3>
-          <p>Choisis une ligne de 2 à 12 demi-coups. Après ton coup prioritaire, Stockfish jouera ses réponses calculées et te rendra la main à chaque tour. Chaque demi-coup gardera une explication visible de son effet. Une ligne peut être plus courte si le moteur ne fournit pas assez de coups légaux. Les explications décrivent les indices observables sur l’échiquier, pas un raisonnement interne supposé du moteur.</p>
+          <p>Choisis une ligne de 2 à 12 demi-coups. Après ton coup prioritaire, Stockfish jouera ses réponses calculées et te rendra la main à chaque tour. Si sa variante principale est trop courte, il recalcule à son extrémité pour compléter la longueur choisie. Chaque demi-coup gardera une explication visible de son effet. La ligne s’arrête si la position est terminée ou si le moteur ne peut plus fournir de coup légal. Les explications décrivent les indices observables sur l’échiquier, pas un raisonnement interne supposé du moteur.</p>
           <label for="lesson-line-length">Longueur de la variante
             <select id="lesson-line-length">
               <option value="2">2 demi-coups</option><option value="4">4 demi-coups</option><option value="6" selected>6 demi-coups</option><option value="8">8 demi-coups</option><option value="10">10 demi-coups</option><option value="12">12 demi-coups</option>
@@ -432,7 +432,7 @@
     </section>
     <p class="lesson-note">Les exercices sont rédigés pour SupaChess. Chaque FEN et chaque demi-coup des lignes étudiées sont vérifiés par les tests; les variantes Stockfish restent dépendantes du temps de recherche.</p>
   </main>
-<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14912</footer>
+<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14913</footer>
 
   <script src="vendor/chess.js"></script>
   <script src="js/engine.js"></script>
@@ -443,7 +443,7 @@
   <script src="js/sounds.js?v=profile-sounds-20261104"></script>
   <script src="js/selfplay-method-lessons.js?v=selfplay-method-20261116-v3"></script>
   <script src="js/provided-course-lessons.js?v=chess-courses-20261119-v1"></script>
-  <script src="js/book-lessons.js?v=course-lessons-stockfish-plies-20261119-v1"></script>
+  <script src="js/book-lessons.js?v=course-lessons-stockfish-plies-20261119-v2"></script>
   <script src="js/lesson-concepts.js?v=imagination-concepts-20261116-v1"></script>
   <script src="js/academy-content-counts.js?v=academy-content-counters-20261106-v1"></script>
   <script src="js/selfplay-study.js?v=engine-match-pgn-20261116-v1"></script>
