@@ -74,7 +74,45 @@ try {
   await page.locator(`#lesson-board .sq[data-square="${hardLesson.uci.slice(2, 4)}"]`).click();
   await page.waitForFunction(() => document.querySelectorAll("#lesson-move-list li").length === 1);
   assert.equal(await page.locator("#lesson-engine-analyze").isVisible(), true, "engine comparison opens after the first attempt");
-  console.log(JSON.stringify({ checks: ["catalogue généré", "leçon miroir ouverte", "échiquier complet", "boutons de parcours et surprise actifs", "commandes de vérification visibles", "raisonnement écrit avant Stockfish", "ligne cachée jusqu’au premier essai", "aucune exception JavaScript"], report, wasmResponses }, null, 2));
+
+  const completionLesson = await page.evaluate(() => {
+    const lesson = window.SupaChessLessons.find((item) => !item.coachBeforeMove && item.sequence.length === 1 && item.sequence[0].side === "user");
+    return lesson && { id: lesson.id, uci: lesson.sequence[0].uci, correctChoice: lesson.choices.find((choice) => choice.correct)?.text };
+  });
+  assert.ok(completionLesson?.id, "there should be a short complete lesson to exercise its success path");
+  assert.equal(await page.evaluate((id) => window.SupaChessAcademy.openLesson(id), completionLesson.id), true);
+  await page.locator("#lesson-choices button").filter({ hasText: completionLesson.correctChoice }).click();
+  await page.locator(`#lesson-board .sq[data-square="${completionLesson.uci.slice(0, 2)}"]`).click();
+  await page.locator(`#lesson-board .sq[data-square="${completionLesson.uci.slice(2, 4)}"]`).click();
+  await page.waitForFunction(() => document.querySelector("#lesson-title")?.classList.contains("is-completed"));
+  const persistedCompletion = await page.evaluate((id) => JSON.parse(localStorage.getItem("supachess-book-lessons-v1") || "{}")[id]?.completed, completionLesson.id);
+  assert.equal(persistedCompletion, true, "the success flow must persist completion, not just display it");
+
+  for (const width of [1440, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    const fit = await page.evaluate(() => {
+      const stage = document.querySelector(".lesson-board-stage").getBoundingClientRect();
+      const board = document.querySelector("#lesson-board").getBoundingClientRect();
+      const pieces = [...document.querySelectorAll("#lesson-board .sq .piece")].map((piece) => {
+        const cell = piece.closest(".sq").getBoundingClientRect();
+        const rect = piece.getBoundingClientRect();
+        return rect.width <= cell.width && rect.height <= cell.height && rect.left >= cell.left && rect.right <= cell.right && rect.top >= cell.top && rect.bottom <= cell.bottom;
+      });
+      return { boardFitsStage: board.width <= stage.width && board.height <= stage.height, squareCount: document.querySelectorAll("#lesson-board .sq").length, piecesFit: pieces.every(Boolean), pieceCount: pieces.length };
+    });
+    assert.equal(fit.squareCount, 64, `board remains complete at ${width}px`);
+    assert.equal(fit.boardFitsStage, true, `board remains inside its reserved stage at ${width}px`);
+    assert.equal(fit.piecesFit, true, `pieces remain inside their squares at ${width}px`);
+  }
+
+  await page.goto(`http://127.0.0.1:${server.address().port}/leaderboards.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => document.querySelectorAll("#leaderboard-tabs button").length === 9);
+  for (const button of await page.locator("#leaderboard-tabs button").all()) {
+    await button.click();
+    assert.equal(await button.getAttribute("aria-pressed"), "true", "each ranking mode should activate its own table");
+    assert.ok((await page.locator("#leaderboard-title").innerText()).length > 0);
+  }
+  console.log(JSON.stringify({ checks: ["catalogue généré", "leçon miroir ouverte", "échiquier complet", "validation et sauvegarde d’une leçon terminée", "échiquier ajusté à 1440/768/390/320 px", "neuf onglets de classement fonctionnels", "boutons de parcours et surprise actifs", "commandes de vérification visibles", "raisonnement écrit avant Stockfish", "ligne cachée jusqu’au premier essai", "aucune exception JavaScript"], report, wasmResponses }, null, 2));
   assert.deepEqual(pageErrors, [], JSON.stringify({ pageErrors, wasmResponses, wasmRequests: requests.filter((request) => request.includes("wasm")) }));
 } finally {
   await browser.close();

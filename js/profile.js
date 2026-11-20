@@ -3,6 +3,10 @@
 var db=null, auth=null;
 var GAME_TYPES = {
   puzzle: {label:'Puzzle', icon:'🧩', defaultRating:1200},
+  puzzleSprint3m: {label:'Sprint puzzles · 3 min', icon:'⚡', defaultRating:1200},
+  puzzleSprint5m: {label:'Sprint puzzles · 5 min', icon:'⏱️', defaultRating:1200},
+  puzzleSurvival: {label:'Survie puzzles', icon:'🛡️', defaultRating:1200},
+  puzzleBattle: {label:'Bataille de puzzles', icon:'⚔️', defaultRating:1200},
   classic1m: {label:'Classique 1 minute', icon:'⚡', defaultRating:1200, minutes:1},
   classic3m: {label:'Classique 3 minutes', icon:'⏱️', defaultRating:1200, minutes:3},
   classic5m: {label:'Classique 5 minutes', icon:'♟️', defaultRating:1200, minutes:5},
@@ -22,6 +26,10 @@ function ensureUserProfile(user){
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       stats:{
         puzzle:{rating:1200, wins:0, losses:0, draws:0, played:0},
+        puzzleSprint3m:{rating:1200, wins:0, losses:0, draws:0, played:0},
+        puzzleSprint5m:{rating:1200, wins:0, losses:0, draws:0, played:0},
+        puzzleSurvival:{rating:1200, wins:0, losses:0, draws:0, played:0},
+        puzzleBattle:{rating:1200, wins:0, losses:0, draws:0, played:0},
         classic1m:{rating:1200, wins:0, losses:0, draws:0, played:0},
         classic3m:{rating:1200, wins:0, losses:0, draws:0, played:0},
         classic5m:{rating:1200, wins:0, losses:0, draws:0, played:0},
@@ -46,9 +54,8 @@ function updateStats(uid, gameType, result, delta){
   if(delta) upd[field+'.rating']=firebase.firestore.FieldValue.increment(delta);
   return ref.set(upd,{merge:true});
 }
-function recordTimedGame(uid, gameType, result, opponentRating) {
-  if (!db || !uid || !GAME_TYPES[gameType] || GAME_TYPES[gameType].minutes === undefined ||
-      !['win','loss','draw'].includes(result)) return Promise.resolve(false);
+function recordRatedGame(uid, gameType, result, opponentRating) {
+  if (!db || !uid || !GAME_TYPES[gameType] || !['win','loss','draw'].includes(result)) return Promise.resolve(false);
   var ref = db.collection('users').doc(uid);
   return db.runTransaction(function(transaction) {
     return transaction.get(ref).then(function(doc) {
@@ -68,11 +75,16 @@ function recordTimedGame(uid, gameType, result, opponentRating) {
       updates[field + 'losses'] = Math.max(0, Number(stats.losses) || 0) + (result === 'loss' ? 1 : 0);
       updates[field + 'draws'] = Math.max(0, Number(stats.draws) || 0) + (result === 'draw' ? 1 : 0);
       updates[field + 'rating'] = rating + delta;
+      updates[field + 'peakRating'] = Math.max(Number(stats.peakRating) || rating, rating + delta);
       updates.totalGames = Math.max(0, Number(data.totalGames) || 0) + 1;
       transaction.set(ref, updates, { merge: true });
       return true;
     });
   }).catch(function(){ return false; });
+}
+function recordTimedGame(uid, gameType, result, opponentRating) {
+  if (!GAME_TYPES[gameType] || GAME_TYPES[gameType].minutes === undefined) return Promise.resolve(false);
+  return recordRatedGame(uid, gameType, result, opponentRating);
 }
 function searchUsers(query, limit){
   limit=limit||8;
@@ -100,8 +112,10 @@ function getTopRanking(gameType, limit){
     snap.forEach(function(doc){
       var d=doc.data();
       var stats=d.stats&&d.stats[gameType]||{};
-      if(!(Number(stats.played)>0))return;
-      out.push({uid:doc.id, displayName:d.displayName, rating:(Number(stats.rating)||1200), stats:d.stats});
+      var played=Math.max(0,Number(stats.played)||0);
+      var puzzlesSolved=Math.max(0,Number(d.puzzlesSolved)||0);
+      if(!(played>0)&&!(gameType==='puzzle'&&puzzlesSolved>0))return;
+      out.push({uid:doc.id, displayName:d.displayName, rating:(Number(stats.rating)||1200), peakRating:(Number(stats.peakRating)||Number(stats.rating)||1200), puzzlesSolved:puzzlesSolved, stats:d.stats});
     });
     return out;
   }).catch(function(){ return []; });
@@ -116,6 +130,29 @@ function publishLearningLevel(uid){
     learningXP:xp,
     learningLevelName:profileRankName(level)
   },{merge:true}).then(function(){return true;}).catch(function(){return false;});
+}
+function publishLocalPuzzleRating(uid){
+  if(!db||!uid) return Promise.resolve(false);
+  var rating=0, solved=0;
+  try{
+    rating=Math.max(0,Number(localStorage.getItem('puzzle_elo'))||0);
+    var progress=JSON.parse(localStorage.getItem('chessnova_progress')||'{}');
+    solved=Math.max(0,Number(progress&&progress.puzzlesSolved)||0);
+  }catch(_error){return Promise.resolve(false);}
+  if(!rating&&!solved)return Promise.resolve(false);
+  var ref=db.collection('users').doc(uid);
+  return db.runTransaction(function(transaction){
+    return transaction.get(ref).then(function(doc){
+      var data=doc.exists?doc.data()||{}:{};
+      var stats=data.stats&&data.stats.puzzle||{};
+      var current=Math.max(0,Number(stats.rating)||0);
+      var peak=Math.max(current,Number(stats.peakRating)||0,rating);
+      var updates={puzzlesSolved:Math.max(Number(data.puzzlesSolved)||0,solved)};
+      if(rating>0){updates['stats.puzzle.rating']=Math.max(current,rating);updates['stats.puzzle.peakRating']=peak;}
+      transaction.set(ref,updates,{merge:true});
+      return true;
+    });
+  }).catch(function(){return false;});
 }
 function getTopLevelRanking(limit){
   limit=Math.max(1,Math.min(50,Number(limit)||10));
@@ -1381,7 +1418,7 @@ function initRankingSection(){
   sec.querySelectorAll('.rank-tab').forEach(function(b){ b.addEventListener('click', function(){ load(b.getAttribute('data-type')); }); });
   load('puzzle');
 }
-window.SupaProfiles={init:init, ensureUserProfile:ensureUserProfile, updateStats:updateStats, recordTimedGame:recordTimedGame, searchUsers:searchUsers, getTopRanking:getTopRanking, getTopLevelRanking:getTopLevelRanking, publishLearningLevel:publishLearningLevel, getProfile:getProfile, renderProfileModal:renderProfileModal, readLocalLearningProgress:readLocalLearningProgress, summarizeAccuracyGames:summarizeAccuracyGames, summarizeCentipawnLossGames:summarizeCentipawnLossGames, mergeProfileAnalysisGames:mergeProfileAnalysisGames, renderLocalLearningPanel:renderLocalLearningPanel, renderOwnProfileFallback:renderOwnProfileFallback, lessonProgressSeries:lessonProgressSeries, renderLessonProgressRangeChart:renderLessonProgressRangeChart, bindLessonProgressRangeControls:bindLessonProgressRangeControls, renderProfileActivityChart:renderProfileActivityChart, renderProfileActivityContent:renderProfileActivityContent, initSearchBar:initSearchBar, initRankingSection:initRankingSection, isCompletedUnaidedClassifiedGame:isCompletedUnaidedClassifiedGame, resolveProfileUserColor:resolveProfileUserColor, GAME_TYPES:GAME_TYPES};
+window.SupaProfiles={init:init, ensureUserProfile:ensureUserProfile, updateStats:updateStats, recordTimedGame:recordTimedGame, recordRatedGame:recordRatedGame, searchUsers:searchUsers, getTopRanking:getTopRanking, getTopLevelRanking:getTopLevelRanking, publishLearningLevel:publishLearningLevel, publishLocalPuzzleRating:publishLocalPuzzleRating, getProfile:getProfile, renderProfileModal:renderProfileModal, readLocalLearningProgress:readLocalLearningProgress, summarizeAccuracyGames:summarizeAccuracyGames, summarizeCentipawnLossGames:summarizeCentipawnLossGames, mergeProfileAnalysisGames:mergeProfileAnalysisGames, renderLocalLearningPanel:renderLocalLearningPanel, renderOwnProfileFallback:renderOwnProfileFallback, lessonProgressSeries:lessonProgressSeries, renderLessonProgressRangeChart:renderLessonProgressRangeChart, bindLessonProgressRangeControls:bindLessonProgressRangeControls, renderProfileActivityChart:renderProfileActivityChart, renderProfileActivityContent:renderProfileActivityContent, initSearchBar:initSearchBar, initRankingSection:initRankingSection, isCompletedUnaidedClassifiedGame:isCompletedUnaidedClassifiedGame, resolveProfileUserColor:resolveProfileUserColor, GAME_TYPES:GAME_TYPES};
 if(document&&typeof document.querySelector==='function'){
   document.addEventListener('click',handleProfileActivityYearClick);
   if(document.readyState==='loading'&&typeof document.addEventListener==='function') document.addEventListener('DOMContentLoaded',initRankingSection,{once:true});

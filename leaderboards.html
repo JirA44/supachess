@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#12141c">
+  <title>Classements SupaChess</title>
+  <link rel="stylesheet" href="css/style.css?v=leaderboards-20261120-v1">
+  <style>
+    .leaderboards-page{width:min(1080px,calc(100% - 28px));margin:24px auto 48px}
+    .leaderboards-intro,.leaderboards-panel{padding:20px;background:var(--panel);border:1px solid var(--panel-edge);border-radius:14px;margin:14px 0}
+    .leaderboard-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+    .leaderboard-tab{padding:9px 13px;border:1px solid #58627a;border-radius:9px;background:#171a24;color:var(--text);font:inherit;cursor:pointer}
+    .leaderboard-tab[aria-pressed="true"]{background:#245b43;border-color:#8acb99;box-shadow:0 0 0 1px #8acb99 inset}
+    .leaderboard-table-wrap{overflow-x:auto}
+    .leaderboard-table{width:100%;min-width:620px;border-collapse:collapse}
+    .leaderboard-table th,.leaderboard-table td{padding:11px 12px;text-align:right;border-bottom:1px solid #434b5e;white-space:nowrap}
+    .leaderboard-table th:first-child,.leaderboard-table td:first-child,.leaderboard-table th:nth-child(2),.leaderboard-table td:nth-child(2){text-align:left}
+    .leaderboard-table thead{background:#171a24;color:#dce8df}
+    .leaderboard-table tbody tr:first-child td:first-child{color:#ffd76b;font-weight:900}
+    .leaderboard-status{min-height:1.5em;color:var(--text-dim)}
+    .leaderboard-empty{padding:18px;background:#171a24;border-radius:9px;color:var(--text-dim)}
+    .leaderboard-note{font-size:.9rem;color:var(--text-dim);line-height:1.5}
+    @media(max-width:560px){.leaderboards-intro,.leaderboards-panel{padding:14px}.leaderboard-tab{flex:1 1 42%}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">♞ SupaChess</a>
+    <a class="btn" href="index.html">Retour au jeu</a>
+    <button id="topbar-profile-btn" class="topbar-profile-btn" type="button" aria-haspopup="dialog">👤 Profil &amp; réglages</button>
+  </header>
+  <main class="leaderboards-page">
+    <section class="leaderboards-intro">
+      <p class="lesson-eyebrow">Joueurs inscrits · résultats enregistrés</p>
+      <h1>Classements SupaChess</h1>
+      <p>Un tableau séparé pour chaque format : Elo puzzle, parties classiques de 1, 3 et 5 minutes, partie sans limite, sprints de puzzles, survie et bataille. Les résultats affichés viennent des comptes enregistrés dans SupaChess.</p>
+      <p class="leaderboard-note">Ces Elo sont des classements internes indicatifs, calculés à partir des résultats déclarés et enregistrés; ils ne sont pas des Elo FIDE. Les modes sans résultat synchronisé affichent un tableau vide jusqu’à la publication de leurs résultats.</p>
+      <nav class="leaderboard-tabs" aria-label="Type de classement" id="leaderboard-tabs"></nav>
+    </section>
+    <section class="leaderboards-panel" aria-labelledby="leaderboard-title">
+      <h2 id="leaderboard-title">Classement</h2>
+      <p class="leaderboard-status" id="leaderboard-status" role="status" aria-live="polite">Connexion au classement…</p>
+      <div id="leaderboard-output"></div>
+    </section>
+  </main>
+  <footer class="site-footer"><span class="site-version">Version SupaChess : 1.13.14922</span></footer>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script src="js/profile.js?v=leaderboard-stat-types-20261120-v1"></script>
+  <script src="js/profile-page.js?v=leaderboards-profile-20261120-v1"></script>
+  <script src="js/leaderboards.js?v=leaderboards-20261120-v1"></script>
+</body>
+</html>

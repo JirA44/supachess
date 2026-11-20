@@ -125,6 +125,9 @@
     }
     showLoading();
     Promise.resolve(window.SupaProfiles.ensureUserProfile(user))
+      .then(() => typeof window.SupaProfiles.publishLocalPuzzleRating === "function"
+        ? window.SupaProfiles.publishLocalPuzzleRating(user.uid)
+        : false)
       .then(() => window.SupaProfiles.getProfile(user.uid))
       .then((profile) => {
         if (profile) window.SupaProfiles.renderProfileModal(profile);

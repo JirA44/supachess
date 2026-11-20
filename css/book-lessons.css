@@ -17,7 +17,8 @@
 .lesson-board-column { min-width: 0; }
 .lesson-status { min-height: 2.6em; margin-bottom: 8px; color: var(--accent); font-weight: 700; line-height: 1.4; }
 #lesson-board { max-width: none; }
-.lesson-board-stage { display: grid; grid-template-columns: minmax(0, 1fr) 42px; gap: 10px; align-items: stretch; }
+.lesson-board-stage { display: grid; grid-template-columns: minmax(0, 1fr) 42px; gap: 10px; align-items: stretch; container-type: inline-size; }
+.lesson-board-stage .sq .piece { font-size: clamp(14px, 10cqi, 58px); }
 .lesson-eval-widget { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .lesson-eval-widget[hidden] { display: none; }
 .lesson-evalbar { position: relative; width: 24px; min-height: 180px; flex: 1; overflow: hidden; background: #171a24; border: 1px solid #687085; border-radius: 5px; }

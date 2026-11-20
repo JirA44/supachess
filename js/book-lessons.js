@@ -4412,6 +4412,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   let lessonLoadGeneration = 0;
   let game = null;
   let sequenceIndex = 0;
+  let lessonFinished = false;
   let selectedSquare = null;
   let attempts = 0;
   let hintsUsed = 0;
@@ -4813,6 +4814,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     $("lesson-engine-status").textContent = "";
     $("lesson-engine-lines").textContent = "";
     lessonIndex = index;
+    lessonFinished = false;
     engineSequence = null;
     engineSequenceMaxPlies = null;
     $("lesson-status").removeAttribute("data-stockfish-uci");
@@ -5076,6 +5078,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   }
 
   function advanceSequence() {
+    if (lessonFinished) return;
     const sequence = currentLessonSequence();
     if (sequenceIndex >= sequence.length) {
       finishLesson();
@@ -5096,8 +5099,10 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
         if (!waitingForBook || !game) return;
         const move = game.move({ from: action.uci.slice(0, 2), to: action.uci.slice(2, 4), promotion: action.uci.slice(4) || "q" });
         if (!move) {
-          $("lesson-status").textContent = "Cette ligne ne peut pas être rejouée dans la position chargée.";
           waitingForBook = false;
+          $("lesson-status").textContent = "La séquence s’est arrêtée : le demi-coup adverse prévu n’est pas légal dans cette position. La leçon n’est pas validée. Recommence la leçon pour rétablir sa position de départ.";
+          $("lesson-feedback").textContent = "Séquence interrompue avant la validation; ta progression n’a pas été marquée comme terminée.";
+          $("lesson-restart").focus();
           return;
         }
         if (root.SupaChessAudio) root.SupaChessAudio.play(game.in_check() ? "check" : (move.flags && (move.flags.includes("c") || move.flags.includes("e")) ? "capture" : "move"));
@@ -5133,6 +5138,8 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   }
 
   function finishLesson() {
+    if (lessonFinished) return;
+    lessonFinished = true;
     if (root.SupaChessAudio) root.SupaChessAudio.play("complete");
     const lesson = LESSONS[lessonIndex];
     const reviewAttempt = reviewSession;

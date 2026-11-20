@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#17211a">
   <title>SupaChess Académie — La route vers l’excellence</title>
   <link rel="stylesheet" href="css/style.css?v=piece-pointer-drag-20261105-v2&piece-outline-20261107-v1">
-  <link rel="stylesheet" href="css/book-lessons.css?v=explain-stockfish-plies-20261119-v1">
+  <link rel="stylesheet" href="css/book-lessons.css?v=responsive-board-and-leaderboards-20261120-v1">
   <link rel="stylesheet" href="css/lesson-concepts.css?v=concept-curriculum-80-20261105-v1">
   <link rel="stylesheet" href="css/method-paths.css?v=methods-player-lessons-20261028">
 <style>.lesson-settings-shortcuts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.lesson-settings-shortcuts .btn{font-size:.9rem}@media(max-width:600px){.lesson-topbar{flex-wrap:wrap}.lesson-settings-shortcuts{order:3;width:100%;justify-content:center}}</style>
@@ -15,6 +15,7 @@
   <header class="topbar lesson-topbar">
     <a class="brand lesson-brand" href="index.html" aria-label="Retour à SupaChess">♞ Supa<span>Chess</span></a>
     <a class="btn" href="index.html">Retour à l’échiquier</a>
+    <a class="btn" href="leaderboards.html">🏆 Classements</a>
     <nav class="lesson-settings-shortcuts" aria-label="Réglages rapides"><a class="btn" href="index.html#appearance-panel">🎨 Apparence</a><a class="btn" href="index.html#analysis-preferences">📊 Analyse</a></nav>
     <a id="topbar-profile-btn" class="topbar-profile-btn" href="#profile" aria-label="Ouvrir mon profil et ses réglages" aria-haspopup="dialog">👤 Profil & réglages</a>
   </header>
@@ -457,7 +458,7 @@
     </section>
     <p class="lesson-note">Les exercices sont rédigés pour SupaChess. Chaque FEN et chaque demi-coup des lignes étudiées sont vérifiés par les tests; les variantes Stockfish restent dépendantes du temps de recherche.</p>
   </main>
-<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14921</footer>
+<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14922</footer>
 
   <script src="vendor/chess.js"></script>
   <script src="js/engine.js"></script>
@@ -469,7 +470,7 @@
   <script src="js/selfplay-method-lessons.js?v=selfplay-method-20261116-v3"></script>
   <script src="js/provided-course-lessons.js?v=chess-courses-20261119-v1"></script>
   <script src="js/course-content-pipeline.js?v=course-verifier-generators-20261120-v1"></script>
-  <script src="js/book-lessons.js?v=advanced-reasoning-tiers-20261120-v2"></script>
+  <script src="js/book-lessons.js?v=responsive-board-lesson-sequence-20261120-v1"></script>
   <script src="js/lesson-concepts.js?v=imagination-concepts-20261116-v1"></script>
   <script src="js/academy-content-counts.js?v=academy-content-counters-20261106-v1"></script>
   <script src="js/selfplay-study.js?v=engine-match-pgn-20261116-v1"></script>
@@ -478,8 +479,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-  <script src="js/profile.js?v=exercise-chart-readable-radar-fix-20261101"></script>
-  <script src="js/profile-page.js?v=lessons-in-page-profile-20261029"></script>
+  <script src="js/profile.js?v=leaderboard-stat-types-20261120-v1"></script>
+  <script src="js/profile-page.js?v=lessons-in-page-profile-20261029&leaderboards=20261120-v1"></script>
 </body>
 </html>
 

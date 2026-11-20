@@ -47,6 +47,25 @@ test("book lesson setups and user/book move sequences are legal", () => {
   }
 });
 
+test("every lesson sequence alternates by actual board turn and cannot advance beyond game end", () => {
+  for (const lesson of LESSONS) {
+    const game = setupGame(lesson, Chess);
+    for (let index = 0; index < lesson.sequence.length; index++) {
+      const action = lesson.sequence[index];
+      assert.equal(action.side, game.turn() === lesson.color ? "user" : "book", `${lesson.id} action ${index + 1} must match whose turn it is`);
+      const move = game.move({ from: action.uci.slice(0, 2), to: action.uci.slice(2, 4), promotion: action.uci.slice(4) || "q" });
+      assert.ok(move, `${lesson.id} action ${index + 1} must remain legal`);
+      if (game.game_over()) assert.equal(index, lesson.sequence.length - 1, `${lesson.id} cannot include moves after a terminal position`);
+    }
+    assert.ok(lesson.sequence.length > 0, `${lesson.id} must have a playable sequence`);
+    assert.ok(lesson.sequence.some((action) => action.side === "user"), `${lesson.id} must require a learner action`);
+  }
+  const source = fs.readFileSync(path.join(__dirname, "../js/book-lessons.js"), "utf8");
+  assert.match(source, /if \(lessonFinished\) return;/, "completion must be idempotent");
+  assert.match(source, /lessonFinished = true;/, "a successful sequence must be marked completed once");
+  assert.match(source, /La séquence s’est arrêtée[\s\S]{0,180}leçon n’est pas validée/i, "a failed reply must explain why progress was not validated");
+});
+
 test("each lesson has a level, principle, transfer, source, and explanation for every half-move", () => {
   for (const lesson of LESSONS) {
     assert.ok(["Débutant", "Intermédiaire", "Avancé", "Expert"].includes(lesson.level), `${lesson.id} should have a level`);
