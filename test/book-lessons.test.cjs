@@ -423,6 +423,27 @@ test("advanced master-game replay adds at least 40 new expert positions with six
   }
 });
 
+test("advanced reasoning curriculum adds progressive super-GM, 2800+, and engine tracks without exposing the answer", () => {
+  const programs = [
+    "Calcul avancé · palier super-GM",
+    "Calcul avancé · palier 2800+",
+    "Calcul avancé · palier moteur",
+  ];
+  const tracks = programs.map((program) => LESSONS.filter((lesson) => lesson.program === program));
+  assert.ok(tracks[0].length >= 40, `expected 40+ super-GM study drills, got ${tracks[0].length}`);
+  assert.ok(tracks[1].length >= 10, `expected 10+ deeper 2800+ drills, got ${tracks[1].length}`);
+  assert.ok(tracks[2].length >= 1, "expected at least one engine-level branch study");
+  for (const lesson of tracks.flat()) {
+    assert.equal(lesson.level, "Expert");
+    assert.equal(lesson.coachBeforeMove, true);
+    assert.ok(lesson.difficultyTrack);
+    assert.ok(lesson.reflectionLabels.every((label) => label.length > 10));
+    assert.ok(lesson.sequence.length >= 6);
+    assert.ok(lesson.question && lesson.principle && lesson.transfer && lesson.pitfall);
+    assert.ok(lesson.movePrompt.includes("Stockfish ne montrera sa comparaison qu’après ton essai"));
+  }
+});
+
 test("15 original precision lessons progress from habit-building to independent review", () => {
   const program = "Précision · jouer juste et vérifier";
   const lessons = LESSONS.filter((lesson) => lesson.program === program);

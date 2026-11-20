@@ -318,6 +318,21 @@
           <button class="btn method-path-action" type="button" data-method-surprise="Calcul avancé · lignes de grands maîtres">Exercice surprise</button>
           <p class="method-path-source">Reconstitutions originales à partir des parties Morphy–Duke/Count (1858), Byrne–Fischer (1956) et Kasparov–Topalov (1999). Les coups historiques ne valent pas preuve de meilleur coup.</p>
         </article>
+        <article class="method-path method-path-complex" data-method-path="Calcul avancé · palier super-GM">
+          <div class="method-path-kicker">Étape 1 · Signaux, menaces et réponses</div><h3>Positions complexes · défi super-GM</h3>
+          <p>Avant de suivre une partie de maître, nomme ce qui a changé, les menaces des deux camps, ton candidat et la défense adverse la plus gênante. « 2700+ » est un repère de difficulté pédagogique, pas un Elo FIDE mesuré.</p>
+          <p class="method-path-count" data-method-count>Positions en cours de comptage…</p><button class="btn method-path-action" type="button" data-method-action="Calcul avancé · palier super-GM">Commencer les défis super-GM</button><button class="btn method-path-action" type="button" data-method-surprise="Calcul avancé · palier super-GM">Défi super-GM surprise</button>
+        </article>
+        <article class="method-path method-path-complex" data-method-path="Calcul avancé · palier 2800+">
+          <div class="method-path-kicker">Étape 2 · Candidats, meilleures défenses, contre-jeu</div><h3>Études très complexes · défi 2800+</h3>
+          <p>Compare plusieurs candidats face aux défenses les plus résistantes. Cherche les ressources cachées, les coups intermédiaires et les contre-menaces. « 2800+ » est un repère du parcours, pas une équivalence Elo certifiée.</p>
+          <p class="method-path-count" data-method-count>Positions en cours de comptage…</p><button class="btn method-path-action" type="button" data-method-action="Calcul avancé · palier 2800+">Commencer les études 2800+</button><button class="btn method-path-action" type="button" data-method-surprise="Calcul avancé · palier 2800+">Étude 2800+ surprise</button>
+        </article>
+        <article class="method-path method-path-engine" data-method-path="Calcul avancé · palier moteur">
+          <div class="method-path-kicker">Étape 3 · Arbres de variantes et comparaison critique</div><h3>Au-delà des repères humains · étude moteur</h3>
+          <p>Explore plusieurs branches, calcule les réponses fortes des deux camps et distingue une ligne de recherche d’une certitude. Ce palier entraîne une méthode d’analyse; il n’attribue pas un Elo humain et ne prétend pas rivaliser avec un moteur.</p>
+          <p class="method-path-count" data-method-count>Positions en cours de comptage…</p><button class="btn method-path-action" type="button" data-method-action="Calcul avancé · palier moteur">Commencer les études moteur</button><button class="btn method-path-action" type="button" data-method-surprise="Calcul avancé · palier moteur">Étude moteur surprise</button>
+        </article>
       </div>
     </section>
 
@@ -337,7 +352,7 @@
       <div class="lesson-filter-row">
         <label>Rechercher<input id="lesson-search" type="search" placeholder="thème, coup, piège ou méthode"></label>
         <label>Niveau<select id="lesson-level-filter"><option value="">Tous les niveaux</option><option>Débutant</option><option>Intermédiaire</option><option>Avancé</option><option>Expert</option></select></label>
-        <label>Parcours<select id="lesson-program-filter"><option value="">Tous les parcours</option><option>Méthode · trouver le meilleur coup</option><option>Carlsen · amélioration et conversion</option><option>Carlsen · reconnaissance des motifs</option><option>Étude des ouvertures</option><option>Étude du milieu de jeu</option><option>Étude des finales</option><option>Étudier le demi-coup adverse</option><option>Fischer · préparation et précision</option><option>Auto-réfutation · méthode Hikaru</option><option>Auto-évaluation · méthode Hikaru</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Capablanca · fondamentaux et principes</option><option>Lasker · mobilisation et principes</option><option>Edward Lasker · calcul et stratégie</option><option>Calcul · meilleure réponse adverse</option><option>Manuels classiques · principes et technique</option><option>Calcul profond · parties maîtresses</option><option>Précision · jouer juste et vérifier</option><option>SupaChess · représenter les possibilités</option><option>Fischer · préparation et précision</option><option>Carlsen · amélioration et conversion</option><option>Capablanca · fondamentaux et principes</option><option>Lasker · mobilisation et principes</option><option>Edward Lasker · calcul et stratégie</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Anti-erreurs · anticiper l’adversaire</option><option>Calcul · meilleure réponse adverse</option><option>Manuels classiques · principes et technique</option><option>Calcul profond · parties maîtresses</option><option>Précision · jouer juste et vérifier</option><option>SupaChess · représenter les possibilités</option><option>Cours · milieu de jeu et conversion</option><option>Cours · milieu de jeu : forces et plans</option><option>Cours · finales de pions</option><option>Cours · fondamentaux et règles</option><option>Cours · défense active et ressources</option><option>Calcul avancé · lignes de grands maîtres</option></select></label>
+        <label>Parcours<select id="lesson-program-filter"><option value="">Tous les parcours</option><option>Méthode · trouver le meilleur coup</option><option>Carlsen · amélioration et conversion</option><option>Carlsen · reconnaissance des motifs</option><option>Étude des ouvertures</option><option>Étude du milieu de jeu</option><option>Étude des finales</option><option>Étudier le demi-coup adverse</option><option>Fischer · préparation et précision</option><option>Auto-réfutation · méthode Hikaru</option><option>Auto-évaluation · méthode Hikaru</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Capablanca · fondamentaux et principes</option><option>Lasker · mobilisation et principes</option><option>Edward Lasker · calcul et stratégie</option><option>Calcul · meilleure réponse adverse</option><option>Manuels classiques · principes et technique</option><option>Calcul profond · parties maîtresses</option><option>Précision · jouer juste et vérifier</option><option>SupaChess · représenter les possibilités</option><option>Fischer · préparation et précision</option><option>Carlsen · amélioration et conversion</option><option>Capablanca · fondamentaux et principes</option><option>Lasker · mobilisation et principes</option><option>Edward Lasker · calcul et stratégie</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Anti-erreurs · anticiper l’adversaire</option><option>Calcul · meilleure réponse adverse</option><option>Manuels classiques · principes et technique</option><option>Calcul profond · parties maîtresses</option><option>Précision · jouer juste et vérifier</option><option>SupaChess · représenter les possibilités</option><option>Cours · milieu de jeu et conversion</option><option>Cours · milieu de jeu : forces et plans</option><option>Cours · finales de pions</option><option>Cours · fondamentaux et règles</option><option>Cours · défense active et ressources</option><option>Calcul avancé · lignes de grands maîtres</option><option>Calcul avancé · palier super-GM</option><option>Calcul avancé · palier 2800+</option><option>Calcul avancé · palier moteur</option></select></label>
         <label>Concept
           <select id="lesson-concept-filter"><option value="">Tous les concepts</option></select>
         </label>
@@ -442,7 +457,7 @@
     </section>
     <p class="lesson-note">Les exercices sont rédigés pour SupaChess. Chaque FEN et chaque demi-coup des lignes étudiées sont vérifiés par les tests; les variantes Stockfish restent dépendantes du temps de recherche.</p>
   </main>
-<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14919</footer>
+<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14920</footer>
 
   <script src="vendor/chess.js"></script>
   <script src="js/engine.js"></script>
@@ -454,7 +469,7 @@
   <script src="js/selfplay-method-lessons.js?v=selfplay-method-20261116-v3"></script>
   <script src="js/provided-course-lessons.js?v=chess-courses-20261119-v1"></script>
   <script src="js/course-content-pipeline.js?v=course-verifier-generators-20261120-v1"></script>
-  <script src="js/book-lessons.js?v=course-content-autogenerator-20261120-v1"></script>
+  <script src="js/book-lessons.js?v=advanced-reasoning-tiers-20261120-v1"></script>
   <script src="js/lesson-concepts.js?v=imagination-concepts-20261116-v1"></script>
   <script src="js/academy-content-counts.js?v=academy-content-counters-20261106-v1"></script>
   <script src="js/selfplay-study.js?v=engine-match-pgn-20261116-v1"></script>

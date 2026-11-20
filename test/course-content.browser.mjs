@@ -48,7 +48,27 @@ try {
   assert.equal(await page.locator("#lesson-board .sq").count(), 64);
   assert.equal(await page.locator("[data-sf-lessons]").innerText(), "Vérifier et créer leçons/exercices");
   assert.equal(await page.locator("[data-sf-puzzles]").innerText(), "Vérifier puzzles et créer des exercices");
-  console.log(JSON.stringify({ checks: ["catalogue généré", "leçon miroir ouverte", "échiquier complet", "commandes de vérification visibles", "aucune exception JavaScript"], report, wasmResponses }, null, 2));
+  const hardLesson = await page.evaluate(() => {
+    const lesson = window.SupaChessLessons.find((item) => item.program === "Calcul avancé · palier super-GM");
+    return lesson && { id: lesson.id, uci: lesson.sequence[0].uci };
+  });
+  assert.ok(hardLesson?.id, "the hard study path should be present in the page catalogue");
+  assert.equal(await page.evaluate((id) => window.SupaChessAcademy.openLesson(id), hardLesson.id), true);
+  await page.waitForFunction(() => document.querySelector("#lesson-title")?.textContent.includes("super-GM"));
+  assert.equal(await page.locator("#lesson-reflection").isVisible(), true);
+  assert.equal(await page.locator("#lesson-engine-analyze").isVisible(), false);
+  assert.equal(await page.locator("#lesson-engine-analysis").isVisible(), false);
+  assert.equal(await page.locator("#lesson-move-list li").count(), 0);
+  await page.locator("#lesson-choices button").filter({ hasText: "Nommer les changements" }).click();
+  await page.locator("#lesson-reflection-candidate").fill("Je repère les pièces actives et propose un candidat de défense.");
+  await page.locator("#lesson-reflection-reply").fill("Je vérifie la contre-menace adverse et calcule ma réponse.");
+  await page.locator("#lesson-reflection-submit").click();
+  assert.equal(await page.locator("#lesson-engine-analyze").isVisible(), false, "engine lines stay hidden until a move attempt");
+  await page.locator(`#lesson-board .sq[data-square="${hardLesson.uci.slice(0, 2)}"]`).click();
+  await page.locator(`#lesson-board .sq[data-square="${hardLesson.uci.slice(2, 4)}"]`).click();
+  await page.waitForFunction(() => document.querySelectorAll("#lesson-move-list li").length === 1);
+  assert.equal(await page.locator("#lesson-engine-analyze").isVisible(), true, "engine comparison opens after the first attempt");
+  console.log(JSON.stringify({ checks: ["catalogue généré", "leçon miroir ouverte", "échiquier complet", "commandes de vérification visibles", "raisonnement écrit avant Stockfish", "ligne cachée jusqu’au premier essai", "aucune exception JavaScript"], report, wasmResponses }, null, 2));
   assert.deepEqual(pageErrors, [], JSON.stringify({ pageErrors, wasmResponses, wasmRequests: requests.filter((request) => request.includes("wasm")) }));
 } finally {
   await browser.close();

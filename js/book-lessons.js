@@ -4311,11 +4311,85 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
             "Visualise toute la ligne sans déplacer les pièces et vérifie la position obtenue après chaque réponse adverse.",
           ],
           sequence,
+          historicalLine: true,
         });
       }
     }
     drills.sort((a, b) => b.sequence.length - a.sequence.length || a.sourceGame.localeCompare(b.sourceGame) || a.id.localeCompare(b.id));
-    return drills;
+
+    // Turn verified historical positions into three increasingly demanding
+    // reasoning tasks. Historical moves stay labelled as study material, never
+    // as engine-best claims; engine comparison is withheld until the learner
+    // has recorded a candidate and an adverse reply, then attempted a move.
+    const tiers = [
+      {
+        minPlies: 6,
+        slug: "super-gm",
+        program: "Calcul avancé · palier super-GM",
+        label: "Défi super-GM · repère 2700+ (indicatif)",
+        question: "Quelle démarche répond le mieux aux signaux de cette position avant de suivre la partie ?",
+        choices: [
+          { text: "Nommer les changements et menaces, proposer un candidat, puis calculer la réponse la plus gênante.", correct: true },
+          { text: "Copier le coup historique sans vérifier les menaces ni les autres candidats.", correct: false },
+          { text: "Demander le top 1 avant d’avoir formulé une idée ou une réponse adverse.", correct: false },
+        ],
+        principle: "Le niveau de travail vient de la qualité du diagnostic : repérer les signaux, relier menace et plan, puis calculer la défense adverse. Le coup historique est un scénario d’étude, pas une preuve qu’il soit le meilleur.",
+        reflectionMode: "threat",
+        reflectionLabels: ["Signaux observés et coup candidat (pourquoi ?)", "Menace adverse la plus forte, ma réponse et la suite prévue"],
+      },
+      {
+        minPlies: 8,
+        slug: "2800-plus",
+        program: "Calcul avancé · palier 2800+",
+        label: "Défi 2800+ · complexité exceptionnelle",
+        question: "Comment départager deux candidats quand chacun autorise plusieurs défenses actives ?",
+        choices: [
+          { text: "Comparer les meilleures défenses de chaque branche, les ressources tactiques et les positions obtenues.", correct: true },
+          { text: "Calculer seulement la réponse la plus naturelle à mon candidat favori.", correct: false },
+          { text: "Choisir le candidat qui ressemble au coup joué dans la partie, sans tester les alternatives.", correct: false },
+        ],
+        principle: "Dans une position complexe, un candidat ne se juge pas contre une réponse arrangeante. Il faut le confronter à sa défense la plus résistante, comparer les branches et vérifier les ressources intermédiaires.",
+        reflectionMode: "candidates",
+        reflectionLabels: ["Deux candidats et le but concret de chacun", "Pour chaque candidat : meilleure défense adverse et ma suite"],
+      },
+      {
+        minPlies: 10,
+        slug: "engine-level",
+        program: "Calcul avancé · palier moteur",
+        label: "Étude moteur · arbre de variantes approfondi",
+        question: "Quelle méthode permet d’utiliser une recherche moteur sans confondre classement, preuve et explication ?",
+        choices: [
+          { text: "Construire plusieurs branches légales, suivre les meilleures réponses des deux camps, puis expliquer les différences observables.", correct: true },
+          { text: "Traiter la première variante affichée comme la seule suite possible et comme une explication complète.", correct: false },
+          { text: "Comparer seulement le premier coup sans regarder les réponses adverses ni la position finale.", correct: false },
+        ],
+        principle: "Le moteur classe des coups selon une recherche donnée. Le travail consiste à examiner les branches, les réponses fortes, les ressources et les évaluations dans leur contexte; aucun score seul ne remplace l’explication de la position.",
+        reflectionMode: "branches",
+        reflectionLabels: ["Branches candidates : idée et signal de chaque branche", "Réponse adverse critique, contre-ressource et position finale à comparer"],
+      },
+    ];
+    const advanced = [];
+    for (const drill of drills) {
+      for (const tier of tiers) {
+        if (drill.sequence.length < tier.minPlies) continue;
+        advanced.push({
+          ...drill,
+          id: drill.id + "-" + tier.slug,
+          program: tier.program,
+          difficultyTrack: tier.label,
+          title: tier.label + " · " + drill.title.replace(/^Calculer une longue suite · /, ""),
+          question: tier.question,
+          choices: tier.choices.map((choice) => ({ ...choice })),
+          principle: tier.principle,
+          reflectionMode: tier.reflectionMode,
+          reflectionLabels: tier.reflectionLabels.slice(),
+          coachBeforeMove: true,
+          movePrompt: "Avant de jouer, consigne tes candidats et la meilleure réponse adverse que tu crains. La suite historique est un objet d’étude; Stockfish ne montrera sa comparaison qu’après ton essai.",
+          hints: drill.hints.concat("La ligne historique n’est pas forcément le meilleur coup moteur : formule ton idée et réfute-la avant de comparer."),
+        });
+      }
+    }
+    return drills.concat(advanced);
   }
   const advancedReplayLessons = buildAdvancedReplayLessons();
   LESSONS.push(...advancedReplayLessons);
@@ -4391,10 +4465,11 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
       lessonEvalTimer = null;
     }
     if (!game || reviewSession || enginePreview) return;
-    if (stockfishCoachMode && !stockfishReflection) {
+    if (stockfishCoachMode && (!stockfishReflection || (LESSONS[lessonIndex] && LESSONS[lessonIndex].coachBeforeMove && sequenceIndex === 0))) {
       if (showEvalBar) {
-        $("lesson-eval-label").textContent = "Après réflexion";
-        $("lesson-evalbar").setAttribute("aria-valuetext", "L’évaluation sera disponible après ta réflexion.");
+        const waitingForAttempt = Boolean(LESSONS[lessonIndex] && LESSONS[lessonIndex].coachBeforeMove && stockfishReflection && sequenceIndex === 0);
+        $("lesson-eval-label").textContent = waitingForAttempt ? "Après ton essai" : "Après réflexion";
+        $("lesson-evalbar").setAttribute("aria-valuetext", waitingForAttempt ? "L’évaluation sera disponible après ton premier essai." : "L’évaluation sera disponible après ta réflexion.");
       }
       return;
     }
@@ -4576,7 +4651,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
       title.textContent = (visibleIndex + 1) + ". " + lesson.title;
       const meta = document.createElement("span");
       meta.className = "lesson-catalog-meta";
-      meta.textContent = lesson.level + " · " + lesson.program + " · " + lesson.author;
+      meta.textContent = lesson.level + (lesson.difficultyTrack ? " · " + lesson.difficultyTrack : "") + " · " + lesson.program + " · " + lesson.author;
       const state = document.createElement("span");
       const timesCompleted = completionCount(progress[lesson.id]);
       state.className = "lesson-catalog-state" + (timesCompleted ? " is-completed" : "");
@@ -4703,24 +4778,28 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     $("lesson-engine-analysis").hidden = true;
     $("lesson-engine-return").hidden = true;
     const isSelfEvaluationLesson = Boolean(LESSONS[index] && LESSONS[index].program === SELF_EVALUATION_PROGRAM);
-    stockfishCoachMode = Boolean(options.coach || (LESSONS[index] && [SELF_REFUTATION_PROGRAM, SELF_EVALUATION_PROGRAM].includes(LESSONS[index].program)));
+    stockfishCoachMode = Boolean(options.coach || (LESSONS[index] && (LESSONS[index].coachBeforeMove || [SELF_REFUTATION_PROGRAM, SELF_EVALUATION_PROGRAM].includes(LESSONS[index].program))));
     const reflectionTitle = $("lesson-reflection-title");
     const reflectionDescription = $("lesson-reflection-description");
     const reflectionLabels = $("lesson-reflection").querySelectorAll("label");
     if (reflectionTitle && reflectionDescription && reflectionLabels.length >= 2) {
-      reflectionTitle.textContent = isSelfEvaluationLesson ? "Avant Stockfish : juge ton demi-coup" : "Avant Stockfish : calcule ta propre variante";
-      reflectionDescription.textContent = isSelfEvaluationLesson
+      const lesson = LESSONS[index];
+      reflectionTitle.textContent = isSelfEvaluationLesson ? "Avant Stockfish : juge ton demi-coup" : lesson.coachBeforeMove ? "Avant les variantes : construis ton analyse" : "Avant Stockfish : calcule ta propre variante";
+      reflectionDescription.textContent = lesson.coachBeforeMove
+        ? "Aucune ligne moteur n’est affichée avant ton essai. Note les signaux, tes candidats et la meilleure réponse adverse possible. La partie historique sert de comparaison, pas de vérité moteur ni de prédiction de l’adversaire."
+        : isSelfEvaluationLesson
         ? "Écris ton coup et l’idée visée, puis nomme une faiblesse possible. Tu n’as pas à deviner le choix adverse : les variantes servent ensuite à éprouver ton diagnostic."
         : "Écris ton candidat, puis le meilleur demi-coup adverse que tu crains et ta réponse prévue. Stockfish vérifiera ensuite les lignes ; il ne devinera pas ton raisonnement.";
-      reflectionLabels[0].textContent = isSelfEvaluationLesson ? "Mon demi-coup candidat et son idée" : "Mon coup candidat et son idée";
-      reflectionLabels[1].textContent = isSelfEvaluationLesson ? "Pourquoi mon demi-coup pourrait-il être mauvais ?" : "La réponse adverse la plus gênante, puis ma suite";
+      reflectionLabels[0].textContent = lesson.reflectionLabels?.[0] || (isSelfEvaluationLesson ? "Mon demi-coup candidat et son idée" : "Mon coup candidat et son idée");
+      reflectionLabels[1].textContent = lesson.reflectionLabels?.[1] || (isSelfEvaluationLesson ? "Pourquoi mon demi-coup pourrait-il être mauvais ?" : "La réponse adverse la plus gênante, puis ma suite");
     }
     stockfishReflection = null;
     $("lesson-reflection").hidden = !stockfishCoachMode;
     $("lesson-reflection-candidate").value = "";
     $("lesson-reflection-reply").value = "";
     $("lesson-reflection-submit").disabled = false;
-    $("lesson-reflection-submit").textContent = isSelfEvaluationLesson ? "Valider mon auto-évaluation et afficher Stockfish" : "Valider mon calcul et afficher Stockfish";
+    $("lesson-reflection-submit").textContent = isSelfEvaluationLesson ? "Valider mon auto-évaluation et afficher Stockfish" :
+      LESSONS[index].coachBeforeMove ? "Consigner mes notes et tenter la ligne" : "Valider mon calcul et afficher Stockfish";
     $("lesson-reflection-status").textContent = "";
     $("lesson-reflection-review").hidden = true;
     $("lesson-review-status").textContent = "";
@@ -4887,6 +4966,11 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     const lesson = LESSONS[lessonIndex];
     const sequence = currentLessonSequence();
     if (!game || enginePreview || !principleAnswered || waitingForBook || sequenceIndex >= sequence.length) return;
+    if (lesson.coachBeforeMove && !stockfishReflection) {
+      $("lesson-feedback").textContent = "Avant de jouer, écris les signaux observés, ton candidat et la meilleure réponse adverse que tu envisages.";
+      $("lesson-reflection-candidate").focus();
+      return;
+    }
     const positionFen = game.fen();
     const cached = engineCache.get(positionFen);
     const engineBest = cached && cached.choices && cached.choices[0];
@@ -4951,12 +5035,20 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
         : engineFailureFens.has(positionFen)
           ? "Stockfish est indisponible pour cette position; la ligne pédagogique sert de secours."
           : "Cette réponse ne suit pas la séquence pédagogique. Stockfish calcule encore la position; compare les variantes puis réessaie.";
+      if (lesson.coachBeforeMove) {
+        $("lesson-engine-analyze").hidden = false;
+        $("lesson-engine-analyze").textContent = "Comparer ma tentative avec Stockfish";
+      }
       updateProgressLabel();
       if (!cached) runEngineComparison(false);
       return;
     }
     if (root.SupaChessAudio) root.SupaChessAudio.play(game.in_check() ? "check" : (move.flags && (move.flags.includes("c") || move.flags.includes("e")) ? "capture" : "move"));
     sequenceIndex++;
+    if (lesson.coachBeforeMove && sequenceIndex === 1) {
+      $("lesson-engine-analyze").hidden = false;
+      $("lesson-engine-analyze").textContent = "Comparer ma tentative avec Stockfish";
+    }
     invalidateLessonEngineLines();
     clearEvalBar();
     const anticipated = anticipatingBook;
@@ -5484,16 +5576,25 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   $("lesson-reflection-submit").addEventListener("click", () => {
     const candidate = $("lesson-reflection-candidate").value.trim();
     const reply = $("lesson-reflection-reply").value.trim();
-    if (!candidate || !reply) {
-      $("lesson-reflection-status").textContent = LESSONS[lessonIndex] && LESSONS[lessonIndex].program === SELF_EVALUATION_PROGRAM ? "Note ton demi-coup candidat et une faiblesse possible de ce coup avant de regarder Stockfish." : "Note ton coup candidat et au moins une réponse adverse avant de regarder Stockfish.";
+    const coachBeforeMove = Boolean(LESSONS[lessonIndex] && LESSONS[lessonIndex].coachBeforeMove);
+    if (!candidate || !reply || (coachBeforeMove && (candidate.length < 20 || reply.length < 20))) {
+      $("lesson-reflection-status").textContent = coachBeforeMove
+        ? "Écris une note développée dans chaque champ (20 caractères minimum). Ces notes ne sont pas évaluées automatiquement."
+        : LESSONS[lessonIndex] && LESSONS[lessonIndex].program === SELF_EVALUATION_PROGRAM ? "Note ton demi-coup candidat et une faiblesse possible de ce coup avant de regarder Stockfish." : "Note ton coup candidat et au moins une réponse adverse avant de regarder Stockfish.";
       return;
     }
     stockfishReflection = { candidate: candidate, reply: reply };
     $("lesson-reflection-submit").disabled = true;
-    $("lesson-reflection-submit").textContent = "Calcul enregistré";
-    $("lesson-reflection-status").textContent = LESSONS[lessonIndex] && LESSONS[lessonIndex].program === SELF_EVALUATION_PROGRAM ? "Ton auto-évaluation est gardée dans cette page. Lance maintenant la comparaison Stockfish." : "Ta prévision est gardée dans cette page. Lance maintenant la comparaison Stockfish.";
-    $("lesson-engine-analyze").hidden = false;
-    $("lesson-engine-analyze").focus();
+    $("lesson-reflection-submit").textContent = coachBeforeMove ? "Notes consignées" : "Calcul enregistré";
+    $("lesson-reflection-status").textContent = coachBeforeMove
+      ? "Notes consignées sur cet appareil; leur contenu n’est pas noté automatiquement. Essaie maintenant ton candidat sur l’échiquier; la comparaison Stockfish sera accessible après ce premier essai."
+      : LESSONS[lessonIndex] && LESSONS[lessonIndex].program === SELF_EVALUATION_PROGRAM ? "Ton auto-évaluation est gardée dans cette page. Lance maintenant la comparaison Stockfish." : "Ta prévision est gardée dans cette page. Lance maintenant la comparaison Stockfish.";
+    if (!coachBeforeMove) {
+      $("lesson-engine-analyze").hidden = false;
+      $("lesson-engine-analyze").focus();
+    } else {
+      $("lesson-board").focus?.();
+    }
   });
   $("lesson-eval-toggle").addEventListener("click", () => {
     showEvalBar = !showEvalBar;
