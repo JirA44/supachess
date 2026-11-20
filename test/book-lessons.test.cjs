@@ -320,6 +320,9 @@ test("Stockfish lesson lines can be played for a chosen number of plies with per
   assert.match(source, /async function buildStockfishSequence/);
   assert.match(source, /while \(sequence\.length < maxPlies && replay\.moves\(\)\.length\)/);
   assert.match(source, /lessonEngine\.analyze\(\{ fen: replay\.fen\(\), multipv: 1, movetime: 700, elo: 0 \}\)/);
+  assert.match(source, /let lessonLoadGeneration = 0/);
+  assert.match(source, /lessonLoadGeneration\+\+/);
+  assert.match(source, /lessonLoadGeneration !== generationAtStart \|\| game !== gameAtStart \|\| lessonIndex !== lessonIndexAtStart/);
   assert.match(source, /appendMove\(move\.san, engineSequence \? "Stockfish" : "Ligne pédagogique", action\.explanation\)/);
   assert.match(source, /className = "lesson-move-explanation"/);
 });

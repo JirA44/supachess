@@ -20,7 +20,7 @@ const REVIEW_MOVE_CLASSES = [
   { id: "unrated", symbol: "…", label: "Non évalué" },
 ];
 
-const reviewState = { fens: [], moves: [], grades: [], moveGrades: [], correctionExercises: [], currentHeaders: {}, gameSummary: null, sessionStats: null, exercise: null, running: false, analysisGeneration: 0, returnState: null, modalReturnFocus: null, variation: null, bestMovePending: false };
+const reviewState = { fens: [], moves: [], grades: [], moveGrades: [], correctionExercises: [], currentHeaders: {}, gameSummary: null, sessionStats: null, exercise: null, displayActive: false, running: false, analysisGeneration: 0, returnState: null, modalReturnFocus: null, variation: null, bestMovePending: false };
 window.SupaChessClearReviewAccuracy = () => { reviewState.gameSummary = null; reviewState.sessionStats = null; };
 window.SupaChessPrepareNewGame = () => {
   reviewState.analysisGeneration++;
@@ -28,6 +28,7 @@ window.SupaChessPrepareNewGame = () => {
   reviewState.returnState = null;
   reviewState.variation = null;
   reviewState.exercise = null;
+  reviewState.displayActive = false;
   reviewState.bestMovePending = false;
   reviewState.fens = [];
   reviewState.moves = [];
@@ -105,9 +106,11 @@ function reviewStart(pgn, headers = {}) {
     if (game[loadFn](source, { sloppy: true }) && typeof game.header === "function") parsedHeaders = game.header();
   }
   reviewState.currentHeaders = { ...suppliedHeaders, ...parsedHeaders };
+  reviewState.displayActive = Boolean(source.trim() || Object.keys(suppliedHeaders).length);
   reviewState.gameSummary = source.trim() || Object.keys(suppliedHeaders).length
     ? { headers: { ...reviewState.currentHeaders }, players: [] }
     : null;
+  window.applyLevelDiagnosticLock?.();
   window.SupaChessRenderAccuracy?.();
   reviewShowModal(source);
 }
@@ -487,6 +490,7 @@ async function reviewRun(options = {}) {
   const headers = { ...reviewState.currentHeaders, ...(options.headers || {}), ...parsedHeaders };
 
   if (!options.batch || options.startCorrections) {
+    reviewState.displayActive = true;
     reviewState.gameSummary = { headers: { ...headers }, players: [] };
     window.SupaChessRenderAccuracy?.();
   }
@@ -1370,6 +1374,7 @@ function reviewSetReplayControls(active) {
 function reviewBeginReplay() {
   window.deactivateLevelDiagnosticForReview?.("relecture");
   if (reviewState.returnState) return;
+  reviewState.displayActive = true;
   reviewSetPlayerClocksHidden(true);
   reviewState.variation = null;
   document.getElementById("replay-bar").classList.remove("hidden");
@@ -1386,6 +1391,7 @@ function reviewBeginReplay() {
     feedbackHtml: feedback.innerHTML,
     coachClass: document.getElementById("coach-panel").className,
   };
+  window.applyLevelDiagnosticLock?.();
   reviewSyncBestMoveButton();
   window.SupaChessRenderAccuracy?.();
 }
@@ -1397,6 +1403,7 @@ function reviewRestoreAfterReplay() {
   reviewState.exercise = null;
   const saved = reviewState.returnState;
   if (!saved) {
+    reviewState.displayActive = false;
     window.setSupaCorrectionExerciseMode?.(false);
     if (wasCorrection) reviewClearCorrectionResumeParams();
     return;
@@ -1414,6 +1421,8 @@ function reviewRestoreAfterReplay() {
   document.getElementById("coach-panel").className = saved.coachClass;
   reviewState.returnState = null;
   reviewState.variation = null;
+  reviewState.displayActive = false;
+  window.applyLevelDiagnosticLock?.();
   reviewSyncBestMoveButton();
   reviewState.bestMovePending = false;
   window.SupaReplayHistory = null;

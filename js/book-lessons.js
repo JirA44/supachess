@@ -4239,6 +4239,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   const STORE_KEY = "supachess-book-lessons-v1";
   const boardUI = new BoardUI($("lesson-board"), onSquareClick);
   let lessonIndex = 0;
+  let lessonLoadGeneration = 0;
   let game = null;
   let sequenceIndex = 0;
   let selectedSquare = null;
@@ -4596,6 +4597,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   }
 
   function loadLesson(index, options = {}) {
+    lessonLoadGeneration++;
     if (bookReplyTimer !== null) {
       root.clearTimeout(bookReplyTimer);
       bookReplyTimer = null;
@@ -4833,8 +4835,13 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
       const prefix = sequence.slice(0, sequenceIndex);
       if (engineSequenceMaxPlies === null) engineSequenceMaxPlies = selectedStockfishSequenceLength();
       const pliesRemaining = engineSequenceMaxPlies - prefix.length;
+      const generationAtStart = lessonLoadGeneration;
+      const gameAtStart = game;
+      const lessonIndexAtStart = lessonIndex;
       waitingForBook = true;
-      engineSequence = prefix.concat(await buildStockfishSequence(positionFen, engineBest, lesson.color, pliesRemaining));
+      const generatedContinuation = await buildStockfishSequence(positionFen, engineBest, lesson.color, pliesRemaining);
+      if (lessonLoadGeneration !== generationAtStart || game !== gameAtStart || lessonIndex !== lessonIndexAtStart) return;
+      engineSequence = prefix.concat(generatedContinuation);
       waitingForBook = false;
       sequenceIndex = prefix.length;
       expected = engineSequence[sequenceIndex];

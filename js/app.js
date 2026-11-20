@@ -59,11 +59,11 @@ function isLevelDiagnosticActive() {
 }
 function isReviewDisplayActive() {
   const review = typeof reviewState !== "undefined" ? reviewState : null;
-  return Boolean(review && (review.running || review.returnState || review.exercise));
+  return Boolean(review && (review.displayActive || review.running || review.returnState || review.exercise));
 }
 let correctionExerciseModeActive = false;
 let correctionModeRestore = null;
-function isUnassistedAidLockActive() { return state.unassistedGame && !correctionExerciseModeActive; }
+function isUnassistedAidLockActive() { return state.unassistedGame && !correctionExerciseModeActive && !isReviewDisplayActive(); }
 function isDiagnosticControlLockActive() {
   return isLevelDiagnosticActive() && !correctionExerciseModeActive;
 }
@@ -305,11 +305,11 @@ function syncEvalBarToggle() {
 }
 const evalBarToggle = $("btn-evalbar-toggle");
 if (evalBarToggle) evalBarToggle.addEventListener("click", () => {
-  if ((isUnassistedGameModeActive() && state.gameMode !== "supa-vs-supa") || isDiagnosticControlLockActive()) return;
+  if ((isUnassistedAidLockActive() && state.gameMode !== "supa-vs-supa") || isDiagnosticControlLockActive()) return;
   const visible = evalBarToggle.getAttribute("aria-pressed") !== "true";
   try { localStorage.setItem(EVALBAR_PREFERENCE_KEY, String(visible)); } catch (_) {}
   syncEvalBarToggle();
-  if (!correctionExerciseModeActive && state.gameMode !== "supa-vs-supa" && visible && typeof window.gamesMarkTrainingAidUsed === "function") window.gamesMarkTrainingAidUsed();
+  if (!correctionExerciseModeActive && !isReviewDisplayActive() && state.gameMode !== "supa-vs-supa" && visible && typeof window.gamesMarkTrainingAidUsed === "function") window.gamesMarkTrainingAidUsed();
 });
 setTimeout(syncEvalBarToggle, 0);
 function applyLevelDiagnosticLock() {
@@ -2106,7 +2106,7 @@ $("btn-abandon-diagnostic")?.addEventListener("click", () => {
 $("btn-dots").addEventListener("click", () => {
   if (isUnassistedAidLockActive() || isDiagnosticControlLockActive()) return;
   boardUI.showDots = !boardUI.showDots;
-  if (!correctionExerciseModeActive && boardUI.showDots && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
+  if (!correctionExerciseModeActive && !isReviewDisplayActive() && boardUI.showDots && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
   localStorage.setItem(DOTS_STORAGE_KEY, String(boardUI.showDots));
   syncDotsButton();
   renderBoard();
@@ -2114,7 +2114,7 @@ $("btn-dots").addEventListener("click", () => {
 $("btn-move-dots").addEventListener("click", () => {
   if (isUnassistedAidLockActive() || isDiagnosticControlLockActive()) return;
   boardUI.showMoveDots = !boardUI.showMoveDots;
-  if (!correctionExerciseModeActive && boardUI.showMoveDots && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
+  if (!correctionExerciseModeActive && !isReviewDisplayActive() && boardUI.showMoveDots && typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
   localStorage.setItem(MOVE_DOTS_STORAGE_KEY, String(boardUI.showMoveDots));
   syncMoveDotsButton();
   renderBoard();
