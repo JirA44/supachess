@@ -3803,8 +3803,12 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
   };
 
   root.startSupaChessMethodSurprise = function (program) {
-    const candidates = LESSONS.map((lesson, index) => ({ lesson, index }))
+    let candidates = LESSONS.map((lesson, index) => ({ lesson, index }))
       .filter(({ lesson }) => lesson.kind === "anticipation" && lesson.program === program);
+    if (!candidates.length) {
+      candidates = LESSONS.map((lesson, index) => ({ lesson, index }))
+        .filter(({ lesson }) => lesson.kind !== "anticipation" && lesson.program === program);
+    }
     if (!candidates.length) return false;
     let choices = candidates.filter(({ lesson }) => !(progress[lesson.id] && progress[lesson.id].completed));
     if (!choices.length) choices = candidates;

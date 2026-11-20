@@ -48,6 +48,12 @@ try {
   assert.equal(await page.locator("#lesson-board .sq").count(), 64);
   assert.equal(await page.locator("[data-sf-lessons]").innerText(), "Vérifier et créer leçons/exercices");
   assert.equal(await page.locator("[data-sf-puzzles]").innerText(), "Vérifier puzzles et créer des exercices");
+  await page.locator('[data-method-action="Calcul avancé · palier 2800+"]').click();
+  await page.waitForFunction(() => document.querySelector("#lesson-program-filter")?.value === "Calcul avancé · palier 2800+");
+  assert.ok((await page.locator("#lesson-catalog-count").innerText()).startsWith("28 affiché(s)"));
+  await page.locator('[data-method-surprise="Calcul avancé · palier moteur"]').click();
+  await page.waitForFunction(() => document.querySelector("#lesson-program-filter")?.value === "Calcul avancé · palier moteur" && document.querySelector("#lesson-source")?.textContent.includes("Exercice au hasard"));
+  assert.ok((await page.locator("#lesson-status").innerText()).includes("À toi"));
   const hardLesson = await page.evaluate(() => {
     const lesson = window.SupaChessLessons.find((item) => item.program === "Calcul avancé · palier super-GM");
     return lesson && { id: lesson.id, uci: lesson.sequence[0].uci };
@@ -68,7 +74,7 @@ try {
   await page.locator(`#lesson-board .sq[data-square="${hardLesson.uci.slice(2, 4)}"]`).click();
   await page.waitForFunction(() => document.querySelectorAll("#lesson-move-list li").length === 1);
   assert.equal(await page.locator("#lesson-engine-analyze").isVisible(), true, "engine comparison opens after the first attempt");
-  console.log(JSON.stringify({ checks: ["catalogue généré", "leçon miroir ouverte", "échiquier complet", "commandes de vérification visibles", "raisonnement écrit avant Stockfish", "ligne cachée jusqu’au premier essai", "aucune exception JavaScript"], report, wasmResponses }, null, 2));
+  console.log(JSON.stringify({ checks: ["catalogue généré", "leçon miroir ouverte", "échiquier complet", "boutons de parcours et surprise actifs", "commandes de vérification visibles", "raisonnement écrit avant Stockfish", "ligne cachée jusqu’au premier essai", "aucune exception JavaScript"], report, wasmResponses }, null, 2));
   assert.deepEqual(pageErrors, [], JSON.stringify({ pageErrors, wasmResponses, wasmRequests: requests.filter((request) => request.includes("wasm")) }));
 } finally {
   await browser.close();
