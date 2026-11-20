@@ -400,6 +400,29 @@ test("18 deep-calculation lessons use legal, sourced historical positions from t
   }
 });
 
+test("advanced master-game replay adds at least 40 new expert positions with six or more legal half-moves", () => {
+  const program = "Calcul avancé · lignes de grands maîtres";
+  const lessons = LESSONS.filter((lesson) => lesson.program === program);
+  const positionKey = (fen) => fen.split(" ").slice(0, 4).join(" ");
+  assert.ok(lessons.length >= 40, `expected at least 40 harder positions, got ${lessons.length}`);
+  assert.equal(new Set(lessons.map((lesson) => lesson.id)).size, lessons.length);
+  assert.equal(new Set(lessons.map((lesson) => positionKey(lesson.fen))).size, lessons.length);
+  assert.equal(new Set(lessons.map((lesson) => lesson.sourceGame)).size, 3);
+  assert.ok(lessons.every((lesson) => lesson.level === "Expert"));
+  assert.ok(lessons.every((lesson) => lesson.sequence.length >= 6));
+  assert.ok(lessons.every((lesson) => lesson.sourceUrl && lesson.movePrompt.includes("coup de la partie")));
+  assert.ok(lessons.every((lesson) => lesson.pitfall.includes("meilleur")));
+  for (const lesson of lessons) {
+    const position = setupGame(lesson, Chess);
+    assert.equal(position.turn(), lesson.color, `${lesson.id} should assign the right side to move`);
+    for (const action of lesson.sequence) {
+      const move = position.move({ from: action.uci.slice(0, 2), to: action.uci.slice(2, 4), promotion: action.uci.slice(4) || "q" });
+      assert.ok(move, `${lesson.id} historical line must remain legal at ${action.uci}`);
+      assert.ok(action.explanation, `${lesson.id} needs an explanation for each half-move`);
+    }
+  }
+});
+
 test("15 original precision lessons progress from habit-building to independent review", () => {
   const program = "Précision · jouer juste et vérifier";
   const lessons = LESSONS.filter((lesson) => lesson.program === program);

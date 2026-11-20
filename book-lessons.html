@@ -308,6 +308,16 @@
           <button class="btn method-path-action" type="button" data-method-surprise="Cours · défense active et ressources">Exercice surprise</button>
           <p class="method-path-source">Leçons originales inspirées des thèmes des cours fournis; positions et explications SupaChess.</p>
         </article>
+        <article class="method-path method-path-precision" data-method-path="Calcul avancé · lignes de grands maîtres">
+          <div class="method-path-kicker">27 · Expert · variantes historiques de 6 à 17 demi-coups</div>
+          <h3>Calcul extrême · tenir une longue variante</h3>
+          <p>Des positions ultérieures issues de trois parties célèbres. Reconstitue le coup réellement joué, garde les branches séparées, cherche la défense la plus résistante et compare ensuite avec Stockfish. La suite historique sert de support d’étude; elle n’est pas présentée comme le meilleur choix moteur.</p>
+          <ol><li>Annonce deux ou trois candidats avant de déplacer.</li><li>Calcule chaque ligne jusqu’au bout, en cherchant la réponse adverse la plus difficile.</li><li>Vérifie les échecs, prises, menaces, pièces non défendues et ressources de défense à chaque branche.</li><li>Évalue la position finale et compare la suite historique à l’analyse Stockfish.</li></ol>
+          <p class="method-path-count" data-method-count>Positions expertes en calcul long · nombre calculé au chargement</p>
+          <button class="btn method-path-action" type="button" data-method-action="Calcul avancé · lignes de grands maîtres">Commencer le parcours expert</button>
+          <button class="btn method-path-action" type="button" data-method-surprise="Calcul avancé · lignes de grands maîtres">Exercice surprise</button>
+          <p class="method-path-source">Reconstitutions originales à partir des parties Morphy–Duke/Count (1858), Byrne–Fischer (1956) et Kasparov–Topalov (1999). Les coups historiques ne valent pas preuve de meilleur coup.</p>
+        </article>
       </div>
     </section>
 
@@ -327,7 +337,7 @@
       <div class="lesson-filter-row">
         <label>Rechercher<input id="lesson-search" type="search" placeholder="thème, coup, piège ou méthode"></label>
         <label>Niveau<select id="lesson-level-filter"><option value="">Tous les niveaux</option><option>Débutant</option><option>Intermédiaire</option><option>Avancé</option><option>Expert</option></select></label>
-        <label>Parcours<select id="lesson-program-filter"><option value="">Tous les parcours</option><option>Méthode · trouver le meilleur coup</option><option>Carlsen · amélioration et conversion</option><option>Carlsen · reconnaissance des motifs</option><option>Étude des ouvertures</option><option>Étude du milieu de jeu</option><option>Étude des finales</option><option>Étudier le demi-coup adverse</option><option>Fischer · préparation et précision</option><option>Auto-réfutation · méthode Hikaru</option><option>Auto-évaluation · méthode Hikaru</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Capablanca · fondamentaux et principes</option><option>Lasker · mobilisation et principes</option><option>Edward Lasker · calcul et stratégie</option><option>Calcul · meilleure réponse adverse</option><option>Manuels classiques · principes et technique</option><option>Calcul profond · parties maîtresses</option><option>Précision · jouer juste et vérifier</option><option>SupaChess · représenter les possibilités</option><option>Fischer · préparation et précision</option><option>Carlsen · amélioration et conversion</option><option>Capablanca · fondamentaux et principes</option><option>Lasker · mobilisation et principes</option><option>Edward Lasker · calcul et stratégie</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Anti-erreurs · anticiper l’adversaire</option><option>Calcul · meilleure réponse adverse</option><option>Manuels classiques · principes et technique</option><option>Calcul profond · parties maîtresses</option><option>Précision · jouer juste et vérifier</option><option>SupaChess · représenter les possibilités</option><option>Cours · milieu de jeu et conversion</option><option>Cours · milieu de jeu : forces et plans</option><option>Cours · finales de pions</option><option>Cours · fondamentaux et règles</option><option>Cours · défense active et ressources</option></select></label>
+        <label>Parcours<select id="lesson-program-filter"><option value="">Tous les parcours</option><option>Méthode · trouver le meilleur coup</option><option>Carlsen · amélioration et conversion</option><option>Carlsen · reconnaissance des motifs</option><option>Étude des ouvertures</option><option>Étude du milieu de jeu</option><option>Étude des finales</option><option>Étudier le demi-coup adverse</option><option>Fischer · préparation et précision</option><option>Auto-réfutation · méthode Hikaru</option><option>Auto-évaluation · méthode Hikaru</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Capablanca · fondamentaux et principes</option><option>Lasker · mobilisation et principes</option><option>Edward Lasker · calcul et stratégie</option><option>Calcul · meilleure réponse adverse</option><option>Manuels classiques · principes et technique</option><option>Calcul profond · parties maîtresses</option><option>Précision · jouer juste et vérifier</option><option>SupaChess · représenter les possibilités</option><option>Fischer · préparation et précision</option><option>Carlsen · amélioration et conversion</option><option>Capablanca · fondamentaux et principes</option><option>Lasker · mobilisation et principes</option><option>Edward Lasker · calcul et stratégie</option><option>Tal · tactique et sacrifices à calculer</option><option>Kasparov · coups candidats et calcul</option><option>Stockfish · comparer et vérifier</option><option>Anti-erreurs · anticiper l’adversaire</option><option>Calcul · meilleure réponse adverse</option><option>Manuels classiques · principes et technique</option><option>Calcul profond · parties maîtresses</option><option>Précision · jouer juste et vérifier</option><option>SupaChess · représenter les possibilités</option><option>Cours · milieu de jeu et conversion</option><option>Cours · milieu de jeu : forces et plans</option><option>Cours · finales de pions</option><option>Cours · fondamentaux et règles</option><option>Cours · défense active et ressources</option><option>Calcul avancé · lignes de grands maîtres</option></select></label>
         <label>Concept
           <select id="lesson-concept-filter"><option value="">Tous les concepts</option></select>
         </label>
@@ -432,7 +442,7 @@
     </section>
     <p class="lesson-note">Les exercices sont rédigés pour SupaChess. Chaque FEN et chaque demi-coup des lignes étudiées sont vérifiés par les tests; les variantes Stockfish restent dépendantes du temps de recherche.</p>
   </main>
-<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14913</footer>
+<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14919</footer>
 
   <script src="vendor/chess.js"></script>
   <script src="js/engine.js"></script>
@@ -443,7 +453,8 @@
   <script src="js/sounds.js?v=profile-sounds-20261104"></script>
   <script src="js/selfplay-method-lessons.js?v=selfplay-method-20261116-v3"></script>
   <script src="js/provided-course-lessons.js?v=chess-courses-20261119-v1"></script>
-  <script src="js/book-lessons.js?v=course-lessons-stockfish-plies-20261119-v2"></script>
+  <script src="js/course-content-pipeline.js?v=course-verifier-generators-20261120-v1"></script>
+  <script src="js/book-lessons.js?v=course-content-autogenerator-20261120-v1"></script>
   <script src="js/lesson-concepts.js?v=imagination-concepts-20261116-v1"></script>
   <script src="js/academy-content-counts.js?v=academy-content-counters-20261106-v1"></script>
   <script src="js/selfplay-study.js?v=engine-match-pgn-20261116-v1"></script>

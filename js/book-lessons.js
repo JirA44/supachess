@@ -1663,6 +1663,23 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     });
   }
 
+  const providedCourseLessons = root.SUPA_PROVIDED_COURSE_LESSONS ||
+    (typeof module !== "undefined" && module.exports ? require("./provided-course-lessons.js") : []);
+  LESSONS.push(...providedCourseLessons);
+
+  const contentPipeline = root.SupaChessCourseContentPipeline ||
+    (typeof module !== "undefined" && module.exports ? require("./course-content-pipeline.js") : null);
+  const courseTransfers = contentPipeline && ChessClass
+    ? contentPipeline.buildCourseTransfers(providedCourseLessons, ChessClass)
+    : { generatedLessons: [], generatedExercises: [], rejected: [], sourceCount: 0 };
+  LESSONS.push(...courseTransfers.generatedLessons, ...courseTransfers.generatedExercises);
+  root.SUPA_COURSE_CONTENT_REPORT = {
+    sourceLessons: providedCourseLessons.length,
+    generatedLessons: courseTransfers.generatedLessons.length,
+    generatedExercises: courseTransfers.generatedExercises.length,
+    rejected: courseTransfers.rejected,
+  };
+
   const sourceLessons = LESSONS.slice();
   const responseExercises = [];
   for (const source of sourceLessons) {
@@ -4224,9 +4241,84 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     }
   );
 
-  const providedCourseLessons = root.SUPA_PROVIDED_COURSE_LESSONS ||
-    (typeof module !== "undefined" && module.exports ? require("./provided-course-lessons.js") : []);
-  LESSONS.push(...providedCourseLessons);
+  // Advanced replay drills start later in already validated master-game lines.
+  // They train long-variation visualization while explicitly separating the
+  // historical move from a Stockfish best-move claim.
+  function buildAdvancedReplayLessons() {
+    if (!ChessClass) return [];
+    const sources = LESSONS.filter((lesson) => lesson.program === "Calcul profond · parties maîtresses" &&
+      lesson.fen && lesson.sequence && lesson.sequence.length >= 7 && lesson.sourceGame && lesson.sourceUrl);
+    const knownPositions = new Set(LESSONS.filter((lesson) => lesson.fen)
+      .map((lesson) => lesson.fen.split(" ").slice(0, 4).join(" ")));
+    const drills = [];
+    for (const source of sources) {
+      for (let offset = 1; offset <= source.sequence.length - 6; offset++) {
+        const position = setupGame(source, ChessClass);
+        let legalPrefix = true;
+        for (let index = 0; index < offset; index++) {
+          if (!playUci(position, source.sequence[index].uci)) { legalPrefix = false; break; }
+        }
+        if (!legalPrefix) continue;
+        const fen = position.fen();
+        const positionKey = fen.split(" ").slice(0, 4).join(" ");
+        if (knownPositions.has(positionKey)) continue;
+        knownPositions.add(positionKey);
+
+        const historicalLine = source.sequence.slice(offset);
+        const sequence = historicalLine.map((action, index) => {
+          const replayPosition = new ChessClass(position.fen());
+          for (let prior = 0; prior < index; prior++) playUci(replayPosition, historicalLine[prior].uci);
+          const move = playUci(replayPosition, action.uci);
+          const san = move ? move.san : action.uci;
+          return {
+            side: index % 2 === 0 ? "user" : "book",
+            uci: action.uci,
+            explanation: "Dans la suite historique, " + san + " a été joué. Repère l’effet concret du demi-coup, puis compare les réponses possibles avec Stockfish.",
+          };
+        });
+        if (sequence.length < 6 || !sequence[0] || !sequence[0].uci) continue;
+        const sideName = position.turn() === "w" ? "aux Blancs" : "aux Noirs";
+        const offsetSlug = String(offset).padStart(2, "0");
+        let positionHash = 2166136261;
+        for (const character of positionKey) positionHash = Math.imul(positionHash ^ character.charCodeAt(0), 16777619);
+        drills.push({
+          id: "grand-calcul-" + source.sourceGame.replace(/[^a-z0-9]+/gi, "-").toLowerCase() + "-ply-" + offsetSlug + "-" + (positionHash >>> 0).toString(36),
+          kind: "method",
+          level: "Expert",
+          title: "Calculer une longue suite · " + source.title + " · position " + (offset + 1),
+          category: "Calcul profond · variantes longues",
+          author: source.author || "SupaChess Académie",
+          program: "Calcul avancé · lignes de grands maîtres",
+          book: "Reconstitution pédagogique originale d’une partie historique",
+          reference: source.reference + " · position ultérieure; le coup historique n’est pas présenté comme un verdict Stockfish.",
+          sourceGame: source.sourceGame,
+          sourceLabel: source.sourceLabel || "Voir la partie source",
+          sourceUrl: source.sourceUrl,
+          fen,
+          color: position.turn(),
+          movePrompt: "Reconstitue le coup de la partie depuis le trait " + sideName + "; calcule aussi la meilleure défense avant de poursuivre.",
+          question: "Quelle démarche permet de calculer cette suite sans confondre le coup historique avec le meilleur coup moteur ?",
+          choices: [
+            { text: "Noter plusieurs candidats, calculer pour chacun la réponse adverse la plus forte, puis comparer à la partie et à Stockfish.", correct: true },
+            { text: "Mémoriser la suite historique et la déclarer meilleure sans comparer les défenses.", correct: false },
+            { text: "S’arrêter après le premier coup plausible et supposer que l’adversaire répond comme prévu.", correct: false },
+          ],
+          principle: "Une partie maîtresse fournit une suite concrète à étudier, pas la preuve que chaque coup est le meilleur. Pour progresser, calcule plusieurs candidats, cherche la défense la plus résistante et compare les positions finales.",
+          transfer: "Rejoue d’abord sans aide en annonçant les coups candidats et les réponses adverses. Ensuite, compare la suite historique et les variantes Stockfish; note à quel demi-coup ta représentation ou ton évaluation change.",
+          pitfall: "Ne valide pas une variante parce qu’elle a été jouée dans une partie célèbre : le coup historique n’est pas automatiquement le meilleur coup. Le résultat et la profondeur moteur ne remplacent pas l’analyse des alternatives.",
+          hints: [
+            "Avant de déplacer, repère les échecs, prises, menaces et pièces qui changent de défense.",
+            "Visualise toute la ligne sans déplacer les pièces et vérifie la position obtenue après chaque réponse adverse.",
+          ],
+          sequence,
+        });
+      }
+    }
+    drills.sort((a, b) => b.sequence.length - a.sequence.length || a.sourceGame.localeCompare(b.sourceGame) || a.id.localeCompare(b.id));
+    return drills;
+  }
+  const advancedReplayLessons = buildAdvancedReplayLessons();
+  LESSONS.push(...advancedReplayLessons);
 
 
   if (typeof module !== "undefined" && module.exports) {
@@ -4674,7 +4766,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     $("lesson-title").classList.toggle("is-completed", titleCompleted);
     $("lesson-goal").textContent = surpriseMode
       ? "Analyse la position sans regarder le thème. Choisis un coup, puis vérifie la réponse adverse sur l’échiquier."
-      : "Observe la position. Choisis d’abord le principe qui s’applique, puis joue les coups sur l’échiquier.";
+      : lesson.movePrompt || "Observe la position. Choisis d’abord le principe qui s’applique, puis joue les coups sur l’échiquier.";
     $("lesson-question").textContent = lesson.question;
     $("lesson-principle").disabled = false;
     $("lesson-feedback").textContent = "";
@@ -4732,7 +4824,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     button.classList.add("correct");
     for (const option of $("lesson-choices").querySelectorAll("button")) option.disabled = true;
     $("lesson-feedback").textContent = "Oui. Maintenant, trouve le coup qui met ce principe en pratique.";
-    $("lesson-goal").textContent = "Joue le meilleur coup de la leçon sur l’échiquier.";
+    $("lesson-goal").textContent = lesson.movePrompt || "Joue le meilleur coup de la leçon sur l’échiquier.";
     $("lesson-status").textContent = "Principe trouvé : joue un coup.";
     if (lesson.choices.length < 1) $("lesson-principle").disabled = true;
   }
