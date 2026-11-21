@@ -4920,7 +4920,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
 
   function selectedStockfishSequenceLength() {
     const requestedPlies = Number($("lesson-line-length") && $("lesson-line-length").value);
-    return Number.isInteger(requestedPlies) && requestedPlies >= 2 && requestedPlies <= 12
+    return Number.isInteger(requestedPlies) && requestedPlies >= 2 && requestedPlies <= 24
       ? requestedPlies : 6;
   }
 
@@ -5406,7 +5406,39 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
       preview.className = "lesson-engine-preview";
       preview.textContent = "Voir cette suite sur l’échiquier";
       preview.addEventListener("click", () => previewEngineLine(choice));
-      item.append(heading, facts, pv, preview);
+      const pruningNote = document.createElement("p");
+      pruningNote.className = "lesson-branch-refutation";
+      pruningNote.textContent = "Meilleure réfutation adverse trouvée avant de garder ou écarter cette branche";
+      const refutation = document.createElement("textarea");
+      refutation.rows = 2;
+      refutation.maxLength = 280;
+      refutation.placeholder = "Ex. …Cxd4! puis ma suite envisagée…";
+      refutation.setAttribute("aria-label", "Meilleure réfutation de la variante " + choice.san);
+      const keep = document.createElement("button");
+      keep.type = "button";
+      keep.className = "btn lesson-branch-decision";
+      keep.textContent = "Garder pour approfondir";
+      const discard = document.createElement("button");
+      discard.type = "button";
+      discard.className = "btn lesson-branch-decision";
+      discard.textContent = "Écarter après réfutation";
+      const decision = document.createElement("p");
+      decision.className = "lesson-branch-decision-status";
+      decision.setAttribute("role", "status");
+      keep.addEventListener("click", () => {
+        item.dataset.branchDecision = "keep";
+        decision.textContent = "Candidate conservée pour approfondissement.";
+      });
+      discard.addEventListener("click", () => {
+        if (!refutation.value.trim()) {
+          decision.textContent = "Écris d’abord la meilleure réfutation que tu as trouvée.";
+          refutation.focus();
+          return;
+        }
+        item.dataset.branchDecision = "discard";
+        decision.textContent = "Branche écartée par ton analyse. Vérifie que ta réfutation est légale et que l’adversaire ne dispose pas d’une meilleure suite.";
+      });
+      item.append(heading, facts, pv, preview, pruningNote, refutation, keep, discard, decision);
       list.appendChild(item);
     });
     const depth = result.choices.reduce((max, choice) => Math.max(max, choice.depth), 0);

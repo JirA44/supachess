@@ -80,6 +80,10 @@
 .lesson-engine-facts, .lesson-engine-pv { margin: 6px 0 0; color: var(--text-dim); font-size: .84rem; line-height: 1.45; }
 .lesson-engine-preview { margin-top: 8px; padding: 6px 9px; color: var(--text); background: #252b3a; border: 1px solid #414863; border-radius: 6px; cursor: pointer; }
 .lesson-engine-preview:hover, .lesson-engine-preview:focus-visible { border-color: var(--accent); outline: 2px solid rgba(240,179,92,.25); }
+.lesson-branch-refutation { margin: 10px 0 5px; color: var(--text-dim); font-size: .9rem; line-height: 1.4; }
+.lesson-engine-line textarea { box-sizing: border-box; width: 100%; max-width: 100%; padding: 9px; color: var(--text); background: #10131b; border: 1px solid #58627a; border-radius: 6px; font: inherit; resize: vertical; }
+.lesson-branch-decision { margin: 8px 8px 0 0; }
+.lesson-branch-decision-status { min-height: 1.4em; margin: 6px 0 0; color: var(--green); font-size: .88rem; line-height: 1.4; }
 
 .lesson-explanation { padding: 13px 14px; line-height: 1.5; }
 .lesson-explanation h3 { margin: 0 0 7px; color: var(--green); font-size: 1.02rem; }

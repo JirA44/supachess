@@ -1,0 +1,25 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const { calculateStandings } = require("../js/engine-tournament.js");
+
+test("engine tournament ratings use pairwise scores and separate time controls", () => {
+  const rows = [
+    { date: "2026-11-21T10:00:00.000Z", whiteId: "sf18", blackId: "sf19", result: "1-0", thinkMs: 300 },
+    { date: "2026-11-21T10:01:00.000Z", whiteId: "sf19", blackId: "sf18", result: "1-0", thinkMs: 300 },
+    { date: "2026-11-21T10:02:00.000Z", whiteId: "berserk14", blackId: "sf19", result: "1/2-1/2", thinkMs: 300 },
+    { date: "2026-11-21T10:03:00.000Z", whiteId: "sf18", blackId: "berserk14", result: "1-0", thinkMs: 100 },
+  ];
+  const standard = calculateStandings(rows, 300);
+  const stockfish18 = standard.find((entry) => entry.id === "sf18");
+  const stockfish19 = standard.find((entry) => entry.id === "sf19");
+  const berserk = standard.find((entry) => entry.id === "berserk14");
+  assert.deepEqual([stockfish18.wins, stockfish18.draws, stockfish18.losses, stockfish18.played], [1, 0, 1, 2]);
+  assert.equal(stockfish18.scorePercent, 50);
+  assert.equal(stockfish18.winLossRatio, 1);
+  assert.equal(stockfish19.draws, 1);
+  assert.equal(berserk.winLossRatio, "—");
+  assert.equal(standard.every((entry) => entry.played !== 1 || entry.id !== "sf18"), true);
+  const rapid = calculateStandings(rows, 100);
+  assert.equal(rapid.find((entry) => entry.id === "sf18").played, 1);
+  assert.equal(rapid.find((entry) => entry.id === "sf18").winLossRatio, "∞");
+});

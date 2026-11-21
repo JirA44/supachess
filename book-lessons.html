@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#17211a">
   <title>SupaChess Académie — La route vers l’excellence</title>
   <link rel="stylesheet" href="css/style.css?v=piece-pointer-drag-20261105-v2&piece-outline-20261107-v1">
-  <link rel="stylesheet" href="css/book-lessons.css?v=responsive-board-and-leaderboards-20261120-v1">
+  <link rel="stylesheet" href="css/book-lessons.css?v=branch-pruning-20261121-v1">
   <link rel="stylesheet" href="css/lesson-concepts.css?v=concept-curriculum-80-20261105-v1">
   <link rel="stylesheet" href="css/method-paths.css?v=methods-player-lessons-20261028">
 <style>.lesson-settings-shortcuts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.lesson-settings-shortcuts .btn{font-size:.9rem}@media(max-width:600px){.lesson-topbar{flex-wrap:wrap}.lesson-settings-shortcuts{order:3;width:100%;justify-content:center}}</style>
@@ -431,10 +431,10 @@
         <p class="lesson-feedback" id="lesson-feedback" role="status" aria-live="polite"></p>
         <section class="lesson-line-training" aria-labelledby="lesson-line-training-title">
           <h3 id="lesson-line-training-title">Jouer une variante Stockfish, demi-coup par demi-coup</h3>
-          <p>Choisis une ligne de 2 à 12 demi-coups. Après ton coup prioritaire, Stockfish jouera ses réponses calculées et te rendra la main à chaque tour. Si sa variante principale est trop courte, il recalcule à son extrémité pour compléter la longueur choisie. Chaque demi-coup gardera une explication visible de son effet. La ligne s’arrête si la position est terminée ou si le moteur ne peut plus fournir de coup légal. Les explications décrivent les indices observables sur l’échiquier, pas un raisonnement interne supposé du moteur.</p>
+          <p>Choisis une ligne jusqu’à 24 demi-coups. La longueur n’est pas un objectif en soi : garde deux ou trois candidats, cherche pour chacun la meilleure réfutation adverse et écarte les branches qui ne tiennent pas. Approfondis ensuite les candidates restantes; après chaque réponse, réévalue la position au lieu de prolonger une suite automatiquement. Stockfish joue ses réponses calculées et te rend la main à chaque tour. Si sa variante principale est trop courte, il recalcule à son extrémité. La ligne s’arrête si la position est terminée ou si le moteur ne peut plus fournir de coup légal. Ses lignes et évaluations reflètent une recherche limitée, pas une preuve absolue.</p>
           <label for="lesson-line-length">Longueur de la variante
             <select id="lesson-line-length">
-              <option value="2">2 demi-coups</option><option value="4">4 demi-coups</option><option value="6" selected>6 demi-coups</option><option value="8">8 demi-coups</option><option value="10">10 demi-coups</option><option value="12">12 demi-coups</option>
+              <option value="2">2 demi-coups</option><option value="4">4 demi-coups</option><option value="6" selected>6 demi-coups</option><option value="8">8 demi-coups</option><option value="10">10 demi-coups</option><option value="12">12 demi-coups</option><option value="16">16 demi-coups</option><option value="20">20 demi-coups</option><option value="24">24 demi-coups</option>
             </select>
           </label>
         </section>
@@ -444,7 +444,7 @@
         <section class="lesson-engine-analysis" id="lesson-engine-analysis" aria-labelledby="lesson-engine-title" hidden>
           <h3 id="lesson-engine-title">Variantes principales</h3>
           <p class="lesson-engine-status" id="lesson-engine-status" role="status" aria-live="polite"></p>
-          <p class="lesson-engine-note">Le top 1 de Stockfish sert de référence pour choisir et réussir le coup dans l’exercice. Les lignes tirées des livres restent des exemples secondaires lorsqu’elles diffèrent. Le moteur classe les coups selon sa recherche; il n’explique pas lui-même les principes et son Elo n’est pas un Elo FIDE humain.</p>
+          <p class="lesson-engine-note">Le top 1 de Stockfish sert de référence pour choisir et réussir le coup dans l’exercice. Les lignes tirées des livres restent des exemples secondaires lorsqu’elles diffèrent. Pour calculer efficacement, ne prolonge pas toutes les candidates : inscris la meilleure réfutation trouvée, écarte les branches qui ne résistent pas, puis approfondis celles qui restent crédibles. Ces décisions sont tes notes de travail, pas un verdict automatique; le classement moteur dépend de sa recherche et n’est pas un Elo FIDE humain.</p>
           <ol class="lesson-engine-lines" id="lesson-engine-lines"></ol>
           <div class="lesson-engine-actions lesson-engine-continuation">
             <button class="btn" id="lesson-engine-return" type="button" hidden>Continuer la leçon</button>
@@ -458,7 +458,7 @@
     </section>
     <p class="lesson-note">Les exercices sont rédigés pour SupaChess. Chaque FEN et chaque demi-coup des lignes étudiées sont vérifiés par les tests; les variantes Stockfish restent dépendantes du temps de recherche.</p>
   </main>
-<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14922</footer>
+<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14923</footer>
 
   <script src="vendor/chess.js"></script>
   <script src="js/engine.js"></script>
@@ -475,6 +475,7 @@
   <script src="js/academy-content-counts.js?v=academy-content-counters-20261106-v1"></script>
   <script src="js/selfplay-study.js?v=engine-match-pgn-20261116-v1"></script>
   <script src="js/stockfish-study-lab.js?v=engine-match-pgn-20261116-v2"></script>
+  <script src="js/engine-tournament.js?v=round-robin-elo-20261121-v1"></script>
   <script src="js/method-paths.js?v=imagination-path-20261116-v1"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>

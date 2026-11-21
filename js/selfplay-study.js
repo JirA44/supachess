@@ -61,7 +61,7 @@
       ["Event", "SupaChess · partie d’étude moteur"], ["Site", "SupaChess"], ["Date", date],
       ["Round", String(metadata.gameNumber || "-")], ["White", metadata.white], ["Black", metadata.black],
       ["Result", result], ["SupaChessGameNumber", metadata.gameNumber || "-"],
-      ["SupaChessOpponent", metadata.engineName], ["SupaChessSelfPlayMode", "supa-vs-supa"],
+      ["SupaChessOpponent", metadata.engineName], ["SupaChessSelfPlayMode", metadata.mode || "supa-vs-supa"],
       ["Termination", metadata.termination || "Partie terminée"]
     ].map(([name, value]) => `[${name} "${escapeTag(value)}"]`).join("\n");
     const tokens = [];
@@ -99,7 +99,7 @@
     const date = options.date instanceof Date ? options.date : new Date(options.date || Date.now());
     const meta = {
       date, gameNumber, white: options.white, black: options.black,
-      engineName: options.engineName, termination: options.termination
+      engineName: options.engineName, termination: options.termination, mode: options.mode
     };
     const pgn = formatPgn(options.chess, meta, result);
     const verifier = new ChessCtor();
@@ -108,9 +108,11 @@
     }
     const entry = {
       id, gameNumber, date: date.toISOString(), pgn, result,
-      selfPlayMode: "supa-vs-supa", engineName: "Supa contre Supa · " + options.engineName,
-      playerName: "Supa Blancs · Supa Noirs", stopped: false, abandoned: false,
-      unassistedMode: true, trainingAidsUsed: false, diagnosticMode: false,
+      selfPlayMode: options.mode === "engine-tournament" ? null : "supa-vs-supa",
+      engineName: options.mode === "engine-tournament" ? options.engineName : "Supa contre Supa · " + options.engineName,
+      playerName: options.mode === "engine-tournament" ? options.engineName : "Supa Blancs · Supa Noirs", stopped: false, abandoned: false,
+      unassistedMode: options.mode === "engine-tournament" ? false : true,
+      trainingAidsUsed: options.mode === "engine-tournament" ? true : false, diagnosticMode: false,
       generatedStudyGame: true, termination: options.termination || "Partie terminée"
     };
     games.unshift(entry);
