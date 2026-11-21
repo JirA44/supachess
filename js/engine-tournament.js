@@ -8,18 +8,48 @@
     { id: "sf19", name: "Stockfish 19", path: "vendor/stockfish-19-lite-single.js", kind: "stockfish" },
     { id: "berserk14", name: "Berserk 14", path: "vendor/berserk-14-worker.js", kind: "berserk" },
   ];
+  const engineByName = new Map(engines.map((engine) => [engine.name.toLowerCase(), engine]));
   let active = null;
+
+  function rebuildResultsFromStudyGames(games) {
+    if (!Array.isArray(games)) return [];
+    return games.filter((game) => game && game.generatedStudyGame === true && typeof game.pgn === "string" && ["1-0", "0-1", "1/2-1/2"].includes(game.result))
+      .map((game) => {
+        const whiteName = (game.pgn.match(/^\[White\s+"([^"]+)"\]/mi) || [])[1];
+        const blackName = (game.pgn.match(/^\[Black\s+"([^"]+)"\]/mi) || [])[1];
+        const white = engineByName.get(String(whiteName || "").toLowerCase());
+        const black = engineByName.get(String(blackName || "").toLowerCase());
+        if (!white || !black || white.id === black.id) return null;
+        return {
+          id: "recovered-" + String(game.id || game.gameNumber || game.date || Math.random()),
+          date: game.date || "",
+          whiteId: white.id,
+          blackId: black.id,
+          result: game.result,
+          thinkMs: null,
+          plies: 0,
+          recoveredFromPgn: true,
+        };
+      }).filter(Boolean);
+  }
 
   function readResults() {
     try {
       const rows = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      return Array.isArray(rows) ? rows.filter((row) => row && engines.some((engine) => engine.id === row.whiteId) && engines.some((engine) => engine.id === row.blackId) && ["1-0", "0-1", "1/2-1/2"].includes(row.result) && Number.isFinite(Number(row.thinkMs))) : [];
+      const valid = Array.isArray(rows) ? rows.filter((row) => row && engines.some((engine) => engine.id === row.whiteId) && engines.some((engine) => engine.id === row.blackId) && ["1-0", "0-1", "1/2-1/2"].includes(row.result) && (row.thinkMs === null || Number.isFinite(Number(row.thinkMs)))) : [];
+      if (valid.length) return valid;
+      const games = JSON.parse(localStorage.getItem("supachess_games") || "[]");
+      const recovered = rebuildResultsFromStudyGames(games);
+      if (recovered.length) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(recovered)); } catch (_) {}
+      }
+      return recovered;
     } catch (_) { return []; }
   }
 
   function calculateStandings(rows, thinkMs) {
     const allCadences = thinkMs === null || thinkMs === "all" || thinkMs === undefined;
-    const selected = rows.filter((row) => allCadences || Number(row.thinkMs) === Number(thinkMs)).slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    const selected = rows.filter((row) => allCadences || (row.thinkMs !== null && Number(row.thinkMs) === Number(thinkMs))).slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
     const stats = new Map(engines.map((engine) => [engine.id, { id: engine.id, name: engine.name, rating: 1500, wins: 0, draws: 0, losses: 0, played: 0, score: 0 }]));
     for (const row of selected) {
       const white = stats.get(row.whiteId);
@@ -207,7 +237,7 @@
   }
 
   root.SupaEngineTournament = { calculateStandings, getLocalStandings };
-  if (typeof module !== "undefined" && module.exports) module.exports = { calculateStandings };
+  if (typeof module !== "undefined" && module.exports) module.exports = { calculateStandings, rebuildResultsFromStudyGames };
   if (root.document) {
     if (root.document.readyState === "loading") root.document.addEventListener("DOMContentLoaded", ensureUI, { once: true });
     else ensureUI();

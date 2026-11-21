@@ -52,8 +52,8 @@
     const rated = (rows || []).filter((entry) => entry.played > 0);
     heading.textContent = "🤖 Moteurs simulés · classement général";
     if (!rated.length) {
-      output.innerHTML = '<div class="leaderboard-empty">Aucun match moteur terminé sur cet appareil. Lance un round-robin dans l’Académie; les résultats apparaîtront ici.</div>';
-      status.textContent = "0 moteur classé localement.";
+      output.innerHTML = '<div class="leaderboard-empty">Aucun résultat moteur lisible dans ce navigateur. La page récupère aussi les matchs PGN de l’historique local. Si le round-robin a été joué dans un autre navigateur, un autre profil ou une page ouverte en fichier local, son stockage est isolé et ne peut pas être lu depuis cette adresse. Lance ou rejoue le round-robin depuis l’Académie ouverte sur ce même site et ce même navigateur.</div>';
+      status.textContent = "Aucun résultat local détecté dans cette origine de site.";
       return;
     }
     output.innerHTML = '<div class="leaderboard-table-wrap"><table class="leaderboard-table"><thead><tr><th scope="col">Rang</th><th scope="col">Moteur simulé</th><th scope="col">Elo estimé</th><th scope="col">Parties</th><th scope="col">V / N / D</th><th scope="col">Victoires totales</th><th scope="col">Défaites totales</th><th scope="col">Score</th><th scope="col">Ratio V/D</th></tr></thead><tbody>' + rated.map((entry, index) => {
