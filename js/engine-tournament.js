@@ -107,8 +107,8 @@
     function requestStop() {
       if (!active) return;
       active.cancelled = true;
-      active.players.forEach((player) => { try { player.stop(); } catch (_) {} });
-      status.textContent = "Arrêt demandé; le coup moteur en cours se termine. Les parties incomplètes ne sont pas classées.";
+      stop.disabled = true;
+      status.textContent = "Arrêt demandé; le demi-coup en cours sera joué, puis le match incomplet sera écarté du classement.";
     }
 
     async function playGame(whiteEngine, blackEngine, players, thinkMs, match) {
@@ -117,13 +117,13 @@
       while (!game.game_over() && plies < MAX_PLIES && !match.cancelled) {
         const engine = game.turn() === "w" ? players[whiteEngine.id] : players[blackEngine.id];
         const response = await engine.analyze({ fen: game.fen(), multipv: 1, movetime: thinkMs, elo: 0, timeoutMs: 90000 });
-        if (match.cancelled) return null;
         const uci = String(response && response.bestmove || "");
         const parsed = uci.match(/^([a-h][1-8])([a-h][1-8])([qrbn])?$/i);
         if (!parsed) throw new Error(engine.engineName + " n’a pas renvoyé de coup UCI valide.");
         const move = game.move({ from: parsed[1].toLowerCase(), to: parsed[2].toLowerCase(), promotion: parsed[3] && parsed[3].toLowerCase() });
         if (!move) throw new Error(engine.engineName + " a renvoyé le coup illégal " + uci + ". Match écarté.");
         plies++;
+        if (match.cancelled) return null;
         if (plies % 8 === 0) {
           status.textContent = whiteEngine.name + " (Blancs) – " + blackEngine.name + " (Noirs) · " + plies + " demi-coups légaux…";
           progress.style.width = Math.min(99, (match.completed / match.total + plies / MAX_PLIES / match.total) * 100) + "%";
@@ -157,7 +157,7 @@
       const match = { cancelled: false, players: [], completed: 0, total: pairs.length };
       active = match;
       start.disabled = true;
-      stop.disabled = false;
+      stop.disabled = true;
       try {
         const players = {};
         for (const config of engines) {
@@ -167,6 +167,7 @@
           await players[config.id].ready;
           if (match.cancelled) return;
         }
+        stop.disabled = false;
         for (const [white, black] of pairs) {
           if (match.cancelled) break;
           const record = await playGame(white, black, players, thinkMs, match);
