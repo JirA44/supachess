@@ -11,6 +11,7 @@
     ["puzzleSprint5m", "🚀 Sprint puzzles · 5 min"],
     ["puzzleSurvival", "🛡️ Survie puzzles"],
     ["puzzleBattle", "⚔️ Bataille de puzzles"],
+    ["simulatedEngines", "🤖 Moteurs simulés · général"],
   ];
   const tabs = document.getElementById("leaderboard-tabs");
   const output = document.getElementById("leaderboard-output");
@@ -47,12 +48,37 @@
     status.textContent = rated.length + " joueur(s) classé(s) affiché(s), parmi les comptes inscrits ayant des résultats enregistrés.";
   }
 
+  function renderEngineRows(rows) {
+    const rated = (rows || []).filter((entry) => entry.played > 0);
+    heading.textContent = "🤖 Moteurs simulés · classement général";
+    if (!rated.length) {
+      output.innerHTML = '<div class="leaderboard-empty">Aucun match moteur terminé sur cet appareil. Lance un round-robin dans l’Académie; les résultats apparaîtront ici.</div>';
+      status.textContent = "0 moteur classé localement.";
+      return;
+    }
+    output.innerHTML = '<div class="leaderboard-table-wrap"><table class="leaderboard-table"><thead><tr><th scope="col">Rang</th><th scope="col">Moteur simulé</th><th scope="col">Elo estimé</th><th scope="col">Parties</th><th scope="col">V / N / D</th><th scope="col">Victoires totales</th><th scope="col">Défaites totales</th><th scope="col">Score</th><th scope="col">Ratio V/D</th></tr></thead><tbody>' + rated.map((entry, index) => {
+      const rank = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : String(index + 1);
+      return '<tr><td>' + rank + '</td><th scope="row">' + escape(entry.name) + '</th><td>≈ ' + formatRating(entry.rating) + (entry.played < 10 ? ' · provisoire' : '') + '</td><td>' + entry.played + '</td><td>' + entry.wins + ' / ' + entry.draws + ' / ' + entry.losses + '</td><td>' + entry.wins + '</td><td>' + entry.losses + '</td><td>' + (entry.scorePercent === null ? '—' : entry.scorePercent + '%') + '</td><td>' + entry.winLossRatio + '</td></tr>';
+    }).join("") + '</tbody></table></div><p class="leaderboard-note">Classement local calculé avec les résultats des tournois de moteurs sur cet appareil, toutes cadences confondues. Elo interne indicatif (départ 1500, K=24), pas un Elo humain/FIDE; les cadences mélangées réduisent la comparabilité. Le ratio V/D = victoires ÷ défaites; les nulles sont affichées séparément. Pour lancer des matchs : ouvre l’Académie et démarre un round-robin.</p>';
+    status.textContent = rated.reduce((sum, entry) => sum + entry.played, 0) / 2 + " match(s) simulé(s) terminés · résultats locaux à cet appareil.";
+  }
+
   function load(type) {
     selected = type;
     const token = ++requestId;
     tabs.querySelectorAll("button").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.type === type)));
     heading.textContent = categories.find(([key]) => key === type)?.[1] || "Classement";
     output.innerHTML = '<div class="leaderboard-empty">Chargement du classement…</div>';
+    if (type === "simulatedEngines") {
+      const tournament = window.SupaEngineTournament;
+      if (!tournament || typeof tournament.getLocalStandings !== "function") {
+        output.innerHTML = '<div class="leaderboard-empty">Le classement local des moteurs n’est pas disponible sur cette page.</div>';
+        status.textContent = "Classement moteur indisponible.";
+        return;
+      }
+      renderEngineRows(tournament.getLocalStandings("all"));
+      return;
+    }
     status.textContent = "Lecture des scores des comptes inscrits…";
     const profiles = window.SupaProfiles;
     if (!profiles || typeof profiles.getTopRanking !== "function") {

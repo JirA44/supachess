@@ -18,7 +18,8 @@
   }
 
   function calculateStandings(rows, thinkMs) {
-    const selected = rows.filter((row) => Number(row.thinkMs) === Number(thinkMs)).slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    const allCadences = thinkMs === null || thinkMs === "all" || thinkMs === undefined;
+    const selected = rows.filter((row) => allCadences || Number(row.thinkMs) === Number(thinkMs)).slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
     const stats = new Map(engines.map((engine) => [engine.id, { id: engine.id, name: engine.name, rating: 1500, wins: 0, draws: 0, losses: 0, played: 0, score: 0 }]));
     for (const row of selected) {
       const white = stats.get(row.whiteId);
@@ -69,8 +70,8 @@
         .engine-tournament th:first-child,.engine-tournament td:first-child{text-align:left}
         .engine-tournament-note{font-size:.92rem;line-height:1.5;color:#d2ddd4}
       </style>
-      <h2 id="engine-tournament-title">Tournoi des moteurs · classement Elo interne</h2>
-      <p class="engine-tournament-note">Un round-robin joue chaque paire deux fois, avec couleurs inversées. Le tableau affiche le score, le ratio victoires/défaites et un Elo interne provisoire (départ 1500, K=24). Il est calculé à partir des résultats enregistrés sur cet appareil; il ne représente ni un Elo FIDE ni un classement global synchronisé. Les parties sont enregistrées dans l’historique comme parties d’étude moteur.</p>
+      <h2 id="engine-tournament-title">Tournoi des moteurs · classement général et Elo interne</h2>
+      <p class="engine-tournament-note">Un round-robin joue chaque paire deux fois, avec couleurs inversées. Le classement général cumule les matchs simulés de toutes les cadences; les filtres permettent aussi de comparer les moteurs à cadence identique. Le tableau indique l’Elo interne estimé (départ 1500, K=24), les victoires, défaites, nulles et le ratio V/D. Les résultats sont enregistrés sur cet appareil; ils ne forment pas encore un classement partagé entre joueurs du site et ne représentent pas un Elo FIDE. Les parties sont conservées dans l’historique comme parties d’étude moteur.</p>
       <p class="engine-tournament-note"><strong>Moteurs embarqués :</strong> Stockfish 18, Stockfish 19 et Berserk 14. Stockfish 16/17 et un binaire Supa indépendant ne sont pas présents dans cette version du dépôt : ils ne participeront pas à ce tournoi.</p>
       <div class="engine-tournament-controls">
         <label>Temps par demi-coup
@@ -79,7 +80,7 @@
         <button class="btn" type="button" data-tournament-start>Lancer le round-robin</button>
         <button class="btn" type="button" data-tournament-stop disabled>Arrêter après le coup en cours</button>
         <label>Tableau
-          <select data-tournament-filter><option value="300" selected>Standard · 0,30 s</option><option value="100">Rapide · 0,10 s</option><option value="700">Approfondi · 0,70 s</option></select>
+          <select data-tournament-filter><option value="all" selected>Général · toutes cadences</option><option value="300">Standard · 0,30 s</option><option value="100">Rapide · 0,10 s</option><option value="700">Approfondi · 0,70 s</option></select>
         </label>
       </div>
       <p class="engine-tournament-status" data-tournament-status role="status" aria-live="polite"></p>
@@ -95,13 +96,15 @@
     const standings = section.querySelector("[data-tournament-standings]");
 
     function renderStandings() {
-      const rows = calculateStandings(readResults(), Number(filter.value));
+      const cadence = filter.value === "all" ? "all" : Number(filter.value);
+      const rows = calculateStandings(readResults(), cadence);
       const played = rows.reduce((sum, row) => sum + row.played, 0) / 2;
       if (!played) {
         standings.innerHTML = '<p class="engine-tournament-note">Aucun match classé à cette cadence pour le moment.</p>';
         return;
       }
-      standings.innerHTML = '<div class="engine-tournament-table-wrap"><table><thead><tr><th>Rang · moteur</th><th>Elo interne</th><th>Parties</th><th>V / N / D</th><th>Score %</th><th>V / D</th></tr></thead><tbody>' + rows.map((row, index) => '<tr><th scope="row">' + (index + 1) + '. ' + row.name + '</th><td>' + row.rating + (row.played < 10 ? ' · provisoire' : '') + '</td><td>' + row.played + '</td><td>' + row.wins + ' / ' + row.draws + ' / ' + row.losses + '</td><td>' + (row.scorePercent === null ? '—' : row.scorePercent + '%') + '</td><td>' + row.winLossRatio + '</td></tr>').join("") + '</tbody></table></div><p class="engine-tournament-note">' + played + ' match(s) pris en compte à cette cadence. Le ratio V/D vaut victoires ÷ défaites; ∞ indique aucune défaite enregistrée.</p>';
+      const scope = cadence === "all" ? "toutes cadences" : "cette cadence";
+      standings.innerHTML = '<div class="engine-tournament-table-wrap"><table><thead><tr><th>Rang · moteur simulé</th><th>Elo estimé</th><th>Parties</th><th>V / N / D</th><th>Victoires totales</th><th>Défaites totales</th><th>Score %</th><th>Ratio V/D</th></tr></thead><tbody>' + rows.map((row, index) => '<tr><th scope="row">' + (index + 1) + '. ' + row.name + '</th><td>≈ ' + row.rating + (row.played < 10 ? ' · provisoire' : '') + '</td><td>' + row.played + '</td><td>' + row.wins + ' / ' + row.draws + ' / ' + row.losses + '</td><td>' + row.wins + '</td><td>' + row.losses + '</td><td>' + (row.scorePercent === null ? '—' : row.scorePercent + '%') + '</td><td>' + row.winLossRatio + '</td></tr>').join("") + '</tbody></table></div><p class="engine-tournament-note">' + played + ' match(s) terminés pris en compte pour ' + scope + '. Le ratio V/D vaut victoires ÷ défaites; ∞ signifie aucune défaite. L’Elo est une estimation interne provisoire calculée à partir des résultats simulés; le classement général mélange les cadences et ne remplace pas un Elo humain ou FIDE. Les nuls comptent dans le score, pas dans le ratio V/D.</p>';
     }
 
     function requestStop() {
@@ -199,7 +202,11 @@
     renderStandings();
   }
 
-  root.SupaEngineTournament = { calculateStandings };
+  function getLocalStandings(thinkMs) {
+    return calculateStandings(readResults(), thinkMs === undefined ? "all" : thinkMs);
+  }
+
+  root.SupaEngineTournament = { calculateStandings, getLocalStandings };
   if (typeof module !== "undefined" && module.exports) module.exports = { calculateStandings };
   if (root.document) {
     if (root.document.readyState === "loading") root.document.addEventListener("DOMContentLoaded", ensureUI, { once: true });

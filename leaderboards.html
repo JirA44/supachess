@@ -34,7 +34,7 @@
     <section class="leaderboards-intro">
       <p class="lesson-eyebrow">Joueurs inscrits · résultats enregistrés</p>
       <h1>Classements SupaChess</h1>
-      <p>Un tableau séparé pour chaque format : Elo puzzle, parties classiques de 1, 3 et 5 minutes, partie sans limite, sprints de puzzles, survie et bataille. Les résultats affichés viennent des comptes enregistrés dans SupaChess.</p>
+      <p>Un tableau séparé pour chaque format : Elo puzzle, parties classiques de 1, 3 et 5 minutes, partie sans limite, sprints de puzzles, survie et bataille. Les résultats affichés viennent des comptes enregistrés dans SupaChess. Un onglet distinct présente le classement local des moteurs simulés, avec Elo estimé, victoires, défaites et ratio V/D.</p>
       <p class="leaderboard-note">Ces Elo sont des classements internes indicatifs, calculés à partir des résultats déclarés et enregistrés; ils ne sont pas des Elo FIDE. Les modes sans résultat synchronisé affichent un tableau vide jusqu’à la publication de leurs résultats.</p>
       <nav class="leaderboard-tabs" aria-label="Type de classement" id="leaderboard-tabs"></nav>
     </section>
@@ -44,12 +44,13 @@
       <div id="leaderboard-output"></div>
     </section>
   </main>
-  <footer class="site-footer"><span class="site-version">Version SupaChess : 1.13.14922</span></footer>
+  <footer class="site-footer"><span class="site-version">Version SupaChess : 1.13.14925</span></footer>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
   <script src="js/profile.js?v=leaderboard-stat-types-20261120-v1"></script>
   <script src="js/profile-page.js?v=leaderboards-profile-20261120-v1"></script>
-  <script src="js/leaderboards.js?v=leaderboards-20261120-v1"></script>
+  <script src="js/engine-tournament.js?v=round-robin-elo-20261121-v3"></script>
+  <script src="js/leaderboards.js?v=leaderboards-engine-general-20261121-v1"></script>
 </body>
 </html>

@@ -22,4 +22,9 @@ test("engine tournament ratings use pairwise scores and separate time controls",
   const rapid = calculateStandings(rows, 100);
   assert.equal(rapid.find((entry) => entry.id === "sf18").played, 1);
   assert.equal(rapid.find((entry) => entry.id === "sf18").winLossRatio, "∞");
+  const general = calculateStandings(rows, "all");
+  const general18 = general.find((entry) => entry.id === "sf18");
+  assert.deepEqual([general18.wins, general18.draws, general18.losses, general18.played], [2, 0, 1, 3]);
+  assert.equal(general18.winLossRatio, 2);
+  assert.equal(general18.scorePercent, 66.7);
 });
