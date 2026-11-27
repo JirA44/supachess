@@ -998,14 +998,36 @@ function renderExerciseCharts(local){
   var depthBars=categories.map(function(item,index){
     var x=62+index*142,base=170,height=100*item.count/(max||1),y=base-height,depth=12;
     var top=x+','+y.toFixed(1)+' '+(x+54)+','+y.toFixed(1)+' '+(x+54+depth)+','+(y-depth*.55).toFixed(1)+' '+(x+depth)+','+(y-depth*.55).toFixed(1);
-    var side=(x+54)+','+y.toFixed(1)+' '+(x+54)+','+base+' '+(x+54+depth)+','+(base-depth*.55).toFixed(1)+' '+(x+54+depth)+','+(y-depth*.55).toFixed(1);
+    var side=(x+54)+','+y.toFixed(1)+' '+(x+54)+','+base+' '+(x+54+depth)+','+(base-depth*.55).toFixed(1)+' '+(x+depth)+','+(base-depth*.55).toFixed(1);
     var front=x+','+y.toFixed(1)+' '+(x+54)+','+y.toFixed(1)+' '+(x+54)+','+base+' '+x+','+base;
     return '<polygon points="'+side+'" fill="#26384d"/><polygon points="'+top+'" fill="#a8c7e4"/><polygon points="'+front+'" fill="'+item.color+'"/><text x="'+(x+27)+'" y="'+Math.max(20,y-8).toFixed(1)+'" text-anchor="middle" fill="#fff" font-size="18">'+item.count+'</text><text x="'+(x+32)+'" y="192" text-anchor="middle" fill="#f4f7fb" font-size="18">'+item.label+'</text>';
   }).join('');
   var depthGrid=ticks.map(function(value){var y=170-100*value/(max||1);return '<line x1="48" y1="'+y.toFixed(1)+'" x2="500" y2="'+y.toFixed(1)+'" stroke="#53647b"/><text x="42" y="'+(y+5).toFixed(1)+'" text-anchor="end" fill="#dce6f2" font-size="17">'+value+'</text>';}).join('');
-  var depth='<div class="profile-chart-scroll" role="region" tabindex="0" aria-label="Graphique en perspective des nombres d’exercices; faire défiler horizontalement pour lire les libellés" style="max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch"><svg class="profile-exercise-chart" viewBox="0 0 520 220" role="img" aria-label="Vue 3D des nombres d’exercices par catégorie; axe vertical : nombre d’exercices; profondeur décorative" style="display:block;width:100%;min-width:500px;height:auto">'+depthGrid+depthBars+'<line x1="48" y1="70" x2="48" y2="170" stroke="#dce6f2"/><line x1="48" y1="170" x2="500" y2="170" stroke="#dce6f2"/><text x="20" y="122" transform="rotate(-90 20 122)" text-anchor="middle" fill="#f4f7fb" font-size="17">Nombre d’exercices</text></svg></div>';
   var card='border:1px solid #53647b;border-radius:12px;padding:14px;background:rgba(12,20,32,.55);min-width:0';
-  return '<section class="profile-exercise-charts" aria-labelledby="profile-exercise-charts-title" style="margin:18px 0;padding:16px;border:1px solid #53647b;border-radius:14px;background:#202b3d;color:#f4f7fb;font-size:16px;line-height:1.55"><h4 id="profile-exercise-charts-title" style="margin-top:0">Graphiques de mes exercices</h4><p>'+total+' exercices de correction enregistrés. Les graphiques décrivent leur répartition par catégorie; ils ne mesurent pas un niveau de jeu.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;align-items:start"><article style="'+card+'"><h5 style="font-size:1.05rem">Répartition par catégorie</h5>'+barChart+'</article><article style="'+card+'"><h5 style="font-size:1.05rem">Radar · part des exercices</h5>'+radar+'<p>Chaque axe indique la part de cette catégorie dans les exercices enregistrés.</p></article><article style="'+card+'"><h5 style="font-size:1.05rem">Vue 3D · mêmes nombres</h5>'+depth+'<p>La hauteur représente le nombre d’exercices; la profondeur est décorative.</p></article></div></section>';
+  var toggle='<div class="profile-chart-toggle" role="group" aria-label="Forme du graphique des exercices"><button type="button" data-profile-exercise-chart="bar" aria-pressed="true">Barres</button><button type="button" data-profile-exercise-chart="radar" aria-pressed="false">Radar</button></div>';
+  return '<section class="profile-exercise-charts" aria-labelledby="profile-exercise-charts-title" style="margin:18px 0;padding:16px;border:1px solid #53647b;border-radius:14px;background:#202b3d;color:#f4f7fb;font-size:16px;line-height:1.55">'+
+    '<h4 id="profile-exercise-charts-title" style="margin-top:0">Graphiques de mes exercices</h4>'+
+    '<p>'+total+' exercices de correction enregistrés. Le graphique décrit leur répartition par catégorie; il ne mesure pas un niveau de jeu.</p>'+
+    '<div class="profile-exercise-chart" data-profile-exercise-chart-view="bar">'+toggle+'<div class="profile-exercise-chart-body" data-profile-exercise-chart-body>'+barChart+'</div>'+
+    '<div class="profile-exercise-chart-body" data-profile-exercise-chart-body="radar" hidden>'+radar+'<p>Chaque axe indique la part de cette catégorie dans les exercices enregistrés.</p></div></div></section>';
+}
+function bindExerciseChartToggle(box){
+  if(!box||typeof box.querySelectorAll!=="function")return;
+  var views=box.querySelectorAll('[data-profile-exercise-chart-view]');
+  Array.prototype.forEach.call(views,function(view){
+    var buttons=view.querySelectorAll('[data-profile-exercise-chart]');
+    Array.prototype.forEach.call(buttons,function(button){
+      button.addEventListener('click',function(){
+        var mode=button.getAttribute('data-profile-exercise-chart')==='radar'?'radar':'bar';
+        Array.prototype.forEach.call(buttons,function(other){other.setAttribute('aria-pressed',String(other===button));});
+        Array.prototype.forEach.call(view.querySelectorAll('[data-profile-exercise-chart-body]'),function(body){
+          var isRadar=body.getAttribute('data-profile-exercise-chart-body')==='radar';
+          body.hidden=isRadar?mode!=='radar':mode!=='bar';
+        });
+        view.setAttribute('data-profile-exercise-chart-view',mode);
+      });
+    });
+  });
 }
 function renderCorrectionProgressSummary(local){
   var stats=local.correctedStats||{inaccuracy:0,mistake:0,blunder:0};
@@ -1218,7 +1240,7 @@ function renderLocalLearningPanel(data){
     '<div class="profile-xp-track" role="progressbar" aria-label="'+profileText('profile_xp_progress','Progression des XP')+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(xpPercent)+'" aria-valuetext="'+(xpRange.total!==null?xpRange.current+' sur '+xpRange.total+' XP dans le niveau '+local.level:Math.round(xpPercent)+'%')+'"><span style="width:'+xpPercent.toFixed(1)+'%"></span></div>'+
     (xpRange.total!==null?'<strong class="profile-xp-level-count">'+Number(xpRange.current).toLocaleString('fr-FR')+' / '+Number(xpRange.total).toLocaleString('fr-FR')+' XP '+profileText('profile_xp_this_level','dans ce niveau')+'</strong>':'')+
     '<small>'+escapeProfileText(profileText('profile_xp_to_next','Progression vers le niveau suivant'))+': '+Math.round(xpPercent)+'%'+(nextXP!==null?' · '+profileText('profile_next_level_at','prochain niveau à')+' '+Number(nextXP).toLocaleString('fr-FR')+' XP · '+profileText('profile_xp_remaining','XP restantes pour atteindre le niveau suivant')+' : '+xpRemaining+' XP':'')+'</small></div>'+
-    '<div class="profile-learning-stats"><div><strong>'+local.completed.length+' / '+local.attempted.length+'</strong><span>'+profileText('profile_lessons_mastered_attempted','leçons maîtrisées / commencées')+'</span></div><div><strong>'+local.moveExercises+'</strong><span>'+profileText('profile_correction_moves','demi-coups à revoir')+'</span></div><div><strong>'+local.puzzlesSolved+'</strong><span>'+profileText('profile_puzzles_solved','problèmes résolus')+'</span></div><div><strong>'+local.practiceSessions+'</strong><span>'+profileText('profile_practice_sessions','séances d’entraînement')+'</span></div></div>'+
+    '<div class="profile-learning-stats"><div><strong>'+local.completed.length+' / '+local.attempted.length+'</strong> <span>'+profileText('profile_lessons_mastered_attempted','leçons maîtrisées / commencées')+'</span></div><div><strong>'+local.moveExercises+'</strong> <span>'+profileText('profile_correction_moves','demi-coups à revoir')+'</span></div><div><strong>'+local.puzzlesSolved+'</strong> <span>'+profileText('profile_puzzles_solved','problèmes résolus')+'</span></div><div><strong>'+local.practiceSessions+'</strong> <span>'+profileText('profile_practice_sessions','séances d’entraînement')+'</span></div></div>'+
     renderProfileActivityChart(local.activityEvents)+
     renderProfilePerformancePanel(local.performanceGames)+
     renderExerciseCharts(local)+renderDiagnosticProfile()+renderCorrectionProgressSummary(local)+
@@ -1268,7 +1290,7 @@ function renderProfileModal(data){
   var name=escapeProfileText(data.displayName||profileText('profile_guest','Joueur')), email=escapeProfileText(data.email||'');
   var photo=escapeProfileText(data.photoURL||'https://ui-avatars.com/api/?name='+encodeURIComponent(data.displayName||'?'));
   var html='<div style="text-align:center"><img src="'+photo+'" alt="" style="width:64px;height:64px;border-radius:50%"><h3 style="margin:8px 0 4px">'+name+'</h3><p style="opacity:.6;font-size:.85em">'+email+'</p></div>';
-  html+='<div style="margin-top:16px;display:grid;gap:10px">';
+  html+='<div class="profile-mode-grid">';
   Object.keys(GAME_TYPES).forEach(function(k){
     var st=data.stats&&data.stats[k]||null;
     var label=profileText('profile_game_'+k,GAME_TYPES[k].label);
@@ -1276,7 +1298,7 @@ function renderProfileModal(data){
     var summary=games?'<b>'+Number(st.rating||1200)+'</b> ELO · '+games+' '+profileText('profile_games','parties')+' ('+Number(st.wins||0)+' '+profileText('profile_wins','victoires')+' / '+Number(st.losses||0)+' '+profileText('profile_losses','défaites')+' / '+Number(st.draws||0)+' '+profileText('profile_draws','nulles')+')':profileText('profile_no_game_data','Aucune donnée de partie pour le moment');
     var playButton=auth&&auth.currentUser&&auth.currentUser.uid===data.uid&&GAME_TYPES[k].minutes!==undefined
       ?'<button type="button" data-play-clock="'+GAME_TYPES[k].minutes+'" style="padding:7px 11px;border-radius:8px;border:1px solid #4facfe;background:rgba(79,172,254,.16);color:#fff;font-weight:700;cursor:pointer">Jouer</button>':'';
-    html+='<div style="background:rgba(255,255,255,.06);padding:10px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><span>'+GAME_TYPES[k].icon+' '+escapeProfileText(label)+'</span><span>'+summary+'</span>'+playButton+'</div>';
+    html+='<div class="profile-mode-card"><span class="profile-mode-label">'+GAME_TYPES[k].icon+' '+escapeProfileText(label)+'</span><span class="profile-mode-summary">'+summary+'</span>'+playButton+'</div>';
   });
   html+='</div>';
   if(auth&&auth.currentUser&&auth.currentUser.uid===data.uid)html+=renderLocalLearningPanel(data);
@@ -1292,6 +1314,7 @@ function renderProfileModal(data){
   renderProfileSettings(box);
   bindLessonProgressRangeControls(box);
   bindProfilePerformanceRangeControls(box);
+  bindExerciseChartToggle(box);
   if(auth&&auth.currentUser&&auth.currentUser.uid===data.uid&&window.SupaKeyboardShortcuts)window.SupaKeyboardShortcuts.renderSettings(box);
 }
 function renderProfileSettings(box){
@@ -1317,7 +1340,7 @@ function renderProfileSettings(box){
       if(status)status.textContent=soundControl.checked?"Sons activés sur cet appareil.":"Sons désactivés sur cet appareil.";
     });
   }
-  var prefs=analysis&&analysis.get?analysis.get():{showAcpl:true,detailedMetrics:true,showArrows:true,multiPv:4};
+  var prefs=analysis&&analysis.get?analysis.get():{showAcpl:true,detailedMetrics:true,showArrows:true,multiPv:1};
   section.querySelectorAll("[data-profile-analysis]").forEach(function(input){var key=input.dataset.profileAnalysis;input.checked=Boolean(prefs[key]);input.addEventListener("change",function(){analysis&&analysis.set(key,input.checked);});});
   var multi=section.querySelector("[data-profile-multipv]"),out=section.querySelector("[data-profile-multipv-value]");
   multi.value=String(prefs.multiPv);out.value=String(prefs.multiPv);

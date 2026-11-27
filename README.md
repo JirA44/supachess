@@ -1,44 +1,62 @@
-# SupaChess — analyse et apprentissage des échecs / Chess Analysis and Learning
+# SupaChess — Chess analysis and learning
 
-## Français — présentation
+[![Live site](https://img.shields.io/badge/live-supachess-4fd964?style=flat-square&logo=github)](https://jira44.github.io/supachess/)
+[![Tests](https://img.shields.io/badge/tests-npm%20test-8a8f98?style=flat-square)](https://github.com/JirA44/supachess/actions)
+[![License: ISC](https://img.shields.io/badge/license-ISC-9aa0b8?style=flat-square)](LICENSE)
+[![Engine](https://img.shields.io/badge/engine-Stockfish%2019%20(WASM)-c58f6b?style=flat-square)](vendor/)
 
-Ce dépôt rassemble le site SupaChess et des outils d’analyse de parties : revue des coups, évaluation en centipions, détection de points à travailler et boucle d’apprentissage. Il s’appuie notamment sur chess.js et Stockfish ; les tests ciblent les angles morts, les centipions et les rapports de revue.
+**Live site:** <https://jira44.github.io/supachess/>
 
-### À quoi ça sert, et pourquoi ?
+## What is it for, and why use it?
 
-Le but est d’aider un joueur à comprendre une partie et à transformer les erreurs récurrentes en exercices ciblés. Une évaluation moteur donne un indice sur la position, mais l’explication pédagogique et le retour à la position sont nécessaires pour comprendre la cause d’une perte de centipions.
+SupaChess is a static chess site that helps a player understand a finished game and turn recurring mistakes into focused practice. A local Stockfish evaluation tells you how a position changed; the teaching layer explains *why* a move lost centipowns and links the position back to the board.
 
-### Exemples d’utilisation
+Everything runs in the browser: games, reviews, lessons and corpus analysis are computed locally with chess.js and a WebAssembly Stockfish build. No game data is uploaded to a server.
 
-- Parcourir une partie coup par coup et repérer les moments où l’évaluation change.
-- Examiner si un coup a laissé une pièce en prise ou manqué une tactique.
-- Utiliser le rapport de revue pour choisir un thème d’entraînement.
-- Lancer les tests automatisés avec `npm test` après avoir installé les dépendances.
+## Modules
 
-Les analyses de moteur dépendent de la version et de la profondeur de Stockfish ; elles ne constituent pas, à elles seules, une preuve de niveau ou de progression.
+| Page | Module | What it does |
+| --- | --- | --- |
+| [`index.html`](index.html) | Play & review | Play against Stockfish, review a game move by move, inspect centipawn losses and build a correction queue. |
+| [`book-lessons.html`](book-lessons.html) | Academy | Guided lessons: recall the principle, find the move, verify the engine line, unlock the exercise. |
+| [`noboardchess.html`](noboardchess.html) | Blind chess | Play without a board: write your moves, track the piece inventory, hear the score, compare with Stockfish. |
+| [`champion-metrics.html`](champion-metrics.html) | Champion metrics | Measure accuracy and ACPL on your own PGN corpus, group results by time control, compare published reference points. |
+| [`leaderboards.html`](leaderboards.html) | Leaderboards | Internal Elo per game mode, cached locally with an offline fallback to local engine standings. |
+| [`learn-moves.html`](learn-moves.html) | Material & calculation | Train piece counting and move calculation with guided exercises. |
+| [`learn-progressive.html`](learn-progressive.html) | Progressive path | Anticipate the opponent threat, calculate the best reply, verify before moving. |
 
-## English — overview
+## Getting started
 
-This repository contains the SupaChess website and chess-analysis tools for reviewing moves, evaluating centipawn changes, identifying training themes and supporting a learning loop. It uses chess.js and Stockfish; tests cover blind spots, centipawn changes and review reports.
+```bash
+npm install       # chess.js and Playwright (browser download can be skipped)
+npm test          # 138+ automated checks (node:test)
+npm run test:lessons-alignment   # lesson QCM / expected-move alignment
+```
 
-### What is it for, and why use it?
+Serve the folder with any static server, for example:
 
-The goal is to help players understand a game and turn recurring mistakes into focused practice. Engine evaluations can indicate how a position changed, while explanations and links back to the board help the player understand why.
+```bash
+npx serve .
+```
 
-### Examples
+## Repository layout
 
-- Review a game move by move and find positions where the evaluation changes.
-- Check whether a move left a piece en prise or missed a tactic.
-- Use a review report to choose a topic for the next practice session.
-- Run the automated checks with `npm test` after installing dependencies.
+- `index.html`, `book-lessons.html`, `noboardchess.html`, `champion-metrics.html`, `leaderboards.html`, `learn-*.html` — static pages.
+- `js/` — browser modules (board, engine wrapper, lessons, review, profile, leaderboards).
+- `css/` — stylesheets.
+- `vendor/` — pinned chess.js and Stockfish WebAssembly builds.
+- `test/` and `tests/` — automated checks (`node --test` plus Playwright specs).
+- `scripts/` — maintenance scripts (lesson alignment, asset builds).
+- `docs/` — project documentation.
+- `sitemap.xml`, `robots.txt` — deployment metadata for GitHub Pages.
 
-Engine analysis depends on the Stockfish version and search depth; it is not by itself proof of playing strength or improvement.
+## Limits and honesty rules
 
-## Organisation
+- Engine analysis depends on the Stockfish version, the search depth and the time per position; it is never a proof of playing strength.
+- Internal Elo values are indicative SupaChess ratings, **not** FIDE ratings. Accuracy and ACPL have no official conversion to Elo.
+- Published reference tables state their own sample, method and limits on the page.
+- The site is French-first; engine lessons accept French notation (C, F, T, D, R) and always display international notation.
 
-- `index.html`, `js/`, `css/` : interface web ;
-- `supa_coach_server.py` : service d’analyse associé ;
-- `docs/` : documentation du projet ;
-- `test/` et `tests/` : tests automatisés.
+## License
 
-Pour connaître les prérequis et le démarrage de chaque composant, consulter les fichiers du dépôt et les guides dans `docs/`.
+ISC. See the repository metadata for details.

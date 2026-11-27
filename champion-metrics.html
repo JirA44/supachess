@@ -4,11 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#17211a">
-  <title>Champions · précision et ACPL | SupaChess</title>
+  <title>Champions — précision et ACPL des grands joueurs | SupaChess</title>
+  <meta name="description" content="Mesure la précision et l'ACPL de parties PGN sur ton appareil, compare des joueurs aux mêmes réglages et situe les repères FIDE sans conversion abusive.">
+  <link rel="canonical" href="https://jira44.github.io/supachess/champion-metrics.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="SupaChess">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:url" content="https://jira44.github.io/supachess/champion-metrics.html">
+  <meta property="og:title" content="Champions — précision et ACPL des grands joueurs | SupaChess">
+  <meta property="og:description" content="Mesure la précision et l'ACPL de parties PGN sur ton appareil, compare des joueurs aux mêmes réglages et situe les repères FIDE sans conversion abusive.">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Champions — précision et ACPL des grands joueurs | SupaChess">
+  <meta name="twitter:description" content="Mesure la précision et l'ACPL de parties PGN sur ton appareil, compare des joueurs aux mêmes réglages et situe les repères FIDE sans conversion abusive.">
   <link rel="stylesheet" href="css/style.css?v=profile-stats-ranges-20261101">
   <link rel="stylesheet" href="css/champion-metrics.css?v=champion-ranking-categories-20261101">
 </head>
-<body class="champion-metrics-page">
+<body class="champion-metrics-page" data-vip-required="champion-metrics">
   <header class="champion-header">
     <a href="index.html" class="champion-back">← SupaChess</a>
     <p class="eyebrow">SupaChess · Archives et analyse reproductible</p>
@@ -27,6 +38,47 @@
       <p class="method-note"><strong>Comparaison équitable :</strong> conserve le même moteur, le même temps par position et le même nombre de parties pour chaque joueur. Les résultats dépendent du corpus, de la profondeur effectivement atteinte et des positions; ils ne sont ni un Elo ni une mesure officielle.</p>
     </section>
 
+
+    <section class="champion-card" aria-labelledby="fide-title">
+      <h2 id="fide-title">Repères FIDE : ce que ces mesures ne disent pas</h2>
+      <p>Les bandes Elo et les titres sont définis par le règlement FIDE (Handbook, chapitre C01). L’ACPL et la précision moyenne n’ont <strong>aucune conversion officielle en Elo</strong> : aucun barème FIDE ne transforme une erreur moyenne en centipions en points Elo. Le tableau ci-dessous donne les repères officiels, puis les mesures réellement calculées sur tes propres analyses, filtrées par cadence.</p>
+      <div class="champion-table-scroll">
+        <table>
+          <caption>Bandes Elo et titres FIDE — repères officiels, indépendants des mesures de moteur.</caption>
+          <thead><tr><th scope="col">Elo</th><th scope="col">Classe FIDE</th><th scope="col">Titres seuils</th></tr></thead>
+          <tbody>
+            <tr><td>< 1400</td><th scope="row">Non classé</th><td>—</td></tr>
+            <tr><td>1400 – 1599</td><th scope="row">Classe C</th><td>—</td></tr>
+            <tr><td>1600 – 1799</td><th scope="row">Classe D</th><td>—</td></tr>
+            <tr><td>1800 – 1999</td><th scope="row">Classe E</th><td>—</td></tr>
+            <tr><td>2000 – 2199</td><th scope="row">Classe F</th><td>CM / WCM à partir de 2200 / 2000</td></tr>
+            <tr><td>2200 – 2399</td><th scope="row">Classe G</th><td>CM 2200 · FM 2300 · WCM 2000 · WFM 2100</td></tr>
+            <tr><td>2400 – 2599</td><th scope="row">Classe H</th><td>IM 2400 · GM 2500 · WIM 2200 · WGM 2300</td></tr>
+            <tr><td>2600 et plus</td><th scope="row">Classe I</th><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Mes analyses par cadence</h3>
+      <label for="champion-cadence-filter">Cadence
+        <select id="champion-cadence-filter">
+          <option value="">Toutes les cadences</option>
+          <option value="blitz">Blitz · 3 min + 2 s</option>
+          <option value="rapid">Rapide · 10 min</option>
+          <option value="classical">Classique · 15 min + 10 s</option>
+          <option value="unknown">Cadence non renseignée</option>
+        </select>
+      </label>
+      <p id="champion-cadence-status" class="champion-status" role="status" aria-live="polite">Aucune analyse enregistrée pour le moment.</p>
+      <div class="champion-table-scroll">
+        <table>
+          <caption>Mesures calculées par tes analyses locales, regroupées par cadence.</caption>
+          <thead><tr><th scope="col">Cadence</th><th scope="col">Analyses</th><th scope="col">Demi-coups</th><th scope="col">Précision moyenne</th><th scope="col">ACPL moyen</th></tr></thead>
+          <tbody id="champion-cadence-body"><tr><td colspan="5">Aucune analyse enregistrée sur cet appareil.</td></tr></tbody>
+        </table>
+      </div>
+      <p class="method-note"><strong>Limites :</strong> ces mesures dépendent du corpus importé, du moteur, du temps par position et de la profondeur atteinte. Elles ne constituent ni un classement officiel, ni une estimation de niveau FIDE. La seule conversion fiable reste le jeu contre des joueurs classés.</p>
+      <p>Source des repères : <a href="https://handbook.fide.com/" target="_blank" rel="noopener noreferrer">FIDE Handbook, chapitre C01 ↗</a>.</p>
+    </section>
 
     <section class="champion-card" aria-labelledby="historical-ranking-title">
       <h2 id="historical-ranking-title">Classements historiques publiés : ACPL et précision ajustée</h2>
@@ -128,6 +180,14 @@
             <option value="600">600 ms · recherche plus longue</option>
           </select>
         </label>
+        <label>Cadence des parties analysées
+          <select id="champion-cadence">
+            <option value="blitz" selected>Blitz · 3 min + 2 s</option>
+            <option value="rapid">Rapide · 10 min</option>
+            <option value="classical">Classique · 15 min + 10 s</option>
+            <option value="unknown">Cadence non renseignée</option>
+          </select>
+        </label>
       </div>
       <label class="file-picker">Fichier PGN décompressé
         <input id="champion-pgn-file" type="file" accept=".pgn,.txt,text/plain">
@@ -214,12 +274,21 @@
       </ul>
       <p>Source : <a href="https://pgnmentor.com/files.html" target="_blank" rel="noopener noreferrer">PGN Mentor · téléchargements PGN gratuits ↗</a>. Les corpus peuvent contenir des parties de périodes, cadences et niveaux d’adversaires différents.</p>
     </section>
-    <footer class="champion-footer">SupaChess · Comparaison indicative, corpus et méthode toujours visibles · Version SupaChess : 1.13.12485</footer>
+    <footer class="champion-footer">SupaChess · Comparaison indicative, corpus et méthode toujours visibles · Version SupaChess : 1.13.12485
+      <nav class="site-footer-nav" aria-label="Autres pages SupaChess">
+        <a href="index.html">Jeu</a>
+        <a href="book-lessons.html">Leçons</a>
+        <a href="noboardchess.html">Échecs sans échiquier</a>
+        <a href="leaderboards.html">Classements</a>
+      </nav>
+    </footer>
   </main>
 
   <script src="vendor/chess.js"></script>
   <script src="js/move-feedback.js?v=move-grade-shared-20261101"></script>
   <script src="js/engine.js?v=stockfish-worker-recovery-20261029"></script>
   <script src="js/champion-metrics.js?v=champion-ranking-move-grades-20261101"></script>
+  <script src="js/vip-config.js?v=vip-20261127-v1"></script>
+  <script src="js/vip-manager.js?v=vip-20261127-v1"></script>
 </body>
 </html>

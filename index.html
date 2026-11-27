@@ -3,7 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SupaChess Coach IA — Entraîneur d'échecs</title>
+<title>SupaChess — Coach IA d'échecs, analyse Stockfish et revue</title>
+<meta name="description" content="Joue contre Stockfish, analyse tes parties en centipions et transforme tes erreurs en exercices ciblés. Revue de partie et entraînement sur ton appareil.">
+<link rel="canonical" href="https://jira44.github.io/supachess/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SupaChess">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:url" content="https://jira44.github.io/supachess/">
+<meta property="og:title" content="SupaChess — Coach IA d'échecs, analyse Stockfish et revue">
+<meta property="og:description" content="Joue contre Stockfish, analyse tes parties en centipions et transforme tes erreurs en exercices ciblés. Revue de partie, classement et entraînement sur ton appareil.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SupaChess — Coach IA d'échecs, analyse Stockfish et revue">
+<meta name="twitter:description" content="Joue contre Stockfish, analyse tes parties en centipions et transforme tes erreurs en exercices ciblés. Revue de partie, classement et entraînement sur ton appareil.">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="css/style.css?v=checkmate-king-fall-20261105-v1&activity=profile-activity-last365-20261105-v1&piece-outline-20261107-v1&king-fall-slower-20261108-v1&move-history-highlight-20261108-v2&psychedelic-liquid-20261109-v6&evalbar-side-score-20261116-v1">
 <style>
@@ -134,9 +145,9 @@
     .game-engine-details { display:block; margin-top:3px; color:#d2dcec; font-size:.9em; line-height:1.45; }
 </style>
 </head>
-<body>
+<body data-analysis-surface="game">
 <header class="topbar">
-  <div class="brand-navigation"><h1 class="brand">♞ Supa<span>Chess</span> <span class="brand-tag">Coach IA</span></h1><a class="topbar-lessons-btn" href="book-lessons.html">Leçons</a><a class="topbar-lessons-btn" href="noboardchess.html?v=noboard-training-20261104-v4">Échecs sans échiquier</a><a class="topbar-lessons-btn" href="champion-metrics.html">Champions</a><a class="topbar-lessons-btn" href="https://jira44.github.io/supachess-web/GENERATEUR_PARTIES_BRILLANTES.html#custom-problems">Problèmes personnalisés</a></div>
+  <div class="brand-navigation"><h1 class="brand">♞ Supa<span>Chess</span> <span class="brand-tag">Coach IA</span></h1><a class="topbar-lessons-btn" href="book-lessons.html">Leçons</a><a class="topbar-lessons-btn" href="noboardchess.html">Échecs sans échiquier</a><a class="topbar-lessons-btn" href="champion-metrics.html">Champions</a><a class="topbar-lessons-btn" href="https://jira44.github.io/supachess-web/GENERATEUR_PARTIES_BRILLANTES.html#custom-problems">Problèmes personnalisés</a></div>
   <div class="engine-status">
     <span id="engine-dot" class="status-dot loading"></span>
     <span id="engine-label">Stockfish NNUE — chargement…</span>
@@ -236,11 +247,11 @@
     </div>
     <div class="analysis-setting">
       <div><h3>Métriques détaillées <span class="advanced-badge">Avancé</span></h3><p>Affiche les explications tactiques, les principes et les détails par demi-coup dans le rapport.</p></div>
-      <button class="analysis-toggle" type="button" role="switch" aria-label="Afficher les métriques détaillées" data-setting="detailedMetrics"><span></span></button>
+      <button class="analysis-toggle" type="button" role="switch" aria-label="Afficher les métriques détaillées" data-setting="detailedMetrics" data-vip-required="detailed-metrics"><span></span></button>
     </div>
     <div class="analysis-setting">
       <div><h3>Toujours afficher les flèches du moteur <span class="advanced-badge">Avancé</span></h3><p>Superpose les meilleurs coups Multi‑PV à la position courante sur l’échiquier.</p></div>
-      <button class="analysis-toggle" type="button" role="switch" aria-label="Toujours afficher les flèches du moteur" data-setting="showArrows"><span></span></button>
+      <button class="analysis-toggle" type="button" role="switch" aria-label="Toujours afficher les flèches du moteur" data-setting="showArrows" data-vip-required="engine-arrows"><span></span></button>
     </div>
     <div class="analysis-setting multipv-setting">
       <label for="analysis-multipv"><h3>Lignes du moteur (Multi‑PV)</h3><input id="analysis-multipv" type="range" min="1" max="4" step="1" value="4"><span class="multipv-scale"><span>1</span><span>2</span><span>3</span><strong id="analysis-multipv-value">4</strong></span></label>
@@ -485,6 +496,12 @@
   <span id="unique-visitors-count" class="unique-visitors-count">Visiteurs uniques estimés : chargement…</span>
 </div>
   <span class="site-version" aria-label="Version de SupaChess">Version SupaChess : 1.13.14922</span>
+  <nav class="site-footer-nav" aria-label="Autres pages SupaChess">
+    <a href="noboardchess.html">Échecs sans échiquier</a>
+    <a href="champion-metrics.html">Analyse de corpus (VIP)</a>
+    <a href="mentions-legales.html">Mentions légales</a>
+    <button type="button" class="vip-open-button" data-vip-open="champion-metrics">SupaChess VIP</button>
+  </nav>
 </footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
@@ -500,6 +517,8 @@
 <script src="js/board.js?v=checkmate-king-fall-20261105-v1"></script>
 <script src="js/appearance.js?v=appearance-options-20261102-v1&psychedelic-liquid-20261109-v1&psychedelic-default-on-20261109-v1&psychedelic-controls-20261109-v6"></script>
 <script src="js/analysis-settings.js?v=diagnostic-arrows-effective-state-20261105-v2&new-game-aids=20261107-v1"></script>
+<script src="js/vip-config.js?v=vip-20261127-v1"></script>
+<script src="js/vip-manager.js?v=vip-20261127-v1"></script>
 <script src="js/move-feedback.js?v=supa-brilliant-indicator-20261103-v1"></script>
 <script src="js/app.js?v=berserk14-integration-20261116-v1&evalbar-side-score-20261116-v1&supa-vs-supa-live-grades-20261117-v2&new-game-clears-review-20261116-v1&self-play-modes-20261115-v1&stop-engine-20261105-v1&clock=explicit-start-20261105-v1&review-clocks=20261105-v1&accuracy-player-colors=20261105-v2&checkmate=king-fall-20261105-v1&precision-gap=20261106-v1&precision-gap-every-game=20261106-v1&diagnostic-only-play-mode=20261106-v2&profile-name=20261106-v1&game-number=20261106-v1&diagnostic-no-aid-label=20261108-v1&precision-gap-percent=20261106-v1&pause-controls=20261107-v1&diagnostic-toggle=20261107-v1&diagnostic-no-aid-mode=20261108-v1&acpl-mate-guard=20261108-v1&best-move-replay=20261108-v3&review-display-move-history=20261108-v1&unassisted-aids-review-unlocked=20261120-v2"></script>
 <script src="js/diagnostic-undo-lock.js?v=correction-unlock-20261105-v1"></script>

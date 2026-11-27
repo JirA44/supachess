@@ -2,7 +2,29 @@
 "use strict";
 (() => {
   const STORAGE_KEY = "supachess-analysis-preferences-v1";
-  const defaults = { showAcpl:true, detailedMetrics:true, showArrows:true, multiPv:4 };
+  const MULTIPV_STORAGE_KEY = "supachess-analysis-multipv-v1";
+  /* Surface d'usage (B8) : en jeu on limite le moteur à 1 ligne MultiPV,
+     en analyse (leçons, relecture) on garde les 4 lignes. */
+  const surface = (() => {
+    const declared = document.body?.dataset?.analysisSurface || document.documentElement?.dataset?.analysisSurface || "";
+    if (declared === "game" || declared === "analysis") return declared;
+    return document.getElementById("board") ? "game" : "analysis";
+  })();
+  const defaults = { showAcpl:true, detailedMetrics:true, showArrows:true, multiPv: surface === "analysis" ? 4 : 1 };
+  function loadMultiPv() {
+    try {
+      const scoped = localStorage.getItem(MULTIPV_STORAGE_KEY + ":" + surface);
+      if (scoped !== null) {
+        const value = Number(scoped);
+        if (Number.isFinite(value) && value >= 1) return Math.max(1, Math.min(4, Math.round(value)));
+      }
+      // Migration : un choix explicite fait avant le réglage par surface est conservé,
+      // l'ancienne valeur par défaut (4) est remplacée par le nouveau défaut de surface.
+      const legacy = Number(JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}").multiPv);
+      if (Number.isFinite(legacy) && legacy >= 1 && legacy <= 4 && legacy !== 4) return legacy;
+    } catch (_) {}
+    return defaults.multiPv;
+  }
   function load() {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
@@ -10,13 +32,20 @@
         showAcpl: typeof saved.showAcpl === "boolean" ? saved.showAcpl : defaults.showAcpl,
         detailedMetrics: typeof saved.detailedMetrics === "boolean" ? saved.detailedMetrics : defaults.detailedMetrics,
         showArrows: typeof saved.showArrows === "boolean" ? saved.showArrows : defaults.showArrows,
-        multiPv: Math.max(1, Math.min(4, Number(saved.multiPv) || defaults.multiPv))
+        multiPv: loadMultiPv()
       };
     } catch (_) { return { ...defaults }; }
   }
   let preferences = load();
   function save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences)); } catch (_) {}
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      saved.showAcpl = preferences.showAcpl;
+      saved.detailedMetrics = preferences.detailedMetrics;
+      saved.showArrows = preferences.showArrows;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+    } catch (_) {}
+    try { localStorage.setItem(MULTIPV_STORAGE_KEY + ":" + surface, String(preferences.multiPv)); } catch (_) {}
   }
   function trainingAidsLocked() {
     if (window.SupaChessIsCorrectionExercise?.()) return false;
@@ -50,8 +79,7 @@
   }
   function update(key, value) {
     if (key === "showArrows" && trainingAidsLocked() && Boolean(value)) return;
-    if (key === "multiPv") preferences.multiPv = Math.max(1, Math.min(4, Number(value) || defaults.multiPv));
-    else if (Object.prototype.hasOwnProperty.call(defaults, key) && key !== "multiPv") preferences[key] = Boolean(value);
+    if (key === "multiPv") preferences.multiPv = Math.max(1, Math.min(4, Number(value) || defaults.multiPv));    else if (Object.prototype.hasOwnProperty.call(defaults, key) && key !== "multiPv") preferences[key] = Boolean(value);
     else return;
     save(); render();
     window.dispatchEvent(new CustomEvent("supachess-analysis-preferences-change", { detail: { ...preferences } }));

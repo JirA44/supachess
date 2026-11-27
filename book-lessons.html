@@ -4,14 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#17211a">
-  <title>SupaChess Académie — La route vers l’excellence</title>
+  <title>SupaChess Académie — Leçons d'échecs guidées par Stockfish</title>
+  <meta name="description" content="Des leçons d'échecs guidées pas à pas : principe à retenir, coup à trouver, réplique adverse expliquée et comparaison Stockfish. Progression locale.">
+  <link rel="canonical" href="https://jira44.github.io/supachess/book-lessons.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="SupaChess">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:url" content="https://jira44.github.io/supachess/book-lessons.html">
+  <meta property="og:title" content="SupaChess Académie — Leçons d'échecs guidées par Stockfish">
+  <meta property="og:description" content="Des leçons d'échecs guidées pas à pas : principe à retenir, coup à trouver, réplique adverse expliquée et comparaison Stockfish. Progression enregistrée dans ton navigateur.">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="SupaChess Académie — Leçons d'échecs guidées par Stockfish">
+  <meta name="twitter:description" content="Des leçons d'échecs guidées pas à pas : principe à retenir, coup à trouver, réplique adverse expliquée et comparaison Stockfish. Progression enregistrée dans ton navigateur.">
   <link rel="stylesheet" href="css/style.css?v=piece-pointer-drag-20261105-v2&piece-outline-20261107-v1">
   <link rel="stylesheet" href="css/book-lessons.css?v=branch-pruning-20261121-v1">
   <link rel="stylesheet" href="css/lesson-concepts.css?v=concept-curriculum-80-20261105-v1">
   <link rel="stylesheet" href="css/method-paths.css?v=methods-player-lessons-20261028">
 <style>.lesson-settings-shortcuts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.lesson-settings-shortcuts .btn{font-size:.9rem}@media(max-width:600px){.lesson-topbar{flex-wrap:wrap}.lesson-settings-shortcuts{order:3;width:100%;justify-content:center}}</style>
 </head>
-<body class="lesson-mode">
+<body class="lesson-mode" data-analysis-surface="analysis">
   <header class="topbar lesson-topbar">
     <a class="brand lesson-brand" href="index.html" aria-label="Retour à SupaChess">♞ Supa<span>Chess</span></a>
     <a class="btn" href="index.html">Retour à l’échiquier</a>
@@ -381,7 +392,7 @@
       <div class="lesson-board-column">
         <p class="lesson-status" id="lesson-status" role="status" aria-live="polite">Choisis une leçon pour commencer.</p>
         <p class="lesson-turn-indicator" id="lesson-turn-indicator" role="status" aria-live="polite">Trait aux Blancs — c’est aux Blancs de jouer.</p>
-        <div class="lesson-board-stage">
+        <div class="lesson-board-stage" id="lesson-board-stage">
           <div id="lesson-board" class="board" aria-label="Échiquier d’exercice"></div>
           <div class="lesson-eval-widget" id="lesson-eval-widget" hidden>
             <span class="lesson-eval-edge" aria-hidden="true">+</span>
@@ -441,15 +452,15 @@
         <div class="lesson-engine-actions">
           <button class="btn" id="lesson-engine-analyze" type="button">Analyser la position avec Stockfish</button>
         </div>
-        <section class="lesson-engine-analysis" id="lesson-engine-analysis" aria-labelledby="lesson-engine-title" hidden>
-          <h3 id="lesson-engine-title">Variantes principales</h3>
+        <details class="lesson-engine-analysis" id="lesson-engine-analysis" aria-labelledby="lesson-engine-title" hidden>
+          <summary id="lesson-engine-title">Variantes principales</summary>
           <p class="lesson-engine-status" id="lesson-engine-status" role="status" aria-live="polite"></p>
           <p class="lesson-engine-note">Le top 1 de Stockfish sert de référence pour choisir et réussir le coup dans l’exercice. Les lignes tirées des livres restent des exemples secondaires lorsqu’elles diffèrent. Pour calculer efficacement, ne prolonge pas toutes les candidates : inscris la meilleure réfutation trouvée, écarte les branches qui ne résistent pas, puis approfondis celles qui restent crédibles. Ces décisions sont tes notes de travail, pas un verdict automatique; le classement moteur dépend de sa recherche et n’est pas un Elo FIDE humain.</p>
           <ol class="lesson-engine-lines" id="lesson-engine-lines"></ol>
           <div class="lesson-engine-actions lesson-engine-continuation">
             <button class="btn" id="lesson-engine-return" type="button" hidden>Continuer la leçon</button>
           </div>
-        </section>
+        </details>
         <div class="lesson-explanation" id="lesson-explanation" hidden></div>
         <h3>Suite jouée</h3>
         <ol class="lesson-move-list" id="lesson-move-list"></ol>
@@ -458,7 +469,14 @@
     </section>
     <p class="lesson-note">Les exercices sont rédigés pour SupaChess. Chaque FEN et chaque demi-coup des lignes étudiées sont vérifiés par les tests; les variantes Stockfish restent dépendantes du temps de recherche.</p>
   </main>
-<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14926</footer>
+<footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14926
+  <nav class="site-footer-nav" aria-label="Autres pages SupaChess">
+    <a href="index.html">Jeu</a>
+    <a href="noboardchess.html">Échecs sans échiquier</a>
+    <a href="champion-metrics.html">Champions</a>
+    <a href="leaderboards.html">Classements</a>
+  </nav>
+</footer>
 
   <script src="vendor/chess.js"></script>
   <script src="js/engine.js"></script>

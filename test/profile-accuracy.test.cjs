@@ -115,6 +115,20 @@ test("renderProfileModal replaces the loading dialog before filling profile cont
   assert.doesNotMatch(profileContent.innerHTML, /My learning|Puzzles solved|Resume my exercises/);
 });
 
+test("le profil affiche les 9 modes de jeu dans une grille dédiée", () => {
+  window.SupaProfiles.init({ currentUser: { uid: "player-1" } }, null);
+  window.SupaProfiles.renderProfileModal({
+    uid: "player-1",
+    displayName: "Joueur test",
+    email: "joueur@example.test",
+    stats: { puzzle: { rating: 1400, played: 3, wins: 2, draws: 1, losses: 0 } },
+  });
+  assert.match(profileContent.innerHTML, /class="profile-mode-grid"/);
+  assert.equal((profileContent.innerHTML.match(/class="profile-mode-card"/g) || []).length, 9);
+  assert.doesNotMatch(profileContent.innerHTML, /<\/strong><span>leçons/);
+  assert.match(profileContent.innerHTML, /<\/strong> <span>leçons maîtrisées/);
+});
+
 test("profile shows XP remaining before the next level", () => {
   values.set("chessnova_progress", JSON.stringify({ xp: 70, level: 1 }));
   const html = window.SupaProfiles.renderLocalLearningPanel({});
@@ -136,7 +150,7 @@ test("mastery summary renders five spaced, labelled rows with clickable lesson a
   assert.match(html, /class="profile-resume-link" href="https:\/\/jira44\.github\.io\/supachess-web\/TRAINING_OPENINGS\.html"/);
 });
 
-test("profile shows exercise charts from saved correction data without a completed diagnostic", () => {
+test("profile shows one unified exercise chart with a bars/radar toggle", () => {
   values.set("supachess_reviewed_pgns", JSON.stringify([{
     correctionExercises: Array.from({ length: 42 }, () => ({ classification: "inaccuracy" })),
   }]));
@@ -144,9 +158,10 @@ test("profile shows exercise charts from saved correction data without a complet
   const html = window.SupaProfiles.renderLocalLearningPanel({});
   assert.match(html, /Graphiques de mes exercices/);
   assert.match(html, /42 exercices de correction enregistrés/);
-  assert.equal((html.match(/class="profile-exercise-chart"/g) || []).length, 3);
-  assert.match(html, /Radar · part des exercices/);
-  assert.match(html, /Vue 3D · mêmes nombres/);
+  assert.equal((html.match(/class="profile-exercise-chart" data-profile-exercise-chart-view="bar"/g) || []).length, 1);
+  assert.match(html, /data-profile-exercise-chart="bar"/);
+  assert.match(html, /data-profile-exercise-chart="radar"/);
+  assert.doesNotMatch(html, /Vue 3D · mêmes nombres/);
 });
 
 test("profile reports move-type percentages averaged equally across completed games", () => {

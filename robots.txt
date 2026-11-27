@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Pages de service qui n'apportent pas de contenu propre.
+Disallow: /test/
+Disallow: /tests/
+
+Sitemap: https://jira44.github.io/supachess/sitemap.xml

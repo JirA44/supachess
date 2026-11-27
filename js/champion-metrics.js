@@ -58,17 +58,55 @@
     try{var data=JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}");return data&&typeof data==="object"&&!Array.isArray(data)?data:{};}catch(_error){return {};}
   }
   function saveResults(results){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(results));return true;}catch(_error){return false;}}
+  var CADENCE_LABELS={blitz:"Blitz · 3 min + 2 s",rapid:"Rapide · 10 min",classical:"Classique · 15 min + 10 s",unknown:"Cadence non renseignée"};
+  function renderCadenceReferences(){
+    var body=document.getElementById("champion-cadence-body");
+    var status=document.getElementById("champion-cadence-status");
+    var filter=document.getElementById("champion-cadence-filter");
+    if(!body||!status||!filter)return;
+    var data=readResults();
+    var rows=Object.keys(data).map(function(key){return data[key];}).filter(function(row){
+      return row&&Number.isFinite(Number(row.accuracy))&&Number.isFinite(Number(row.acpl));
+    });
+    var selected=filter.value;
+    var filtered=selected?rows.filter(function(row){return String(row.cadence||"unknown")===selected;}):rows;
+    if(!filtered.length){
+      body.innerHTML='<tr><td colspan="5">Aucune analyse enregistrée pour cette cadence.</td></tr>';
+      status.textContent=rows.length
+        ? rows.length+" analyse(s) enregistrée(s), aucune pour la cadence sélectionnée."
+        : "Aucune analyse enregistrée sur cet appareil.";
+      return;
+    }
+    var groups={};
+    filtered.forEach(function(row){
+      var key=String(row.cadence||"unknown");
+      if(!groups[key])groups[key]={cadence:key,count:0,moves:0,accuracySum:0,acplSum:0};
+      groups[key].count++;
+      groups[key].moves+=Number(row.ratedMoves||0);
+      groups[key].accuracySum+=Number(row.accuracy)*Number(row.ratedMoves||0);
+      groups[key].acplSum+=Number(row.acpl)*Number(row.ratedMoves||0);
+    });
+    var ordered=Object.keys(groups).map(function(key){return groups[key];}).sort(function(a,b){return b.moves-a.moves;});
+    body.innerHTML=ordered.map(function(group){
+      var moves=group.moves||1;
+      return "<tr><th scope=\"row\">"+escapeHtml(CADENCE_LABELS[group.cadence]||group.cadence)+"</th><td>"+group.count+"</td><td>"+group.moves+"</td><td>"+
+        (group.accuracySum/moves).toFixed(1).replace(".",",")+" %</td><td>"+(group.acplSum/moves).toFixed(1).replace(".",",")+" cp</td></tr>";
+    }).join("");
+    var totalMoves=ordered.reduce(function(sum,group){return sum+group.moves;},0);
+    status.textContent=filtered.length+" analyse(s), "+totalMoves+" demi-coups comparables · moyenne pondérée par le nombre de demi-coups évalués.";
+  }
   function renderResults(){
     var body=document.getElementById("champion-results-body");
     if(!body)return;
     var data=readResults();
     var rows=Object.keys(data).map(function(key){return data[key];}).filter(Boolean).sort(function(a,b){return a.name.localeCompare(b.name,"fr");});
-    if(!rows.length){body.innerHTML='<tr><td colspan="8">Aucune analyse enregistrée sur cet appareil.</td></tr>';renderRanking();return;}
+    if(!rows.length){body.innerHTML='<tr><td colspan="8">Aucune analyse enregistrée sur cet appareil.</td></tr>';renderRanking();renderCadenceReferences();return;}
     body.innerHTML=rows.map(function(row){
       var date=row.completedAt?new Date(row.completedAt).toLocaleString("fr-FR"):"—";
       return "<tr><th scope=\"row\">"+escapeHtml(row.name)+"</th><td>"+row.gamesAnalyzed+" / "+row.candidateGames+"</td><td>"+row.ratedMoves+"</td><td>"+row.accuracy.toFixed(1).replace(".",",")+" %</td><td>"+row.acpl.toFixed(1).replace(".",",")+" cp</td><td>"+row.averageDepth.toFixed(1)+"</td><td>"+escapeHtml(row.engine)+" · "+row.movetime+" ms</td><td>"+escapeHtml(date)+"</td></tr>";
     }).join("");
     renderRanking();
+    renderCadenceReferences();
   }
   function renderRanking(){
     var body=document.getElementById("champion-ranking-body");
@@ -99,7 +137,7 @@
     }
     var selected=protocolSelect.value;
     var rows=all.filter(function(row){return String(row.engine||"Stockfish")+"|"+String(row.movetime||0)===selected;});
-    var metric=metricSelect.value;
+    var metric=metricSelect.value||"accuracy";
     var labels={accuracy:"Précision moyenne",acpl:"ACPL",gamesAnalyzed:"Parties analysées",ratedMoves:"Demi-coups évalués",averageDepth:"Profondeur moyenne",
       "grade:best":"Meilleur coup","grade:very-good":"Très bon coup","grade:good":"Bon coup","grade:ok":"Coup OK",
       "grade:inaccuracy":"Imprécisions","grade:error":"Erreurs","grade:blunder":"Gaffes"};
@@ -220,6 +258,7 @@
       if(!totalRated)throw new Error("Aucune évaluation comparable obtenue. Les positions de mat et les évaluations manquantes sont exclues.");
       var record={name:playerName,gamesAnalyzed:totalGames,candidateGames:candidates.length,ratedMoves:totalRated,
         accuracy:accuracySum/totalRated,acpl:lossSum/totalRated,engine:currentEngine.engineName||"Stockfish",movetime:movetime,
+        cadence:(document.getElementById("champion-cadence")||{}).value||"unknown",
         averageDepth:depthSum/totalRated,gradeCounts:gradeCounts,gradedMoves:totalRated,sourceFile:file?file.name:"PGN collé",completedAt:new Date().toISOString()};
       var results=readResults();var recordKey=key==="custom"?"custom:"+normalizeName(playerName):key;results[recordKey]=record;
       if(!saveResults(results))throw new Error("Le stockage local du navigateur est indisponible; exporte ou capture le résultat avant de quitter.");
@@ -250,11 +289,12 @@
     document.getElementById("champion-cancel").addEventListener("click",cancelAnalysis);
     document.getElementById("champion-ranking-metric").addEventListener("change",renderRanking);
     document.getElementById("champion-ranking-protocol").addEventListener("change",renderRanking);
+    document.getElementById("champion-cadence-filter").addEventListener("change",renderCadenceReferences);
     document.getElementById("champion-clear").addEventListener("click",function(){
       try{localStorage.removeItem(STORAGE_KEY);renderResults();document.getElementById("champion-analysis-status").textContent="Les résultats locaux ont été effacés.";}catch(_error){}
     });
   }
-  var api={splitPgnGames:splitPgnGames,parsePgnGames:parsePgnGames,moveAccuracy:moveAccuracy,moveLoss:moveLoss,winningPercent:winningPercent,matchesPlayer:matchesPlayer};
+  var api={splitPgnGames:splitPgnGames,parsePgnGames:parsePgnGames,moveAccuracy:moveAccuracy,moveLoss:moveLoss,winningPercent:winningPercent,matchesPlayer:matchesPlayer,renderCadenceReferences:renderCadenceReferences};
   root.SupaChampionMetrics=api;
   if(root.document){if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();}
 })(typeof window!=="undefined"?window:this);

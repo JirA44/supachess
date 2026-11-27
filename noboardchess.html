@@ -4,7 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#101926">
-  <title>Échecs sans échiquier · SupaChess</title>
+  <title>Échecs sans échiquier — Jouer et s'entraîner à l'écrit | SupaChess</title>
+  <meta name="description" content="Joue aux échecs sans voir l'échiquier : écris tes coups en notation, suis l'inventaire des pièces, joue à la voix haute et compare-toi à Stockfish.">
+  <link rel="canonical" href="https://jira44.github.io/supachess/noboardchess.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="SupaChess">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:url" content="https://jira44.github.io/supachess/noboardchess.html">
+  <meta property="og:title" content="Échecs sans échiquier — Jouer et s'entraîner à l'écrit | SupaChess">
+  <meta property="og:description" content="Joue aux échecs sans voir l'échiquier : écris tes coups en notation, suis l'inventaire des pièces, joue à la voix haute et compare-toi à Stockfish.">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Échecs sans échiquier — Jouer et s'entraîner à l'écrit | SupaChess">
+  <meta name="twitter:description" content="Joue aux échecs sans voir l'échiquier : écris tes coups en notation, suis l'inventaire des pièces, joue à la voix haute et compare-toi à Stockfish.">
   <style>
     :root{color-scheme:dark;--bg:#0b1220;--panel:#121e2e;--edge:#2a3d52;--text:#eff6ff;--muted:#b8c8d8;--accent:#63dfbf;--gold:#f4cb66;--danger:#ff8585}
     *{box-sizing:border-box}
@@ -117,7 +128,11 @@
 
       <div class="actions">
         <button id="copy-pgn" class="secondary" type="button" disabled>Copier la partie PGN</button>
+        <button id="speak-moves" class="secondary" type="button" disabled>Lire les derniers coups</button>
+        <button id="flash-position" class="secondary" type="button" disabled>Aperçu de la position (2 s)</button>
       </div>
+      <p class="note" id="piece-inventory">Inventaire : —</p>
+      <div class="note" id="position-flash" hidden aria-live="polite"></div>
       <h2 style="margin-top:24px">Partie en notation</h2>
       <div id="move-columns" class="move-columns" hidden><span>Coup</span><span id="white-heading">Blancs</span><span id="black-heading">Noirs</span></div>
       <div id="move-list" class="empty" aria-live="polite">La partie apparaîtra ici coup par coup, sans représentation de l’échiquier.</div>
@@ -214,6 +229,14 @@
       <p class="source-note">La maîtrise est suivie sur cet appareil. Une validation de test confirme une réussite à cette session; elle ne prouve pas une acquisition définitive.</p>
     </section>
   </main>
+  <footer class="site-version-footer" style="text-align:center;padding:16px 12px;font-size:.9rem;opacity:.8" aria-label="Version de SupaChess">Version SupaChess : 1.13.14818
+    <nav class="site-footer-nav" aria-label="Autres pages SupaChess">
+      <a href="index.html">Jeu</a>
+      <a href="book-lessons.html">Leçons</a>
+      <a href="champion-metrics.html">Champions</a>
+      <a href="leaderboards.html">Classements</a>
+    </nav>
+  </footer>
 
   <script src="vendor/chess.js"></script>
   <script src="js/engine.js?v=stockfish-worker-recovery-20261029"></script>
@@ -230,6 +253,10 @@
     const newGameButton = document.getElementById("new-game");
     const copyButton = document.getElementById("copy-pgn");
     const moveList = document.getElementById("move-list");
+    const speakButton = document.getElementById("speak-moves");
+    const flashButton = document.getElementById("flash-position");
+    const inventoryEl = document.getElementById("piece-inventory");
+    const flashEl = document.getElementById("position-flash");
     let playerColor = "w";
     let gameStarted = false;
     let busy = false;
@@ -260,6 +287,95 @@
       colorSelect.disabled = busy;
       eloSelect.disabled = busy;
       copyButton.disabled = game.history().length === 0;
+      if (speakButton) speakButton.disabled = game.history().length === 0;
+      if (flashButton) flashButton.disabled = !gameStarted || gameFinished;
+      renderInventory();
+    }
+
+    /* Inventaire : pièces restantes, utile pour reconstruire la position sans échiquier. */
+    const PIECE_LABELS = { k: "R", q: "D", r: "T", b: "F", n: "C", p: "P" };
+    function renderInventory() {
+      if (!inventoryEl) return;
+      if (!gameStarted) {
+        inventoryEl.textContent = "Inventaire : démarre une partie pour suivre les pièces restantes.";
+        return;
+      }
+      const board = game.board();
+      const count = { w: {}, b: {} };
+      for (const row of board) {
+        for (const cell of row) {
+          if (!cell || !cell.type) continue;
+          const bucket = count[cell.color];
+          bucket[cell.type] = (bucket[cell.type] || 0) + 1;
+        }
+      }
+      const describe = (bucket) => ["q", "r", "b", "n", "p", "k"]
+        .filter((type) => bucket[type])
+        .map((type) => PIECE_LABELS[type] + (bucket[type] > 1 ? String(bucket[type]) : ""))
+        .join(" ");
+      inventoryEl.textContent = "Inventaire — Blancs : " + (describe(count.w) || "aucune pièce") +
+        " · Noirs : " + (describe(count.b) || "aucune pièce");
+    }
+
+    /* Aperçu anti-triche : la position n'est visible que 2 secondes, puis disparaît. */
+    let flashTimer = null;
+    function flashPosition() {
+      if (!flashEl || !gameStarted) return;
+      if (flashTimer) clearTimeout(flashTimer);
+      flashEl.hidden = false;
+      flashEl.textContent = "Aperçu (2 s) — " + game.fen();
+      flashTimer = setTimeout(() => {
+        flashEl.hidden = true;
+        flashEl.textContent = "";
+        flashTimer = null;
+      }, 2000);
+    }
+
+    /* Notation française acceptée en plus de la notation internationale. */
+    function frenchSanToEnglish(value) {
+      const text = String(value || "").trim();
+      if (!text) return text;
+      return text
+        .replace(/([+#?!]?)0-0-0/g, "$1O-O-O")
+        .replace(/([+#?!]?)0-0/g, "$1O-O")
+        .replace(/=R/g, "=K")
+        .replace(/=D/g, "=Q")
+        .replace(/=F/g, "=B")
+        .replace(/=C/g, "=N")
+        .replace(/=T/g, "=R")
+        .replace(/([a-h][1-8])C([a-h][1-8])/g, "$1N$2")
+        .replace(/([a-h][1-8])F([a-h][1-8])/g, "$1B$2")
+        .replace(/([a-h][1-8])T([a-h][1-8])/g, "$1R$2")
+        .replace(/([a-h][1-8])D([a-h][1-8])/g, "$1Q$2")
+        .replace(/^C([a-h][1-8])/g, "N$1")
+        .replace(/^F([a-h][1-8])/g, "B$1")
+        .replace(/^T([a-h][1-8])/g, "R$1")
+        .replace(/^D([a-h][1-8])/g, "Q$1");
+    }
+
+    /* Lecture des derniers coups (synthèse vocale du navigateur). */
+    function speakRecentMoves() {
+      if (typeof window === "undefined" || typeof window.speechSynthesis === "undefined" || !window.speechSynthesis) {
+        setStatus("La lecture vocale n’est pas disponible dans ce navigateur.", "error");
+        return;
+      }
+      const history = game.history();
+      if (!history.length) return;
+      const recent = history.slice(-4);
+      const spoken = recent.map((san, index) => {
+        const absolute = history.length - recent.length + index;
+        const color = absolute % 2 === 0 ? "Blancs" : "Noirs";
+        return color + " : " + san;
+      }).join(". ");
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(spoken);
+        utterance.lang = "fr-FR";
+        window.speechSynthesis.speak(utterance);
+        setStatus("Lecture des derniers coups : " + spoken, "ok");
+      } catch (_) {
+        setStatus("La lecture vocale a échoué. La notation reste lisible ci-dessous.", "error");
+      }
     }
     function renderMoves() {
       const sans = game.history();
@@ -314,6 +430,15 @@
       const uci = text.replace(/\s+/g, "");
       if (/^[a-h][1-8][a-h][1-8][qrbn]?$/i.test(uci)) {
         return game.move({ from: uci.slice(0, 2).toLowerCase(), to: uci.slice(2, 4).toLowerCase(), promotion: (uci[4] || "q").toLowerCase() });
+      }
+      const french = frenchSanToEnglish(text);
+      if (french !== text) {
+        try {
+          const move = game.move(french, { sloppy: true });
+          if (move) return move;
+        } catch (_) {
+          /* la notation française n'était pas jouable : on tente la forme brute */
+        }
       }
       return game.move(text, { sloppy: true });
     }
@@ -393,6 +518,8 @@
         setStatus("Copie refusée par le navigateur. Tu peux sélectionner la notation ci-dessus.", "error");
       }
     });
+    if (speakButton) speakButton.addEventListener("click", () => speakRecentMoves());
+    if (flashButton) flashButton.addEventListener("click", () => flashPosition());
     engine.ready.then(() => {
       engineReady = true;
       document.getElementById("play-move").disabled = false;
@@ -437,7 +564,11 @@
     function setFeedback(id,text,state){const el=byId(id);el.textContent=text;el.dataset.state=state||"";}
     function escapeHtml(value){return String(value).replace(/[&<>"']/g,function(ch){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[ch];});}
     function selectMode(name){
-      document.querySelectorAll("[data-mode]").forEach(function(button){button.setAttribute("aria-selected",button.dataset.mode===name?"true":"false");});
+      document.querySelectorAll("[data-mode]").forEach(function(button){
+        const active=button.dataset.mode===name;
+        button.setAttribute("aria-selected",active?"true":"false");
+        button.setAttribute("tabindex",active?"0":"-1");
+      });
       document.querySelectorAll("[data-mode-panel]").forEach(function(panel){panel.hidden=panel.dataset.modePanel!==name;});
       if(name==="lessons")renderLesson();
       if(name==="notation")renderNotationLesson();
@@ -445,7 +576,22 @@
       if(name==="mastery")renderMasteryStats();
       if(name==="exercises")renderExerciseStats();
     }
-    document.querySelectorAll("[data-mode]").forEach(function(button){button.addEventListener("click",function(){selectMode(button.dataset.mode);});});
+    const modeTabs=Array.prototype.slice.call(document.querySelectorAll("[data-mode]"));
+    modeTabs.forEach(function(button,index){
+      button.addEventListener("click",function(){selectMode(button.dataset.mode);});
+      button.addEventListener("keydown",function(event){
+        let target=-1;
+        if(event.key==="ArrowRight"||event.key==="ArrowDown")target=(index+1)%modeTabs.length;
+        else if(event.key==="ArrowLeft"||event.key==="ArrowUp")target=(index-1+modeTabs.length)%modeTabs.length;
+        else if(event.key==="Home")target=0;
+        else if(event.key==="End")target=modeTabs.length-1;
+        if(target<0)return;
+        event.preventDefault();
+        selectMode(modeTabs[target].dataset.mode);
+        modeTabs[target].focus();
+      });
+    });
+    selectMode(modeTabs.length?modeTabs[0].dataset.mode:"games");
 
     function renderNotationProgress(){
       const done=data.notationLessons.length;
@@ -554,7 +700,8 @@
       const value=String(raw||"").trim().replace(/\s+/g,"");if(!value)return null;
       const legal=chess.moves({verbose:true});
       if(/^[a-h][1-8][a-h][1-8][qrbn]?$/i.test(value))return legal.find(function(m){return uciOf(m).toLowerCase()===value.toLowerCase();})||null;
-      const target=normalizeSan(value);return legal.find(function(m){return normalizeSan(m.san)===target;})||null;
+      const target=normalizeSan(frenchSanToEnglish(value));
+      return legal.find(function(m){return normalizeSan(m.san)===target;})||null;
     }
     function applyUci(chess,uci){return chess.move({from:uci.slice(0,2),to:uci.slice(2,4),promotion:(uci[4]||"q").toLowerCase()});}
     function sanLine(item){

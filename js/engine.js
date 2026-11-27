@@ -102,7 +102,11 @@ class StockfishEngine {
     if (!job) return;
     if (line.startsWith("info ") && line.includes(" pv ")) {
       const parsed = parseInfoLine(line);
-      if (parsed) job.lines[parsed.multipv] = parsed;
+      // Bornage (B7) : on ne conserve que les lignes MultiPV demandées.
+      if (!parsed) return;
+      const maxMultiPv = Math.max(1, Number(job.options?.multipv) || 1);
+      if (parsed.multipv > maxMultiPv) return;
+      job.lines[parsed.multipv] = parsed;
       return;
     }
     if (line.startsWith("bestmove")) {

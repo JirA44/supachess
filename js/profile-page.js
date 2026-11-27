@@ -23,6 +23,7 @@
     const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
     auth = firebase.auth(app);
     database = firebase.firestore(app);
+    window.SupaAccounts = { auth: auth, database: database };
     if (window.SupaProfiles) window.SupaProfiles.init(auth, database);
   } catch (error) {
     console.error("SupaChess profile initialization failed:", error);

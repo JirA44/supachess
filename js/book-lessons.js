@@ -1149,6 +1149,11 @@
     (typeof require === "function" ? require("chess.js").Chess : null);
   const frenchSanToEngine = (san) => String(san).replace(/([CFDRT])(?=x?[a-h])/g,
     (piece) => ({ C: "N", F: "B", D: "Q", R: "K", T: "R" })[piece]);
+  /* Le site affiche la notation française (C, F, D, R, T) ; le moteur renvoie la notation
+     internationale. On convertit pour que le QCM et la suite étudiée parlent la même langue. */
+  const englishSanToFrench = (san) => String(san)
+    .replace(/=Q/g, "=D")
+    .replace(/([NBRQK])(?=[x]?[a-h])/g, (piece) => ({ N: "C", B: "F", R: "T", Q: "D", K: "R" })[piece]);
   const playUci = (position, uci) => position.move({
     from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.slice(4) || "q",
   });
@@ -1695,7 +1700,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
           const priorPosition = setupGame(source, ChessClass);
           for (let prior = 0; prior < index; prior++) playUci(priorPosition, source.sequence[prior].uci);
           const priorMove = priorPosition.history({ verbose: true }).slice(-1)[0];
-          const replySan = expected.san;
+          const replySan = englishSanToFrench(expected.san);
           const selfRefutationExercise = source.program === SELF_REFUTATION_PROGRAM;
           const selfEvaluationExercise = source.program === SELF_EVALUATION_PROGRAM;
           const carlsenPatternExercise = source.program === CARLSEN_PATTERN_PROGRAM;
@@ -4781,6 +4786,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     analysisToken++;
     enginePreview = null;
     $("lesson-engine-analysis").hidden = true;
+    $("lesson-engine-analysis").open = false;
     $("lesson-engine-return").hidden = true;
     const isSelfEvaluationLesson = Boolean(LESSONS[index] && LESSONS[index].program === SELF_EVALUATION_PROGRAM);
     stockfishCoachMode = Boolean(options.coach || (LESSONS[index] && (LESSONS[index].coachBeforeMove || [SELF_REFUTATION_PROGRAM, SELF_EVALUATION_PROGRAM].includes(LESSONS[index].program))));
@@ -4837,6 +4843,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     attempts = 0;
     hintsUsed = 0;
     principleAnswered = false;
+    lockLessonBoard(true);
     waitingForBook = false;
     flipped = lesson.color === "b";
     boardUI.setFlipped(flipped);
@@ -4867,6 +4874,10 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     if (reviewSession) $("lesson-source").textContent = "Test de rétention · position différente · complexité " + reviewSession.exerciseLevel + " · thème révélé après la résolution";
     else if (surpriseMode) $("lesson-source").textContent = "Exercice au hasard · thème révélé après la résolution";
     renderChoices(lesson);
+    if (!lesson.choices || !lesson.choices.length) {
+      principleAnswered = true;
+      lockLessonBoard(false);
+    }
     renderCatalog();
     renderNextLessonPrompt();
     renderBoard();
@@ -4893,6 +4904,13 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     });
   }
 
+  function lockLessonBoard(locked) {
+    if (!boardUI || typeof boardUI.setLocked !== "function") return;
+    boardUI.setLocked(locked);
+    const stage = $("lesson-board-stage") || $("lesson-board");
+    if (stage && stage.classList) stage.classList.toggle("is-locked", Boolean(locked));
+  }
+
   function answerPrinciple(button, choice) {
     if (principleAnswered) return;
     const lesson = LESSONS[lessonIndex];
@@ -4905,13 +4923,13 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
       return;
     }
     principleAnswered = true;
+    lockLessonBoard(false);
     if (root.SupaChessAudio) root.SupaChessAudio.play("correct");
     button.classList.add("correct");
     for (const option of $("lesson-choices").querySelectorAll("button")) option.disabled = true;
     $("lesson-feedback").textContent = "Oui. Maintenant, trouve le coup qui met ce principe en pratique.";
     $("lesson-goal").textContent = lesson.movePrompt || "Joue le meilleur coup de la leçon sur l’échiquier.";
     $("lesson-status").textContent = "Principe trouvé : joue un coup.";
-    if (lesson.choices.length < 1) $("lesson-principle").disabled = true;
   }
 
   function currentLessonSequence() {
@@ -5457,6 +5475,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
     }
     $("lesson-engine-status").textContent = alignment + "Stockfish a évalué " + result.choices.length + " ligne(s); " + Math.min(result.choices.length, maxLines) + " affichée(s) selon le réglage Multi‑PV, sur " + result.legalCount + " coups légaux. Profondeur maximale " + depth + ". L’évaluation dépend de la recherche et ne constitue pas seule une explication humaine.";
     $("lesson-engine-analysis").hidden = false;
+    $("lesson-engine-analysis").open = true;
   }
 
   window.SupaChessReanalyze = function () {
@@ -5477,6 +5496,7 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
         lessonEvalTimer = null;
       }
       panel.hidden = false;
+      panel.open = true;
       button.disabled = true;
       button.textContent = "Stockfish analyse…";
       $("lesson-engine-status").textContent = "Analyse des coups légaux avec Stockfish 19…";
@@ -5515,11 +5535,14 @@ const SELF_EVALUATION_PROGRAM = "Auto-évaluation · méthode Hikaru";
       if (!automatic) renderEngineChoices(result, fen);
       if (showEvalBar) renderEvalBar(result);
       $("lesson-engine-status").setAttribute("data-source", "stockfish-19");
-      $("lesson-status").setAttribute("data-stockfish-uci", result.choices[0].uci);
+      // C9 : l'attribut d'identification du top 1 n'est publié que sur demande explicite
+      // (panneau « Comparer avec Stockfish »), jamais dans le flux automatique de l'exercice.
+      if (!automatic) $("lesson-status").setAttribute("data-stockfish-uci", result.choices[0].uci);
+      else $("lesson-status").removeAttribute("data-stockfish-uci");
       if (automatic && game && game.fen() === fen && !enginePreview &&
           sequenceIndex < currentLessonSequence().length) {
-        $("lesson-status").textContent = "Stockfish top 1 : " + result.choices[0].san +
-          ". Joue ce coup pour suivre la variante de référence.";
+        // C9 : le top 1 de Stockfish reste masqué tant que l'exercice n'est pas résolu.
+        $("lesson-status").textContent = "Stockfish a calculé la position ; le coup prioritaire reste masqué jusqu’à ta résolution. Joue ton coup, puis compare les variantes.";
       }
       if (!automatic && stockfishCoachMode && stockfishReflection) {
         const bestLine = result.choices[0] ? result.choices[0].sanLine.join(" ") : "aucune variante disponible";

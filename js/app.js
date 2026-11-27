@@ -22,11 +22,15 @@ const state = {
   stopped: false,
   undoCount: 0,
   pendingMove: null,     // coup utilisateur intercepté {from,to,promotion,uci}
+  pendingPostMove: null, // coup déjà joué, en cours d'évaluation en arrière-plan {from,to,promotion,uci,...}
+  legalMovesCache: { fen: null, moves: [], bySquare: new Map() },
+  warmLegalMoves: null, // index des coups légaux pré-calculé pour la position suivante
   fenHistory: [],        // clés FEN (4 champs) pour détection de répétition
   positionFenHistory: [], // FEN exacts avant chaque demi-coup pour retrouver les évaluations
   evalHistory: [],       // éval (côté Blancs) de chaque demi-coup joué, parallèle à history()
   evalWhiteCp: 0,
   gen: 0,                // génération de tour : invalide les analyses en vol au changement de mode
+  gameToken: 0,          // jeton de partie : invalide les évaluations différées d'une partie précédente
 
   stats: { moves: 0, rankedMoves: 0, top1: 0, top3: 0, top5: 0, top10: 0, top25: 0, top50: 0, accuracyMoves: 0, accuracyAbove60: 0, accuracyAbove75: 0, accuracyAbove90: 0, intercepts: 0, forced: 0 },
   sessionMoveSamples: [],
@@ -649,6 +653,7 @@ function newGame(options = {}) {
   if (stopButton) stopButton.disabled = false;
   syncPauseButton();
   state.gen++;
+  state.gameToken++;
   moveFeedback.clear();
   state.moveGradeHistory = [];
   state.chess = new Chess();
@@ -656,6 +661,9 @@ function newGame(options = {}) {
   state.candidateFen = null;
   state.systemBrilliantCandidates = [];
   state.pendingMove = null;
+  state.pendingPostMove = null;
+  state.legalMovesCache = { fen: null, moves: [], bySquare: new Map() };
+  state.warmLegalMoves = null;
   resetAccuracy();
   state.fenHistory = [fenKey(state.chess.fen())];
   state.positionFenHistory = [state.chess.fen()];
@@ -875,16 +883,21 @@ async function analyzeForUser() {
   setStatus("Analyse de la position… (MultiPV)");
   boardUI.dots = candidateDotsForPosition(fen);
   renderBoard();
-  const legalMoveCount = state.chess.moves({ verbose: true }).length;
+  const legalMoveCount = legalMovesIndex().moves.length;
   setStatus(`Analyse des ${legalMoveCount} coups possibles…`);
-  const requestedMultiPv = window.SupaAnalysisSettings?.getMultiPv() || 4;
+  const requestedMultiPv = window.SupaAnalysisSettings?.getMultiPv() || 1;
   const displayMultiPv = Math.max(1, Math.min(legalMoveCount, requestedMultiPv));
-  const rankingMultiPv = Math.min(legalMoveCount, Math.max(50, displayMultiPv));
+  // MultiPV borné (B6) : le moteur ne calcule que les lignes réellement utiles
+  // (préférence « Lignes du moteur » : 1 en jeu, 4 en analyse).
+  // Les 50 lignes demandées auparavant saturaient le moteur et retardaient le premier coup.
+  const rankingCap = Math.max(1, Math.min(legalMoveCount, displayMultiPv));
   state.candidateRankByUci = new Map();
   state.candidateRankCoverageComplete = false;
-  const res = await state.engine.analyze({ fen, multipv: rankingMultiPv, movetime: movetime(), elo: 0 });
+  const res = await state.engine.analyze({ fen, multipv: rankingCap, movetime: movetime(), elo: 0 });
   if (state.gen !== gen || state.chess.fen() !== fen) return; // partie/mode changé entre temps
   state.candidateRankByUci = new Map(res.lines.map((line, index) => [line.pv[0], index + 1]));
+  // Le classement n'est « complet » que si toutes les lignes légales ont été calculées :
+  // sinon le rang des coups hors du lot calculé reste inconnu (statistiques honnêtes).
   state.candidateRankCoverageComplete = res.lines.length >= Math.min(50, legalMoveCount);
   buildCandidates(res.lines.slice(0, displayMultiPv), fen);
   updateEvalBar(res.lines[0]);
@@ -1267,6 +1280,51 @@ function findPreviouslyEvaluatedMove(fen, uci) {
   return null;
 }
 
+/* ── Cache des coups légaux (A4) ───────────────────────────────────────────────
+   La liste complète des coups légaux n'est recalculée que lorsque la position
+   change : un simple clic sur une case ne recalcule plus la liste complète.
+   La position suivante est pré-calculée en tâche de fond (temps morts du navigateur). */
+function computeLegalIndex(fen) {
+  const probe = new Chess(fen);
+  const moves = probe.moves({ verbose: true });
+  const bySquare = new Map();
+  for (const move of moves) {
+    if (!bySquare.has(move.from)) bySquare.set(move.from, []);
+    bySquare.get(move.from).push(move);
+  }
+  return { fen, moves, bySquare };
+}
+
+function legalMovesIndex() {
+  const fen = state.chess.fen();
+  const cache = state.legalMovesCache;
+  if (cache.fen === fen) return cache;
+  if (state.warmLegalMoves && state.warmLegalMoves.fen === fen) {
+    state.legalMovesCache = state.warmLegalMoves;
+    state.warmLegalMoves = null;
+    return state.legalMovesCache;
+  }
+  state.legalMovesCache = computeLegalIndex(fen);
+  return state.legalMovesCache;
+}
+
+function legalMovesFrom(sq) {
+  return legalMovesIndex().bySquare.get(sq) || [];
+}
+
+/* Pré-calcul différé de la position suivante : aucune latence sur le prochain coup. */
+function warmLegalMovesAfter(fenAfterMove) {
+  const run = () => {
+    try {
+      if (!fenAfterMove) return;
+      const index = computeLegalIndex(fenAfterMove);
+      if (state.chess.fen() !== fenAfterMove) state.warmLegalMoves = index;
+    } catch (error) { /* pré-calcul non critique */ }
+  };
+  if (typeof requestIdleCallback === "function") requestIdleCallback(run, { timeout: 400 });
+  else setTimeout(run, 100);
+}
+
 function onSquareClick(sq) {
   if (state.paused) return;
   if (typeof reviewHandleExerciseSquareClick === "function" && reviewHandleExerciseSquareClick(sq)) return;
@@ -1277,8 +1335,7 @@ function onSquareClick(sq) {
       boardUI.selected = null; boardUI.legalTargets = []; boardUI.legalTargetHints = {};
       renderBoard(); return;
     }
-    const legal = state.chess.moves({ square: boardUI.selected, verbose: true })
-      .find((m) => m.to === sq);
+    const legal = legalMovesFrom(boardUI.selected).find((m) => m.to === sq);
     if (legal) {
       const promotion = legal.flags.includes("p") ? "q" : undefined;
       attemptUserMove({ from: boardUI.selected, to: sq, promotion });
@@ -1294,7 +1351,7 @@ function onSquareClick(sq) {
       renderBoard();
       return;
     }
-    const legalMoves = state.chess.moves({ square: sq, verbose: true });
+    const legalMoves = legalMovesFrom(sq);
     boardUI.legalTargets = [...new Set(legalMoves.map((m) => m.to))];
     boardUI.legalTargetHints = {};
     for (const move of legalMoves) {
@@ -1331,61 +1388,121 @@ function onSquareClick(sq) {
 async function attemptUserMove(moveObj) {
   if (state.phase !== "userTurn") return;
   const fen = state.chess.fen();
-  const gen = state.gen;
   const probe = new Chess(fen);
   const attempted = probe.move(moveObj);
   if (!attempted) return;
+  const uci = moveObj.from + moveObj.to + (moveObj.promotion || "");
+  const cand = state.candidates.find((c) => c.uci === uci);
+  // Mode manuel : pas d'interception pour le camp adverse (réplication d'une
+  // partie jouée ailleurs — on rentre le coup tel quel, l'analyse reste affichée).
+  const skipIntercept = state.unassistedGame || isLevelDiagnosticActive() || (isManualMode() && state.chess.turn() !== state.userColor);
+
+  if (cand) {
+    // Coup déjà présent dans l'analyse MultiPV : décision immédiate, aucun appel moteur.
+    stopPlayerClock(state.chess.turn());
+    boardUI.selected = null;
+    boardUI.legalTargets = [];
+    boardUI.legalTargetHints = {};
+    if (!skipIntercept && cand.deltaCp > thresholdCp()) interceptMove(moveObj, cand);
+    else commitUserMove(moveObj, cand, false);
+    return;
+  }
+
+  // Coup hors des lignes analysées : joué tout de suite, évalué en arrière-plan (A5).
+  playMoveAndEvaluate(moveObj, uci, fen);
+}
+
+/* Le coup est affiché immédiatement ; l'évaluation Stockfish du coup arrive ensuite
+   et alimente le coach (qualité, précision, alerte) sans jamais bloquer l'affichage. */
+function playMoveAndEvaluate(moveObj, uci, fenBefore) {
   stopPlayerClock(state.chess.turn());
   boardUI.selected = null;
   boardUI.legalTargets = [];
   boardUI.legalTargetHints = {};
-  const uci = moveObj.from + moveObj.to + (moveObj.promotion || "");
-  let cand = state.candidates.find((c) => c.uci === uci);
+  const userMoveColor = state.chess.turn();
+  const mv = state.chess.move(moveObj);
+  if (!mv) {
+    state.phase = "userTurn";
+    startPlayerClock(state.chess.turn());
+    return;
+  }
+  if (window.SupaChessAudio) window.SupaChessAudio.play(state.chess.in_check() ? "check" : (mv.flags && (mv.flags.includes("c") || mv.flags.includes("e")) ? "capture" : "move"));
+  moveFeedback.clearPreview();
+  const ply = state.chess.history().length;
+  recordMoveGrade(ply, userMoveColor, "unrated", {
+    noTrainingAids: typeof gamesTrainingAidsActive === "function" && !gamesTrainingAidsActive(),
+    lossCp: null,
+  });
+  if (!state.unassistedGame) moveFeedback.show({ san: mv.san, color: mv.color, moveNumber: moveNumberFromFen(fenBefore), square: mv.to });
+  boardUI.lastMove = { from: mv.from, to: mv.to, san: mv.san, grade: null, evaluation: null };
+  state.evalHistory.push(null);
+  boardUI.dots = [];
+  state.fenHistory.push(fenKey(state.chess.fen()));
+  state.positionFenHistory.push(state.chess.fen());
+  recordSessionMoveSample(null, userMoveColor);
+  state.pendingPostMove = {
+    uci, san: mv.san, ply, color: userMoveColor, gameToken: state.gameToken,
+    fenAfter: state.chess.fen(),
+    bestLine: state.candidates[0] ? state.candidates[0].line : null,
+    bestSan: state.candidates[0] ? state.candidates[0].san : null,
+  };
+  if (typeof gamesAutoSave === "function") gamesAutoSave();
+  hideCoach();
+  renderAll();
+  startTurn();
+  evaluatePlayedMoveAsync(state.pendingPostMove);
+  warmLegalMovesAfter(state.chess.fen());
+}
 
-  if (!cand) {
-    // Coup hors du top : évaluation rapide de ce coup précis
-    setStatus("Évaluation de votre coup…");
-    state.phase = "analyzing";
-    renderBoard();
-    if (!state.unassistedGame) moveFeedback.show({ san: attempted.san, color: attempted.color, moveNumber: moveNumberFromFen(fen), square: attempted.to, mode: "preview" });
-    const res = probe.game_over() ? { lines: [] } :
-      await state.engine.analyze({ fen: probe.fen(), multipv: 1, movetime: 600, elo: 0 });
-    if (state.gen !== gen || state.chess.fen() !== fen) return;
-    // Score retourné côté adversaire → on inverse pour le joueur
-    let line;
-    if (res.lines.length) {
+/* Évaluation différée du coup joué : elle alimente la note, la précision et l'alerte
+   coach une fois le moteur disponible, sans jamais bloquer le rendu du coup. */
+async function evaluatePlayedMoveAsync(pending) {
+  if (!pending) return;
+  const fenAfter = pending.fenAfter;
+  let line = null;
+  try {
+    const res = await state.engine.analyze({ fen: fenAfter, multipv: 1, movetime: 600, elo: 0 });
+    if (res && res.lines && res.lines.length) {
       const l = res.lines[0];
       line = {
         multipv: 99, depth: l.depth,
         scoreCp: l.scoreCp !== null ? -l.scoreCp : null,
         mate: l.mate !== null ? -l.mate : null,
-        pv: [uci, ...l.pv],
+        pv: [pending.uci, ...l.pv],
       };
-    } else if (probe.game_over()) {
-      line = { multipv: 99, depth: 0, scoreCp: 0, mate: probe.in_checkmate() ? 1 : null, pv: [uci] };
-    } else {
-      state.phase = "userTurn";
-      startPlayerClock(state.chess.turn());
-      setStatus("Analyse du coup indisponible. Réessaie ce coup.");
-      return;
     }
-    const best = state.candidates[0] ? state.candidates[0].line : line;
-    const deltaCp = Math.max(0, scoreValue(best) - scoreValue(line));
-    const args = buildArguments(state.chess.fen(), line, best, state.fenHistory);
-    const reply = buildReplyInfo(state.chess.fen(), line.pv);
-    const bd = computeBreakdown(state.chess.fen(), line);
-    cand = { rank: state.candidateRankByUci.get(uci) || null, uci, san: args.san, line, deltaCp, args, reply, cmp: null, bd };
-    state.phase = "userTurn";
+  } catch (error) {
+    line = null;
   }
-
-  // Mode manuel : pas d'interception pour le camp adverse (réplication d'une
-  // partie jouée ailleurs — on rentre le coup tel quel, l'analyse reste affichée).
-  const skipIntercept = state.unassistedGame || isLevelDiagnosticActive() || (isManualMode() && state.chess.turn() !== state.userColor);
-  if (!skipIntercept && cand.deltaCp > thresholdCp()) {
-    interceptMove(moveObj, cand);
-  } else {
-    commitUserMove(moveObj, cand, false);
+  if (state.gameToken !== pending.gameToken) return; // nouvelle partie : abandon de l'analyse
+  if (state.positionFenHistory[pending.ply - 1] !== fenAfter) return; // partie rejouée ou abandonnée
+  if (!line) {
+    setStatus("Analyse du coup indisponible — la note du coup reste « en cours ».");
+    return;
   }
+  const bestLine = pending.bestLine || line;
+  const deltaCp = Math.max(0, scoreValue(bestLine) - scoreValue(line));
+  const brilliant = false;
+  const category = moveGradeCategory(deltaCp, brilliant, false);
+  recordMoveGrade(pending.ply, pending.color, category, {
+    noTrainingAids: typeof gamesTrainingAidsActive === "function" && !gamesTrainingAidsActive(),
+    lossCp: deltaCp,
+  });
+  if (pending.bestLine) {
+    recordAccuracy(pending.color, clampCpFromLine(pending.bestLine), clampCpFromLine(line), pending.ply);
+  }
+  if (!state.unassistedGame) {
+    moveFeedback.show({ san: pending.san, color: pending.color, moveNumber: Math.ceil(pending.ply / 2), square: pending.uci.slice(2, 4), deltaCp });
+  }
+  if (deltaCp > thresholdCp()) {
+    const bestSan = pending.bestSan || "—";
+    const msg = `Coup joué : ${pending.san} (perte de ${(deltaCp / 100).toFixed(2)} pion(s) face au meilleur coup ${bestSan}).`;
+    $("coach-message").textContent = msg;
+    $("coach-panel").classList.remove("hidden");
+    setStatus("Coup joué — le coach commente la perte.");
+    renderStats();
+  }
+  if (state.pendingPostMove && state.pendingPostMove.ply === pending.ply) state.pendingPostMove = null;
 }
 
 function interceptMove(moveObj, cand) {
@@ -1507,6 +1624,7 @@ function commitUserMove(moveObj, cand, forced) {
   if (typeof gamesAutoSave === "function") gamesAutoSave();
   hideCoach();
   renderAll();
+  warmLegalMovesAfter(state.chess.fen());
   startTurn();
 }
 
