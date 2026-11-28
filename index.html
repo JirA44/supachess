@@ -263,6 +263,8 @@
         <button id="btn-self-play" class="btn" type="button" title="Joue les deux camps toi-même, sans aide. Après la partie, analyse les deux couleurs et reprends les moments critiques.">Jouer contre soi-même</button>
         <button id="btn-supa-vs-supa" class="btn" type="button" title="Lance une partie automatique Supa contre Supa au niveau moteur choisi. Cette partie n’alimente pas ton profil de joueur.">Supa contre Supa</button>
         <button id="btn-unassisted-game" class="btn" type="button" aria-pressed="false" title="Démarrer une nouvelle partie sans bulles, aides de coups, flèches, évaluation, coach ni annulation.">Jouer une partie sans aide</button>
+        <button id="btn-daily-routine" class="btn" type="button" aria-expanded="false" aria-controls="daily-routine-panel" title="Parcours guidé de 45 minutes : une leçon ciblée, un lot de puzzles tactiques, puis une partie lente analysée.">Routine du Jour (45 min)</button>
+        <button id="btn-anti-blunder-shield" class="btn" type="button" role="switch" aria-checked="false" aria-pressed="false" title="Vérifie ton coup avant de le jouer : alerte si tu laisses une pièce en prise ou si l'adversaire peut mater en un coup. La partie est marquée « avec aides » et ne compte pas pour le classement.">Bouclier Anti-Gaffe : OFF</button>
         <button id="btn-undo" class="btn" type="button">Annuler mon demi-coup</button>
         <button id="btn-flip-board" class="btn" type="button" aria-pressed="false">Retourner l’échiquier</button>
         <button id="btn-best-move" class="btn" type="button" title="Jouer le meilleur demi-coup Stockfish ; en relecture, il remplace le coup affiché dans une variante temporaire." disabled>Jouer le meilleur demi-coup</button>
@@ -283,6 +285,62 @@
         <button id="btn-pgn" class="btn">⬇ PGN</button>
         <button id="btn-analyze-pgn" class="btn">Analyser un PGN (Supa)</button>
       </div>
+      <section id="daily-routine-panel" class="routine-panel" hidden aria-labelledby="daily-routine-title">
+        <div class="routine-header">
+          <h2 id="daily-routine-title">Routine du Jour (45 min)</h2>
+          <span id="daily-routine-streak" class="routine-streak">Série : 0 jour</span>
+        </div>
+        <p id="daily-routine-summary" class="routine-summary">Étape en cours : Leçon ciblée · 3 étapes de 15 minutes.</p>
+        <ol class="routine-steps">
+          <li class="routine-step" data-routine-step="lesson">
+            <div class="routine-step-head">
+              <strong>1. Leçon ciblée</strong>
+              <span class="routine-timer" data-routine-timer="lesson">15:00</span>
+            </div>
+            <p class="routine-detail" data-routine-detail="lesson">Leçon du jour : chargement…</p>
+            <div class="routine-actions">
+              <button class="btn mini" type="button" data-routine-action="lesson-open">Ouvrir la leçon</button>
+              <button class="btn mini" type="button" data-routine-action="lesson-skip">Passer cette étape</button>
+            </div>
+          </li>
+          <li class="routine-step" data-routine-step="woodpecker">
+            <div class="routine-step-head">
+              <strong>2. Woodpecker tactique</strong>
+              <span class="routine-timer" data-routine-timer="woodpecker">15:00</span>
+            </div>
+            <p class="routine-detail" data-routine-detail="woodpecker">Lot de 50 puzzles : chargement…</p>
+            <div class="routine-actions">
+              <button class="btn mini" type="button" data-routine-action="woodpecker-open">Ouvrir le puzzle</button>
+              <button class="btn mini" type="button" data-routine-action="woodpecker-next">Puzzle suivant</button>
+              <button class="btn mini" type="button" data-routine-action="woodpecker-skip">Passer cette étape</button>
+            </div>
+          </li>
+          <li class="routine-step" data-routine-step="slowgame">
+            <div class="routine-step-head">
+              <strong>3. Partie lente</strong>
+              <span class="routine-timer" data-routine-timer="slowgame">15:00</span>
+            </div>
+            <p class="routine-detail" data-routine-detail="slowgame">Partie lente contre Stockfish : chargement…</p>
+            <div class="routine-actions">
+              <label class="routine-control" for="routine-slowgame-control">Cadence
+                <select id="routine-slowgame-control" class="btn select">
+                  <option value="10+5">10 min + 5 s</option>
+                  <option value="15+10">15 min + 10 s</option>
+                </select>
+              </label>
+              <button class="btn mini" type="button" data-routine-action="slowgame-start">Lancer la partie lente</button>
+              <button class="btn mini" type="button" data-routine-action="slowgame-analysis" disabled>Ouvrir l’analyse</button>
+              <button class="btn mini" type="button" data-routine-action="slowgame-skip">Passer cette étape</button>
+            </div>
+          </li>
+        </ol>
+        <div class="routine-actions">
+          <button class="btn mini" type="button" data-routine-action="start">Démarrer / reprendre l’étape</button>
+          <button class="btn mini" type="button" data-routine-action="pause">Pause</button>
+          <button class="btn mini" type="button" data-routine-action="reset">Réinitialiser la routine du jour</button>
+        </div>
+        <p id="daily-routine-status" class="routine-status" role="status" aria-live="polite"></p>
+      </section>
       <details id="self-play-learning-guide" class="panel">
         <summary>Leçon : apprendre en jouant les deux camps</summary>
         <p>Avant chaque demi-coup, formule ton plan et le meilleur coup candidat. En changeant de camp, cherche la réponse la plus forte contre ton idée : menace, défense, échange ou ressource tactique.</p>
@@ -321,15 +379,20 @@
         </label>
         <label>Temps Blancs
           <select id="sel-clock-white" class="btn select" aria-label="Temps de réflexion des Blancs">
-            <option value="0" selected>Illimité</option><option value="1">1 minute</option><option value="3">3 minutes</option><option value="5">5 minutes</option>
+            <option value="0" selected>Illimité</option><option value="1">1 minute</option><option value="3">3 minutes</option><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option>
           </select>
         </label>
         <label>Temps Noirs
           <select id="sel-clock-black" class="btn select" aria-label="Temps de réflexion des Noirs">
-            <option value="0" selected>Illimité</option><option value="1">1 minute</option><option value="3">3 minutes</option><option value="5">5 minutes</option>
+            <option value="0" selected>Illimité</option><option value="1">1 minute</option><option value="3">3 minutes</option><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option>
           </select>
         </label>
-        <small class="setting-hint">Chaque pendule est indépendante. Les réglages prennent effet à la prochaine partie.</small>
+        <label>Incrément
+          <select id="sel-clock-increment" class="btn select" aria-label="Incrément de temps ajouté après chaque coup">
+            <option value="0" selected>Sans incrément</option><option value="5">+5 s par coup</option><option value="10">+10 s par coup</option>
+          </select>
+        </label>
+        <small class="setting-hint">Chaque pendule est indépendante. Les réglages prennent effet à la prochaine partie. L’incrément est ajouté à ton pendule après chaque coup joué (système Fischer).</small>
         <label for="sel-engine">Moteur adverse</label>
         <select id="sel-engine" class="btn select" aria-describedby="engine-choice-note">
           <option value="stockfish" selected>Stockfish 19 · Elo réglable</option>
@@ -424,6 +487,16 @@
     </div>
 
 
+
+    <div id="anti-blunder-alert" class="panel anti-blunder-alert" role="alertdialog" aria-modal="false" aria-labelledby="anti-blunder-alert-title" aria-hidden="true" hidden>
+      <h2 id="anti-blunder-alert-title">Bouclier Anti-Gaffe</h2>
+      <p id="anti-blunder-alert-message" class="anti-blunder-alert-message"></p>
+      <p id="anti-blunder-alert-detail" class="anti-blunder-alert-detail"></p>
+      <div class="coach-actions">
+        <button id="anti-blunder-replay" class="btn" type="button">Revérifier et rejouer</button>
+        <button id="anti-blunder-play-anyway" class="btn danger" type="button">Jouer quand même</button>
+      </div>
+    </div>
 
     <div class="panel">
       <h2>Historique</h2>
@@ -522,6 +595,9 @@
 <script src="js/move-feedback.js?v=supa-brilliant-indicator-20261103-v1"></script>
 <script src="js/app.js?v=berserk14-integration-20261116-v1&evalbar-side-score-20261116-v1&supa-vs-supa-live-grades-20261117-v2&new-game-clears-review-20261116-v1&self-play-modes-20261115-v1&stop-engine-20261105-v1&clock=explicit-start-20261105-v1&review-clocks=20261105-v1&accuracy-player-colors=20261105-v2&checkmate=king-fall-20261105-v1&precision-gap=20261106-v1&precision-gap-every-game=20261106-v1&diagnostic-only-play-mode=20261106-v2&profile-name=20261106-v1&game-number=20261106-v1&diagnostic-no-aid-label=20261108-v1&precision-gap-percent=20261106-v1&pause-controls=20261107-v1&diagnostic-toggle=20261107-v1&diagnostic-no-aid-mode=20261108-v1&acpl-mate-guard=20261108-v1&best-move-replay=20261108-v3&review-display-move-history=20261108-v1&unassisted-aids-review-unlocked=20261120-v2"></script>
 <script src="js/diagnostic-undo-lock.js?v=correction-unlock-20261105-v1"></script>
+<script src="js/anti-blunder-shield.js?v=routine-20261127-v1"></script>
+<script src="js/curriculum.js?v=routine-20261127-v1"></script>
+<script src="js/daily-routine.js?v=routine-20261127-v1"></script>
 <script src="js/games.js?v=berserk14-metadata-20261116-v1&self-play-metadata-20261115-v1&timed-games-20261104-v1&precision-gap-every-game-20261106-v1&acpl-gap=20261106-v1&profile-name=20261106-v1&game-number=20261106-v1&precision-gap-percent=20261106-v1"></script>
 <script src="js/tablebase.js?v=op1-partial-tablebase-20261027"></script>
 <script src="js/blindspots.js?v=pressure-defender-causes-20261030"></script>

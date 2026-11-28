@@ -776,3 +776,29 @@ body:not(.user-is-vip) [data-vip-locked="true"] .analysis-toggle { background:#4
     filter: brightness(.78);
   }
 }
+
+/* Routine du Jour */
+.routine-panel { margin-top: 10px; border-color: rgba(240,179,92,.45); background: linear-gradient(180deg, rgba(240,179,92,.08) 0%, var(--bg-soft) 100%); }
+.routine-panel[hidden] { display: none !important; }
+.routine-header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.routine-header h2 { margin-bottom: 0; }
+.routine-streak { font-size: .82rem; font-weight: 700; color: var(--accent); }
+.routine-summary { margin: 6px 0 10px; font-size: .88rem; color: var(--text-dim); }
+.routine-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.routine-step { border: 1px solid var(--panel-edge); border-radius: 10px; padding: 10px 12px; background: rgba(0,0,0,.12); }
+.routine-step.is-running { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(240,179,92,.15); }
+.routine-step.is-done { border-color: rgba(95,211,155,.55); background: rgba(95,211,155,.07); }
+.routine-step.is-skipped { border-color: rgba(128,128,128,.5); opacity: .8; }
+.routine-step-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.routine-timer { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent); }
+.routine-detail { margin: 6px 0; font-size: .85rem; line-height: 1.45; color: var(--text-dim); }
+.routine-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.routine-control { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--text-dim); }
+.routine-status { margin: 10px 0 0; font-size: .85rem; min-height: 1.2em; color: var(--text-dim); }
+
+/* Bouclier Anti-Gaffe */
+.anti-blunder-alert { margin-top: 12px; border-color: var(--red); box-shadow: 0 0 24px rgba(239,91,91,.15); }
+.anti-blunder-alert[hidden] { display: none !important; }
+.anti-blunder-alert h2 { color: var(--red); }
+.anti-blunder-alert-message { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+.anti-blunder-alert-detail { font-size: .85rem; margin-bottom: 10px; color: var(--text-dim); }

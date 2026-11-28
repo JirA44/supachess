@@ -40,13 +40,17 @@ const state = {
   moveGradeHistory: [], // demi-coups joués avec catégorie, révisée après analyse moteur
   clockMs: { w: 0, b: 0 },
   clockRemainingMs: { w: 0, b: 0 },
+  clockIncrementMs: 0,
   clocksEnabled: false,
   clockActiveColor: null,
   clockStartedAt: 0,
   clockIntervalId: null,
   timeExpiredColor: null,
   timeRankSubmitted: false,
+  shieldAlertPending: false,
 };
+
+window.SupaChessGameState = state;
 
 const boardUI = new BoardUI($("board"), onSquareClick);
 const DOTS_STORAGE_KEY = "supachess-show-candidate-dots";
@@ -439,8 +443,11 @@ function restorePlayerClockSettings() {
     for (const color of ["w", "b"]) {
       const select = $(color === "w" ? "sel-clock-white" : "sel-clock-black");
       const value = String(Number(saved[color]) || 0);
-      if (select && ["0", "1", "3", "5"].includes(value)) select.value = value;
+      if (select && ["0", "1", "3", "5", "10", "15"].includes(value)) select.value = value;
     }
+    const increment = $("sel-clock-increment");
+    const incrementValue = String(Number(saved.increment) || 0);
+    if (increment && ["0", "5", "10"].includes(incrementValue)) increment.value = incrementValue;
   } catch (_) {}
 }
 function persistPlayerClockSettings() {
@@ -448,6 +455,7 @@ function persistPlayerClockSettings() {
     localStorage.setItem(PLAYER_CLOCK_SETTINGS_KEY, JSON.stringify({
       w: $("sel-clock-white")?.value || "0",
       b: $("sel-clock-black")?.value || "0",
+      increment: $("sel-clock-increment")?.value || "0",
     }));
   } catch (_) {}
 }
@@ -455,6 +463,11 @@ function selectedClockMs(color) {
   const select = $(color === "w" ? "sel-clock-white" : "sel-clock-black");
   const minutes = select ? Math.max(0, Number(select.value) || 0) : 0;
   return minutes * 60 * 1000;
+}
+function selectedClockIncrementMs() {
+  const select = $("sel-clock-increment");
+  const seconds = select ? Math.max(0, Number(select.value) || 0) : 0;
+  return seconds * 1000;
 }
 function formatPlayerClock(ms) {
   const safe = Math.max(0, ms);
@@ -488,11 +501,14 @@ function renderPlayerClocks() {
       (state.paused ? " · en pause" : state.clockActiveColor ? " · pendule en cours" : " · arrêtée");
   }
 }
-function stopPlayerClock(color) {
+function stopPlayerClock(color, options = {}) {
   if (!state.clockActiveColor || (color && color !== state.clockActiveColor)) return;
   const active = state.clockActiveColor;
   if (state.clockStartedAt && state.clockMs[active] > 0) {
     state.clockRemainingMs[active] = Math.max(0, state.clockRemainingMs[active] - (Date.now() - state.clockStartedAt));
+  }
+  if (options.increment && state.clockIncrementMs > 0 && state.clockMs[active] > 0) {
+    state.clockRemainingMs[active] = Math.min(state.clockMs[active], state.clockRemainingMs[active] + state.clockIncrementMs);
   }
   state.clockActiveColor = null;
   state.clockStartedAt = 0;
@@ -543,6 +559,29 @@ window.SupaChessStartTimedGame = function(minutes) {
   if (modal) modal.remove();
   if (document.body.dataset.engineReady === "1" && state.phase !== "init") newGame({ unassisted: true });
   else pendingTimedGameMinutes = value;
+};
+let pendingTrainingGame = null;
+function applyTrainingGameSettings(options = {}) {
+  const minutes = Math.max(1, Math.floor(Number(options.minutes) || 10));
+  const incrementSeconds = Math.max(0, Math.floor(Number(options.incrementSeconds) || 0));
+  const white = $("sel-clock-white"), black = $("sel-clock-black");
+  if (white) white.value = String(minutes);
+  if (black) black.value = String(minutes);
+  const increment = $("sel-clock-increment");
+  if (increment) increment.value = ["0", "5", "10"].includes(String(incrementSeconds)) ? String(incrementSeconds) : "0";
+  persistPlayerClockSettings();
+  return { minutes, incrementSeconds };
+}
+window.SupaChessStartTrainingGame = function(options = {}) {
+  applyTrainingGameSettings(options);
+  const modal = $("profile-modal");
+  if (modal) modal.remove();
+  if (document.body.dataset.engineReady === "1" && state.phase !== "init") {
+    newGame({ unassisted: false, clocksEnabled: true });
+    return true;
+  }
+  pendingTrainingGame = { ...options };
+  return true;
 };
 function opponentElo() { return parseInt($("sel-elo").value, 10); }
 function isManualMode() { return $("sel-elo").value === "manual"; }
@@ -616,9 +655,14 @@ async function init() {
   const resumeUnaided = sessionStorage.getItem("supachess-unassisted-game-active-v1") === "true";
   const queuedClockMinutes = pendingTimedGameMinutes;
   pendingTimedGameMinutes = null;
+  const queuedTrainingGame = pendingTrainingGame;
+  pendingTrainingGame = null;
   // Discard legacy session flags so an old profile click cannot launch a timed game on a later visit.
   try { sessionStorage.removeItem("supachess-pending-clock-game-v1"); } catch (_) {}
-  if (queuedClockMinutes !== null) {
+  if (queuedTrainingGame !== null) {
+    applyTrainingGameSettings(queuedTrainingGame);
+    newGame({ unassisted: false, clocksEnabled: true });
+  } else if (queuedClockMinutes !== null) {
     $("sel-clock-white").value = queuedClockMinutes;
     $("sel-clock-black").value = queuedClockMinutes;
     newGame({ unassisted: false });
@@ -639,8 +683,10 @@ function newGame(options = {}) {
   state.undoCount = 0;
   state.timeExpiredColor = null;
   state.timeRankSubmitted = false;
+  state.shieldAlertPending = false;
   state.clockMs = { w: selectedClockMs("w"), b: selectedClockMs("b") };
   state.clockRemainingMs = { ...state.clockMs };
+  state.clockIncrementMs = selectedClockIncrementMs();
   const diagnosticGame = isLevelDiagnosticActive();
   setUnassistedGameMode(Boolean(options.unassisted || diagnosticGame || state.gameMode !== "vs-engine"), { resume: Boolean(options.resume) });
   if (!options.resume) setNewGameAidsOff();
@@ -721,6 +767,7 @@ function abandonCurrentGame() {
   boardUI.dots = [];
   if (typeof gamesAutoSave === "function") gamesAutoSave();
   setStatus("Partie terminée — défaite par abandon.");
+  window.dispatchEvent(new CustomEvent("supachess:game-over", { detail: { reason: "abandoned", message: "Partie terminée — défaite par abandon." } }));
   renderAll();
 }
 
@@ -747,6 +794,7 @@ function stopCurrentGame() {
   if (stopButton) stopButton.disabled = true;
   if (typeof gamesAutoSave === "function") gamesAutoSave();
   setStatus("Partie arrêtée — résultat non décidé, aucune défaite enregistrée.");
+  window.dispatchEvent(new CustomEvent("supachess:game-over", { detail: { reason: "stopped", message: "Partie arrêtée — résultat non décidé." } }));
   renderAll();
 }
 
@@ -1387,6 +1435,7 @@ function onSquareClick(sq) {
 /* ── Cœur du concept : interception ── */
 async function attemptUserMove(moveObj) {
   if (state.phase !== "userTurn") return;
+  if (state.shieldAlertPending) return;
   const fen = state.chess.fen();
   const probe = new Chess(fen);
   const attempted = probe.move(moveObj);
@@ -1397,6 +1446,35 @@ async function attemptUserMove(moveObj) {
   // partie jouée ailleurs — on rentre le coup tel quel, l'analyse reste affichée).
   const skipIntercept = state.unassistedGame || isLevelDiagnosticActive() || (isManualMode() && state.chess.turn() !== state.userColor);
 
+  const shield = window.SupaChessAntiBlunderShield;
+  if (!skipIntercept && shield && typeof shield.isActive === "function" && shield.isActive()) {
+    const report = shield.diagnoseMove(fen, uci);
+    if (report && report.alert) {
+      state.shieldAlertPending = true;
+      const shown = shield.present(report, {
+        onReplay: () => {
+          state.shieldAlertPending = false;
+          boardUI.selected = null;
+          boardUI.legalTargets = [];
+          boardUI.legalTargetHints = {};
+          setStatus("Coup annulé — vérifie tes pièces avant de rejouer.");
+          renderBoard();
+        },
+        onPlayAnyway: () => {
+          state.shieldAlertPending = false;
+          if (typeof gamesMarkTrainingAidUsed === "function") gamesMarkTrainingAidUsed();
+          continueUserMove(moveObj, uci, fen, cand, skipIntercept);
+        },
+      });
+      if (shown) return;
+      state.shieldAlertPending = false;
+    }
+  }
+
+  continueUserMove(moveObj, uci, fen, cand, skipIntercept);
+}
+
+function continueUserMove(moveObj, uci, fen, cand, skipIntercept) {
   if (cand) {
     // Coup déjà présent dans l'analyse MultiPV : décision immédiate, aucun appel moteur.
     stopPlayerClock(state.chess.turn());
@@ -1415,7 +1493,7 @@ async function attemptUserMove(moveObj) {
 /* Le coup est affiché immédiatement ; l'évaluation Stockfish du coup arrive ensuite
    et alimente le coach (qualité, précision, alerte) sans jamais bloquer l'affichage. */
 function playMoveAndEvaluate(moveObj, uci, fenBefore) {
-  stopPlayerClock(state.chess.turn());
+  stopPlayerClock(state.chess.turn(), { increment: true });
   boardUI.selected = null;
   boardUI.legalTargets = [];
   boardUI.legalTargetHints = {};
@@ -1589,7 +1667,7 @@ function candidateCard(c, whiteSide, isUserMove) {
 }
 
 function commitUserMove(moveObj, cand, forced) {
-  stopPlayerClock(state.chess.turn());
+  stopPlayerClock(state.chess.turn(), { increment: true });
   state.phase = "userTurn";
   const userMoveColor = state.chess.turn();
   const fenBefore = state.chess.fen();
@@ -1679,6 +1757,7 @@ function checkGameOver() {
   if (typeof gamesAutoSave === "function") gamesAutoSave();
   refreshLevelDiagnosticProgress();
   setStatus(msg);
+  window.dispatchEvent(new CustomEvent("supachess:game-over", { detail: { reason: "finished", message: msg } }));
   renderBoard();
   return true;
 }
@@ -2274,7 +2353,7 @@ $("sel-engine")?.addEventListener("change", () => {
 });
 $("sel-movetime").addEventListener("change", onOpponentSettingsChange);
 restorePlayerClockSettings();
-for (const id of ["sel-clock-white", "sel-clock-black"]) {
+for (const id of ["sel-clock-white", "sel-clock-black", "sel-clock-increment"]) {
   const control = $(id);
   control?.addEventListener("change", () => {
     persistPlayerClockSettings();

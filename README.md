@@ -25,6 +25,20 @@ Everything runs in the browser: games, reviews, lessons and corpus analysis are 
 | [`learn-moves.html`](learn-moves.html) | Material & calculation | Train piece counting and move calculation with guided exercises. |
 | [`learn-progressive.html`](learn-progressive.html) | Progressive path | Anticipate the opponent threat, calculate the best reply, verify before moving. |
 
+## Daily routine and anti-blunder shield
+
+Two training tools live on the play page (`index.html`), both computed and stored locally:
+
+- **Routine du Jour (45 min)** — three 15-minute steps (one curriculum lesson picked from the date, a fixed lot of 50 tactical puzzles, then a slow game against Stockfish at 10+5 or 15+10 that is analysed for its two worst moments). A local streak counts consecutive completed days and resets as soon as one day is missed. See [`docs/ROUTINE_DU_JOUR.md`](docs/ROUTINE_DU_JOUR.md) for the full French documentation.
+- **Bouclier Anti-Gaffe** — off by default. When enabled on a training game, it blocks a move that leaves one of your pieces attacked and undefended, or that allows mate in one, and shows a short *Échecs / Prises / Menaces* reminder. The geometric check ignores pinned pieces, so it is a teaching aid, not a proof. Games that use it are tagged "with aids" and never feed the leaderboards.
+
+The clock settings also gained a Fischer increment (none, +5 s, +10 s) added after each move played.
+
+```bash
+npm test                        # 171 automated checks (node:test)
+npm run test:routine-browser    # Playwright check of the routine panel and the shield in a real game
+```
+
 ## Getting started
 
 ```bash
