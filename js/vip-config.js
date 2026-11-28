@@ -1,18 +1,20 @@
 /* Configuration VIP SupaChess.
  *
- * IMPORTANT — les liens de paiement sont volontairement VIDES.
- * Hugop doit y coller les vrais liens (Payment Links Stripe, PayPal, etc.)
- * avant toute mise en ligne. Tant qu'un lien est vide, le bouton de paiement
- * l'explique honnêtement à l'utilisateur : aucun paiement n'est simulé.
+ * Liens de paiement Stripe LIVE (Payment Links crees le 28/11/2026 via l'API
+ * Stripe, compte live). Montants alignes sur les offres affichees ci-dessous.
+ * Le portail client est gere par Stripe (configuration bpc_1UghNLQ6hTr1mXdff8AvbHEC).
+ * L'URL de connexion "no-code" n'est pas exposee par l'API : Hugop doit copier
+ * le lien "Portail client" depuis Dashboard Stripe > Settings > Billing > Customer portal.
  */
 (function () {
   "use strict";
 
   window.SupaVipConfig = {
     checkout: {
-      monthly: "",
-      yearly: "",
-      lifetime: "",
+      monthly: "https://buy.stripe.com/3cIeVf2AUgpddYJeeS6sw00",
+      yearly: "https://buy.stripe.com/7sYeVfcbugpdf2N0o26sw01",
+      lifetime: "https://buy.stripe.com/8x28wRdfyb4T4o9fiW6sw02",
+      portal: "",
     },
     offers: [
       { id: "monthly", label: "SupaChess VIP · mensuel", price: "4,99 € / mois", priceValue: 4.99, period: "mois", badge: "Sans engagement" },
