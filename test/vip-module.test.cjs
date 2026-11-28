@@ -23,8 +23,15 @@ test("la configuration VIP propose trois offres et aucun lien de paiement actif"
   assert.equal(config.offers[1].price, "34,99 € / an");
   assert.equal(config.offers[2].price, "60 €");
   ["monthly", "yearly", "lifetime"].forEach((id) => {
-    assert.equal(config.checkout[id], "", "le lien de paiement " + id + " doit rester vide tant qu'il n'est pas configuré");
+    const url = config.checkout[id];
+    assert.match(
+      url,
+      /^https:\/\/buy\.stripe\.com\/[A-Za-z0-9]+$/,
+      "le lien de paiement " + id + " doit pointer vers un Payment Link Stripe valide",
+    );
   });
+  const ids = ["monthly", "yearly", "lifetime"].map((id) => config.checkout[id]);
+  assert.equal(new Set(ids).size, 3, "les trois offres doivent pointer vers des liens distincts");
 });
 
 test("le gestionnaire VIP lit le statut sans écrire et n'ouvre aucun paiement sans lien", () => {
