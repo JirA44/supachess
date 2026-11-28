@@ -1,22 +1,34 @@
 rules_version = '2';
 
-// Règles canoniques du projet Firebase "chessnova" (SupaChess + SupaChess-Web).
-// Ce fichier est identique dans les dépôts supachess et supachess-web : il ne doit
-// être déployé qu'une seule fois depuis l'un des deux dépôts, avec un contrôle
-// préalable des deux sites (compteurs, profils, présence, classements).
+// Règles Firestore du projet "chessnova" (SupaChess + SupaChess-Web).
+// Fichier identique dans les dépôts supachess et supachess-web.
 //
-// Principes appliqués :
-// - un utilisateur ne peut écrire que son propre document users/{uid} ;
-// - les champs VIP (isVip, vipPlan, vipExpiry) ne sont jamais modifiables depuis
-//   le navigateur, ni à la création ni à la mise à jour ;
-// - les compteurs publics n'acceptent que des incréments de +1 sur des champs
-//   autorisés ;
-// - toutes les autres collections restent refusées.
+// Cette version est le SUR-SET du ruleset en production (sauvegarde :
+// D:\Temp\mammouth\trading\firestore_rules_backup_chessnova_*.rules).
+// - toutes les collections déjà servies en production sont conservées telles
+//   quelles (site_stats, visitors, section_clicks, community_chat, suggestions,
+//   faq, presence, presence_public, challenges, games, chess_analyses,
+//   client_error_reports) ;
+// - /users/{uid} est durci : le navigateur ne peut plus s'attribuer un statut
+//   VIP (isVip, vipPlan, vipExpiry), qui reste réservé au serveur (Admin SDK,
+//   webhook Stripe) ;
+// - /puzzle_leaderboard et /registered_user_markers sont ajoutés : le code
+//   client les écrit déjà, ils étaient donc refusés par le ruleset précédent.
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isOwner(uid) {
-      return request.auth != null && request.auth.uid == uid;
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function owns(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isCounterIncrement(data, before, field) {
+      return data[field] is int
+        && before.get(field, 0) is int
+        && data[field] == before.get(field, 0) + 1;
     }
 
     function counterPath() {
@@ -27,10 +39,6 @@ service cloud.firestore {
       return /databases/$(database)/documents/registered_user_markers/$(uid);
     }
 
-    function userPath(uid) {
-      return /databases/$(database)/documents/users/$(uid);
-    }
-
     function oldRegisteredCount() {
       return exists(counterPath())
         && ('registered_users' in get(counterPath()).data)
@@ -38,205 +46,247 @@ service cloud.firestore {
         : 0;
     }
 
-    function counterDiff() {
-      return request.resource.data.diff(resource.data);
-    }
-
-    // Un compteur n'est accepté que s'il progresse d'exactement une unité.
-    function counterStepOk(field) {
-      var old = resource.data.get(field, 0);
-      var neu = request.resource.data.get(field, 0);
-      return counterDiff().affectedKeys().hasAll([field])
-        ? neu == old + 1
-        : neu == old;
-    }
-
-    function validMarkerForCounter(uid) {
-      return isOwner(uid)
-        && !exists(markerPath(uid))
-        && existsAfter(markerPath(uid))
-        && getAfter(markerPath(uid)).data.uid == uid
-        && getAfter(markerPath(uid)).data.registered_at == request.time
-        && existsAfter(counterPath())
-        && getAfter(counterPath()).data.registered_users is int
-        && getAfter(counterPath()).data.registered_users == oldRegisteredCount() + 1;
-    }
-
-    function validCounterForMarker(uid) {
-      return isOwner(uid)
-        && existsAfter(counterPath())
-        && getAfter(counterPath()).data.registered_users is int
-        && getAfter(counterPath()).data.registered_users == oldRegisteredCount() + 1;
-    }
-
-    // SupaChess crée son profil puis incrémente le compteur de comptes.
-    // L'incrément n'est accepté que dans une fenêtre courte après la
-    // création du profil, ce qui rend l'opération non rejouable.
-    function withinRegistrationWindow() {
-      var profile = get(userPath(request.auth.uid)).data;
-      return request.auth != null
-        && exists(userPath(request.auth.uid))
-        && profile.get('uid', '') == request.auth.uid
-        && profile.get('createdAt', timestamp.date(2000, 1, 1))
-             > request.time - duration.value(10, 'm');
-    }
-
-    function validRegisteredCounter() {
-      return request.auth != null
-        && counterDiff().affectedKeys().hasOnly(['registered_users'])
+    // Le compteur d'inscriptions n'est accepté que si le même lot de requête
+    // crée le marqueur d'inscription du demandeur (décompte non rejouable).
+    function validRegisteredIncrement() {
+      return signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['registered_users'])
         && request.resource.data.registered_users is int
         && request.resource.data.registered_users == oldRegisteredCount() + 1
-        && (validMarkerForCounter(request.auth.uid) || withinRegistrationWindow());
+        && existsAfter(markerPath(request.auth.uid))
+        && getAfter(markerPath(request.auth.uid)).data.uid == request.auth.uid;
     }
 
-    function validVisitCounters() {
-      return counterDiff().affectedKeys().hasOnly(['total_visits', 'unique_visitors'])
-        && counterStepOk('total_visits')
-        && counterStepOk('unique_visitors');
+    match /site_stats/{docId} {
+      allow read: if true;
+      allow create: if docId == 'counters'
+        && request.resource.data.keys().hasOnly(['total_visits', 'unique_visitors', 'registered_users'])
+        && request.resource.data.keys().size() == 1
+        && (
+          (request.resource.data.keys().hasAny(['total_visits'])
+            && request.resource.data.total_visits is int && request.resource.data.total_visits == 1)
+          || (request.resource.data.keys().hasAny(['unique_visitors'])
+            && request.resource.data.unique_visitors is int && request.resource.data.unique_visitors == 1)
+          || (request.resource.data.keys().hasAny(['registered_users'])
+            && request.resource.data.registered_users is int && request.resource.data.registered_users == 1)
+        );
+      allow update: if docId == 'counters'
+        && request.resource.data.diff(resource.data).affectedKeys().size() == 1
+        && (
+          (request.resource.data.diff(resource.data).affectedKeys().hasAny(['total_visits'])
+            && isCounterIncrement(request.resource.data, resource.data, 'total_visits'))
+          || (request.resource.data.diff(resource.data).affectedKeys().hasAny(['unique_visitors'])
+            && isCounterIncrement(request.resource.data, resource.data, 'unique_visitors'))
+          || (request.resource.data.diff(resource.data).affectedKeys().hasAny(['registered_users'])
+            && isCounterIncrement(request.resource.data, resource.data, 'registered_users')
+            && validRegisteredIncrement())
+        );
+      allow delete: if false;
     }
 
-    function validCounterCreate() {
-      return request.resource.data.keys()
-        .hasOnly(['registered_users', 'total_visits', 'unique_visitors'])
-        && request.resource.data.get('registered_users', 0) <= 1
-        && request.resource.data.get('total_visits', 0) <= 1
-        && request.resource.data.get('unique_visitors', 0) <= 1;
-    }
-
-    function validCounterUpdate() {
-      return validVisitCounters() || validRegisteredCounter();
-    }
-
-    // ── Profils utilisateurs ──────────────────────────────────────────
-    match /users/{uid} {
-      function ownerWritableFields() {
-        return counterDiff().affectedKeys().hasOnly([
-          'displayName',
-          'photoURL',
-          'stats',
-          'totalGames',
-          'learningLevel',
-          'learningXP',
-          'learningLevelName',
-          'puzzlesSolved'
-        ]);
-      }
-
-      function vipUnchanged() {
-        return request.resource.data.get('isVip', false) == resource.data.get('isVip', false)
-          && request.resource.data.get('vipPlan', '') == resource.data.get('vipPlan', '')
-          && request.resource.data.get('vipExpiry', null) == resource.data.get('vipExpiry', null);
-      }
-
-      allow get: if request.auth != null;
-      allow list: if request.auth != null;
-
-      allow create: if isOwner(uid)
-        && request.resource.data.keys().hasOnly([
-          'uid',
-          'email',
-          'displayName',
-          'photoURL',
-          'createdAt',
-          'stats',
-          'totalGames',
-          'learningLevel',
-          'learningXP',
-          'learningLevelName',
-          'puzzlesSolved',
-          'isVip',
-          'vipPlan',
-          'vipExpiry'
-        ])
-        && request.resource.data.keys().hasAll(['uid', 'displayName', 'stats', 'totalGames'])
-        && request.resource.data.uid == uid
-        && request.resource.data.get('isVip', false) == false
-        && request.resource.data.get('vipPlan', '') == ''
-        && request.resource.data.get('vipExpiry', null) == null;
-
-      allow update: if isOwner(uid)
-        && ownerWritableFields()
-        && vipUnchanged();
-
-      allow delete: if isOwner(uid);
-    }
-
-    // ── Compteurs publics ─────────────────────────────────────────────
-    match /site_stats/counters {
-      allow get: if true;
-      allow list, delete: if false;
-      allow create: if validCounterCreate();
-      allow update: if validCounterUpdate();
-    }
-
-    // ── Visiteurs uniques estimés (empreinte non réversible) ─────────
-    match /visitors/{fingerprint} {
-      allow get: if true;
-      allow list, delete: if false;
-      allow create: if request.resource.data.keys()
-        .hasOnly(['first_visit', 'last_visit', 'visit_count'])
+    match /visitors/{visitorId} {
+      allow read: if true;
+      allow create: if visitorId.matches('^v_[a-z0-9]+$')
+        && request.resource.data.keys().hasOnly(['first_visit', 'last_visit', 'visit_count'])
+        && request.resource.data.keys().hasAll(['first_visit', 'last_visit', 'visit_count'])
+        && request.resource.data.first_visit == request.time
+        && request.resource.data.last_visit == request.time
         && request.resource.data.visit_count == 1;
-      allow update: if request.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(['last_visit', 'visit_count'])
+      allow update: if visitorId.matches('^v_[a-z0-9]+$')
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['last_visit', 'visit_count'])
+        && request.resource.data.last_visit == request.time
+        && request.resource.data.visit_count is int
         && request.resource.data.visit_count == resource.data.get('visit_count', 0) + 1;
+      allow delete: if false;
     }
 
-    // ── Marqueurs d'inscription (comptage idempotent) ─────────────────
-    match /registered_user_markers/{uid} {
-      allow get: if isOwner(uid);
-      allow list, update, delete: if false;
-      allow create: if validCounterForMarker(uid)
-        && request.resource.data.keys().hasOnly(['uid', 'registered_at'])
-        && request.resource.data.keys().hasAll(['uid', 'registered_at'])
-        && request.resource.data.uid == uid
-        && request.resource.data.registered_at == request.time
-        && !exists(markerPath(uid));
+    match /section_clicks/{sectionId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['clicks', 'name', 'last_clicked'])
+        && request.resource.data.keys().hasAll(['clicks', 'name', 'last_clicked'])
+        && request.resource.data.name == sectionId
+        && request.resource.data.clicks == 1
+        && request.resource.data.last_clicked == request.time;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clicks', 'last_clicked'])
+        && request.resource.data.name == resource.data.name
+        && request.resource.data.clicks is int
+        && request.resource.data.clicks == resource.data.get('clicks', 0) + 1
+        && request.resource.data.last_clicked == request.time;
+      allow delete: if false;
     }
 
-    // ── Présence ──────────────────────────────────────────────────────
+    match /community_chat/{messageId} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['author_uid', 'author_name', 'message', 'type', 'created_at'])
+        && request.resource.data.keys().hasAll(['author_uid', 'author_name', 'message', 'type', 'created_at'])
+        && request.resource.data.author_uid is string
+        && (request.resource.data.author_uid == request.auth.uid
+          || (request.resource.data.author_uid == 'bot' && request.resource.data.type == 'bot'))
+        && request.resource.data.author_name is string
+        && request.resource.data.author_name.size() <= 120
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 2000
+        && request.resource.data.type in ['message', 'bot']
+        && request.resource.data.created_at == request.time;
+      allow update, delete: if false;
+    }
+
+    match /suggestions/{suggestionId} {
+      allow create: if request.resource.data.keys().hasOnly([
+          'author_uid', 'author_name', 'category', 'message', 'rating', 'created_at'
+        ])
+        && request.resource.data.keys().hasAll(['author_name', 'category', 'message', 'rating', 'created_at'])
+        && (!('author_uid' in request.resource.data.keys())
+          || request.resource.data.author_uid == null
+          || (signedIn() && request.resource.data.author_uid == request.auth.uid))
+        && request.resource.data.author_name is string
+        && request.resource.data.author_name.size() <= 120
+        && request.resource.data.category is string
+        && request.resource.data.category.size() <= 80
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 3000
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.created_at == request.time;
+      allow read, update, delete: if false;
+    }
+
+    match /faq/{faqId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /presence/{uid} {
-      allow get, list: if isOwner(uid);
-      allow create, update: if isOwner(uid)
-        && request.resource.data.keys().hasOnly([
-          'uid', 'displayName', 'status', 'lastSeen', 'page'
-        ])
-        && request.resource.data.keys().hasAll([
-          'uid', 'displayName', 'status', 'lastSeen'
-        ])
+      allow read, delete: if owns(uid);
+      allow create, update: if owns(uid)
+        && request.resource.data.keys().hasOnly(['uid', 'displayName', 'status', 'lastSeen', 'page'])
         && request.resource.data.uid == uid
         && request.resource.data.displayName is string
-        && request.resource.data.displayName.size() > 0
-        && request.resource.data.displayName.size() <= 80
+        && request.resource.data.displayName.size() <= 120
         && request.resource.data.status in ['dispo', 'occupe', 'invisible', 'offline']
         && request.resource.data.lastSeen == request.time
-        && (!('page' in request.resource.data)
-          || (request.resource.data.page is string
-            && request.resource.data.page.size() <= 200));
-      allow delete: if isOwner(uid);
+        && request.resource.data.page is string
+        && request.resource.data.page.size() <= 300;
     }
 
     match /presence_public/{uid} {
-      allow read: if request.auth != null;
-      allow create, update: if isOwner(uid)
-        && request.resource.data.keys().hasOnly([
-          'uid', 'displayName', 'status', 'lastSeen'
-        ])
-        && request.resource.data.keys().hasAll([
-          'uid', 'displayName', 'status', 'lastSeen'
-        ])
+      allow read: if signedIn();
+      allow create, update: if owns(uid)
+        && request.resource.data.keys().hasOnly(['uid', 'displayName', 'status', 'lastSeen'])
+        && request.resource.data.keys().hasAll(['uid', 'displayName', 'status', 'lastSeen'])
         && request.resource.data.uid == uid
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() > 0
         && request.resource.data.displayName.size() <= 60
-        && !request.resource.data.displayName.matches('.*@.*')
+        && request.resource.data.displayName.matches('^[^@]+$')
         && request.resource.data.status in ['dispo', 'occupe']
         && request.resource.data.lastSeen == request.time;
-      allow delete: if isOwner(uid);
+      allow delete: if owns(uid);
     }
 
-    // ── Classement de puzzles (une entrée par compte) ────────────────
-    function isValidPuzzleLeaderboardEntry() {
-      return request.resource.data.keys().hasOnly([
+    match /challenges/{challengeId} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+          'from', 'fromName', 'to', 'toName', 'timeControl', 'status', 'createdAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'from', 'fromName', 'to', 'toName', 'timeControl', 'status', 'createdAt'
+        ])
+        && request.resource.data.from == request.auth.uid
+        && request.resource.data.to is string
+        && request.resource.data.to != request.auth.uid
+        && request.resource.data.fromName is string
+        && request.resource.data.fromName.size() <= 120
+        && request.resource.data.toName is string
+        && request.resource.data.toName.size() <= 120
+        && request.resource.data.timeControl in ['1+0', '3+2', '5+0', '10+0']
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time;
+      allow get, list: if signedIn() && resource.data.to == request.auth.uid;
+      allow update: if signedIn()
+        && resource.data.to == request.auth.uid
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status in ['accepted', 'declined'];
+      allow delete: if false;
+    }
+
+    // Profils utilisateurs : le client reste maître de son profil, mais il ne
+    // peut plus s'accorder le statut VIP. Ces champs sont écrits uniquement par
+    // le serveur (Admin SDK / webhook de paiement).
+    match /users/{uid} {
+      function vipFieldsUntouched() {
+        return !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['isVip', 'vipPlan', 'vipExpiry']);
+      }
+
+      function vipFieldsEmpty() {
+        return request.resource.data.get('isVip', false) == false
+          && request.resource.data.get('vipPlan', '') == ''
+          && request.resource.data.get('vipExpiry', null) == null;
+      }
+
+      allow read: if owns(uid);
+      allow create: if owns(uid)
+        && vipFieldsEmpty()
+        && (!('uid' in request.resource.data.keys())
+          || request.resource.data.uid == uid);
+      allow update: if owns(uid) && vipFieldsUntouched();
+      allow delete: if owns(uid);
+    }
+
+    match /games/{gameId} {
+      allow read: if signedIn() && resource.data.odUID == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.odUID == request.auth.uid
+        && request.resource.data.created_at == request.time;
+      allow update: if signedIn()
+        && resource.data.odUID == request.auth.uid
+        && request.resource.data.odUID == request.auth.uid;
+      allow delete: if signedIn() && request.resource.data.odUID == request.auth.uid;
+    }
+
+    match /chess_analyses/{gameHash} {
+      allow read: if true;
+      allow create, update: if gameHash.matches('^game_[a-z0-9]{1,8}$')
+        && request.resource.data.keys().hasOnly([
+          'pgn', 'headers', 'analyzedMoves', 'evalHistory',
+          'whiteAcc', 'blackAcc', 'errors', 'timestamp', 'updatedAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'pgn', 'headers', 'analyzedMoves', 'evalHistory',
+          'whiteAcc', 'blackAcc', 'errors', 'timestamp', 'updatedAt'
+        ])
+        && request.resource.data.pgn is string
+        && request.resource.data.pgn.size() <= 50000
+        && request.resource.data.headers is map
+        && request.resource.data.analyzedMoves is list
+        && request.resource.data.analyzedMoves.size() <= 1000
+        && request.resource.data.evalHistory is list
+        && request.resource.data.evalHistory.size() <= 1000
+        && request.resource.data.whiteAcc is int
+        && request.resource.data.whiteAcc >= 0
+        && request.resource.data.whiteAcc <= 100
+        && request.resource.data.blackAcc is int
+        && request.resource.data.blackAcc >= 0
+        && request.resource.data.blackAcc <= 100
+        && request.resource.data.errors is int
+        && request.resource.data.errors >= 0
+        && request.resource.data.errors <= 1000
+        && request.resource.data.timestamp is int
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+
+    // Classement communautaire des puzzles (une entrée par compte).
+    match /puzzle_leaderboard/{uid} {
+      allow read: if signedIn();
+      allow create, update: if owns(uid)
+        && request.resource.data.keys().hasOnly([
           'displayName', 'puzzleElo', 'puzzlesSolved', 'updatedAt'
         ])
         && request.resource.data.keys().hasAll([
@@ -252,18 +302,24 @@ service cloud.firestore {
         && request.resource.data.puzzlesSolved is int
         && request.resource.data.puzzlesSolved >= 0
         && request.resource.data.updatedAt == request.time;
-    }
-
-    match /puzzle_leaderboard/{uid} {
-      allow read: if request.auth != null;
-      allow create: if isOwner(uid) && isValidPuzzleLeaderboardEntry();
-      allow update: if isOwner(uid) && isValidPuzzleLeaderboardEntry();
       allow delete: if false;
     }
 
-    // ── Rapports d'erreurs client (champs techniques assainis) ────────
+    // Marqueurs d'inscription : garantissent un décompte unique des comptes.
+    match /registered_user_markers/{uid} {
+      allow get: if owns(uid);
+      allow list, update, delete: if false;
+      allow create: if owns(uid)
+        && request.resource.data.keys().hasOnly(['uid', 'registered_at'])
+        && request.resource.data.keys().hasAll(['uid', 'registered_at'])
+        && request.resource.data.uid == uid
+        && request.resource.data.registered_at == request.time
+        && !exists(markerPath(uid));
+    }
+
+    // Authenticated, sanitized client error reports; reports cannot be read or altered by clients.
     match /client_error_reports/{reportId} {
-      allow create: if request.auth != null
+      allow create: if signedIn()
         && request.resource.data.keys().hasOnly([
           'source', 'message', 'page', 'version', 'language', 'created_at'
         ])
@@ -289,5 +345,8 @@ service cloud.firestore {
 
     // Toutes les autres collections restent refusées tant que leurs
     // patterns d'accès n'ont pas été revus séparément.
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }
